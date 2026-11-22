@@ -1,3 +1,4 @@
+import { gunzip } from '@omsett/detect'
 import { dimensionProblem } from '@omsett/registry'
 import { resvgInfo } from '../info'
 import type { ConvertInput, ConvertOutput, Engine } from '../types'
@@ -16,6 +17,9 @@ export interface ResvgHost {
   /** The typefaces text is drawn in. There are no others: a browser tab cannot lend its fonts. */
   fonts(): Promise<Uint8Array[]>
 }
+
+/** The most an SVGZ may unpack to. Real drawings are a small fraction of this. */
+const MAX_SVG_BYTES = 64 * 1024 * 1024
 
 /** The family name inside the font files the host supplies. */
 const FAMILY = 'Inter'
@@ -52,7 +56,16 @@ export function createResvgEngine(host: ResvgHost): Engine {
       throwIfAborted(signal)
       const { Renderer, fontBuffers } = await ready()
       onProgress(0.2)
-      const bytes = new Uint8Array(await blob.arrayBuffer())
+      let bytes: Uint8Array = new Uint8Array(await blob.arrayBuffer())
+      // An SVGZ is inflated here, with a limit, so the renderer is never handed a file that
+      // unpacks to more than it should.
+      if (bytes[0] === 0x1F && bytes[1] === 0x8B) {
+        const inflated = await gunzip(blob, MAX_SVG_BYTES + 1)
+        if (!inflated.complete) {
+          throw new Error(inflated.bytes.length > MAX_SVG_BYTES ? 'The drawing is too large' : `resvg could not read ${input.name}`)
+        }
+        bytes = inflated.bytes
+      }
       throwIfAborted(signal)
 
       let renderer: ResvgRenderer | undefined

@@ -22,6 +22,14 @@ const samples: Record<string, string> = {
   psd: 'psd/sample.psd',
   ico: 'ico/sample.ico',
   jp2: 'jp2/sample.jp2',
+  tga: 'tga/sample.tga',
+  pnm: 'pnm/sample.ppm',
+  pcx: 'pcx/sample.pcx',
+  sgi: 'sgi/sample.sgi',
+  ras: 'ras/sample.ras',
+  hdr: 'hdr/sample.hdr',
+  exr: 'exr/sample.exr',
+  svgz: 'svgz/sample.svgz',
 }
 const path = (id: string) => fileURLToPath(new URL(`../fixtures/${samples[id]}`, import.meta.url))
 

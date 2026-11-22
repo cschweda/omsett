@@ -191,6 +191,24 @@ trap(
     group=G,
 )
 trap(
+    "huge-declared.pnm",
+    b"P6\n# a comment\n50000 50000\n255\n" + bytes(64),
+    "Thirty bytes of Netpbm text that state 50,000 pixels a side. Refused from the header.",
+    "pnm",
+    guard="refused",
+    group=G,
+)
+tga_huge = bytearray(read("tga", "sample.tga"))
+tga_huge[12:16] = struct.pack("<HH", 65535, 65535)
+trap(
+    "huge-declared.tga",
+    bytes(tga_huge),
+    "A small TGA whose header states 65,535 pixels a side, the most the format can say.",
+    "tga",
+    guard="refused",
+    group=G,
+)
+trap(
     "huge-declared.svg",
     b'<svg xmlns="http://www.w3.org/2000/svg" width="200000" height="200000"><rect width="10" height="10"/></svg>\n',
     "A hundred bytes of SVG that state a size of forty thousand megapixels. Refused from the "
@@ -428,6 +446,53 @@ for folder, ext, label in (
         node="fails",
         group=G,
     )
+for folder, name, ext, label in (
+    ("tga", "sample.tga", "tga", "TGA"),
+    ("pnm", "sample.ppm", "pnm", "Netpbm"),
+    ("pcx", "sample.pcx", "pcx", "PCX"),
+    ("sgi", "sample.sgi", "sgi", "SGI"),
+    ("ras", "sample.ras", "ras", "Sun Raster"),
+    ("hdr", "sample.hdr", "hdr", "Radiance HDR"),
+    ("exr", "sample.exr", "exr", "OpenEXR"),
+    ("svgz", "sample.svgz", "svgz", "SVGZ"),
+):
+    sound = read(folder, name)
+    trap(
+        f"truncated.{name.split('.')[1]}",
+        sound[: len(sound) // 2],
+        f"A sound {label} file cut off halfway through.",
+        ext,
+        node="fails",
+        group=G,
+    )
+
+
+def gzip_bytes(parts) -> bytes:
+    """Gzip, with no name or time in the header, so the file is the same on every run."""
+    squeeze = zlib.compressobj(9, zlib.DEFLATED, 31)
+    return b"".join(squeeze.compress(part) for part in parts) + squeeze.flush()
+
+
+trap(
+    "gzip-bomb.svgz",
+    gzip_bytes(
+        [b'<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64">']
+        + [b" " * (1 << 20)] * 256
+        + [b"</svg>\n"]
+    ),
+    "A quarter of a megabyte that unpacks to a quarter of a gigabyte of spaces inside an SVG. "
+    "Unpacking must stop at a limit, and the file be refused.",
+    "svgz",
+    node="fails",
+    group=G,
+)
+trap(
+    "gzip-of-text.svgz",
+    gzip_bytes([b"Not a drawing, only some text that has been compressed.\n"]),
+    "A gzip file with an .svgz name that does not hold an SVG. It is a gzip file, and no more.",
+    "unregistered",
+    group=G,
+)
 ico_sound = bytearray(read("ico", "sample.ico"))
 ico_sound[18:22] = struct.pack("<I", 0x7FFFFFF0)  # where the first picture is said to start
 trap(
