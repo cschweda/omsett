@@ -42,8 +42,15 @@ one, install 24 alongside it with a version manager.
 
 - **Domain:** `omsett.com`, with `www.omsett.com` as an alias.
 - **Project type:** Static HTML.
-- **Web directory:** `/live/public`
-- **Repository:** `cschweda/omsett`, branch `main`. Leave "Install Composer dependencies" off.
+- **Repository:** `cschweda/omsett`, branch `main`.
+- Under **Advanced settings**:
+  - **Web directory:** `/live/public` (the default is `/public`).
+  - **Zero downtime deployments:** off. Forge's version gives the site its own `releases` and
+    `current` layout; `scripts/publish-static.sh` already builds and then switches a `live` link
+    to the new build, and running both would nest one inside the other and change every path
+    in this guide.
+  - **Root directory** `/`, **Frontend package manager** None, **Push to deploy** on (this is
+    the Quick Deploy of step 8), website isolation off.
 
 The site will answer 404 until the first deploy creates `live`.
 
@@ -111,9 +118,10 @@ To run the full browser suite against the live site from your own machine:
 BASE_URL=https://omsett.com pnpm e2e
 ```
 
-### 8. Turn on Quick Deploy
+### 8. Push to deploy
 
-With Quick Deploy on, every push to `main` runs the deploy script. There is no staging branch
+With "Push to deploy" on (set when the site was created, or in the site's settings), every push
+to `main` runs the deploy script. There is no staging branch
 and no cost per deploy.
 
 ## Afterwards
