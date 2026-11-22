@@ -17,6 +17,7 @@ pnpm build           # static site + generated headers and policies → apps/web
 pnpm e2e             # Playwright against the built site, in Chromium, Firefox, WebKit
 pnpm lint && pnpm typecheck
 docker compose up --build   # the self-host image at http://localhost:8080
+scripts/publish-static.sh   # build and publish atomically, as the server does
 ```
 
 `pnpm e2e` needs `pnpm build` first. `BASE_URL=https://… pnpm e2e` points it at a deployed copy.
@@ -68,6 +69,9 @@ build by `apps/web/scripts/write-headers.ts`.
 - Both policies carry `connect-src 'self' blob:`. Never widen it.
 - Do not add a `Content-Security-Policy` header to `/*`: it would also govern worker scripts and
   break libvips.
+- The headers are written in three formats (Netlify `_headers`, a Caddy snippet, an nginx
+  snippet). The site is served by nginx; CI runs the conversion tests through
+  `apps/web/nginx/omsett.conf` so that path stays proven.
 
 ## Things that will bite
 
@@ -89,10 +93,10 @@ build by `apps/web/scripts/write-headers.ts`.
 
 ## Working agreements
 
-- **Branches and deploys.** Work on a feature branch and open a pull request into `staging`
-  (`gh pr create --base staging`). Never push to `main`, never open or merge a PR into `main`,
-  and never merge into `staging` without being told to. A production build costs Netlify credits
-  and happens only on Chris's word, as one merge-commit PR from `staging` into `main`.
+- **Branches and deploys.** There is no staging branch. Changes go to `main`, and the server
+  rebuilds the live site from `main` on every push (see `docs/deploy-digitalocean.md`); a deploy
+  costs nothing. Use a short-lived branch and a pull request when CI should vouch for a change
+  before it is live, which is most of the time.
 - **Changelog.** Every change goes into `CHANGELOG.md` under "Unreleased", in the same pull
   request that makes it: added, changed, fixed, or known. A release renames that section.
 - **Commits** are small and labeled (`feat(registry): …`, `fix(web): …`, `chore(ci): …`), and

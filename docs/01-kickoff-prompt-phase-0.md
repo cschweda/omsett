@@ -2,6 +2,8 @@
 
 Nov 1, 2026 · Christopher Schweda · revised Nov 22, 2026
 
+> **Since this prompt was run.** Phase 0 is built. Three things below are now history and are kept only so the record of what was asked stays intact. Hosting moved from Netlify to the DigitalOcean droplet (`docs/deploy-digitalocean.md`). There is no `staging` branch: changes go to `main`. Accessibility checks are deferred to a final phase. `AGENTS.md` has the current working agreements; the next phase's prompt should be written from that, not from the Netlify and staging instructions here.
+
 ## How to use this prompt
 
 **Everything from "Role and mission" down is the prompt. Paste it whole into Claude Code as the first message in the `omsett/` directory.** It is self-contained: it does not assume Claude Code has read the design document, though the document is in `docs/` and reading it does no harm.

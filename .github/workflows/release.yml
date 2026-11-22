@@ -1,7 +1,7 @@
 name: Release
 
-# On a version tag, publish the self-host image. The Netlify site is not released from here:
-# production deploys happen only when staging is merged into main, by hand.
+# On a version tag, publish the self-host image. The website is not released from here: the
+# server deploys it whenever main changes (see docs/deploy-digitalocean.md).
 #
 # This job can write packages, so every action is pinned to a full commit SHA; a tag can be
 # moved, a SHA cannot. The comment after each SHA is the release it corresponds to.
