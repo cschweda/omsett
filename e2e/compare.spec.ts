@@ -68,6 +68,60 @@ test('the handle moves once when the comparison appears, then rests at the centr
   await context.close()
 })
 
+test('scrolling zooms toward the pointer, dragging then pans, and reset returns to life size', async ({ page }) => {
+  await convert(page)
+  const zoom = page.getByTestId('compare-zoom')
+  const control = page.getByTestId('compare-control')
+  await expect(zoom).toHaveText('100%')
+  await page.locator('.stage').scrollIntoViewIfNeeded()
+  const box = (await page.locator('.stage').boundingBox())!
+
+  // Scroll up over the picture: it enlarges, and the page does not scroll.
+  const scrolled = await page.evaluate(() => scrollY)
+  await page.mouse.move(box.x + box.width * 0.7, box.y + box.height * 0.5)
+  await page.mouse.wheel(0, -300)
+  await expect(zoom).not.toHaveText('100%')
+  expect(await page.evaluate(() => scrollY)).toBe(scrolled)
+  const transformOf = () =>
+    page.locator('.stage canvas[data-side="after"]').evaluate((c) => (c as HTMLElement).style.transform)
+  expect(await transformOf()).toMatch(/scale\((?!1\))/)
+
+  // Zoomed in, dragging away from the handle moves the picture, not the divider.
+  const before = { divider: await control.inputValue(), transform: await transformOf() }
+  await page.mouse.move(box.x + box.width * 0.2, box.y + box.height * 0.3)
+  await page.mouse.down()
+  await page.mouse.move(box.x + box.width * 0.3, box.y + box.height * 0.4, { steps: 4 })
+  await page.mouse.up()
+  expect(await control.inputValue()).toBe(before.divider)
+  expect(await transformOf()).not.toBe(before.transform)
+
+  // The handle still moves the divider.
+  const handleX = box.x + (Number(before.divider) / 100) * box.width
+  await page.mouse.move(handleX, box.y + box.height * 0.5)
+  await page.mouse.down()
+  await page.mouse.move(handleX + box.width * 0.2, box.y + box.height * 0.5, { steps: 4 })
+  await page.mouse.up()
+  expect(Number(await control.inputValue())).toBeGreaterThan(Number(before.divider) + 10)
+
+  await page.getByTestId('zoom-in').click()
+  await page.getByTestId('zoom-reset').click()
+  await expect(zoom).toHaveText('100%')
+  expect(await transformOf()).toContain('scale(1)')
+})
+
+test('the quality slider beside the comparison changes the result as it moves', async ({ page }) => {
+  await convert(page)
+  const before = await outputBytes(page)
+  const live = page.getByTestId('compare-quality')
+  await expect(live).toHaveValue('80')
+  await live.fill('15')
+  await expect.poll(() => outputBytes(page), { timeout: 15_000 }).toBeLessThan(before)
+  // It is the same setting as the one above the Convert button.
+  await expect(page.getByTestId('quality')).toHaveValue('15')
+  // The comparison was updated in place, not rebuilt.
+  await expect(page.locator('[data-testid="compare"]')).toHaveCount(1)
+})
+
 test('lowering the quality converts again and the file gets smaller', async ({ page }) => {
   await convert(page)
   const before = await outputBytes(page)

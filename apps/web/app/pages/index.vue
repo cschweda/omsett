@@ -102,7 +102,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
             :loading="queue.converting.value"
             class="convert-button"
             data-testid="convert"
-            @click="queue.convertAll"
+            @click="queue.convertAll()"
           />
           <span class="shortcut">
             <UKbd :value="isMac ? '⌘' : 'Ctrl'" />
@@ -119,6 +119,10 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
             :result="result"
             :source="sourceOf(result.sourceId).blob"
             :source-format-id="sourceOf(result.sourceId).formatId"
+            :quality="queue.quality.value"
+            :suggested-quality="queue.defaultQuality.value"
+            :busy="queue.converting.value"
+            @update:quality="queue.quality.value = $event"
           />
         </ul>
         <!-- TODO(phase-1): "Download all as ZIP" when there is more than one result. -->

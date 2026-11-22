@@ -9,7 +9,12 @@ const props = defineProps<{
   /** The file this was converted from, and its format, for the comparison. */
   source?: Blob
   sourceFormatId?: string
+  /** The batch's quality setting, shown beside the comparison so it can be changed in view. */
+  quality?: number | null
+  suggestedQuality?: number | null
+  busy?: boolean
 }>()
+defineEmits<{ 'update:quality': [value: number] }>()
 
 // One object URL per output, revoked when it is replaced or the card goes away.
 const url = ref('')
@@ -57,6 +62,10 @@ const delta = computed(() => formatDelta(props.result.inputBytes, props.result.b
       :after="result.blob"
       :before-label="`${from?.name} ${formatBytes(result.inputBytes)}`"
       :after-label="`${to?.name} ${formatBytes(result.blob.size)}`"
+      :quality="quality"
+      :suggested-quality="suggestedQuality"
+      :busy="busy"
+      @update:quality="$emit('update:quality', $event)"
     />
   </li>
 </template>

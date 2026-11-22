@@ -222,7 +222,8 @@ export function useConversionQueue() {
     return produced
   }
 
-  async function convertAll() {
+  /** @param quiet a re-conversion while a setting is moved: no announcements for each one. */
+  async function convertAll({ quiet = false }: { quiet?: boolean } = {}) {
     const target = selected.value
     if (!canConvert.value || !target?.route) return
     converting.value = true
@@ -240,7 +241,7 @@ export function useConversionQueue() {
       const step = [0.75, 0.5, 0.25].find((s) => fraction >= s && s > lastStep)
       if (step && fraction < 1) {
         lastStep = step
-        announce(`${Math.round(step * 100)} percent.`)
+        if (!quiet) announce(`${Math.round(step * 100)} percent.`)
       }
     })
 
@@ -270,11 +271,9 @@ export function useConversionQueue() {
     converting.value = false
     const failed = queue.length - done
     const count = `${done} ${done === 1 ? 'file' : 'files'} converted.`
-    announce(
-      failed > 0
-        ? `${count} ${failed} could not be converted.`
-        : `${count} Download ready.`,
-    )
+    if (!quiet || failed > 0) {
+      announce(failed > 0 ? `${count} ${failed} could not be converted.` : `${count} Download ready.`)
+    }
   }
 
   // Once there is a result, moving the quality setting converts again, so the comparison and
@@ -283,10 +282,13 @@ export function useConversionQueue() {
   watch(quality, (value, previous) => {
     if (value === null || previous === null || results.value.length === 0) return
     clearTimeout(requeue)
+    // Short enough that the picture keeps up with a hand on the slider, long enough that a
+    // drag across fifty values does not start fifty conversions. While one is running, the
+    // latest value waits its turn; values in between are skipped.
     requeue = setTimeout(function again() {
-      if (converting.value) requeue = setTimeout(again, 150)
-      else void convertAll()
-    }, 350)
+      if (converting.value) requeue = setTimeout(again, 60)
+      else void convertAll({ quiet: true })
+    }, 120)
   })
 
   function reset() {

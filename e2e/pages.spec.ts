@@ -104,6 +104,8 @@ test('the home page teases what is new, briefly, and leads to the full list', as
   const changelog = readFileSync(new URL('../CHANGELOG.md', import.meta.url), 'utf8').replace(/\s+/g, ' ')
   expect(changelog).toContain(teaser.replace(/\s+/g, ' '))
 
+  // The label is a way there too.
+  await expect(page.getByTestId('whats-new-label')).toHaveAttribute('href', /\/whats-new#release-/)
   await page.getByTestId('whats-new-link').click()
   await expect(page).toHaveURL(/\/whats-new\/?#release-/)
   await expect(page.getByRole('heading', { level: 1 })).toContainText('What’s new')

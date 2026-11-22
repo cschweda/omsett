@@ -38,6 +38,11 @@ every browser, where some used to return half a picture.
 - A preview that cannot be drawn (a browser cannot display a TIFF) is no longer reported as a
   problem with the file.
 - The "What's new" banner marks its label with a green underline in place of a full-width rule.
+- **The comparison can be zoomed and panned.** Scroll over it to zoom toward the pointer, up to
+  eight times; drag to move around once zoomed; or use the buttons above it. Past twice life
+  size the pixels are shown as they are.
+- **Quality can be changed beside the comparison**, and the picture follows as the slider moves.
+- The "What's new" label in the banner is a link to the list.
 - The comparison's divider is now plainly a control: a blue line with a round, arrowed handle,
   which slides a little each way once when the comparison first appears.
 - Diagrams on the Technical details page are centered.

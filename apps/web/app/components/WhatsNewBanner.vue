@@ -34,10 +34,10 @@ function dismiss() {
 
 <template>
   <aside v-if="visible && latest" class="banner" aria-label="What’s new" data-testid="whats-new-banner">
-    <p class="label">
+    <NuxtLink :to="anchor" class="label" data-testid="whats-new-label">
       <span class="mark">What’s new</span>
       <span class="version figures">{{ title }}</span>
-    </p>
+    </NuxtLink>
     <p class="teaser">
       <span data-testid="whats-new-teaser">{{ latest.teaser }}</span>
       {{ ' ' }}
@@ -69,11 +69,17 @@ function dismiss() {
 }
 .label {
   grid-column: 1 / span 3;
+  justify-self: start;
   display: flex;
   flex-direction: column;
   margin: 0;
+  color: var(--ink);
   font-weight: 700;
   line-height: 1.3;
+  text-decoration: none;
+}
+.label:hover .mark {
+  color: var(--positive);
 }
 .version {
   font-size: var(--text-small);
