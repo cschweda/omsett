@@ -4,7 +4,7 @@ export const pnm: Format = {
   id: 'pnm',
   name: 'Netpbm',
   category: 'image',
-  extensions: ['ppm', 'pgm', 'pbm', 'pnm', 'pam'],
+  extensions: ['pnm', 'ppm', 'pgm', 'pbm', 'pam'],
   mime: ['image/x-portable-anymap'],
   detect: ['pnm'],
   explain:
