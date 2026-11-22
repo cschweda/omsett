@@ -62,6 +62,9 @@ importers:
       '@omsett/registry':
         specifier: workspace:*
         version: link:../../packages/registry
+      '@resvg/resvg-wasm':
+        specifier: ^2.6.2
+        version: 2.6.2
       comlink:
         specifier: 4.4.2
         version: 4.4.2
@@ -99,12 +102,18 @@ importers:
 
   packages/engines:
     dependencies:
+      '@fontsource/inter':
+        specifier: ^5.3.0
+        version: 5.3.0
       '@omsett/detect':
         specifier: workspace:*
         version: link:../detect
       '@omsett/registry':
         specifier: workspace:*
         version: link:../registry
+      '@resvg/resvg-wasm':
+        specifier: ^2.6.2
+        version: 2.6.2
       libheif-js:
         specifier: ^1.23.5
         version: 1.23.5
@@ -938,6 +947,10 @@ packages:
 
   '@poppinss/exception@1.2.3':
     resolution: {integrity: sha512-dCED+QRChTVatE9ibtoaxc+WkdzOSjYTKi/+uacHWIsfodVfpsueo3+DKpgU5Px8qXjgmXkSvhXvSCz3fnP9lw==}
+
+  '@resvg/resvg-wasm@2.6.2':
+    resolution: {integrity: sha512-FqALmHI8D4o6lk/LRWDnhw95z5eO+eAa6ORjVg09YRR7BkcM6oPHU9uyC0gtQG5vpFLvgpeU4+zEAz2H8APHNw==}
+    engines: {node: '>= 10'}
 
   '@rolldown/binding-android-arm-eabi@1.2.19':
     resolution: {integrity: sha512-e+Ebe0WT+9tbXmNKPIiC8YrWAHYwug3m6i4p3rZGGulfZri1jtI4HslT+OZnFf/OIHowWF71DTlHwXBP2SiA7A==}
@@ -6495,6 +6508,8 @@ snapshots:
       supports-color: 10.2.2
 
   '@poppinss/exception@1.2.3': {}
+
+  '@resvg/resvg-wasm@2.6.2': {}
 
   '@rolldown/binding-android-arm-eabi@1.2.19':
     optional: true

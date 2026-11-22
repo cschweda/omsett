@@ -55,6 +55,19 @@ export const heifInfo: EngineInfo = {
   sourceUrl: 'https://github.com/catdad-experiments/libheif-js',
 }
 
+// resvg, from resvg-js, with the two weights of Inter it draws text in.
+export const resvgInfo: EngineInfo = {
+  id: 'resvg',
+  sizeBytes: 2_480_000,
+  runtimes: ['browser', 'node'],
+  // resvg itself is Apache-2.0 OR MIT; the resvg-js build is MPL-2.0. Inter is OFL-1.1.
+  license: 'MPL-2.0 AND OFL-1.1',
+  sourceUrl: 'https://github.com/thx/resvg-js',
+}
+
+/** The font files resvg is given, from @fontsource/inter. */
+export const resvgFonts = ['inter-latin-400-normal.woff2', 'inter-latin-700-normal.woff2']
+
 /** The libvips module each engine needs, by file name, beyond libvips itself. */
 export const vipsModules: Record<string, string[]> = {
   [vipsInfo.id]: [],
@@ -68,4 +81,5 @@ export const engineInfo: Record<string, EngineInfo> = {
   [vipsHeifInfo.id]: vipsHeifInfo,
   [vipsJxlInfo.id]: vipsJxlInfo,
   [heifInfo.id]: heifInfo,
+  [resvgInfo.id]: resvgInfo,
 }

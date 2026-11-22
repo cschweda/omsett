@@ -44,6 +44,24 @@ describe('detect', () => {
     await expect(detect(new Blob([bmp]), formats)).resolves.toMatchObject({ kind: 'unregistered', ext: 'bmp' })
   })
 
+  it('recognises an SVG by its root element, whatever comes before it', async () => {
+    const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="40" height="30"/>'
+    for (const [text, size] of [
+      [svg, { width: 40, height: 30 }],
+      [`\uFEFF<?xml version="1.0"?>\n<!-- a comment -->\n<!DOCTYPE svg [<!ENTITY a "b>">]>\n${svg}`, { width: 40, height: 30 }],
+      ['<svg viewBox="0 0 64.2 32" xmlns="http://www.w3.org/2000/svg"/>', { width: 65, height: 32 }],
+      ['<SVG width="12px" height="8px">', { width: 12, height: 8 }],
+      ['<svg width="10mm" height="10mm" viewBox="0 0 5 5">', null],
+      ['<svg>', null],
+    ] as const) {
+      expect(await detect(new Blob([text]), formats), text).toMatchObject({ kind: 'known', ext: 'svg', dimensions: size })
+    }
+    for (const text of ['<html><svg/></html>', '<svgx/>', 'svg', '<!-- <svg> -->', '<?xml version="1.0"?><root><svg/></root>', '<!DOCTYPE svg [']) {
+      const found = await detect(new Blob([text]), formats)
+      expect(found.kind === 'known' ? found.ext : found.kind, text).not.toBe('svg')
+    }
+  })
+
   it('reads the size of every registered format from its header', async () => {
     for (const [file, size] of [
       ['webp/sample.webp', { width: 320, height: 200 }],
@@ -52,6 +70,7 @@ describe('detect', () => {
       ['jpeg/sample.jpg', { width: 320, height: 168 }],
       ['avif/sample.avif', { width: 320, height: 200 }],
       ['jxl/sample.jxl', { width: 320, height: 200 }],
+      ['svg/sample.svg', { width: 320, height: 200 }],
     ] as const) {
       const bytes = await readFile(new URL(`../../../fixtures/${file}`, import.meta.url))
       expect(await detect(new Blob([bytes]), formats), file).toMatchObject({ kind: 'known', dimensions: size })

@@ -67,6 +67,14 @@ encoder, so it does not read or write HEIC.
 - **Patents:** HEVC is covered by patents. Omsett ships a decoder only, and it can be switched
   off in `packages/registry/src/switches.ts`.
 
+### resvg-js 2.6.2
+
+- **What it is:** resvg, an SVG renderer, compiled to WebAssembly. It draws SVG files. Shipped as
+  `resvg.wasm`, fetched only when an SVG is converted, with two weights of Inter for its text.
+- **License:** MPL-2.0 for the resvg-js build; resvg itself is Apache-2.0 OR MIT. Inter is
+  OFL-1.1.
+- **Source:** <https://github.com/thx/resvg-js>, which builds <https://github.com/linebender/resvg>.
+
 ### canvas
 
 The browser's own `OffscreenCanvas` encoder. Nothing is downloaded; the wrapper around it is

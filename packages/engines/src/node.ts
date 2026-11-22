@@ -1,7 +1,8 @@
 import { readFile } from 'node:fs/promises'
 import { createRequire } from 'node:module'
 import { createHeifEngine, type HeifModule } from './heif'
-import { engineInfo, vipsModules } from './info'
+import { engineInfo, resvgFonts, vipsModules } from './info'
+import { createResvgEngine, type ResvgHost } from './resvg'
 import { createVipsEngine, type VipsModule } from './vips'
 import type { Engine } from './types'
 
@@ -28,6 +29,18 @@ export function createNodeEngines(): Record<string, Engine> {
       const wasmBinary = await readFile(require.resolve('libheif-js/libheif-wasm/libheif.wasm'))
       return factory({ wasmBinary })
     },
+  })
+  engines.resvg = createResvgEngine({
+    async init() {
+      const resvg = require('@resvg/resvg-wasm') as {
+        initWasm(wasm: Uint8Array): Promise<void>
+        Resvg: Awaited<ReturnType<ResvgHost['init']>>
+      }
+      await resvg.initWasm(await readFile(require.resolve('@resvg/resvg-wasm/index_bg.wasm')))
+      return resvg.Resvg
+    },
+    fonts: () =>
+      Promise.all(resvgFonts.map(async (file) => new Uint8Array(await readFile(require.resolve(`@fontsource/inter/files/${file}`))))),
   })
   return engines
 }

@@ -3,12 +3,14 @@
 import {
   createCanvasEngine,
   createHeifEngine,
+  createResvgEngine,
   createVipsEngine,
   engineInfo,
   vipsModules,
   type ConvertOutput,
   type Engine,
   type HeifModule,
+  type ResvgHost,
   type VipsModule,
 } from '@omsett/engines'
 import { formatById, registry, type Format } from '@omsett/registry'
@@ -74,6 +76,14 @@ async function loadHeif(): Promise<HeifModule> {
   return factory({ wasmBinary })
 }
 
+/** Start resvg from its verified binary. Its small loader is part of this worker's own code. */
+async function loadResvg() {
+  const [resvg, wasm] = await Promise.all([import('@resvg/resvg-wasm'), verified(assets.resvg.wasm)])
+  await resvg.initWasm(wasm)
+  return resvg.Resvg as unknown as Awaited<ReturnType<ResvgHost['init']>>
+}
+const resvgFonts = () => Promise.all(assets.resvg.fonts.map(async (font) => new Uint8Array(await verified(font))))
+
 // Threads need SharedArrayBuffer, which needs cross-origin isolation (and so HTTPS).
 const threadsAvailable = async () => self.crossOriginIsolated === true && typeof SharedArrayBuffer !== 'undefined'
 
@@ -85,6 +95,7 @@ const engines: Record<string, Engine> = Object.fromEntries(
       createVipsEngine({ init: () => loadVips(modules), available: threadsAvailable }, engineInfo[id]),
     ),
     createHeifEngine({ init: loadHeif }),
+    createResvgEngine({ init: loadResvg, fonts: resvgFonts }),
   ].map((engine) => [engine.id, engine]),
 )
 

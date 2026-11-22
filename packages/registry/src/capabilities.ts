@@ -55,6 +55,10 @@ export const capabilities: Capability[] = [
   // off in switches.ts.
   { engine: 'heif', tier: 'browser', reads: ['heic'], writes: [png], priority: 30 },
 
+  // resvg draws an SVG and hands back a PNG, on the same terms as HEIC: other engines go on
+  // from there. It is given Omsett's own typeface, since a browser tab has no fonts to offer.
+  { engine: 'resvg', tier: 'browser', reads: ['svg'], writes: [png], priority: 30 },
+
   // libvips with its JPEG XL module, on the same terms.
   { engine: 'vips-jxl', tier: 'browser', reads: CORE, writes: [jxl], priority: 30 },
   { engine: 'vips-jxl', tier: 'browser', reads: ['jxl'], writes: CORE_WRITES, priority: 30 },
