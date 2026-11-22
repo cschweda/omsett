@@ -35,8 +35,9 @@ export default defineNuxtConfig({
 
   // Fonts are self-hosted from public/fonts; nothing is fetched from a font service.
   ui: { fonts: false },
-  // Follows the device. Where the device does not say, ink on paper: the Swiss default.
-  colorMode: { preference: 'system', fallback: 'light' },
+  // Dark is the default on every page. Light is there for whoever prefers it, and the choice
+  // is remembered.
+  colorMode: { preference: 'dark', fallback: 'dark' },
   // Icons are bundled; the app never calls the Iconify API.
   icon: { provider: 'none', fallbackToApi: false, clientBundle: { scan: true } },
 

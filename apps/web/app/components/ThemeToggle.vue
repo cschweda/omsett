@@ -8,6 +8,6 @@ function toggle() {
 
 <template>
   <button type="button" class="text-button" @click="toggle">
-    <ClientOnly fallback="Dark mode">{{ dark ? 'Light mode' : 'Dark mode' }}</ClientOnly>
+    <ClientOnly fallback="Light mode">{{ dark ? 'Light mode' : 'Dark mode' }}</ClientOnly>
   </button>
 </template>

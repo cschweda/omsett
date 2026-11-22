@@ -33,7 +33,8 @@ Every change to Omsett is recorded here, newest first, in the same pull request 
 
 - **Typeface.** Helvetica Neue where a device has it and self-hosted Inter where it does not,
   replacing Space Grotesk and JetBrains Mono. Figures line up through tabular numerals.
-- **Theme follows the device**, light where the device does not say. It was dark by default.
+- **Dark is the default on every page**, charts and tables included; light is one click away
+  and is remembered.
 - **The og:image** is redrawn in the new typeface. The tagline is unchanged.
 - Errors are shown in a signal red; information is not.
 - Each page is published as its own HTML file, each carrying the security policy.
