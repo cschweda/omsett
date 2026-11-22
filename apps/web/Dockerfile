@@ -8,6 +8,7 @@ RUN corepack enable
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.base.json .nvmrc CHANGELOG.md ./
 COPY packages ./packages
 COPY fixtures ./fixtures
+COPY security ./security
 COPY apps/web ./apps/web
 # Only the web app and the workspace packages it uses; the test tooling stays out of the image.
 RUN pnpm install --frozen-lockfile --filter "web..."

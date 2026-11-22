@@ -71,6 +71,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
 
       <StepSection :step="1" title="Files" heading-id="step-files">
         <DropZone ref="dropZone" @files="queue.add" />
+        <p v-if="queue.notice.value" class="notice" data-testid="notice">{{ queue.notice.value }}</p>
         <ul v-if="queue.files.value.length" class="rows" aria-label="Files to convert">
           <FileCard v-for="entry in queue.files.value" :key="entry.id" :entry="entry" @remove="queue.remove" />
         </ul>
@@ -174,6 +175,11 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
 .rows {
   margin: 0;
   padding: 0;
+}
+.notice {
+  margin: 0;
+  font-size: var(--text-small);
+  font-weight: 700;
 }
 .convert {
   display: flex;

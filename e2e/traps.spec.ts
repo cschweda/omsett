@@ -16,6 +16,7 @@ interface Trap {
   guard: 'ok' | 'refused'
   browser: 'none' | 'succeeds' | 'fails' | 'either'
   note: string | null
+  absent: string | null
 }
 
 const dir = new URL('../fixtures/_traps/', import.meta.url)
@@ -36,13 +37,21 @@ async function convertGoodFile(page: Page) {
 }
 
 for (const trap of traps) {
-  test(`${trap.file}: ${trap.why}`, async ({ page }) => {
+  test(`${trap.file}: ${trap.why}`, async ({ page, baseURL }) => {
+    const home = new URL(baseURL!).origin
     const problems: string[] = []
     page.on('crash', () => problems.push('the page crashed'))
     page.on('pageerror', (error) => problems.push(`uncaught: ${error.message}`))
     page.on('dialog', (dialog) => {
       problems.push(`a dialog opened: ${dialog.message()}`)
       void dialog.dismiss()
+    })
+    // No trap may make the page ask another site for anything.
+    page.on('request', (request) => {
+      const url = request.url()
+      if (/^https?:/.test(url) && new URL(url).origin !== home) {
+        problems.push(`asked another site for ${url}`)
+      }
     })
 
     await open(page)
@@ -82,6 +91,9 @@ for (const trap of traps) {
         const output = await describeDownload(page, () => link.click())
         expect(output.found.kind === 'known' && output.found.format.id).toBe('webp')
         expect(output.found.kind === 'known' && output.found.dimensions).toEqual(declaredSize(trap.file))
+        if (trap.absent) {
+          expect(output.bytes.toString('latin1').includes(trap.absent), `output carries "${trap.absent}"`).toBe(false)
+        }
       }
       if (trap.browser === 'either') console.log(`[traps] ${test.info().project.name} ${trap.file}: ${outcome}`)
     }
@@ -107,6 +119,7 @@ test('a file name is shown as text, never run as markup', async ({ page }) => {
   await expect(page.locator('.file-card img')).toHaveCount(0)
   await page.getByRole('radio', { name: /WebP/ }).click()
   await page.getByTestId('convert').click()
-  await expect(page.getByTestId('download')).toHaveAttribute('download', '"><img src=x onerror=alert(1)>.webp')
+  // The name offered back has been made safe: nothing a file system or a reader could trip on.
+  await expect(page.getByTestId('download')).toHaveAttribute('download', '___img src=x onerror=alert(1)_.webp')
   expect(dialogs).toEqual([])
 })

@@ -47,7 +47,7 @@ test.describe('gate', () => {
     await expect(page.getByTestId('announcer')).toHaveText('sample.png added, PNG.')
 
     // Tab to the picker, arrow to WebP, select.
-    for (let i = 0; i < 10 && (await focused(page)).name !== 'picker'; i++) await page.keyboard.press('Tab')
+    for (let i = 0; i < 40 && (await focused(page)).name !== 'picker'; i++) await page.keyboard.press('Tab')
     expect((await focused(page)).name).toBe('picker')
     const formats = await page.getByRole('radio').evaluateAll((tiles) => tiles.map((t) => (t as HTMLElement).dataset.format))
     for (let i = 0; i < formats.length; i++) {

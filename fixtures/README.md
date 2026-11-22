@@ -82,12 +82,16 @@ Sound files that exercise one specific path.
 
 ## Traps
 
-`_traps/` holds 30 files that are broken, hostile, or lying, each in one deliberate way.
+`_traps/` holds 53 files that are broken, hostile, or lying, each in one deliberate way.
 `_traps/manifest.json` says what each is and what must happen to it, and both test suites read
 it: `traps.test.ts` runs every trap through identification, the size guard, and libvips in Node;
 `e2e/traps.spec.ts` drops every trap into the app in Chromium, Firefox, and WebKit.
 
 To add a trap, add it to `_tools/make-traps.py` and run the script. Nothing else needs editing.
+
+The second batch (23 files) is adversarial: each reproduces the shape of a known attack on image
+readers, such as a lookup outside a table, a length that overflows, or a payload hidden in
+metadata. None of them contains anything harmful; they are test inputs for our own reader.
 
 For every trap, whatever it is:
 
@@ -95,15 +99,17 @@ For every trap, whatever it is:
 - the size guard decides from the header, before anything is decoded;
 - an engine either converts the file properly or refuses it with an ordinary error. No hang, no
   crash, no output that is not what it claims to be;
-- the engine still works afterwards, and in the browser the page survives, the file ends in a
-  state the user can read, and a good file still converts.
+- where the manifest names a payload (`absent`), no trace of it is in the output;
+- the engine still works afterwards, and in the browser the page survives, asks no other site
+  for anything, opens no dialog, the file ends in a state the user can read, and a good file
+  still converts.
 
 | Group | Files | What they prove |
 | --- | --- | --- |
-| Not what they say | `empty`, `text`, `random-bytes`, `svg-with-script`, `jpeg-named`, `webp-named`, `gif-named`, `png-named.jpg` | A name is never believed. Non-images are "Unsupported format"; a mislabeled image is named for what it is; a script in markup is never run |
-| Lying about size | `declares-30000x30000`, `declares-max-size`, `declares-zero-size`, `bomb-20000x20000`, `too-wide-for-webp` | A real decompression bomb (49 KB, 400 megapixels) is refused from its header. A picture too wide for the target is refused with the reason |
-| Damaged | `signature-only`, `truncated`, `no-image-data`, `short-image-data`, `corrupt-image-data`, `bad-checksum`, `bad-bit-depth`, `bad-colour-type`, `bad-filter-type`, `chunk-length-overflow`, `header-not-first`, `metadata-bomb`, `no-end-marker`, `trailing-garbage` | Damage is an error, not half a picture. Harmless oddities (a missing end marker, junk after the end, a 50 MB comment) still convert |
-| Sound but unusual | `sixteen-bit`, `palette-with-transparency`, `one-bit-grey` | Valid files a careless reader gets wrong |
+| Not what they say | `empty`, `text`, `random-bytes`, `utf16-text`, `svg-with-script`, `entity-expansion.svg`, `svg-fetches-elsewhere.svg`, `gif-header-then-script`, `jpeg-named`, `webp-named`, `gif-named`, `png-named.jpg`, `png-then-zip`, `script-in-metadata` | A name is never believed. Markup is never parsed and a script never run, including an XML entity bomb and markup that references another site. A file that is two formats at once is treated as the one it opens as. A payload in a picture's metadata does not reach the output |
+| Lying about size | `declares-30000x30000`, `declares-max-size`, `declares-zero-size`, `rowbytes-overflow`, `sign-bit-size`, `bomb-20000x20000`, `too-wide-for-webp`, `tall-1x100000`, `large-8000x8000` | A real decompression bomb is refused from its header. Sizes that overflow 32-bit arithmetic are refused. A picture too wide or tall for the target is refused with the reason. A genuinely large picture (64 megapixels) converts without exhausting memory |
+| Damaged | `signature-only`, `truncated`, `no-image-data`, `short-image-data`, `too-much-image-data`, `corrupt-image-data`, `bad-checksum`, `inner-checksum-wrong`, `bad-bit-depth`, `bad-colour-type`, `bad-filter-type`, `chunk-length-overflow`, `header-not-first`, `unknown-critical-chunk`, `interlace-flag-lies`, `palette-index-out-of-range`, `palette-wrong-length`, `transparency-longer-than-palette`, `zero-gamma`, `claims-a-million-frames`, `metadata-bomb`, `colour-profile-bomb`, `image-data-in-single-bytes`, `five-thousand-comments`, `no-end-marker`, `trailing-garbage` | Damage is an error, not half a picture. An index outside its table, more data than was allocated for, and a zero that would be divided by are all survived. Harmless oddities still convert |
+| Sound but unusual | `sixteen-bit`, `palette-with-transparency`, `one-bit-grey`, `interlaced` | Valid files a careless reader gets wrong |
 
 ### What the traps found
 
@@ -121,8 +127,8 @@ Writing them turned up four real faults, all fixed:
 
 ### Known gap: some browsers forgive damage
 
-Five damaged files (`truncated`, `short-image-data`, `corrupt-image-data`, `bad-checksum`,
-`bad-filter-type`) convert in some browsers, because the browser's own PNG decoder returns the
+Some damaged files (`truncated`, `short-image-data`, `corrupt-image-data`, `bad-checksum`,
+`bad-filter-type`, and several from the second batch) convert in some browsers, because the browser's own PNG decoder returns the
 part it could read and the canvas engine has no way to know. Which browsers depends on the
 platform as well as the engine:
 
@@ -131,7 +137,7 @@ platform as well as the engine:
 | macOS | refuses all five | forgives four (not `bad-filter-type`) | refuses all five (it converts with libvips) |
 | Linux (CI) | refuses all five | forgives four | forgives all five (its canvas encodes WebP, so libvips is not used) |
 
-The manifest marks these five `either` for browsers, and the test still checks that what comes
+The manifest marks these `either` for browsers, and the test still checks that what comes
 out is a real WebP of the declared size.
 
 Closing the gap means checking a file's structure ourselves before handing it to the browser:

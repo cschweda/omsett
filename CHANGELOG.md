@@ -6,6 +6,17 @@ Every change to Omsett is recorded here, newest first, in the same pull request 
 
 ### Added
 
+- **A Security page**, and `SECURITY.md`, recording every audit: what was looked for, what was
+  found, each finding's severity, how it was identified, and how it was dealt with. Newest
+  first, the latest open and the rest collapsed. The page, the file, and the README's Security
+  section are all generated from one record, `security/audits.json`.
+- **Time limits.** A conversion that runs past its budget (30 seconds, plus 3 per megapixel, at
+  most 10 minutes) has its worker stopped and is reported as having taken too long. Previews
+  have a 20-second limit.
+- **23 more trap files**, adversarial ones: an XML entity bomb, a file that is a GIF and a
+  script at once, payloads hidden in metadata, sizes that overflow, palette indexes outside
+  their palette, a colour profile that expands to 64 MB. 53 traps now run in every test.
+- A limit of 100 files per session, with a notice when more are dropped.
 - **A new look.** The interface is redrawn in the Swiss manner: one typeface, a twelve-column grid
   with a label column, rules instead of boxes, and the format picker set as large type. Three
   numbered bands follow the three moves: files, format, result.
@@ -31,6 +42,12 @@ Every change to Omsett is recorded here, newest first, in the same pull request 
 
 ### Changed
 
+- **Metadata is always removed from converted files**, whichever engine does the work, and the
+  picker says so before converting.
+- Download names are cleaned: no folders, no invisible direction-changing characters, no
+  control characters, at most 120 characters.
+- The site now sends `Strict-Transport-Security`, so browsers insist on HTTPS.
+- Settings read from the address bar (`?engine`, `?timeout`) are honored on localhost only.
 - **Typeface.** Helvetica Neue where a device has it and self-hosted Inter where it does not,
   replacing Space Grotesk and JetBrains Mono. Figures line up through tabular numerals.
 - **Dark is the default on every page**, charts and tables included; light is one click away
@@ -57,6 +74,10 @@ Every change to Omsett is recorded here, newest first, in the same pull request 
 
 ### Fixed
 
+- **libvips copied EXIF and XMP metadata into its output; the browser's encoder did not.** What
+  leaked depended on the visitor's browser. Found in the red/blue audit of 22 November 2026.
+- Nothing limited how long a conversion could run, so a file that hung an engine hung the page.
+- A link with `?engine=anything` made every conversion fail for whoever opened it.
 - A browser that could not start the conversion worker showed an error overlay. It now reports
   plainly that conversions are unavailable there.
 - **A deploy took the live site down.** On Linux, `scripts/publish-static.sh` did not switch to

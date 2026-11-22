@@ -85,6 +85,11 @@ describe('trap files', () => {
         expect(after.kind === 'known' && after.dimensions, 'output keeps the declared size').toEqual(
           found.dimensions,
         )
+        if (trap.absent) {
+          // What was hidden in the input's metadata must not have been carried across.
+          const text = Buffer.from(await outputs[0]!.blob.arrayBuffer()).toString('latin1')
+          expect(text.includes(trap.absent), `output carries "${trap.absent}"`).toBe(false)
+        }
         outcome = 'succeeds'
       } catch (error) {
         expect(error, 'a failure is an ordinary error').toBeInstanceOf(Error)

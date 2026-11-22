@@ -66,6 +66,11 @@ export interface WriteSpec {
   /** True if the default options lose data. */
   lossy: boolean
   defaultOptions?: Record<string, unknown>
+  /**
+   * Things the format could carry that this engine leaves out on purpose. Metadata is the
+   * usual one: author, location and camera details are removed, not copied into the output.
+   */
+  drops?: Trait[]
 }
 
 /** A pair that needs saying something the reads/writes lists can't. */
@@ -89,6 +94,7 @@ export interface Candidate {
   /** lossless = 1, lossy = 3, native = +5 */
   cost: number
   defaultOptions: Record<string, unknown>
+  drops: Trait[]
 }
 
 export interface Edge {

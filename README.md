@@ -71,6 +71,37 @@ The site is static files plus a set of response headers the build generates. Wit
 
 **Netlify.** [`netlify.toml`](netlify.toml) still works if you would rather host there; the build writes Netlify's `_headers` file too.
 
+## Security
+
+<!-- security:start -->
+<!-- Generated from security/audits.json by `pnpm security:docs`. Do not edit by hand. -->
+
+Every audit is recorded in full, with how each problem was found and what was done about it, in [`SECURITY.md`](SECURITY.md) and on the site’s [Security page](https://omsett.com/security).
+
+| Date | Audit | Findings | Fixed | Open | Accepted |
+| --- | --- | --- | --- | --- | --- |
+| 22 November 2026 | Red/blue audit of the converter and its hosting | 10 (3 medium, 5 low, 2 info) | 6 | 3 | 1 |
+| 22 November 2026 | Review with deliberately broken files, and a deployment incident | 6 (2 high, 3 medium, 1 low) | 5 | 1 | 0 |
+
+**Latest audit, 22 November 2026:**
+
+| ID | Severity | Finding | Status |
+| --- | --- | --- | --- |
+| OMS-007 | Medium | Metadata was copied into the output by one engine and not the other | Fixed |
+| OMS-008 | Medium | Nothing limited how long a conversion could run | Fixed |
+| OMS-009 | Low | The site did not tell browsers to insist on HTTPS | Fixed |
+| OMS-010 | Low | A link could make every conversion fail | Fixed |
+| OMS-011 | Low | Download names were taken from the dropped file unchanged | Fixed |
+| OMS-012 | Low | No limit on how many files could be dropped at once | Fixed |
+| OMS-005 | Medium | Some browsers' own decoders turn a damaged file into a partial picture | Open |
+| OMS-013 | Low | Container base images and the nvm installer are referenced by tag, not by digest | Open |
+| OMS-014 | Info | The conversion worker is allowed to evaluate code from strings | Accepted |
+| OMS-015 | Info | The host's template sends a deprecated protection header | Open |
+
+To report a vulnerability, use the **Security** tab of this repository (“Report a vulnerability”), not a public issue.
+
+<!-- security:end -->
+
 ## Documents
 
 - [`docs/00-high-level-design.md`](docs/00-high-level-design.md) — architecture, format matrix, engines, roadmap, brand

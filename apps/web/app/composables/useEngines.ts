@@ -1,5 +1,6 @@
 import { engineInfo, type ConvertOutput } from '@omsett/engines'
 import * as Comlink from 'comlink'
+import { PREVIEW_BUDGET_MS, withTimeout } from '~/utils/limits'
 import type { ConvertRequest, EngineWorkerApi } from '~/workers/engine.worker'
 import type { ThumbnailWorkerApi } from '~/workers/thumbnail.worker'
 
@@ -56,17 +57,25 @@ export function useEngines() {
     }
   }
 
+  /**
+   * @param budgetMs how long this conversion may run. Past it, the worker is terminated, which
+   * is the only way to stop an engine that is stuck inside a file, and TimedOut is thrown.
+   */
   async function convert(
     id: string,
     request: ConvertRequest,
     onProgress: (fraction: number) => void,
+    budgetMs: number,
   ): Promise<ConvertOutput[]> {
     const current = engineWorker()
     try {
-      const outputs = await Promise.race([
-        current.api.convert(id, request, Comlink.proxy(onProgress)),
-        current.crashed,
-      ])
+      const outputs = await withTimeout(
+        Promise.race([current.api.convert(id, request, Comlink.proxy(onProgress)), current.crashed]),
+        budgetMs,
+        () => {
+          if (engineHost === current) terminate()
+        },
+      )
       if (!loaded.value.includes(id)) loaded.value = [...loaded.value, id]
       return outputs
     } catch (error) {
@@ -79,7 +88,12 @@ export function useEngines() {
   async function thumbnail(blob: Blob, size: number): Promise<ImageBitmap> {
     const current = thumbnailWorker()
     try {
-      return await Promise.race([current.api.thumbnail(blob, size), current.crashed])
+      // On timeout the catch below terminates this worker; the next preview gets a fresh one.
+      return await withTimeout(
+        Promise.race([current.api.thumbnail(blob, size), current.crashed]),
+        PREVIEW_BUDGET_MS,
+        () => {},
+      )
     } catch (error) {
       if (thumbnailHost === current) {
         current.worker.terminate()
