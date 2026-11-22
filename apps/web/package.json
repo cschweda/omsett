@@ -8,6 +8,8 @@
     "postinstall": "node scripts/prepare-assets.ts && nuxt prepare",
     "prepare-assets": "node scripts/prepare-assets.ts",
     "dev": "node scripts/prepare-assets.ts && nuxt dev",
+    "dev:lan": "node scripts/prepare-assets.ts && nuxt dev --host 0.0.0.0",
+    "dev:lan:https": "node scripts/prepare-assets.ts && nuxt dev --host 0.0.0.0 --https",
     "generate": "node scripts/prepare-assets.ts && nuxt generate",
     "write-headers": "node scripts/write-headers.ts",
     "preview": "node ../../e2e/serve.ts",

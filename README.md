@@ -49,6 +49,8 @@ pnpm dev
 open http://localhost:3000
 ```
 
+To try it from a phone or another computer on the same network, use `pnpm dev:lan` and open `http://<this machine's address>:3000`. Over plain HTTP, browsers switch off what libvips needs, so Chrome and Firefox convert there and Safari cannot; `pnpm dev:lan:https` serves it over HTTPS with a self-signed certificate (accept the browser's warning once) and everything works.
+
 Node 24 and pnpm (the versions in `.nvmrc` and `package.json`). `pnpm test` runs the unit and fixture tests; `pnpm build && pnpm e2e` runs the browser tests against the built site in Chromium, Firefox, and WebKit.
 
 ## Add a format

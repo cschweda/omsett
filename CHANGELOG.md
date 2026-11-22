@@ -17,6 +17,8 @@ Every change to Omsett is recorded here, newest first, in the same pull request 
   script at once, payloads hidden in metadata, sizes that overflow, palette indexes outside
   their palette, a colour profile that expands to 64 MB. 53 traps now run in every test.
 - A limit of 100 files per session, with a notice when more are dropped.
+- `pnpm dev:lan` and `pnpm dev:lan:https` serve the development build to other devices on the
+  network.
 - **A new look.** The interface is redrawn in the Swiss manner: one typeface, a twelve-column grid
   with a label column, rules instead of boxes, and the format picker set as large type. Three
   numbered bands follow the three moves: files, format, result.

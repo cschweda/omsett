@@ -10,6 +10,8 @@
   },
   "scripts": {
     "dev": "pnpm --filter web dev",
+    "dev:lan": "pnpm --filter web dev:lan",
+    "dev:lan:https": "pnpm --filter web dev:lan:https",
     "build": "pnpm --filter web generate && pnpm --filter web write-headers",
     "test": "vitest run",
     "lint": "eslint .",

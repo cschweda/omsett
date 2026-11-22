@@ -11,7 +11,9 @@ there, so files never leave the device.
 
 ```
 pnpm install         # also copies engine binaries, fonts, and the sample file into apps/web
-pnpm dev             # the app at http://localhost:3000
+pnpm dev             # the app at http://localhost:3000, this machine only
+pnpm dev:lan         # the same, reachable from other devices on the network (plain HTTP)
+pnpm dev:lan:https   # the same over HTTPS: needed for Safari and for libvips on other devices
 pnpm test            # Vitest: registry, router, detection, fixtures through Node engines
 pnpm build           # static site + generated headers and policies → apps/web/.output/public
 pnpm e2e             # Playwright against the built site, in Chromium, Firefox, WebKit

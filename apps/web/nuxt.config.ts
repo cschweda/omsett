@@ -23,7 +23,9 @@ export default defineNuxtConfig({
   // refused by an isolated page unless its own response carries the embedder policy too.
   $development: {
     routeRules: { '/**': { headers: isolation } },
-    vite: { server: { headers: isolation } },
+    // `.local` lets another device on the network reach the dev server by this machine's name
+    // (pnpm dev:lan); by IP address it is allowed anyway.
+    vite: { server: { headers: isolation, allowedHosts: ['.local'] } },
   },
 
   runtimeConfig: {
