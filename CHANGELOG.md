@@ -18,6 +18,11 @@ Every change to Omsett is recorded here, newest first, in the same pull request 
 
 ### Changed
 
+- **Hosting moves to the DigitalOcean droplet, behind nginx.** The build now also writes its
+  headers as an nginx snippet, `scripts/publish-static.sh` builds and switches to the new build
+  in one step, and `docs/deploy-digitalocean.md` has the setup. CI runs the conversion tests
+  through the reference nginx config.
+- **No staging branch.** Deploys on the droplet cost nothing, so changes go to `main`.
 - Accessibility audits, the axe gate, and screen reader testing move to a final phase. Their
   tests are parked, not deleted.
 - The Content-Security-Policy is now two policies: a strict one in the page, and one on worker

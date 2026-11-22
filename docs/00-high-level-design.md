@@ -109,15 +109,15 @@ This ordering also decides the roadmap: the desktop app arrives before video, so
 
 ## Deployment topology
 
-**Netlify serves the site; GitHub Releases serve the desktop app; nothing else is required.** The DigitalOcean droplet is not part of the plan. It stays available as one place you could run a private `omsettd` for yourself or ICJIA, using the same Docker image a homelab user gets.
+**The DigitalOcean droplet serves the site, as static files behind nginx; GitHub Releases serve the desktop app; nothing else is required.** The droplet already hosts audit.icjia.app, and a static site adds no running process to it: nginx serves a folder. Deploys cost nothing, so there is no staging branch: `main` is the site, and the server rebuilds on every push. (The first plan was Netlify with a staging branch to ration paid production builds; hosting on the droplet removed the reason for both.) The droplet is also still one place you could run a private `omsettd`, using the same Docker image a homelab user gets.
 
-**Why no server at all for the public product?** Every conversion the browser can't do, the desktop app can, on the user's own CPU, with no upload and no bill. A public server would add latency, a privacy liability, and bandwidth cost while serving only people who can't install software — and those people are better served by a self-hosted instance on their own network, where video and large files aren't your problem. Netlify's CDN is also simply the right place for a static site and 10–35 MB WASM engines; a single droplet behind Caddy is not.
+**Why no server at all for the public product?** Every conversion the browser can't do, the desktop app can, on the user's own CPU, with no upload and no bill. A public server would add latency, a privacy liability, and bandwidth cost while serving only people who can't install software — and those people are better served by a self-hosted instance on their own network, where video and large files aren't your problem. One trade-off of the droplet over a CDN: every visitor fetches the engines from one region. They are fetched once, cached for a year, and compressed (libvips is about 2 MB on the wire), so this is acceptable now; when the larger engines arrive in Phase 2, a CDN in front of the droplet is the fix, and nothing in the build has to change for it.
 
 **What goes where:**
 
 | Piece | Lives | Deploys via | Notes |
 | --- | --- | --- | --- |
-| `omsett.com` — Nuxt 4 static site + WASM engines + PWA | Netlify Pro | Feature PRs merge into a long-lived `staging` branch (a free branch deploy); `staging` merges into `main` only on an explicit release, because each production build costs 15 Netlify credits | The page's CSP is a `<meta>` tag in the HTML; `_headers` carries COOP/COEP, the worker CSP on worker scripts, and a long cache on the `.wasm` by content hash |
+| `omsett.com` — Nuxt 4 static site + WASM engines + PWA | The DigitalOcean droplet (Laravel Forge, nginx) | Push to `main`; Forge runs `scripts/publish-static.sh`, which builds and then switches to the new build atomically. No staging branch | The page's CSP is a `<meta>` tag in the HTML; the generated `headers.nginx` carries COOP/COEP, the worker CSP on worker scripts, and a long cache on the `.wasm` by content hash. See `docs/deploy-digitalocean.md` |
 | Desktop app (full suite) | GitHub Releases | electron-builder in GitHub Actions (macOS signed + notarized, Windows signed, Linux AppImage/deb) | Same Nuxt build inside an Electron shell (as Drafter); ffmpeg bundled, other engines installed on first use; auto-update via electron-updater |
 | CLI `npx omsett` | npm | GitHub Actions on tag | Shares the registry; Tier 1 via WASM in Node, Tier 3 by shelling out to local binaries |
 | `omsettd` (self-host only, Phase 4) | Wherever the user runs Docker: homelab, office box, or your droplet if you want a private one | `ghcr.io/cschweda/omsettd` image + `docker-compose.yml` | Never a public endpoint you operate |
@@ -541,7 +541,7 @@ Electron has no mobile build and bundling ffmpeg or LibreOffice into a phone app
 - Tier 1/2 conversions never make a network request with file data. This is the headline promise. It is verifiable in DevTools and enforced by `connect-src 'self'` in two Content-Security-Policies, one on the page and one on every worker script: neither can send anything to another origin even if a dependency tried.
 - omsett.com has no Tier 3 upload path at all. On a self-hosted copy, sending a file to that copy's own omsettd is opt-in per conversion and labeled before the click.
 - omsettd stores nothing beyond the life of the job; logs record sizes and formats, never filenames or content.
-- No analytics beyond Netlify's server-side counts. No cookies. No accounts.
+- No analytics beyond the web server's own access log. No cookies. No accounts.
 - Metadata (EXIF/GPS/author) is shown before converting and stripped by default for web-bound presets, since the most common privacy leak in file conversion is the metadata nobody looked at.
 
 ## Licensing
@@ -581,7 +581,7 @@ Electron has no mobile build and bundling ffmpeg or LibreOffice into a phone app
 ```
 omsett/
 ├─ apps/
-│  ├─ web/            Nuxt 4 + Nuxt UI, static build → Netlify; Dockerfile (Caddy) for self-hosters
+│  ├─ web/            Nuxt 4 + Nuxt UI, static build → nginx on the droplet; Dockerfile (Caddy) for self-hosters
 │  ├─ desktop/        Electron shell wrapping apps/web + bundled ffmpeg (Phase 3)
 │  ├─ cli/            npx omsett → npm (Phase 3)
 │  └─ server/         omsettd: Node 24, Hono, child_process engines → Docker image, self-host only (Phase 4)
@@ -612,10 +612,10 @@ omsett/
 | Desktop | Electron (electron-vite + electron-builder) | Same shell as Drafter; bundled Chromium makes WebCodecs/WASM behave identically on every OS; \~120 MB with ffmpeg |
 | Tests | Vitest for unit + registry graph checks; Playwright for the drop→pick→download flow; fixture corpus through every edge in CI | The corpus is the real test suite |
 | CI | GitHub Actions: lint, typecheck, fixtures, Playwright, electron-builder matrix on tag; axe-core joins in the final phase |  |
-| Hosting | Netlify Pro (web), GitHub Releases (desktop), npm (CLI), GHCR (self-host images) |  |
+| Hosting | DigitalOcean droplet behind nginx (web), GitHub Releases (desktop), npm (CLI), GHCR (self-host images) | No per-deploy cost; `netlify.toml` is kept so Netlify remains an option |
 | License | MIT, personal project under github.com/cschweda/omsett (decided) |  |
 
-**Netlify specifics:**
+**Build output and headers** (the `netlify.toml` shown is kept for anyone hosting on Netlify; the live site uses the same build behind nginx):
 
 ```
 # netlify.toml
@@ -625,7 +625,7 @@ omsett/
 
 ```
 
-Policies and response headers are defined once in `apps/web/security-headers.ts` and written out after the build, so the two hosts cannot drift. COOP `same-origin` and COEP `require-corp` go on everything, and `/engines/*` gets a one-year immutable cache plus `Cross-Origin-Resource-Policy: same-origin`.
+Policies and response headers are defined once in `apps/web/security-headers.ts` and written out after the build in each host's format (nginx, Caddy, Netlify), so they cannot drift. COOP `same-origin` and COEP `require-corp` go on everything, and `/engines/*` gets a one-year immutable cache plus `Cross-Origin-Resource-Policy: same-origin`.
 
 **There are two Content-Security-Policies, because a browser governs a page and a worker separately.** A worker answers to the policy on its own script's response, not to the page's.
 

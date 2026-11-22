@@ -17,3 +17,7 @@ apps/web/app/generated/
 test-results/
 playwright-report/
 apps/web/public/fonts/
+# published builds (scripts/publish-static.sh)
+/releases/
+/live
+/live.next
