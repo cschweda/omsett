@@ -42,7 +42,20 @@ nvm for the `forge` user:
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.41.0/install.sh | bash
 ```
 
-Nothing else is needed. `scripts/publish-static.sh` looks for nvm, and when it finds it, installs
+Then, before the next deploy, pin nvm's default to the system Node:
+
+```
+export NVM_DIR="$HOME/.nvm" && . "$NVM_DIR/nvm.sh"
+nvm alias default system
+```
+
+This matters. The first version nvm installs becomes the default for every new shell, so
+without the pin, logging in as `forge` after a deploy would put you on Node 24, and rebuilding
+the audit app from that shell would compile it for a Node its running process is not using.
+`nvm alias default` should answer `default -> system`, and `node --version` in a fresh login
+should still show the system version after a deploy.
+
+`scripts/publish-static.sh` looks for nvm, and when it finds it, installs
 and switches to the version in `.nvmrc` for that deploy only. The first line of its output says
 which Node it used. Without nvm it uses the system Node.
 

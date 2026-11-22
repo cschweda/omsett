@@ -24,6 +24,8 @@ Every change to Omsett is recorded here, newest first, in the same pull request 
   through the reference nginx config.
 - `scripts/publish-static.sh` switches to the Node version in `.nvmrc` when nvm is installed,
   for that deploy only, and reports which Node it built with.
+- The deployment guide explains pinning nvm's default to the system Node, so other sites on the
+  server are not moved to a new Node by an Omsett deploy.
 - The deployment guide now covers Forge's "Zero downtime deployments" setting (leave it off) and
   where the web directory is set.
 - **No staging branch.** Deploys on the droplet cost nothing, so changes go to `main`.
