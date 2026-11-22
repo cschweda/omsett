@@ -56,6 +56,17 @@ needs it, and registered as an engine of its own:
 The third, resvg, is not shipped in this release. The HEIF module holds no HEVC decoder or
 encoder, so it does not read or write HEIC.
 
+### libheif-js 1.23.5
+
+- **What it is:** libheif with the libde265 HEVC decoder, compiled to WebAssembly. It reads HEIC.
+  Shipped as `libheif.wasm` and its loader script, fetched only when a HEIC file is converted.
+- **License:** LGPL-3.0 (libheif and libde265 both). Served next to the binary at
+  `/engines/libheif.LICENSE.txt`.
+- **Source:** <https://github.com/catdad-experiments/libheif-js>, which builds
+  <https://github.com/strukturag/libheif> and <https://github.com/strukturag/libde265>.
+- **Patents:** HEVC is covered by patents. Omsett ships a decoder only, and it can be switched
+  off in `packages/registry/src/switches.ts`.
+
 ### canvas
 
 The browser's own `OffscreenCanvas` encoder. Nothing is downloaded; the wrapper around it is

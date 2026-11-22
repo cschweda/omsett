@@ -7,6 +7,30 @@ The paragraph that opens a version is its teaser: the home page shows its first 
 in the "What's new" banner, so keep it to two or three sentences on what a visitor will notice.
 A line beginning "Released" gives the date.
 
+## 0.5.0
+
+Released 22 November 2026.
+
+Omsett now reads HEIC, the format an iPhone saves photographs as, and turns it into any of the
+other seven. The decoder is downloaded only when a HEIC file is dropped.
+
+### Added
+
+- **HEIC, as a source.** libheif decodes the picture, Omsett writes it as a PNG, and any other
+  format follows from there in a second step. The engine is 1.5 MB, fetched and checked against
+  its recorded hash only when needed. HEIC is not offered as a target.
+- **An off switch for a format**, in `packages/registry/src/switches.ts`. One line removes a
+  format from the picker, the file chooser, the lists on the information pages and the engines;
+  a file of that format is then named and told why. HEIC has one, because HEVC is patented.
+- A trap file: a HEIC cut off halfway through. It is refused.
+
+### Known
+
+- **A HEIC whose compressed data is altered, but whose structure is whole, is not always
+  refused.** HEVC carries no checksum, so the decoder cannot tell and returns a damaged picture.
+  A file cut short is refused.
+- HEIC has been tested with a small generated sample, not yet with photographs from a phone.
+
 ## 0.4.0
 
 Released 22 November 2026.
@@ -33,8 +57,6 @@ needs is fetched only by someone who asks for it.
 
 ### Known
 
-- **HEIC is not read yet.** libvips's module opens a HEIC file's header but cannot decode the
-  picture: it has no HEVC decoder. HEIC needs a decoder of its own.
 - Writing AVIF is slow next to WebP: several seconds for a large photograph.
 
 ## 0.3.0

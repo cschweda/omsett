@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { createRouter, deriveEdges, registry, traitWarnings } from './index'
+import { acceptAttribute, applySwitches, createRouter, deriveEdges, engineIds, everything, registry, traitWarnings } from './index'
 import type { Capability, EdgeOverride, Format, Registry } from './types'
 
 describe('router, real registry', () => {
@@ -27,15 +27,33 @@ describe('router, real registry', () => {
     for (const edge of deriveEdges(registry).edges) {
       const engines = edge.candidates.map((c) => c.engine)
       if (edge.from !== 'png') expect(engines, `${edge.from} → ${edge.to}`).not.toContain('canvas')
-      for (const engine of engines) expect(engine === 'canvas' || engine.startsWith('vips')).toBe(true)
+      for (const engine of engines) expect(engine === 'canvas' || engine === 'heif' || engine.startsWith('vips')).toBe(true)
     }
   })
 
-  it('converts between seven formats, in order of general usefulness', () => {
-    const ids = registry.formats.map((f) => f.id)
-    expect(ids).toEqual(['webp', 'jpeg', 'png', 'avif', 'gif', 'tiff', 'jxl'])
-    // Every pair converts, directly or through one step in between.
-    for (const from of ids) for (const to of ids) expect(router.route(from, to) === null).toBe(from === to)
+  it('converts between seven formats, in order of general usefulness, and reads HEIC', () => {
+    const all = createRouter(everything)
+    const ids = everything.formats.map((f) => f.id)
+    expect(ids).toEqual(['webp', 'jpeg', 'png', 'avif', 'gif', 'tiff', 'jxl', 'heic'])
+    // Every pair converts, directly or through a step in between; nothing is written as HEIC.
+    for (const from of ids) {
+      for (const to of ids) expect(all.route(from, to) === null, `${from} → ${to}`).toBe(from === to || to === 'heic')
+    }
+    // HEIC is decoded to PNG first, without loss, and goes on from there.
+    expect(all.route('heic', 'png')!.edges.map((e) => e.candidates[0]!.engine)).toEqual(['heif'])
+    expect(all.route('heic', 'jpeg')!.edges.map((e) => e.to)).toEqual(['png', 'jpeg'])
+    expect(all.targetsFor(['png']).find((t) => t.format.id === 'heic')!.reason).toBe('HEIC can be read but not written')
+  })
+
+  it('removes a switched-off format everywhere at once', () => {
+    const off = applySwitches(everything, { heic: { on: false, whenOff: 'Off' } })
+    expect(off.formats.map((f) => f.id)).not.toContain('heic')
+    expect(engineIds(off)).not.toContain('heif')
+    expect(off.capabilities.flatMap((c) => [...c.reads, ...c.writes.map((w) => w.format)])).not.toContain('heic')
+    expect(acceptAttribute(off)).not.toMatch(/heic|heif/)
+    // Everything else is untouched.
+    expect(deriveEdges(off).edges).toHaveLength(deriveEdges(everything).edges.length - 1)
+    expect(applySwitches(everything, { heic: { on: true, whenOff: 'Off' } })).toBe(everything)
   })
 
   it('reaches AVIF and JPEG XL from the five core formats directly, and each other in two steps', () => {
@@ -52,7 +70,7 @@ describe('router, real registry', () => {
 
   it('offers plain libvips, not a module, for the pairs plain libvips covers', () => {
     for (const edge of deriveEdges(registry).edges) {
-      if (edge.from === 'avif' || edge.to === 'avif' || edge.from === 'jxl' || edge.to === 'jxl') continue
+      if ([edge.from, edge.to].some((id) => ['avif', 'jxl', 'heic'].includes(id))) continue
       for (const c of edge.candidates) expect(['canvas', 'vips'], `${edge.from} → ${edge.to}`).toContain(c.engine)
     }
   })

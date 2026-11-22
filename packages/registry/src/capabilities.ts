@@ -50,6 +50,11 @@ export const capabilities: Capability[] = [
   { engine: 'vips-heif', tier: 'browser', reads: CORE, writes: [avif], priority: 30 },
   { engine: 'vips-heif', tier: 'browser', reads: ['avif'], writes: CORE_WRITES, priority: 30 },
 
+  // libheif with libde265, which decodes HEIC. It hands back plain pixels, written out as a PNG;
+  // from there any other engine takes over, so HEIC to JPEG is two steps. It can be switched
+  // off in switches.ts.
+  { engine: 'heif', tier: 'browser', reads: ['heic'], writes: [png], priority: 30 },
+
   // libvips with its JPEG XL module, on the same terms.
   { engine: 'vips-jxl', tier: 'browser', reads: CORE, writes: [jxl], priority: 30 },
   { engine: 'vips-jxl', tier: 'browser', reads: ['jxl'], writes: CORE_WRITES, priority: 30 },

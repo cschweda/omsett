@@ -4,7 +4,7 @@
 import { readFile } from 'node:fs/promises'
 import { detect, MAX_PIXELS, nameDisagrees, sizeProblem } from '@omsett/detect'
 import { createNodeEngines } from '@omsett/engines/node'
-import { createRouter, deriveEdges, formatById, registry, type Format } from '@omsett/registry'
+import { createRouter, deriveEdges, formatById, registry, switches, type Format } from '@omsett/registry'
 import { describe, expect, it } from 'vitest'
 import manifest from './_traps/manifest.json'
 
@@ -16,20 +16,24 @@ const webp = formatById(registry, 'webp')!
 
 const load = async (file: string) => new File([await readFile(new URL(`./_traps/${file}`, import.meta.url))], file)
 
-/** Convert with libvips at its registered defaults, as the app would. */
-function convert(blob: Blob, name: string, from: Format, to: Format) {
-  // libvips, plain or with the module the format needs: whichever the registry names for the pair.
-  const candidate = derived.edge(from.id, to.id)!.candidates.find((c) => c.engine in engines)!
-  return engines[candidate.engine]!.convert({
-    blob,
-    name,
-    from,
-    to,
-    options: candidate.defaultOptions,
-    maxPixels: MAX_PIXELS,
-    signal: new AbortController().signal,
-    onProgress: () => {},
-  })
+/** Convert along the registry's route, each step at its registered defaults, as the app would. */
+async function convert(blob: Blob, name: string, from: Format, to: Format) {
+  let outputs = [{ name, format: from.id, blob }]
+  for (const edge of router.route(from.id, to.id)!.edges) {
+    // Whichever engine the registry names for the step that also runs in Node.
+    const candidate = derived.edge(edge.from, edge.to)!.candidates.find((c) => c.engine in engines)!
+    outputs = await engines[candidate.engine]!.convert({
+      blob: outputs[0]!.blob,
+      name,
+      from: formatById(registry, edge.from)!,
+      to: formatById(registry, edge.to)!,
+      options: candidate.defaultOptions,
+      maxPixels: MAX_PIXELS,
+      signal: new AbortController().signal,
+      onProgress: () => {},
+    })
+  }
+  return outputs
 }
 
 /** A trap may fail, but it may not take the engine down with it. */
@@ -56,6 +60,11 @@ describe('trap files', () => {
       // 1. Identification never throws, and goes by contents.
       const found = await detect(file, registry.formats)
       const identified = found.kind === 'known' ? found.format.id : found.kind
+      if (switches[trap.detect]?.on === false) {
+        // Its format is switched off: the file must be turned away before any engine sees it.
+        expect(identified).toBe('unregistered')
+        return
+      }
       expect(identified, 'identified as').toBe(trap.detect)
       if (found.kind !== 'known') {
         expect(trap.node, 'an unidentified file reaches no engine').toBe('none')

@@ -372,6 +372,18 @@
     "absent": null
   },
   {
+    "file": "truncated.heic",
+    "group": "damage",
+    "why": "A sound HEIC file cut off halfway through.",
+    "detect": "heic",
+    "mismatch": false,
+    "guard": "ok",
+    "node": "fails",
+    "browser": "fails",
+    "note": null,
+    "absent": null
+  },
+  {
     "file": "sixteen-bit.png",
     "group": "unusual",
     "why": "Valid, 16 bits a channel.",

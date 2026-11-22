@@ -34,6 +34,7 @@ for (const name of await readdir(enginesDir)) {
 }
 
 const vipsLib = dirname(fromEngines.resolve('wasm-vips/vips.wasm'))
+const heifLib = dirname(fromEngines.resolve('libheif-js/libheif-wasm/libheif.wasm'))
 const manifest = {
   vips: {
     script: await hashed(join(vipsLib, 'vips-es6.js'), 'vips-es6', 'js'),
@@ -44,6 +45,10 @@ const manifest = {
       'vips-jxl.wasm': await hashed(join(vipsLib, 'vips-jxl.wasm'), 'vips-jxl', 'wasm'),
     },
   },
+  heif: {
+    script: await hashed(join(heifLib, 'libheif.js'), 'libheif', 'js'),
+    wasm: await hashed(join(heifLib, 'libheif.wasm'), 'libheif', 'wasm'),
+  },
   sample: { url: '/sample.png', name: 'sample.png' },
 }
 await writeFile(join(generatedDir, 'engine-assets.json'), JSON.stringify(manifest, null, 2) + '\n')
@@ -52,6 +57,7 @@ await writeFile(join(generatedDir, 'engine-assets.json'), JSON.stringify(manifes
 const vipsRoot = join(vipsLib, '..')
 await copyFile(join(vipsRoot, 'LICENSE'), join(enginesDir, 'vips.LICENSE.txt'))
 await copyFile(join(vipsRoot, 'THIRD-PARTY-NOTICES.md'), join(enginesDir, 'vips.THIRD-PARTY-NOTICES.md'))
+await copyFile(join(heifLib, 'LICENSE'), join(enginesDir, 'libheif.LICENSE.txt'))
 
 await copyFile(join(repo, 'fixtures', 'png', 'sample.png'), join(web, 'public', 'sample.png'))
 

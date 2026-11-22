@@ -2,11 +2,13 @@
 // off the main thread; a hostile file can at worst kill this worker.
 import {
   createCanvasEngine,
+  createHeifEngine,
   createVipsEngine,
   engineInfo,
   vipsModules,
   type ConvertOutput,
   type Engine,
+  type HeifModule,
   type VipsModule,
 } from '@omsett/engines'
 import { formatById, registry, type Format } from '@omsett/registry'
@@ -60,6 +62,18 @@ async function loadVips(moduleNames: string[]): Promise<VipsModule> {
   })
 }
 
+/**
+ * Start libheif. Its loader is an ordinary script, not a module, so the verified text is run
+ * here directly; the worker's policy allows that for exactly this kind of engine, and nothing
+ * runs that did not match its recorded hash.
+ */
+async function loadHeif(): Promise<HeifModule> {
+  const [script, wasmBinary] = await Promise.all([verified(assets.heif.script), verified(assets.heif.wasm)])
+  const text = new TextDecoder().decode(script)
+  const factory = new Function(`${text}\n;return libheif`)() as (options: object) => HeifModule
+  return factory({ wasmBinary })
+}
+
 // Threads need SharedArrayBuffer, which needs cross-origin isolation (and so HTTPS).
 const threadsAvailable = async () => self.crossOriginIsolated === true && typeof SharedArrayBuffer !== 'undefined'
 
@@ -70,6 +84,7 @@ const engines: Record<string, Engine> = Object.fromEntries(
     ...Object.entries(vipsModules).map(([id, modules]) =>
       createVipsEngine({ init: () => loadVips(modules), available: threadsAvailable }, engineInfo[id]),
     ),
+    createHeifEngine({ init: loadHeif }),
   ].map((engine) => [engine.id, engine]),
 )
 
