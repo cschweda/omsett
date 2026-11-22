@@ -35,8 +35,8 @@ Every change to Omsett is recorded here, newest first, in the same pull request 
 
 ### Known
 
-- In Firefox, four kinds of damaged PNG still convert to a partial picture, because Firefox's own
-  decoder forgives them. See `fixtures/README.md`.
+- In Firefox, and in WebKit on Linux, some damaged PNGs still convert to a partial picture,
+  because the browser's own decoder forgives them. See `fixtures/README.md`.
 - In Safari under `pnpm dev` only, thumbnails and the comparison do not appear. The built site is
   not affected.
 

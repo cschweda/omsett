@@ -119,12 +119,19 @@ Writing them turned up four real faults, all fixed:
 - **The PNG size reader trusted its offsets.** It read bytes 16–23 as a size without checking
   that the first chunk was a header.
 
-### Known gap: Firefox forgives damage
+### Known gap: some browsers forgive damage
 
-Four damaged files (`truncated`, `short-image-data`, `corrupt-image-data`, `bad-checksum`)
-convert in Firefox, because Firefox's own PNG decoder returns the part it could read and the
-canvas engine has no way to know. Chromium refuses them, and so does Safari, which uses libvips.
-The manifest marks these four `either` for browsers, and the test still checks that what comes
+Five damaged files (`truncated`, `short-image-data`, `corrupt-image-data`, `bad-checksum`,
+`bad-filter-type`) convert in some browsers, because the browser's own PNG decoder returns the
+part it could read and the canvas engine has no way to know. Which browsers depends on the
+platform as well as the engine:
+
+| | Chromium | Firefox | WebKit |
+| --- | --- | --- | --- |
+| macOS | refuses all five | forgives four (not `bad-filter-type`) | refuses all five (it converts with libvips) |
+| Linux (CI) | refuses all five | forgives four | forgives all five (its canvas encodes WebP, so libvips is not used) |
+
+The manifest marks these five `either` for browsers, and the test still checks that what comes
 out is a real WebP of the declared size.
 
 Closing the gap means checking a file's structure ourselves before handing it to the browser:

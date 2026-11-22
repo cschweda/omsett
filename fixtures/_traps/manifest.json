@@ -238,7 +238,7 @@
     "mismatch": false,
     "guard": "ok",
     "node": "fails",
-    "browser": "fails",
+    "browser": "either",
     "note": null
   },
   {

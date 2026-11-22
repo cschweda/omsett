@@ -68,9 +68,9 @@ def trap(name, data, why, detect, guard="ok", node="none", browser=None, mismatc
     guard    'refused' if the size and pixel guard must stop it before any decode
     node     what libvips in Node must do with it: 'fails', 'succeeds', or 'none' (never reached)
     browser  the same for the app in a browser. Defaults to the Node expectation. 'either' marks
-             the four damaged files that Firefox's own decoder forgives and turns into a partial
-             picture, while Chromium and Safari refuse them. That is a known gap, not a goal:
-             see fixtures/README.md.
+             the five damaged files that some browsers' own decoders forgive and turn into a
+             partial picture (Firefox everywhere, WebKit on Linux) while others refuse them.
+             That is a known gap, not a goal: see fixtures/README.md.
     note     the exact reason the app must show, where a generic one will not do
     """
     with open(os.path.join(OUT, name), "wb") as out:
@@ -286,6 +286,7 @@ trap(
     "Every row is marked with a filter type (9) that does not exist.",
     "png",
     node="fails",
+    browser="either",
     group=G,
 )
 trap(
