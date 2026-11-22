@@ -81,6 +81,10 @@ build by `apps/web/scripts/write-headers.ts`.
   a preference to treat a WebP link as a download (see `playwright.config.ts`).
 - **GitHub Actions are pinned to commit SHAs**, with the release in a trailing comment. Keep it
   that way when adding or updating one; look the SHA up, do not guess it.
+- **Trap files** (`fixtures/_traps/`, listed in `manifest.json`) run in both test suites. A new
+  failure mode gets a trap; add it in `fixtures/_tools/make-traps.py`.
+- **libvips forgives damaged files unless told not to.** The engine loads with
+  `fail_on: 'error'`. Do not remove it.
 - **A canvas has a size limit**; `maxPixels` on the engine sends larger images to libvips.
 
 ## Working agreements
@@ -89,6 +93,8 @@ build by `apps/web/scripts/write-headers.ts`.
   (`gh pr create --base staging`). Never push to `main`, never open or merge a PR into `main`,
   and never merge into `staging` without being told to. A production build costs Netlify credits
   and happens only on Chris's word, as one merge-commit PR from `staging` into `main`.
+- **Changelog.** Every change goes into `CHANGELOG.md` under "Unreleased", in the same pull
+  request that makes it: added, changed, fixed, or known. A release renames that section.
 - **Commits** are small and labeled (`feat(registry): …`, `fix(web): …`, `chore(ci): …`), and
   each builds and passes tests. No `Co-Authored-By` line and no other AI attribution trailer.
 - **Decide small things; ask about big ones.** Anything that changes the public shape (the

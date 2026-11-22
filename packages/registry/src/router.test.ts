@@ -174,3 +174,15 @@ describe('router, synthetic registry', () => {
     expect(ids).toEqual(['animation-lost', 'lossy-to-lossy', 'custom'])
   })
 })
+
+describe('dimension limits', () => {
+  it('refuses a picture wider or taller than the target can hold, and says why', async () => {
+    const { dimensionProblem, formatById } = await import('./index')
+    const webp = formatById(registry, 'webp')!
+    const png = formatById(registry, 'png')!
+    expect(dimensionProblem(webp, 16383, 16383)).toBeNull()
+    expect(dimensionProblem(webp, 16384, 10)).toBe('Too large for WebP, which holds 16383 pixels a side at most')
+    expect(dimensionProblem(webp, 10, 20000)).not.toBeNull()
+    expect(dimensionProblem(png, 100000, 100000)).toBeNull()
+  })
+})

@@ -1,3 +1,4 @@
+import { dimensionProblem } from '@omsett/registry'
 import { canvasInfo } from '../info'
 import type { ConvertInput, ConvertOutput, Engine } from '../types'
 import { outputName, qualityOption, throwIfAborted } from '../util'
@@ -41,6 +42,9 @@ export function createCanvasEngine(probeMime: string): Engine {
       const bitmap = await createImageBitmap(blob)
       try {
         throwIfAborted(signal)
+        // Browsers clamp an oversized picture to the format's limit and report success.
+        const tooLarge = dimensionProblem(to, bitmap.width, bitmap.height)
+        if (tooLarge) throw new Error(tooLarge)
         onProgress(0.4)
         const canvas = new OffscreenCanvas(bitmap.width, bitmap.height)
         const context = canvas.getContext('2d')

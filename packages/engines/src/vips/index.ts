@@ -10,7 +10,9 @@ export interface VipsImage {
   delete(): void
 }
 export interface VipsModule {
-  Image: { newFromBuffer(data: Uint8Array, options?: string): VipsImage }
+  Image: {
+    newFromBuffer(data: Uint8Array, stringOptions?: string, options?: Record<string, unknown>): VipsImage
+  }
 }
 
 export interface VipsHost {
@@ -48,8 +50,11 @@ export function createVipsEngine(host: VipsHost): Engine {
       onProgress(0.2)
       const bytes = new Uint8Array(await blob.arrayBuffer())
       throwIfAborted(signal)
-      const image = vips.Image.newFromBuffer(bytes)
+      let image: VipsImage | undefined
       try {
+        // libvips forgives damaged files by default and returns whatever it managed to read.
+        // A converter must not hand back half a picture as if it were whole, so damage is fatal.
+        image = vips.Image.newFromBuffer(bytes, '', { fail_on: 'error' })
         onProgress(0.4)
         const encoded = image.writeToBuffer(`.${to.extensions[0]}`, { Q: qualityOption(input.options) })
         throwIfAborted(signal)
@@ -57,8 +62,13 @@ export function createVipsEngine(host: VipsHost): Engine {
         // Copy out of the WASM heap: the view is only valid until the next allocation.
         const out = new Blob([encoded.slice()], { type: to.mime[0] })
         return [{ name: outputName(input.name, to), format: to.id, blob: out }]
+      } catch (error) {
+        // Some libvips failures surface as a raw WebAssembly exception, which is not an Error
+        // and cannot cross a worker boundary. Every failure leaves here as an ordinary Error.
+        if (error instanceof Error) throw error
+        throw new Error(`libvips could not convert ${input.name}`, { cause: error })
       } finally {
-        image.delete()
+        image?.delete()
       }
     },
   }
