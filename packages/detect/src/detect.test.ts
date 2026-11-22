@@ -50,6 +50,8 @@ describe('detect', () => {
       ['gif/sample.gif', { width: 320, height: 200 }],
       ['tiff/sample.tiff', { width: 320, height: 200 }],
       ['jpeg/sample.jpg', { width: 320, height: 168 }],
+      ['avif/sample.avif', { width: 320, height: 200 }],
+      ['jxl/sample.jxl', { width: 320, height: 200 }],
     ] as const) {
       const bytes = await readFile(new URL(`../../../fixtures/${file}`, import.meta.url))
       expect(await detect(new Blob([bytes]), formats), file).toMatchObject({ kind: 'known', dimensions: size })

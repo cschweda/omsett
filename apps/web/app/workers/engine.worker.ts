@@ -3,6 +3,8 @@
 import {
   createCanvasEngine,
   createVipsEngine,
+  engineInfo,
+  vipsModules,
   type ConvertOutput,
   type Engine,
   type VipsModule,
@@ -16,13 +18,30 @@ async function sha256(buffer: ArrayBuffer): Promise<string> {
   return [...digest].map((b) => b.toString(16).padStart(2, '0')).join('')
 }
 
-/** Fetch libvips from this origin, check it is the file the build shipped, then start it. */
-async function loadVips(): Promise<VipsModule> {
-  const { script, wasm } = assets.vips
-  const response = await fetch(wasm.url)
-  if (!response.ok) throw new Error(`Could not fetch ${wasm.url}: ${response.status}`)
-  const binary = await response.arrayBuffer()
-  if ((await sha256(binary)) !== wasm.sha256) throw new Error('Engine file failed its integrity check')
+/** Fetch a file from this origin and check it is the one the build shipped. */
+async function verified(asset: { url: string; sha256: string }): Promise<ArrayBuffer> {
+  const response = await fetch(asset.url)
+  if (!response.ok) throw new Error(`Could not fetch ${asset.url}: ${response.status}`)
+  const bytes = await response.arrayBuffer()
+  if ((await sha256(bytes)) !== asset.sha256) throw new Error('Engine file failed its integrity check')
+  return bytes
+}
+
+/**
+ * Start libvips, with any of its optional modules. Every file is fetched from this origin and
+ * checked against the hash recorded at build time before a byte of it runs.
+ */
+async function loadVips(moduleNames: string[]): Promise<VipsModule> {
+  const { script, wasm, modules } = assets.vips
+  const binary = await verified(wasm)
+
+  // libvips asks for a module by name. It is handed the verified bytes, as a local address.
+  const local: Record<string, string> = {}
+  for (const name of moduleNames) {
+    const asset = (modules as Record<string, { url: string; sha256: string }>)[name]
+    if (!asset) throw new Error(`Unknown libvips module: ${name}`)
+    local[name] = URL.createObjectURL(new Blob([await verified(asset)], { type: 'application/wasm' }))
+  }
 
   const scriptUrl = new URL(script.url, self.location.origin).href
   const { default: Vips } = (await import(/* @vite-ignore */ scriptUrl)) as {
@@ -34,21 +53,23 @@ async function loadVips(): Promise<VipsModule> {
       void WebAssembly.instantiate(binary, imports).then(({ instance, module }) => done(instance, module))
       return {}
     },
+    locateFile: (file: string) => local[file] ?? new URL(`/engines/${file}`, self.location.origin).href,
     // Thread workers are started from this same-origin, content-hashed script.
     mainScriptUrlOrBlob: scriptUrl,
-    // No optional codec libraries: Phase 0 needs none of them.
-    dynamicLibraries: [],
+    dynamicLibraries: moduleNames,
   })
 }
+
+// Threads need SharedArrayBuffer, which needs cross-origin isolation (and so HTTPS).
+const threadsAvailable = async () => self.crossOriginIsolated === true && typeof SharedArrayBuffer !== 'undefined'
 
 const engines: Record<string, Engine> = Object.fromEntries(
   [
     createCanvasEngine(),
-    createVipsEngine({
-      init: loadVips,
-      // Threads need SharedArrayBuffer, which needs cross-origin isolation (and so HTTPS).
-      available: async () => self.crossOriginIsolated === true && typeof SharedArrayBuffer !== 'undefined',
-    }),
+    // Plain libvips, and libvips with each optional module. Each starts only when first needed.
+    ...Object.entries(vipsModules).map(([id, modules]) =>
+      createVipsEngine({ init: () => loadVips(modules), available: threadsAvailable }, engineInfo[id]),
+    ),
   ].map((engine) => [engine.id, engine]),
 )
 

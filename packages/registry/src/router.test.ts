@@ -21,20 +21,40 @@ describe('router, real registry', () => {
     expect(byId(targets, 'png')).toMatchObject({ route: null, reason: 'Already PNG' })
   })
 
-  it('reads every format but PNG with libvips alone', () => {
+  it('never gives the canvas anything but PNG to read', () => {
     // The canvas decodes with the browser's forgiving decoder, so it is given PNG only, the one
-    // format whose structure the app verifies itself.
+    // format whose structure the app verifies itself. Everything else is read by libvips.
     for (const edge of deriveEdges(registry).edges) {
       const engines = edge.candidates.map((c) => c.engine)
-      if (edge.from !== 'png') expect(engines, `${edge.from} → ${edge.to}`).toEqual(['vips'])
+      if (edge.from !== 'png') expect(engines, `${edge.from} → ${edge.to}`).not.toContain('canvas')
+      for (const engine of engines) expect(engine === 'canvas' || engine.startsWith('vips')).toBe(true)
     }
   })
 
-  it('converts between all five formats: twenty conversions', () => {
+  it('converts between seven formats, in order of general usefulness', () => {
     const ids = registry.formats.map((f) => f.id)
-    expect(ids).toEqual(['webp', 'jpeg', 'png', 'gif', 'tiff'])
-    expect(deriveEdges(registry).edges).toHaveLength(20)
+    expect(ids).toEqual(['webp', 'jpeg', 'png', 'avif', 'gif', 'tiff', 'jxl'])
+    // Every pair converts, directly or through one step in between.
     for (const from of ids) for (const to of ids) expect(router.route(from, to) === null).toBe(from === to)
+  })
+
+  it('reaches AVIF and JPEG XL from the five core formats directly, and each other in two steps', () => {
+    for (const core of ['png', 'jpeg', 'webp', 'gif', 'tiff']) {
+      expect(router.route(core, 'avif')!.edges.map((e) => e.candidates[0]!.engine)).toEqual(['vips-heif'])
+      expect(router.route('avif', core)!.edges).toHaveLength(1)
+      expect(router.route(core, 'jxl')!.edges.map((e) => e.candidates[0]!.engine)).toEqual(['vips-jxl'])
+    }
+    // No one engine holds both modules, so the router goes through a lossless format between.
+    const through = router.route('avif', 'jxl')!
+    expect(through.edges).toHaveLength(2)
+    expect(through.edges[0]!.candidates[0]!.lossy).toBe(false)
+  })
+
+  it('offers plain libvips, not a module, for the pairs plain libvips covers', () => {
+    for (const edge of deriveEdges(registry).edges) {
+      if (edge.from === 'avif' || edge.to === 'avif' || edge.from === 'jxl' || edge.to === 'jxl') continue
+      for (const c of edge.candidates) expect(['canvas', 'vips'], `${edge.from} → ${edge.to}`).toContain(c.engine)
+    }
   })
 
   it('warns about what each conversion loses', () => {
@@ -163,6 +183,17 @@ describe('router, synthetic registry', () => {
 
     const nativeOnly = make(['a', 'b', 'c'], [cap('web', 'a', 'b'), cap('desk', 'b', 'c', { tier: 'native' })])
     expect(createRouter(nativeOnly).route('a', 'c')!.tier).toBe('native')
+  })
+
+  it('says why a read-only format is not a target', () => {
+    const formats = [fmt('a'), fmt('b', { readOnly: 'B can be read but not written' })]
+    const reg = make([], [cap('x', 'b', 'a')], [], formats)
+    const router = createRouter(reg)
+    expect(router.route('b', 'a')).not.toBeNull()
+    expect(router.targetsFor(['a']).find((t) => t.format.id === 'b')).toMatchObject({
+      route: null,
+      reason: 'B can be read but not written',
+    })
   })
 
   it('does not offer a blocked pair and carries the reason', () => {

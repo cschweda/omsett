@@ -8,7 +8,7 @@ import { createRouter, deriveEdges, formatById, registry, type Format } from '@o
 import { describe, expect, it } from 'vitest'
 import manifest from './_traps/manifest.json'
 
-const engine = createNodeEngines().vips!
+const engines = createNodeEngines()
 const router = createRouter(registry)
 const derived = deriveEdges(registry)
 const png = formatById(registry, 'png')!
@@ -18,8 +18,9 @@ const load = async (file: string) => new File([await readFile(new URL(`./_traps/
 
 /** Convert with libvips at its registered defaults, as the app would. */
 function convert(blob: Blob, name: string, from: Format, to: Format) {
-  const candidate = derived.edge(from.id, to.id)!.candidates.find((c) => c.engine === 'vips')!
-  return engine.convert({
+  // libvips, plain or with the module the format needs: whichever the registry names for the pair.
+  const candidate = derived.edge(from.id, to.id)!.candidates.find((c) => c.engine in engines)!
+  return engines[candidate.engine]!.convert({
     blob,
     name,
     from,

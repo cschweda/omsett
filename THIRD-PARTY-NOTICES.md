@@ -45,8 +45,16 @@ They are not compiled into Omsett's code.
 | zlib-ng | 2.3.3 | zlib |
 | Emscripten runtime | 6.0.10 | MIT |
 
-wasm-vips also publishes three optional modules (JPEG XL, HEIF with aom, and resvg). Omsett does
-not ship them in this release.
+wasm-vips also publishes optional modules. Omsett ships two, each fetched only when a conversion
+needs it, and registered as an engine of its own:
+
+| Engine | Module | Adds | Libraries, with licenses as stated by wasm-vips |
+| --- | --- | --- | --- |
+| `vips-heif` | `vips-heif.wasm` | AVIF, read and written | libheif (LGPL-3.0), aom (BSD-2-Clause, with the Alliance for Open Media Patent License 1.0) |
+| `vips-jxl` | `vips-jxl.wasm` | JPEG XL, read and written | libjxl (BSD-3-Clause), highway (BSD-3-Clause), lcms (MIT) |
+
+The third, resvg, is not shipped in this release. The HEIF module holds no HEVC decoder or
+encoder, so it does not read or write HEIC.
 
 ### canvas
 

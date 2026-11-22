@@ -1,6 +1,6 @@
 import { dimensionProblem } from '@omsett/registry'
 import { vipsInfo } from '../info'
-import type { ConvertInput, ConvertOutput, Engine } from '../types'
+import type { ConvertInput, ConvertOutput, Engine, EngineInfo } from '../types'
 import { outputName, qualityOption, throwIfAborted } from '../util'
 
 /** The slice of the wasm-vips API this engine uses. */
@@ -25,8 +25,11 @@ export interface VipsHost {
   available(): Promise<boolean>
 }
 
-/** libvips compiled to WebAssembly. The same code runs in a browser worker and in Node. */
-export function createVipsEngine(host: VipsHost): Engine {
+/**
+ * libvips compiled to WebAssembly. The same code runs in a browser worker and in Node.
+ * `info` says which libvips this is: plain, or with one of its optional modules.
+ */
+export function createVipsEngine(host: VipsHost, info: EngineInfo = vipsInfo): Engine {
   let loading: Promise<VipsModule> | undefined
 
   const ready = () => {
@@ -38,7 +41,7 @@ export function createVipsEngine(host: VipsHost): Engine {
   }
 
   return {
-    ...vipsInfo,
+    ...info,
 
     available: () => host.available(),
 

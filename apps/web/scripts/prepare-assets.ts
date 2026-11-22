@@ -38,6 +38,11 @@ const manifest = {
   vips: {
     script: await hashed(join(vipsLib, 'vips-es6.js'), 'vips-es6', 'js'),
     wasm: await hashed(join(vipsLib, 'vips.wasm'), 'vips', 'wasm'),
+    // Optional libvips modules, keyed by the name libvips asks for them by.
+    modules: {
+      'vips-heif.wasm': await hashed(join(vipsLib, 'vips-heif.wasm'), 'vips-heif', 'wasm'),
+      'vips-jxl.wasm': await hashed(join(vipsLib, 'vips-jxl.wasm'), 'vips-jxl', 'wasm'),
+    },
   },
   sample: { url: '/sample.png', name: 'sample.png' },
 }

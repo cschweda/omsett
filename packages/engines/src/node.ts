@@ -1,15 +1,22 @@
+import { engineInfo, vipsModules } from './info'
 import { createVipsEngine, type VipsModule } from './vips'
 import type { Engine } from './types'
 
 /** Engines that run in Node, called in-process: the fixture tests now, the CLI in Phase 3. */
 export function createNodeEngines(): Record<string, Engine> {
-  const vips = createVipsEngine({
-    available: async () => true,
-    async init() {
-      const { default: Vips } = await import('wasm-vips')
-      // No optional codec libraries: Phase 0 needs none of them.
-      return (await Vips({ dynamicLibraries: [] })) as unknown as VipsModule
-    },
-  })
-  return { [vips.id]: vips }
+  const engines: Record<string, Engine> = {}
+  // Plain libvips, and libvips with each optional module: one instance apiece, started on demand.
+  for (const [id, modules] of Object.entries(vipsModules)) {
+    engines[id] = createVipsEngine(
+      {
+        available: async () => true,
+        async init() {
+          const { default: Vips } = await import('wasm-vips')
+          return (await Vips({ dynamicLibraries: modules })) as unknown as VipsModule
+        },
+      },
+      engineInfo[id],
+    )
+  }
+  return engines
 }

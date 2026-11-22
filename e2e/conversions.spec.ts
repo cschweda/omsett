@@ -13,6 +13,8 @@ const samples: Record<string, string> = {
   webp: 'webp/sample.webp',
   gif: 'gif/sample.gif',
   tiff: 'tiff/sample.tiff',
+  avif: 'avif/sample.avif',
+  jxl: 'jxl/sample.jxl',
 }
 const path = (id: string) => fileURLToPath(new URL(`../fixtures/${samples[id]}`, import.meta.url))
 

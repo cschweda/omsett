@@ -85,8 +85,67 @@ const tiff: Reader = (bytes) => {
   return width && height ? { width, height } : null
 }
 
+/**
+ * AVIF and HEIC: the size is in an "ispe" box. A file can hold several (a thumbnail, an alpha
+ * plane), so the largest is the picture.
+ */
+const heif: Reader = (bytes) => {
+  const v = view(bytes)
+  let best: Dimensions | null = null
+  for (let i = 4; i + 16 <= bytes.length; i++) {
+    // "ispe", then four bytes of version and flags, then width and height.
+    if (bytes[i] !== 0x69 || bytes[i + 1] !== 0x73 || bytes[i + 2] !== 0x70 || bytes[i + 3] !== 0x65) continue
+    const found = { width: v.getUint32(i + 8), height: v.getUint32(i + 12) }
+    if (!best || found.width * found.height > best.width * best.height) best = found
+  }
+  return best
+}
+
+/** JPEG XL: the size is bit-packed at the start of the codestream, which may be inside a box. */
+const jxl: Reader = (bytes) => {
+  let start = -1
+  if (bytes[0] === 0xFF && bytes[1] === 0x0A) start = 2
+  else {
+    // The container form: walk its boxes to the codestream ("jxlc", or the first "jxlp" part).
+    const v = view(bytes)
+    for (let offset = 0; offset + 8 <= bytes.length; ) {
+      const size = v.getUint32(offset)
+      const type = String.fromCharCode(...bytes.subarray(offset + 4, offset + 8))
+      const body = offset + 8 + (type === 'jxlp' ? 4 : 0)
+      if (type === 'jxlc' || type === 'jxlp') {
+        if (bytes[body] === 0xFF && bytes[body + 1] === 0x0A) start = body + 2
+        break
+      }
+      if (size < 8) break
+      offset += size
+    }
+  }
+  if (start < 0) return null
+
+  let bit = start * 8
+  const read = (count: number) => {
+    let value = 0
+    for (let i = 0; i < count; i++, bit++) value += ((bytes[bit >> 3]! >> (bit & 7)) & 1) * 2 ** i
+    return value
+  }
+  /** One of four widths of number, chosen by a two-bit selector, plus one. */
+  const size = () => read([9, 13, 18, 30][read(2)]!) + 1
+  const small = read(1) === 1
+  const height = small ? (read(5) + 1) * 8 : size()
+  const ratio = read(3)
+  const ratios: Array<[number, number]> = [[1, 1], [12, 10], [4, 3], [3, 2], [16, 9], [5, 4], [2, 1]]
+  const width =
+    ratio === 0
+      ? small
+        ? (read(5) + 1) * 8
+        : size()
+      : Math.floor((height * ratios[ratio - 1]![0]) / ratios[ratio - 1]![1])
+  if (bit > bytes.length * 8) return null
+  return { width, height }
+}
+
 /** Keyed by `file-type` ext value. A format with no reader simply has unknown dimensions. */
-const readers: Record<string, Reader> = { png, apng: png, jpg: jpeg, webp, gif, tif: tiff }
+const readers: Record<string, Reader> = { png, apng: png, jpg: jpeg, webp, gif, tif: tiff, avif: heif, heic: heif, jxl }
 
 /** How much of the file a header reader may need. */
 export const HEADER_BYTES = 512 * 1024
