@@ -70,7 +70,7 @@ When a format ships, update its row here, in the same change.
 | Images, Markdown, HTML, text to PDF | Browser | pdf-lib; Typst (to be proven) | Planned |
 | Compress; PDF/A | Desktop | Ghostscript, qpdf | Planned |
 | PDF to DOCX, XLSX, PPTX, SVG | Desktop | LibreOffice | Planned |
-| Accessibility check | Desktop (veraPDF); a link out on the web | — | Planned |
+| Accessibility check | A link out to audit.icjia.app on the web; veraPDF on the desktop | — | Planned, with the PDF work. Decided 22 November 2026: a link, not an upload, and no privileged token. Shown beside a PDF or document result. The audit's shareable results page should be reachable from Omsett; how the report's address gets back without Omsett sending the file is to be settled then |
 | PDF to HWPX | Declined | — | See HWP |
 
 ## Documents
