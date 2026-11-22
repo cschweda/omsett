@@ -125,24 +125,19 @@ Writing them turned up four real faults, all fixed:
 - **The PNG size reader trusted its offsets.** It read bytes 16–23 as a size without checking
   that the first chunk was a header.
 
-### Known gap: some browsers forgive damage
+### Closed: browsers that forgave damage
 
-Some damaged files (`truncated`, `short-image-data`, `corrupt-image-data`, `bad-checksum`,
-`bad-filter-type`, and several from the second batch) convert in some browsers, because the browser's own PNG decoder returns the
-part it could read and the canvas engine has no way to know. Which browsers depends on the
-platform as well as the engine:
+Until version 0.3.0, some damaged files converted in some browsers, because the browser's own
+PNG decoder returned the part it could read. Firefox did it everywhere, WebKit on Linux, and the
+manifest marked those traps as browser-dependent.
 
-| | Chromium | Firefox | WebKit |
-| --- | --- | --- | --- |
-| macOS | refuses all five | forgives four (not `bad-filter-type`) | refuses all five (it converts with libvips) |
-| Linux (CI) | refuses all five | forgives four | forgives all five (its canvas encodes WebP, so libvips is not used) |
+That allowance is gone. A PNG's structure is now verified in the worker before a browser may
+decode it (`packages/detect/src/png-structure.ts`), and no other format is decoded by a browser
+at all. Every trap has one required outcome, in Node and in all three browsers, and the manifest
+has no `either`.
 
-The manifest marks these `either` for browsers, and the test still checks that what comes
-out is a real WebP of the declared size.
-
-Closing the gap means checking a file's structure ourselves before handing it to the browser:
-for PNG, walking the chunks and their checksums in the worker. That is cheap, but it is a check
-per format, so it belongs with Phase 1's format work.
+When a format is added, the same question has to be answered for it: either the app can verify
+the format's structure itself, or only libvips reads it.
 
 ## Not here yet
 
@@ -154,5 +149,6 @@ per format, so it belongs with Phase 1's format work.
 - **Formats no tool on this machine can write:** camera RAW (DNG, CR2, NEF, and the rest), XCF,
   DICOM, MIFF, MNG, JPEG XR, XPM, DDS, Photo CD, PSB, Live Photo. These need real files from
   real devices and applications.
+- **Only images, and only five of them convert so far.** PNG, JPEG, WebP, GIF, and TIFF. The other samples wait for their formats.
 - **Only images.** Audio, documents, data, archives, fonts, subtitles, and video samples belong
   with the phases that add those formats.

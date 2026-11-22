@@ -52,8 +52,41 @@ const webp: Reader = (bytes) => {
   return null
 }
 
+/** GIF: the logical screen size follows the six-byte signature, little-endian. */
+const gif: Reader = (bytes) => {
+  if (bytes.length < 10) return null
+  const v = view(bytes)
+  return { width: v.getUint16(6, true), height: v.getUint16(8, true) }
+}
+
+/**
+ * TIFF: the size is in the first directory, which can be anywhere in the file. If it lies
+ * beyond the part that was read, the size is unknown and the engine checks it after loading.
+ */
+const tiff: Reader = (bytes) => {
+  if (bytes.length < 8) return null
+  const v = view(bytes)
+  const little = bytes[0] === 0x49
+  const directory = v.getUint32(4, little)
+  if (directory + 2 > bytes.length) return null
+  const entries = v.getUint16(directory, little)
+  let width = 0
+  let height = 0
+  for (let i = 0; i < entries; i++) {
+    const entry = directory + 2 + i * 12
+    if (entry + 12 > bytes.length) return null
+    const tag = v.getUint16(entry, little)
+    if (tag !== 256 && tag !== 257) continue
+    // The value is a 16-bit or a 32-bit number, stored in the entry itself.
+    const value = v.getUint16(entry + 2, little) === 3 ? v.getUint16(entry + 8, little) : v.getUint32(entry + 8, little)
+    if (tag === 256) width = value
+    else height = value
+  }
+  return width && height ? { width, height } : null
+}
+
 /** Keyed by `file-type` ext value. A format with no reader simply has unknown dimensions. */
-const readers: Record<string, Reader> = { png, apng: png, jpg: jpeg, webp }
+const readers: Record<string, Reader> = { png, apng: png, jpg: jpeg, webp, gif, tif: tiff }
 
 /** How much of the file a header reader may need. */
 export const HEADER_BYTES = 512 * 1024

@@ -1,0 +1,35 @@
+# Keeps the things this project pins from going stale. A pin that is never updated trades one
+# risk (a moved tag) for another (an unpatched image), so each is checked weekly.
+version: 2
+updates:
+  # The self-host image's base images, pinned by digest in apps/web/Dockerfile.
+  - package-ecosystem: docker
+    directory: /apps/web
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: chore(docker)
+
+  # The actions the workflows use, pinned by commit SHA.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: chore(ci)
+    groups:
+      actions:
+        patterns: ['*']
+
+  # JavaScript dependencies. Minor and patch updates arrive as one pull request a week; a major
+  # version comes on its own, to be looked at.
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: chore(deps)
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]

@@ -71,10 +71,12 @@ watch(() => colorMode.value, () => nextTick(draw))
 .drawing.waiting {
   min-height: 12rem;
 }
+/* Centered in the column: a drawing narrower than the text beside it sits in the middle. */
 .drawing :deep(svg) {
   display: block;
   max-width: 100%;
   height: auto;
+  margin: 0 auto;
 }
 /* Mermaid rounds its boxes and gives them shadows; this page does neither. */
 .drawing :deep(rect) {

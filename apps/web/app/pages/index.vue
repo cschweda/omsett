@@ -84,6 +84,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
           :model-value="queue.targetId.value"
           :via-server="server.state.value === 'reachable'"
           labelledby="pick-heading"
+          :waiting="queue.waiting.value"
           @select="queue.select"
         />
 

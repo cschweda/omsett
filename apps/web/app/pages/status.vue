@@ -30,7 +30,7 @@ const engineRows = computed(() =>
 )
 const conversions = computed(() =>
   readiness.edges.map((edge) => {
-    const engine = edge.candidates.find((c) => engines.availability.value[c.engine] === true)
+    const engine = edge.candidates.find((c) => engines.availability.value[`${c.engine}>${edge.to}`] === true)
     return {
       key: `${edge.from}-${edge.to}`,
       from: formatById(registry, edge.from)?.name ?? edge.from,

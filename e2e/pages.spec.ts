@@ -126,7 +126,10 @@ test('what’s new is the changelog', async ({ page }) => {
   await page.goto('/whats-new')
   await expect(page.getByTestId('release')).toHaveCount(releases.length)
   await expect(page.getByRole('heading', { level: 2 }).first()).toHaveText(/Latest|Version/)
-  await expect(page.getByTestId('release').first()).toContainText('Compare slider')
+  // The newest entry's first item, whatever it happens to be this release.
+  const firstItem = /^- \*\*([^*]+)\*\*/m.exec(changelog.slice(changelog.indexOf('## ')))?.[1]
+  expect(firstItem).toBeTruthy()
+  await expect(page.getByTestId('release').first()).toContainText(firstItem!)
 })
 
 test('security lists every audit, newest open and the rest collapsed', async ({ page }) => {

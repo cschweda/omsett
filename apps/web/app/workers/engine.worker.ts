@@ -41,14 +41,9 @@ async function loadVips(): Promise<VipsModule> {
   })
 }
 
-// The canvas probe checks the format canvas is registered to write.
-// TODO(phase-1): probe per target once canvas writes more than one format.
-const canvasTarget = registry.capabilities.find((c) => c.engine === 'canvas')?.writes[0]?.format
-const canvasProbeMime = (canvasTarget && formatById(registry, canvasTarget)?.mime[0]) ?? ''
-
 const engines: Record<string, Engine> = Object.fromEntries(
   [
-    createCanvasEngine(canvasProbeMime),
+    createCanvasEngine(),
     createVipsEngine({
       init: loadVips,
       // Threads need SharedArrayBuffer, which needs cross-origin isolation (and so HTTPS).
@@ -63,14 +58,27 @@ export interface ConvertRequest {
   from: Format
   to: Format
   options: Record<string, unknown>
+  maxPixels: number
 }
 
 const api = {
+  /**
+   * What this browser can run. Keyed by engine id, and by "engine>format" for each format the
+   * registry says that engine writes, since a browser may encode one format and not another.
+   */
   async availability(): Promise<Record<string, boolean>> {
-    const entries = await Promise.all(
-      Object.values(engines).map(async (engine) => [engine.id, await engine.available().catch(() => false)]),
-    )
-    return Object.fromEntries(entries) as Record<string, boolean>
+    const answers: Record<string, boolean> = {}
+    for (const capability of registry.capabilities) {
+      const engine = engines[capability.engine]
+      if (!engine) continue
+      answers[engine.id] = await engine.available().catch(() => false)
+      for (const write of capability.writes) {
+        const target = formatById(registry, write.format)
+        answers[`${engine.id}>${write.format}`] =
+          answers[engine.id] === true && (await engine.available(target).catch(() => false))
+      }
+    }
+    return answers
   },
 
   async load(id: string): Promise<void> {

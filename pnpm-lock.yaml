@@ -99,6 +99,9 @@ importers:
 
   packages/engines:
     dependencies:
+      '@omsett/detect':
+        specifier: workspace:*
+        version: link:../detect
       '@omsett/registry':
         specifier: workspace:*
         version: link:../registry

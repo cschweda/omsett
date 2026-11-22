@@ -40,8 +40,20 @@ describe('detect', () => {
   })
 
   it('reports a real format with no registry entry as unregistered', async () => {
-    const gif = new TextEncoder().encode('GIF89a\u0001\u0000\u0001\u0000\u0000\u0000\u0000;')
-    await expect(detect(new Blob([gif]), formats)).resolves.toMatchObject({ kind: 'unregistered', ext: 'gif' })
+    const bmp = await readFile(new URL('../../../fixtures/bmp/sample.bmp', import.meta.url))
+    await expect(detect(new Blob([bmp]), formats)).resolves.toMatchObject({ kind: 'unregistered', ext: 'bmp' })
+  })
+
+  it('reads the size of every registered format from its header', async () => {
+    for (const [file, size] of [
+      ['webp/sample.webp', { width: 320, height: 200 }],
+      ['gif/sample.gif', { width: 320, height: 200 }],
+      ['tiff/sample.tiff', { width: 320, height: 200 }],
+      ['jpeg/sample.jpg', { width: 320, height: 168 }],
+    ] as const) {
+      const bytes = await readFile(new URL(`../../../fixtures/${file}`, import.meta.url))
+      expect(await detect(new Blob([bytes]), formats), file).toMatchObject({ kind: 'known', dimensions: size })
+    }
   })
 })
 

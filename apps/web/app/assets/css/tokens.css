@@ -15,6 +15,9 @@
   --accent-text: #2450e0;
   /* Signal red. Used for one thing only: something went wrong. */
   --signal: #c8200d;
+  /* Highlight. Marks what is new, and nothing else. Yellow would vanish on the light ground,
+     so there it is a deep amber. */
+  --highlight: #a85f00;
 
   /* The grid: twelve columns, one gutter, one margin. Everything sits on it. */
   --gutter: 24px;
@@ -53,4 +56,5 @@
   --surface: #171716;
   --accent-text: #7d9dff;
   --signal: #ff6b57;
+  --highlight: #ffd60a;
 }

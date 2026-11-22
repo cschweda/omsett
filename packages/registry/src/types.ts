@@ -17,7 +17,7 @@ export type Category =
   | 'video'
 
 /** Things a format can carry. A warning is derived whenever the source has one the target lacks. */
-export type Trait = 'alpha' | 'animation' | 'metadata' | 'multi-page' | 'layers'
+export type Trait = 'alpha' | 'animation' | 'metadata' | 'multi-page' | 'layers' | 'full-color'
 
 export interface Format {
   /** 'png' */

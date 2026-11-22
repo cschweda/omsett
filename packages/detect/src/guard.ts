@@ -7,6 +7,9 @@ export const MAX_WORKING_BYTES = 1.5 * 1024 * 1024 * 1024
 
 export const TOO_LARGE = 'This image is too large to convert in a browser'
 
+/** The most pixels any picture may have: the working-set limit, counted in pixels. */
+export const MAX_PIXELS = Math.floor(MAX_WORKING_BYTES / 8)
+
 export function pixelCount(dimensions: Dimensions | null): number {
   return dimensions ? dimensions.width * dimensions.height : 0
 }

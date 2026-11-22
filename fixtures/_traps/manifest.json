@@ -50,36 +50,36 @@
   {
     "file": "jpeg-named.png",
     "group": "identity",
-    "why": "A real JPEG with a .png name. The contents win over the name.",
+    "why": "A real JPEG with a .png name. The contents win over the name, and it converts as a JPEG.",
     "detect": "jpeg",
     "mismatch": true,
     "guard": "ok",
-    "node": "none",
-    "browser": "none",
+    "node": "succeeds",
+    "browser": "succeeds",
     "note": null,
     "absent": null
   },
   {
     "file": "webp-named.png",
     "group": "identity",
-    "why": "A real WebP with a .png name.",
+    "why": "A real WebP with a .png name. It converts as the WebP it is.",
     "detect": "webp",
     "mismatch": true,
     "guard": "ok",
-    "node": "none",
-    "browser": "none",
+    "node": "succeeds",
+    "browser": "succeeds",
     "note": null,
     "absent": null
   },
   {
     "file": "gif-named.png",
     "group": "identity",
-    "why": "A real GIF, a format the registry does not know yet, with a .png name.",
-    "detect": "unregistered",
-    "mismatch": false,
+    "why": "A real GIF with a .png name. It converts as the GIF it is.",
+    "detect": "gif",
+    "mismatch": true,
     "guard": "ok",
-    "node": "none",
-    "browser": "none",
+    "node": "succeeds",
+    "browser": "succeeds",
     "note": null,
     "absent": null
   },
@@ -175,7 +175,7 @@
     "mismatch": false,
     "guard": "ok",
     "node": "fails",
-    "browser": "either",
+    "browser": "fails",
     "note": null,
     "absent": null
   },
@@ -199,7 +199,7 @@
     "mismatch": false,
     "guard": "ok",
     "node": "fails",
-    "browser": "either",
+    "browser": "fails",
     "note": null,
     "absent": null
   },
@@ -211,7 +211,7 @@
     "mismatch": false,
     "guard": "ok",
     "node": "fails",
-    "browser": "either",
+    "browser": "fails",
     "note": null,
     "absent": null
   },
@@ -223,7 +223,7 @@
     "mismatch": false,
     "guard": "ok",
     "node": "fails",
-    "browser": "either",
+    "browser": "fails",
     "note": null,
     "absent": null
   },
@@ -259,7 +259,7 @@
     "mismatch": false,
     "guard": "ok",
     "node": "fails",
-    "browser": "either",
+    "browser": "fails",
     "note": null,
     "absent": null
   },
@@ -362,12 +362,12 @@
   {
     "file": "gif-header-then-script.png",
     "group": "identity",
-    "why": "The classic two-in-one: bytes that open like a GIF and continue as a script. Identified as the GIF it opens as, which is not a supported format, and never run.",
-    "detect": "unregistered",
-    "mismatch": false,
+    "why": "The classic two-in-one: bytes that open like a GIF and continue as a script. Identified as the GIF it opens as, refused as a broken one, and never run.",
+    "detect": "gif",
+    "mismatch": true,
     "guard": "ok",
-    "node": "none",
-    "browser": "none",
+    "node": "fails",
+    "browser": "fails",
     "note": null,
     "absent": null
   },
@@ -487,7 +487,7 @@
     "mismatch": false,
     "guard": "ok",
     "node": "fails",
-    "browser": "either",
+    "browser": "fails",
     "note": null,
     "absent": null
   },
@@ -499,7 +499,7 @@
     "mismatch": false,
     "guard": "ok",
     "node": "succeeds",
-    "browser": "either",
+    "browser": "succeeds",
     "note": null,
     "absent": null
   },
@@ -511,7 +511,7 @@
     "mismatch": false,
     "guard": "ok",
     "node": "succeeds",
-    "browser": "either",
+    "browser": "succeeds",
     "note": null,
     "absent": null
   },
@@ -523,7 +523,7 @@
     "mismatch": false,
     "guard": "ok",
     "node": "fails",
-    "browser": "either",
+    "browser": "fails",
     "note": null,
     "absent": null
   },
@@ -535,7 +535,7 @@
     "mismatch": false,
     "guard": "ok",
     "node": "succeeds",
-    "browser": "either",
+    "browser": "succeeds",
     "note": null,
     "absent": null
   },
@@ -547,7 +547,7 @@
     "mismatch": false,
     "guard": "ok",
     "node": "fails",
-    "browser": "either",
+    "browser": "fails",
     "note": null,
     "absent": null
   },
@@ -559,7 +559,7 @@
     "mismatch": false,
     "guard": "ok",
     "node": "fails",
-    "browser": "either",
+    "browser": "fails",
     "note": null,
     "absent": null
   },
@@ -571,7 +571,7 @@
     "mismatch": false,
     "guard": "ok",
     "node": "succeeds",
-    "browser": "either",
+    "browser": "succeeds",
     "note": null,
     "absent": null
   },
@@ -607,7 +607,7 @@
     "mismatch": false,
     "guard": "ok",
     "node": "succeeds",
-    "browser": "either",
+    "browser": "succeeds",
     "note": null,
     "absent": null
   },
@@ -619,7 +619,7 @@
     "mismatch": false,
     "guard": "ok",
     "node": "succeeds",
-    "browser": "either",
+    "browser": "succeeds",
     "note": null,
     "absent": null
   },

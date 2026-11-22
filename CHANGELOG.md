@@ -7,6 +7,47 @@ The paragraph that opens a version is its teaser: the home page shows its first 
 in the "What's new" banner, so keep it to two or three sentences on what a visitor will notice.
 A line beginning "Released" gives the date.
 
+## 0.3.0
+
+Released 22 November 2026.
+
+Omsett now converts between five image formats: PNG, JPEG, WebP, GIF and TIFF, twenty
+conversions in all. Drop a file and it shows what that file can become, with the likeliest
+choices set large and what each one costs written beneath it. A damaged file is now refused in
+every browser, where some used to return half a picture.
+
+### Added
+
+- **JPEG, GIF, and TIFF**, as sources and as targets, alongside PNG and WebP. Every pair
+  converts, in every browser.
+- **A picker that follows the file.** Before a file is dropped it lists what Omsett handles.
+  After, the first four formats the file can become are set large, and the rest are listed
+  beneath, with a field to filter them once the list is long.
+- **What each conversion loses is derived for every pair**: transparency flattened to white,
+  colours reduced to 256, animation and extra pages dropped, and metadata always removed.
+- **A structural check for PNG**, run before a browser is allowed to decode the file.
+- Dependabot, to keep pinned images, actions, and dependencies current.
+
+### Changed
+
+- **Only PNG is decoded by the browser itself**, and only after Omsett has verified the file.
+  JPEG, WebP, GIF, and TIFF are read by libvips, which costs a 5 MB download once and treats a
+  damaged file as an error.
+- A transparent picture converted to a format without transparency gets a white ground.
+- An engine checks a picture's real size as soon as it knows it, in case the header lied.
+- A preview that cannot be drawn (a browser cannot display a TIFF) is no longer reported as a
+  problem with the file.
+- The "What's new" banner marks its label with an underline in place of a full-width rule.
+- Diagrams on the Technical details page are centered.
+- The self-host image's base images are pinned by digest, and the deployment guide checks nvm's
+  installer against a hash before running it.
+
+### Fixed
+
+- **Some browsers turned a damaged PNG into a partial picture** (Firefox, and WebKit on Linux).
+  Open since the first review as OMS-005; now closed. All 53 trap files have one required
+  outcome in every browser.
+
 ## 0.2.0
 
 Released 22 November 2026.
@@ -113,8 +154,8 @@ security audit.
 
 - Under `pnpm dev`, Nuxt's own restart (after editing its config or installing a package) drops
   the isolation headers, and nothing converts until the dev server is restarted by hand.
-- In Firefox, and in WebKit on Linux, some damaged PNGs still convert to a partial picture,
-  because the browser's own decoder forgives them. See `fixtures/README.md`.
+- In Firefox, and in WebKit on Linux, some damaged PNGs still converted to a partial picture,
+  because the browser's own decoder forgave them. Fixed in 0.3.0.
 - In Safari under `pnpm dev` only, thumbnails and the comparison do not appear. The built site is
   not affected.
 

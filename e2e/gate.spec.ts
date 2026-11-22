@@ -125,17 +125,24 @@ test.describe('gate', () => {
   })
 })
 
-test('picker says why a tile is dimmed', async ({ page }) => {
+test('the picker waits for a file, then offers what that file can become', async ({ page }) => {
   await open(page)
-  // Nothing dropped: everything is dimmed.
-  for (const tile of await page.getByRole('radio').all()) {
-    await expect(tile).toHaveAttribute('aria-disabled', 'true')
-    await expect(tile).toContainText('Drop a file first')
-  }
+  // Nothing dropped: no choices yet, only what the app handles.
+  await expect(page.getByTestId('picker-waiting')).toContainText('Drop a file to see what it can become.')
+  await expect(page.getByTestId('picker-waiting')).toContainText('WebP, JPEG, PNG, GIF, TIFF')
+  await expect(page.getByRole('radio')).toHaveCount(0)
+
   await page.locator('#file-input').setInputFiles(FIXTURE)
-  await expect(page.getByRole('radio', { name: /WebP/ })).toHaveAttribute('aria-disabled', 'false')
+  await expect(page.getByTestId('picker-waiting')).toHaveCount(0)
+  for (const id of ['webp', 'jpeg', 'gif', 'tiff']) {
+    await expect(page.locator(`[role="radio"][data-format="${id}"]`)).toHaveAttribute('aria-disabled', 'false')
+  }
   await expect(page.getByRole('radio', { name: /WebP/ })).toContainText('on your device')
-  await expect(page.locator('[data-format="jpeg"]')).toContainText('No converter from PNG to JPEG yet')
+  // What a conversion costs is said before it is chosen.
+  await expect(page.locator('[data-format="jpeg"]')).toContainText('Transparency will be flattened to white.')
+  await expect(page.locator('[data-format="gif"]')).toContainText('Reduced to 256 colours.')
+  // The format the file already is stays listed, with the reason it is not a choice.
+  await expect(page.locator('[data-format="png"]')).toHaveAttribute('aria-disabled', 'true')
   await expect(page.locator('[data-format="png"]')).toContainText('Already PNG')
 })
 

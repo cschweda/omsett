@@ -15,19 +15,39 @@ describe('router, real registry', () => {
     expect(webp.route!.edges[0]!.candidates.map((c) => c.engine)).toEqual(['canvas', 'vips'])
   })
 
-  it('explains why JPEG and PNG are not offered from PNG', () => {
+  it('offers every other image format from PNG, and explains why PNG itself is not', () => {
     const targets = router.targetsFor(['png'])
-    expect(byId(targets, 'jpeg')).toMatchObject({
-      route: null,
-      reason: 'No converter from PNG to JPEG yet',
-    })
+    for (const id of ['webp', 'jpeg', 'gif', 'tiff']) expect(byId(targets, id).route, id).not.toBeNull()
     expect(byId(targets, 'png')).toMatchObject({ route: null, reason: 'Already PNG' })
   })
 
-  it('offers nothing from JPEG', () => {
-    const targets = router.targetsFor(['jpeg'])
-    expect(targets).toHaveLength(registry.formats.length)
-    expect(targets.every((t) => t.route === null && t.reason)).toBe(true)
+  it('reads every format but PNG with libvips alone', () => {
+    // The canvas decodes with the browser's forgiving decoder, so it is given PNG only, the one
+    // format whose structure the app verifies itself.
+    for (const edge of deriveEdges(registry).edges) {
+      const engines = edge.candidates.map((c) => c.engine)
+      if (edge.from !== 'png') expect(engines, `${edge.from} → ${edge.to}`).toEqual(['vips'])
+    }
+  })
+
+  it('converts between all five formats: twenty conversions', () => {
+    const ids = registry.formats.map((f) => f.id)
+    expect(ids).toEqual(['webp', 'jpeg', 'png', 'gif', 'tiff'])
+    expect(deriveEdges(registry).edges).toHaveLength(20)
+    for (const from of ids) for (const to of ids) expect(router.route(from, to) === null).toBe(from === to)
+  })
+
+  it('warns about what each conversion loses', () => {
+    const lost = (from: string, to: string) => router.route(from, to)!.warnings.map((w) => w.id)
+    expect(lost('png', 'jpeg')).toContain('alpha-lost')
+    expect(lost('png', 'gif')).toContain('colors-reduced')
+    expect(lost('jpeg', 'webp')).toContain('lossy-to-lossy')
+    expect(lost('gif', 'webp')).toContain('animation-lost')
+    expect(lost('tiff', 'png')).toContain('pages-lost')
+    // every engine drops metadata, and says so
+    for (const edge of deriveEdges(registry).edges) {
+      expect(edge.warnings.map((w) => w.id), `${edge.from} → ${edge.to}`).toContain('metadata-lost')
+    }
   })
 
   it('dims everything when nothing is dropped', () => {
@@ -36,6 +56,16 @@ describe('router, real registry', () => {
 
   it('has no route from a format to itself', () => {
     expect(router.route('png', 'png')).toBeNull()
+  })
+
+  it('gives every engine for a pair the same defaults and the same omissions', () => {
+    for (const edge of deriveEdges(registry).edges) {
+      const first = edge.candidates[0]!
+      for (const candidate of edge.candidates) {
+        expect(candidate.defaultOptions, `${edge.from} → ${edge.to}`).toEqual(first.defaultOptions)
+        expect(candidate.drops, `${edge.from} → ${edge.to}`).toEqual(first.drops)
+      }
+    }
   })
 
   it('writes WebP at the same default quality from every engine', () => {

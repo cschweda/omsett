@@ -82,6 +82,7 @@ Every audit is recorded in full, with how each problem was found and what was do
 
 | Date | Audit | Findings | Fixed | Open | Accepted |
 | --- | --- | --- | --- | --- | --- |
+| 22 November 2026 | Follow-up: closing two open findings | 3 (1 medium, 1 low, 1 info) | 2 | 1 | 0 |
 | 22 November 2026 | Red/blue audit of the converter and its hosting | 10 (3 medium, 5 low, 2 info) | 6 | 3 | 1 |
 | 22 November 2026 | Review with deliberately broken files, and a deployment incident | 6 (2 high, 3 medium, 1 low) | 5 | 1 | 0 |
 
@@ -89,15 +90,8 @@ Every audit is recorded in full, with how each problem was found and what was do
 
 | ID | Severity | Finding | Status |
 | --- | --- | --- | --- |
-| OMS-007 | Medium | Metadata was copied into the output by one engine and not the other | Fixed |
-| OMS-008 | Medium | Nothing limited how long a conversion could run | Fixed |
-| OMS-009 | Low | The site did not tell browsers to insist on HTTPS | Fixed |
-| OMS-010 | Low | A link could make every conversion fail | Fixed |
-| OMS-011 | Low | Download names were taken from the dropped file unchanged | Fixed |
-| OMS-012 | Low | No limit on how many files could be dropped at once | Fixed |
-| OMS-005 | Medium | Some browsers' own decoders turn a damaged file into a partial picture | Open |
-| OMS-013 | Low | Container base images and the nvm installer are referenced by tag, not by digest | Open |
-| OMS-014 | Info | The conversion worker is allowed to evaluate code from strings | Accepted |
+| OMS-005 | Medium | Some browsers' own decoders turn a damaged file into a partial picture | Fixed |
+| OMS-013 | Low | Container base images and the nvm installer are referenced by tag, not by digest | Fixed |
 | OMS-015 | Info | The host's template sends a deprecated protection header | Open |
 
 To report a vulnerability, use the **Security** tab of this repository (“Report a vulnerability”), not a public issue.
