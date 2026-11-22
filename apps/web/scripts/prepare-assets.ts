@@ -34,6 +34,8 @@ for (const name of await readdir(enginesDir)) {
 }
 
 const vipsLib = dirname(fromEngines.resolve('wasm-vips/vips.wasm'))
+// The weights of Inter that resvg draws text in. The same list as `resvgFonts` in packages/engines.
+const resvgFonts = ['inter-latin-400-normal.woff2', 'inter-latin-700-normal.woff2']
 const heifLib = dirname(fromEngines.resolve('libheif-js/libheif-wasm/libheif.wasm'))
 const manifest = {
   vips: {
@@ -48,6 +50,12 @@ const manifest = {
   heif: {
     script: await hashed(join(heifLib, 'libheif.js'), 'libheif', 'js'),
     wasm: await hashed(join(heifLib, 'libheif.wasm'), 'libheif', 'wasm'),
+  },
+  resvg: {
+    wasm: await hashed(fromEngines.resolve('@resvg/resvg-wasm/index_bg.wasm'), 'resvg', 'wasm'),
+    fonts: await Promise.all(
+      resvgFonts.map((file) => hashed(fromEngines.resolve(`@fontsource/inter/files/${file}`), file.replace('.woff2', ''), 'woff2')),
+    ),
   },
   sample: { url: '/sample.png', name: 'sample.png' },
 }

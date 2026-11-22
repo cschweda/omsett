@@ -1,6 +1,7 @@
 import type { Format } from '@omsett/registry'
 import { fileTypeFromBuffer } from 'file-type'
 import { HEADER_BYTES, readDimensions, type Dimensions } from './dimensions'
+import { svgDimensions, svgRoot } from './svg'
 
 export { readDimensions, type Dimensions } from './dimensions'
 export { MAX_BYTES, MAX_PIXELS, MAX_WORKING_BYTES, TOO_LARGE, pixelCount, sizeProblem, workingBytes } from './guard'
@@ -19,7 +20,10 @@ export type Detection =
 export async function detect(blob: Blob, formats: Format[]): Promise<Detection> {
   try {
     const head = new Uint8Array(await blob.slice(0, HEADER_BYTES).arrayBuffer())
-    const found = await fileTypeFromBuffer(head)
+    let found: { ext: string; mime: string } | undefined = await fileTypeFromBuffer(head)
+    // SVG is text and has no magic bytes: the most the library can say is "XML", or nothing.
+    const root = !found || found.ext === 'xml' ? svgRoot(head) : null
+    if (root) found = { ext: 'svg', mime: 'image/svg+xml' }
     if (!found) return { kind: 'unknown' }
     const format = formats.find((f) => f.detect.includes(found.ext))
     if (!format) return { kind: 'unregistered', ext: found.ext, mime: found.mime }
@@ -28,7 +32,7 @@ export async function detect(blob: Blob, formats: Format[]): Promise<Detection> 
       format,
       ext: found.ext,
       mime: found.mime,
-      dimensions: readDimensions(found.ext, head),
+      dimensions: root ? svgDimensions(root) : readDimensions(found.ext, head),
     }
   } catch {
     return { kind: 'unknown' }

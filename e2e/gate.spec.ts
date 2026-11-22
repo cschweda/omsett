@@ -130,7 +130,11 @@ test('the picker waits for a file, then offers what that file can become', async
   await open(page)
   // Nothing dropped: no choices yet, only what the app handles.
   await expect(page.getByTestId('picker-waiting')).toContainText('Drop a file to see what it can become.')
-  await expect(page.getByTestId('picker-waiting')).toContainText(registry.formats.map((f) => f.name).join(', '))
+  // Listed by kind, in the registry's order.
+  for (const category of new Set(registry.formats.map((f) => f.category))) {
+    const names = registry.formats.filter((f) => f.category === category).map((f) => f.name)
+    await expect(page.getByTestId('picker-waiting')).toContainText(names.join(', '))
+  }
   await expect(page.getByRole('radio')).toHaveCount(0)
 
   await page.locator('#file-input').setInputFiles(FIXTURE)

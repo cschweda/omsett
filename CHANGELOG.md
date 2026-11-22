@@ -7,6 +7,31 @@ The paragraph that opens a version is its teaser: the home page shows its first 
 in the "What's new" banner, so keep it to two or three sentences on what a visitor will notice.
 A line beginning "Released" gives the date.
 
+## 0.6.0
+
+Released 22 November 2026.
+
+Omsett now reads SVG and draws it as a PNG, JPEG, WebP or any other format it writes. Text in
+the file is drawn in Inter, and nothing the file links to is fetched.
+
+### Added
+
+- **SVG, as a source.** resvg draws the file to a PNG and any other format follows in a second
+  step. The engine is 2.5 MB, fetched only when an SVG is dropped. No script in the file runs,
+  no link is followed, and what each conversion leaves out is said in the picker.
+- **SVG is recognised by its contents**: it is text, with no signature, so the root element is
+  read. A web page named `.svg` is not taken for one.
+- Six trap files for SVG: an unfinished file, a stated size of forty thousand megapixels, shapes
+  that multiply themselves a hundred million times, a shape that draws itself, a web page named
+  as an SVG, and three older traps now read as the SVGs they are.
+
+### Known
+
+- **Text in an SVG is always drawn in Inter**, in Latin letters only. A browser tab has no
+  fonts to lend, so the font the file names is not used, and other scripts are not drawn.
+- An SVG sized in millimetres or inches converts, but its size is not shown before converting.
+- SVGZ, the compressed form, is not read yet.
+
 ## 0.5.0
 
 Released 22 November 2026.

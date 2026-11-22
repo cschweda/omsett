@@ -27,21 +27,24 @@ describe('router, real registry', () => {
     for (const edge of deriveEdges(registry).edges) {
       const engines = edge.candidates.map((c) => c.engine)
       if (edge.from !== 'png') expect(engines, `${edge.from} → ${edge.to}`).not.toContain('canvas')
-      for (const engine of engines) expect(engine === 'canvas' || engine === 'heif' || engine.startsWith('vips')).toBe(true)
+      for (const engine of engines) expect(engine === 'canvas' || engine === 'heif' || engine === 'resvg' || engine.startsWith('vips')).toBe(true)
     }
   })
 
-  it('converts between seven formats, in order of general usefulness, and reads HEIC', () => {
+  it('converts between seven formats, in order of general usefulness, and reads HEIC and SVG', () => {
     const all = createRouter(everything)
     const ids = everything.formats.map((f) => f.id)
-    expect(ids).toEqual(['webp', 'jpeg', 'png', 'avif', 'gif', 'tiff', 'jxl', 'heic'])
+    expect(ids).toEqual(['webp', 'jpeg', 'png', 'avif', 'gif', 'tiff', 'jxl', 'heic', 'svg'])
     // Every pair converts, directly or through a step in between; nothing is written as HEIC.
     for (const from of ids) {
-      for (const to of ids) expect(all.route(from, to) === null, `${from} → ${to}`).toBe(from === to || to === 'heic')
+      for (const to of ids) expect(all.route(from, to) === null, `${from} → ${to}`).toBe(from === to || to === 'heic' || to === 'svg')
     }
     // HEIC is decoded to PNG first, without loss, and goes on from there.
     expect(all.route('heic', 'png')!.edges.map((e) => e.candidates[0]!.engine)).toEqual(['heif'])
     expect(all.route('heic', 'jpeg')!.edges.map((e) => e.to)).toEqual(['png', 'jpeg'])
+    // An SVG is drawn to PNG the same way, and what that costs is said for every target.
+    expect(all.route('svg', 'png')!.edges.map((e) => e.candidates[0]!.engine)).toEqual(['resvg'])
+    expect(all.route('svg', 'webp')!.warnings.map((w) => w.id)).toEqual(expect.arrayContaining(['svg-fonts', 'svg-linked']))
     expect(all.targetsFor(['png']).find((t) => t.format.id === 'heic')!.reason).toBe('HEIC can be read but not written')
   })
 
@@ -70,7 +73,7 @@ describe('router, real registry', () => {
 
   it('offers plain libvips, not a module, for the pairs plain libvips covers', () => {
     for (const edge of deriveEdges(registry).edges) {
-      if ([edge.from, edge.to].some((id) => ['avif', 'jxl', 'heic'].includes(id))) continue
+      if ([edge.from, edge.to].some((id) => ['avif', 'jxl', 'heic', 'svg'].includes(id))) continue
       for (const c of edge.candidates) expect(['canvas', 'vips'], `${edge.from} → ${edge.to}`).toContain(c.engine)
     }
   })

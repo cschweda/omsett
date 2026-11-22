@@ -116,8 +116,11 @@ trap(
 trap(
     "svg-with-script.png",
     b'<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"><script>alert(1)</script></svg>\n',
-    "Markup carrying a script, named as a PNG. Must never be treated as a picture, or run.",
-    "unknown",
+    "An SVG carrying a script, named as a PNG. It is drawn as the SVG it is, and the script is "
+    "never run.",
+    "svg",
+    node="succeeds",
+    mismatch=True,
     group=G,
 )
 trap(
@@ -159,6 +162,15 @@ trap(
 
 # === 2. Files that lie about their size ============================================================
 G = "size"
+trap(
+    "huge-declared.svg",
+    b'<svg xmlns="http://www.w3.org/2000/svg" width="200000" height="200000"><rect width="10" height="10"/></svg>\n',
+    "A hundred bytes of SVG that state a size of forty thousand megapixels. Refused from the "
+    "stated size, before anything is drawn.",
+    "svg",
+    guard="refused",
+    group=G,
+)
 trap(
     "declares-30000x30000.png",
     SIGNATURE + ihdr(30000, 30000),
@@ -371,6 +383,44 @@ trap(
     group=G,
 )
 
+# SVG, drawn by resvg. It is text, so the ways it goes wrong are a parser's.
+SVG_OPEN = b'<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64">'
+trap(
+    "unclosed.svg",
+    SVG_OPEN + b'<rect width="10" height="10"',
+    "An SVG that stops in the middle of a tag.",
+    "svg",
+    node="fails",
+    group=G,
+)
+use_bomb = b'<g id="a0"><rect width="1" height="1"/></g>'
+for level in range(1, 9):
+    use_bomb += f'<g id="a{level}">'.encode() + f'<use href="#a{level - 1}"/>'.encode() * 10 + b"</g>"
+trap(
+    "use-bomb.svg",
+    SVG_OPEN + b"<defs>" + use_bomb + b'</defs><use href="#a8"/></svg>\n',
+    "A few hundred bytes of shapes that each draw the one before ten times: a hundred million "
+    "rectangles if followed. The reader must stop counting and refuse.",
+    "svg",
+    node="fails",
+    group=G,
+)
+trap(
+    "self-reference.svg",
+    SVG_OPEN + b'<g id="x"><rect width="8" height="8"/><use href="#x"/></g></svg>\n',
+    "A shape that draws itself. The reader must break the loop, not follow it.",
+    "svg",
+    node="succeeds",
+    group=G,
+)
+trap(
+    "html-named.svg",
+    b"<!DOCTYPE html>\n<html><body><svg></svg><script>alert(1)</script></body></html>\n",
+    "A web page with an .svg name. Its root is not <svg>, so it is not an SVG.",
+    "unknown",
+    group=G,
+)
+
 # === 4. Sound files in shapes a careless reader gets wrong ============================================
 G = "unusual"
 deep = bytearray()
@@ -447,17 +497,20 @@ trap(
     )
     + b']>\n<svg xmlns="http://www.w3.org/2000/svg"><text>&i;</text></svg>\n',
     "An XML entity bomb (\"billion laughs\"): a kilobyte that expands to a gigabyte of text if "
-    "parsed. It must be recognized as markup and never parsed.",
-    "unregistered",
+    "parsed. The SVG reader must notice the loop and refuse.",
+    "svg",
+    node="fails",
     group=G,
 )
 trap(
     "svg-fetches-elsewhere.svg",
-    b'<?xml version="1.0"?>\n<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">'
+    b'<?xml version="1.0"?>\n<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="40" height="40">'
     b'<image xlink:href="https://example.invalid/track.png" width="1" height="1"/>'
     b'<script xlink:href="https://example.invalid/x.js"/></svg>\n',
-    "Markup that asks for a picture and a script from another site. Nothing may be requested.",
-    "unregistered",
+    "An SVG that asks for a picture and a script from another site. It is drawn without them, "
+    "and nothing may be requested.",
+    "svg",
+    node="succeeds",
     group=G,
 )
 trap(
