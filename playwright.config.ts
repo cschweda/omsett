@@ -13,6 +13,9 @@ export default defineConfig({
   use: {
     baseURL: remote ?? `http://localhost:${port}`,
     trace: 'retain-on-failure',
+    // Tests ask for reduced motion, so nothing moves by itself while they measure and click.
+    // The one test of the comparison's opening movement turns it back on.
+    contextOptions: { reducedMotion: 'reduce' },
   },
   webServer: remote
     ? undefined

@@ -53,6 +53,21 @@ test('the comparison shows both pictures, unstretched, and the divider moves', a
   await expect(page.locator('.tag.right')).toContainText('WebP')
 })
 
+test('the handle moves once when the comparison appears, then rests at the centre', async ({ browser }) => {
+  // With motion allowed, the handle shows that it is a handle.
+  const context = await browser.newContext({ reducedMotion: 'no-preference' })
+  const page = await context.newPage()
+  await open(page)
+  await page.locator('#file-input').setInputFiles(ALPHA)
+  await page.getByRole('radio', { name: /WebP/ }).click()
+  await page.getByTestId('convert').click()
+  const control = page.getByTestId('compare-control')
+  await expect(page.locator('[data-testid="compare"][data-ready="true"]')).toBeVisible({ timeout: 15_000 })
+  await expect.poll(async () => Number(await control.inputValue()), { timeout: 3000, intervals: [30] }).not.toBe(50)
+  await expect(control).toHaveValue('50', { timeout: 5000 })
+  await context.close()
+})
+
 test('lowering the quality converts again and the file gets smaller', async ({ page }) => {
   await convert(page)
   const before = await outputBytes(page)

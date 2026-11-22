@@ -38,6 +38,8 @@ every browser, where some used to return half a picture.
 - A preview that cannot be drawn (a browser cannot display a TIFF) is no longer reported as a
   problem with the file.
 - The "What's new" banner marks its label with a green underline in place of a full-width rule.
+- The comparison's divider is now plainly a control: a blue line with a round, arrowed handle,
+  which slides a little each way once when the comparison first appears.
 - Diagrams on the Technical details page are centered.
 - The readiness mark in the navigation is green when the browser can convert and red when it
   cannot.
