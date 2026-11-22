@@ -12,6 +12,7 @@ export const pipeline = `flowchart TD
   fits -->|no| refused
   fits -->|yes| engine["Convert in a background worker"]
   engine -->|fails| failed["Shown as: couldn't be converted"]
+  engine -->|runs past its time limit| stopped["Worker stopped;<br/>shown as: took too long"]
   engine -->|succeeds| result["Result: download and compare"]
 `
 

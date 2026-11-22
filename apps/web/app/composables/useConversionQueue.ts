@@ -1,6 +1,7 @@
 import { detect, nameDisagrees, pixelCount, sizeProblem, type Detection } from '@omsett/detect'
 import type { Edge, Route } from '@omsett/registry'
 import { dimensionProblem, formatById } from '@omsett/registry'
+import { conversionBudgetMs, MAX_FILES, testHook, TimedOut } from '~/utils/limits'
 import { registry, router } from '~/utils/registry'
 
 export interface QueueFile {
@@ -44,8 +45,16 @@ export function useConversionQueue() {
   const converting = ref(false)
   /** The user's quality setting, 1–100. Null when the selected target has no such setting. */
   const quality = ref<number | null>(null)
-  /** `?engine=<id>` forces one engine, so each path can be exercised on purpose. */
-  const forcedEngine = import.meta.client ? new URLSearchParams(location.search).get('engine') : null
+  /** Said to the user when something was left out: too many files, for one. */
+  const notice = ref('')
+
+  // Two settings for the test suite, read from the address bar and honored only on localhost.
+  // `?engine=<id>` forces one engine, so each path can be exercised on purpose; an id that is
+  // not an engine is ignored. `?timeout=<ms>` shortens the time limit, to prove it works.
+  const requestedEngine = import.meta.client ? testHook('engine', location) : null
+  const forcedEngine = requestedEngine && engines.info[requestedEngine] ? requestedEngine : null
+  const requestedBudget = import.meta.client ? Number(testHook('timeout', location)) : Number.NaN
+  const forcedBudgetMs = Number.isFinite(requestedBudget) && requestedBudget > 0 ? requestedBudget : null
 
   const convertible = computed(() =>
     files.value.filter((f) => f.detection.kind === 'known' && !f.problem),
@@ -78,7 +87,13 @@ export function useConversionQueue() {
   })
 
   async function add(incoming: Iterable<File>) {
+    notice.value = ''
     for (const file of incoming) {
+      if (files.value.length >= MAX_FILES) {
+        notice.value = `Only the first ${MAX_FILES} files were added.`
+        announce(notice.value)
+        break
+      }
       const detection = await detect(file, registry.formats)
       const known = detection.kind === 'known'
       const entry: QueueFile = {
@@ -149,6 +164,7 @@ export function useConversionQueue() {
     let pixels = pixelCount(entry.detection.dimensions)
 
     const produced: QueueResult[] = []
+    let timedOut = false
     for (const [hop, edge] of route.edges.entries()) {
       const from = formatById(registry, edge.from)!
       const to = formatById(registry, edge.to)!
@@ -169,6 +185,7 @@ export function useConversionQueue() {
             (fraction) => {
               entry.progress = (hop + fraction) / route.edges.length
             },
+            forcedBudgetMs ?? conversionBudgetMs(pixels),
           )
           if (last) {
             for (const [index, output] of outputs.entries()) {
@@ -190,9 +207,11 @@ export function useConversionQueue() {
           name = first.name
           break
         } catch (error) {
+          if (error instanceof TimedOut) timedOut = true
           console.warn(`[omsett] ${candidate.engine} failed on ${entry.file.name}`, error)
         }
       }
+      if (!next && timedOut) throw new Refusal('Stopped: this file took too long to convert')
       if (!next) throw new Error("This file couldn't be converted")
       blob = next
       pixels = 0
@@ -269,6 +288,7 @@ export function useConversionQueue() {
 
   function reset() {
     clearTimeout(requeue)
+    notice.value = ''
     engines.terminate()
     for (const entry of files.value) entry.thumbnail?.close()
     files.value = []
@@ -289,6 +309,7 @@ export function useConversionQueue() {
     canConvert,
     overall,
     forcedEngine,
+    notice,
     add,
     remove,
     select,

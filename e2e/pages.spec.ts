@@ -9,6 +9,7 @@ const pages = [
   { path: '/about', heading: 'About' },
   { path: '/technical', heading: 'Technical details' },
   { path: '/whats-new', heading: 'What’s new' },
+  { path: '/security', heading: 'Security' },
   { path: '/status', heading: 'Status' },
 ]
 
@@ -81,6 +82,34 @@ test('what’s new is the changelog', async ({ page }) => {
   await expect(page.getByTestId('release')).toHaveCount(releases.length)
   await expect(page.getByRole('heading', { level: 2 }).first()).toHaveText(/Latest|Version/)
   await expect(page.getByTestId('release').first()).toContainText('Compare slider')
+})
+
+test('security lists every audit, newest open and the rest collapsed', async ({ page }) => {
+  const audits = JSON.parse(readFileSync(new URL('../security/audits.json', import.meta.url), 'utf8')) as Array<{
+    title: string
+    findings: Array<{ id: string; title: string; severity: string }>
+  }>
+  await page.goto('/security')
+  const sections = page.getByTestId('audit')
+  await expect(sections).toHaveCount(audits.length)
+  await expect(sections.first()).toHaveAttribute('open', '')
+  for (let i = 1; i < audits.length; i++) await expect(sections.nth(i)).not.toHaveAttribute('open', '')
+
+  // The open audit shows every finding with its severity, identification and mitigation.
+  const latest = audits[0]!
+  const shown = sections.first().getByTestId('finding')
+  await expect(shown).toHaveCount(latest.findings.length)
+  await expect(shown.first()).toContainText(latest.findings[0]!.id)
+  await expect(shown.first()).toContainText('Identification')
+  await expect(shown.first()).toContainText('Mitigation')
+  await expect(shown.first().locator('.severity')).toHaveText(new RegExp(latest.findings[0]!.severity, 'i'))
+
+  // An older audit keeps its findings out of sight until it is opened.
+  const older = sections.nth(1)
+  await expect(older.getByTestId('finding').first()).toBeHidden()
+  await older.locator('summary').click()
+  await expect(older.getByTestId('finding').first()).toBeVisible()
+  await expect(page.getByTestId('count-audits')).toHaveText(String(audits.length))
 })
 
 test('status reports what this browser can do', async ({ page }) => {

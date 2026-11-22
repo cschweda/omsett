@@ -65,6 +65,10 @@ export function securityHeaders(): HeaderRule[] {
         // Both are required for SharedArrayBuffer, which multi-threaded WASM needs.
         'Cross-Origin-Opener-Policy': 'same-origin',
         'Cross-Origin-Embedder-Policy': 'require-corp',
+        // Once a browser has seen this over HTTPS, it refuses plain HTTP to this site for a
+        // year, so a network in the middle cannot quietly downgrade a later visit. Ignored on
+        // http://localhost. Subdomains are left out on purpose: they are not this build's to bind.
+        'Strict-Transport-Security': 'max-age=31536000',
         // frame-ancestors cannot be set from a <meta> policy, so framing is refused here.
         'X-Frame-Options': 'DENY',
         'X-Content-Type-Options': 'nosniff',

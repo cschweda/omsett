@@ -50,6 +50,7 @@ export function deriveEdges(registry: Registry): Derived {
           lossy: write.lossy,
           cost: candidateCost(write.lossy, capability.tier === 'native'),
           defaultOptions: { ...write.defaultOptions },
+          drops: write.drops ?? [],
           priority: capability.priority,
         })
         ranked.set(key(from, to), list)
@@ -69,12 +70,16 @@ export function deriveEdges(registry: Registry): Derived {
       lossy: c.lossy,
       cost: c.cost,
       defaultOptions: c.defaultOptions,
+      drops: c.drops,
     }))
     const first = candidates[0]!
 
     const warnings: Warning[] = []
     for (const trait of source.traits) {
-      if (!target.traits.includes(trait)) warnings.push(registry.traitWarnings[trait])
+      // Lost because the target cannot hold it, or because the engine that will run leaves it out.
+      if (!target.traits.includes(trait) || first.drops.includes(trait)) {
+        warnings.push(registry.traitWarnings[trait])
+      }
     }
     if (source.lossy === 'always' && first.lossy) warnings.push(lossyToLossy)
     for (const override of overridesFor(from, to)) {

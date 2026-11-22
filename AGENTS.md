@@ -87,6 +87,14 @@ build by `apps/web/scripts/write-headers.ts`.
   a preference to treat a WebP link as a download (see `playwright.config.ts`).
 - **GitHub Actions are pinned to commit SHAs**, with the release in a trailing comment. Keep it
   that way when adding or updating one; look the SHA up, do not guess it.
+- **Security audits** live in `security/audits.json`, newest first. The site's Security page,
+  `SECURITY.md`, and the README's Security section are generated from it; run
+  `pnpm security:docs` after editing, or a test fails. Never mark a finding fixed without a test.
+- **Every conversion has a time limit** (`apps/web/app/utils/limits.ts`); past it the worker is
+  terminated. A new engine needs no code for this, but must be safe to kill at any moment.
+- **Engines must agree on what they leave out.** Both drop metadata, declared as `drops` on the
+  capability. If one engine for a pair kept it, what leaks would depend on the browser.
+- **Settings in the address bar are for tests and work on localhost only** (`testHook`).
 - **Trap files** (`fixtures/_traps/`, listed in `manifest.json`) run in both test suites. A new
   failure mode gets a trap; add it in `fixtures/_tools/make-traps.py`.
 - **libvips forgives damaged files unless told not to.** The engine loads with
@@ -111,6 +119,7 @@ build by `apps/web/scripts/write-headers.ts`.
     read from the registry and the repository, so they update themselves; their prose and the
     diagrams in `app/utils/diagrams.ts` do not, and must be edited when the process they
     describe changes.
+  - `security/audits.json`, when the change fixes or opens a security finding.
   - `README.md`, the design doc, and this file, wherever they describe what changed.
 - **Commits** are small and labeled (`feat(registry): …`, `fix(web): …`, `chore(ci): …`), and
   each builds and passes tests. No `Co-Authored-By` line and no other AI attribution trailer.

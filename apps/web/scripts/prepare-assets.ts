@@ -119,6 +119,9 @@ const facts = {
 }
 await writeFile(join(generatedDir, 'facts.json'), JSON.stringify(facts, null, 2) + '\n')
 
+// The Security page is the audit record itself.
+await copyFile(join(repo, 'security', 'audits.json'), join(generatedDir, 'audits.json'))
+
 // Inter stands in for Helvetica Neue on devices that do not have it (see main.css).
 const fonts: Array<[pkg: string, file: string]> = [
   ['@fontsource/inter', 'inter-latin-400-normal.woff2'],

@@ -8,7 +8,8 @@
     "guard": "ok",
     "node": "none",
     "browser": "none",
-    "note": null
+    "note": null,
+    "absent": null
   },
   {
     "file": "text.png",
@@ -19,7 +20,8 @@
     "guard": "ok",
     "node": "none",
     "browser": "none",
-    "note": null
+    "note": null,
+    "absent": null
   },
   {
     "file": "random-bytes.png",
@@ -30,7 +32,8 @@
     "guard": "ok",
     "node": "none",
     "browser": "none",
-    "note": null
+    "note": null,
+    "absent": null
   },
   {
     "file": "svg-with-script.png",
@@ -41,7 +44,8 @@
     "guard": "ok",
     "node": "none",
     "browser": "none",
-    "note": null
+    "note": null,
+    "absent": null
   },
   {
     "file": "jpeg-named.png",
@@ -52,7 +56,8 @@
     "guard": "ok",
     "node": "none",
     "browser": "none",
-    "note": null
+    "note": null,
+    "absent": null
   },
   {
     "file": "webp-named.png",
@@ -63,7 +68,8 @@
     "guard": "ok",
     "node": "none",
     "browser": "none",
-    "note": null
+    "note": null,
+    "absent": null
   },
   {
     "file": "gif-named.png",
@@ -74,7 +80,8 @@
     "guard": "ok",
     "node": "none",
     "browser": "none",
-    "note": null
+    "note": null,
+    "absent": null
   },
   {
     "file": "png-named.jpg",
@@ -85,7 +92,8 @@
     "guard": "ok",
     "node": "succeeds",
     "browser": "succeeds",
-    "note": null
+    "note": null,
+    "absent": null
   },
   {
     "file": "declares-30000x30000.png",
@@ -96,7 +104,8 @@
     "guard": "refused",
     "node": "none",
     "browser": "none",
-    "note": null
+    "note": null,
+    "absent": null
   },
   {
     "file": "declares-max-size.png",
@@ -107,7 +116,8 @@
     "guard": "refused",
     "node": "none",
     "browser": "none",
-    "note": null
+    "note": null,
+    "absent": null
   },
   {
     "file": "declares-zero-size.png",
@@ -118,7 +128,8 @@
     "guard": "ok",
     "node": "fails",
     "browser": "fails",
-    "note": null
+    "note": null,
+    "absent": null
   },
   {
     "file": "bomb-20000x20000.png",
@@ -129,7 +140,8 @@
     "guard": "refused",
     "node": "none",
     "browser": "none",
-    "note": null
+    "note": null,
+    "absent": null
   },
   {
     "file": "too-wide-for-webp.png",
@@ -140,7 +152,8 @@
     "guard": "ok",
     "node": "fails",
     "browser": "fails",
-    "note": "Too large for WebP, which holds 16383 pixels a side at most"
+    "note": "Too large for WebP, which holds 16383 pixels a side at most",
+    "absent": null
   },
   {
     "file": "signature-only.png",
@@ -151,7 +164,8 @@
     "guard": "ok",
     "node": "none",
     "browser": "none",
-    "note": null
+    "note": null,
+    "absent": null
   },
   {
     "file": "truncated.png",
@@ -162,7 +176,8 @@
     "guard": "ok",
     "node": "fails",
     "browser": "either",
-    "note": null
+    "note": null,
+    "absent": null
   },
   {
     "file": "no-image-data.png",
@@ -173,7 +188,8 @@
     "guard": "ok",
     "node": "fails",
     "browser": "fails",
-    "note": null
+    "note": null,
+    "absent": null
   },
   {
     "file": "short-image-data.png",
@@ -184,7 +200,8 @@
     "guard": "ok",
     "node": "fails",
     "browser": "either",
-    "note": null
+    "note": null,
+    "absent": null
   },
   {
     "file": "corrupt-image-data.png",
@@ -195,7 +212,8 @@
     "guard": "ok",
     "node": "fails",
     "browser": "either",
-    "note": null
+    "note": null,
+    "absent": null
   },
   {
     "file": "bad-checksum.png",
@@ -206,7 +224,8 @@
     "guard": "ok",
     "node": "fails",
     "browser": "either",
-    "note": null
+    "note": null,
+    "absent": null
   },
   {
     "file": "bad-bit-depth.png",
@@ -217,7 +236,8 @@
     "guard": "ok",
     "node": "fails",
     "browser": "fails",
-    "note": null
+    "note": null,
+    "absent": null
   },
   {
     "file": "bad-colour-type.png",
@@ -228,7 +248,8 @@
     "guard": "ok",
     "node": "fails",
     "browser": "fails",
-    "note": null
+    "note": null,
+    "absent": null
   },
   {
     "file": "bad-filter-type.png",
@@ -239,7 +260,8 @@
     "guard": "ok",
     "node": "fails",
     "browser": "either",
-    "note": null
+    "note": null,
+    "absent": null
   },
   {
     "file": "chunk-length-overflow.png",
@@ -250,7 +272,8 @@
     "guard": "ok",
     "node": "none",
     "browser": "none",
-    "note": null
+    "note": null,
+    "absent": null
   },
   {
     "file": "header-not-first.png",
@@ -261,7 +284,8 @@
     "guard": "ok",
     "node": "fails",
     "browser": "fails",
-    "note": null
+    "note": null,
+    "absent": null
   },
   {
     "file": "metadata-bomb.png",
@@ -272,7 +296,8 @@
     "guard": "ok",
     "node": "succeeds",
     "browser": "succeeds",
-    "note": null
+    "note": null,
+    "absent": null
   },
   {
     "file": "no-end-marker.png",
@@ -283,7 +308,8 @@
     "guard": "ok",
     "node": "succeeds",
     "browser": "succeeds",
-    "note": null
+    "note": null,
+    "absent": null
   },
   {
     "file": "trailing-garbage.png",
@@ -294,7 +320,8 @@
     "guard": "ok",
     "node": "succeeds",
     "browser": "succeeds",
-    "note": null
+    "note": null,
+    "absent": null
   },
   {
     "file": "sixteen-bit.png",
@@ -305,7 +332,8 @@
     "guard": "ok",
     "node": "succeeds",
     "browser": "succeeds",
-    "note": null
+    "note": null,
+    "absent": null
   },
   {
     "file": "palette-with-transparency.png",
@@ -316,7 +344,8 @@
     "guard": "ok",
     "node": "succeeds",
     "browser": "succeeds",
-    "note": null
+    "note": null,
+    "absent": null
   },
   {
     "file": "one-bit-grey.png",
@@ -327,6 +356,283 @@
     "guard": "ok",
     "node": "succeeds",
     "browser": "succeeds",
-    "note": null
+    "note": null,
+    "absent": null
+  },
+  {
+    "file": "gif-header-then-script.png",
+    "group": "identity",
+    "why": "The classic two-in-one: bytes that open like a GIF and continue as a script. Identified as the GIF it opens as, which is not a supported format, and never run.",
+    "detect": "unregistered",
+    "mismatch": false,
+    "guard": "ok",
+    "node": "none",
+    "browser": "none",
+    "note": null,
+    "absent": null
+  },
+  {
+    "file": "entity-expansion.svg",
+    "group": "identity",
+    "why": "An XML entity bomb (\"billion laughs\"): a kilobyte that expands to a gigabyte of text if parsed. It must be recognized as markup and never parsed.",
+    "detect": "unregistered",
+    "mismatch": false,
+    "guard": "ok",
+    "node": "none",
+    "browser": "none",
+    "note": null,
+    "absent": null
+  },
+  {
+    "file": "svg-fetches-elsewhere.svg",
+    "group": "identity",
+    "why": "Markup that asks for a picture and a script from another site. Nothing may be requested.",
+    "detect": "unregistered",
+    "mismatch": false,
+    "guard": "ok",
+    "node": "none",
+    "browser": "none",
+    "note": null,
+    "absent": null
+  },
+  {
+    "file": "utf16-text.png",
+    "group": "identity",
+    "why": "Text in an encoding whose first bytes can be mistaken for a binary signature.",
+    "detect": "unknown",
+    "mismatch": false,
+    "guard": "ok",
+    "node": "none",
+    "browser": "none",
+    "note": null,
+    "absent": null
+  },
+  {
+    "file": "png-then-zip.png",
+    "group": "identity",
+    "why": "A sound PNG with a ZIP archive attached to its end: one file, two formats. It is the PNG it opens as, and only the picture is converted.",
+    "detect": "png",
+    "mismatch": false,
+    "guard": "ok",
+    "node": "succeeds",
+    "browser": "succeeds",
+    "note": null,
+    "absent": null
+  },
+  {
+    "file": "script-in-metadata.png",
+    "group": "identity",
+    "why": "A sound picture whose comment, XMP and EXIF metadata all carry a marked payload, one of them a script. The picture converts; none of the payload may reach the output, whichever engine does the work.",
+    "detect": "png",
+    "mismatch": false,
+    "guard": "ok",
+    "node": "succeeds",
+    "browser": "succeeds",
+    "note": null,
+    "absent": "OMSETT-TRAP-PAYLOAD"
+  },
+  {
+    "file": "rowbytes-overflow.png",
+    "group": "size",
+    "why": "One row, a billion pixels wide at 16 bits a channel: eight gigabytes for a single row, a size that overflows the 32-bit arithmetic older readers used for it.",
+    "detect": "png",
+    "mismatch": false,
+    "guard": "refused",
+    "node": "none",
+    "browser": "none",
+    "note": null,
+    "absent": null
+  },
+  {
+    "file": "sign-bit-size.png",
+    "group": "size",
+    "why": "A width and height with the top bit set, which a reader that treats them as signed numbers sees as negative.",
+    "detect": "png",
+    "mismatch": false,
+    "guard": "refused",
+    "node": "none",
+    "browser": "none",
+    "note": null,
+    "absent": null
+  },
+  {
+    "file": "tall-1x100000.png",
+    "group": "size",
+    "why": "Valid, one pixel wide and a hundred thousand tall. Tiny in pixels, so the size guard lets it through; far taller than WebP can hold, so the target must refuse it.",
+    "detect": "png",
+    "mismatch": false,
+    "guard": "ok",
+    "node": "fails",
+    "browser": "fails",
+    "note": "Too large for WebP, which holds 16383 pixels a side at most",
+    "absent": null
+  },
+  {
+    "file": "large-8000x8000.png",
+    "group": "size",
+    "why": "Valid and genuinely large: 64 megapixels in a file of a few kilobytes. Allowed by the guard and too big for the canvas engine, so it must be handed to libvips and convert, without the tab running out of memory.",
+    "detect": "png",
+    "mismatch": false,
+    "guard": "ok",
+    "node": "succeeds",
+    "browser": "succeeds",
+    "note": null,
+    "absent": null
+  },
+  {
+    "file": "inner-checksum-wrong.png",
+    "group": "damage",
+    "why": "The outer checksum is right; the one inside the compressed data, which is only checked after everything has been decompressed, is wrong.",
+    "detect": "png",
+    "mismatch": false,
+    "guard": "ok",
+    "node": "fails",
+    "browser": "either",
+    "note": null,
+    "absent": null
+  },
+  {
+    "file": "too-much-image-data.png",
+    "group": "damage",
+    "why": "Twice as many rows as the header declares. A reader that writes what it is given, instead of what it allocated for, writes past the end of its buffer.",
+    "detect": "png",
+    "mismatch": false,
+    "guard": "ok",
+    "node": "succeeds",
+    "browser": "either",
+    "note": null,
+    "absent": null
+  },
+  {
+    "file": "palette-index-out-of-range.png",
+    "group": "damage",
+    "why": "A two-colour palette, and pixels that all ask for colour number 200. A reader that looks it up without checking reads memory that is not the palette.",
+    "detect": "png",
+    "mismatch": false,
+    "guard": "ok",
+    "node": "succeeds",
+    "browser": "either",
+    "note": null,
+    "absent": null
+  },
+  {
+    "file": "palette-wrong-length.png",
+    "group": "damage",
+    "why": "A palette of seven bytes. Colours take three bytes each, so the last one is cut short.",
+    "detect": "png",
+    "mismatch": false,
+    "guard": "ok",
+    "node": "fails",
+    "browser": "either",
+    "note": null,
+    "absent": null
+  },
+  {
+    "file": "transparency-longer-than-palette.png",
+    "group": "damage",
+    "why": "Two colours in the palette, and 256 transparency entries for them.",
+    "detect": "png",
+    "mismatch": false,
+    "guard": "ok",
+    "node": "succeeds",
+    "browser": "either",
+    "note": null,
+    "absent": null
+  },
+  {
+    "file": "unknown-critical-chunk.png",
+    "group": "damage",
+    "why": "Contains a chunk marked as essential that no reader knows. The format says a reader that does not understand an essential chunk must give up.",
+    "detect": "png",
+    "mismatch": false,
+    "guard": "ok",
+    "node": "fails",
+    "browser": "either",
+    "note": null,
+    "absent": null
+  },
+  {
+    "file": "interlace-flag-lies.png",
+    "group": "damage",
+    "why": "The header says the rows are interlaced; the data is laid out as if they were not.",
+    "detect": "png",
+    "mismatch": false,
+    "guard": "ok",
+    "node": "fails",
+    "browser": "either",
+    "note": null,
+    "absent": null
+  },
+  {
+    "file": "colour-profile-bomb.png",
+    "group": "damage",
+    "why": "A sound picture with a colour profile that expands to 64 MB of nothing. Unlike a comment, a profile is something a reader wants to load.",
+    "detect": "png",
+    "mismatch": false,
+    "guard": "ok",
+    "node": "succeeds",
+    "browser": "either",
+    "note": null,
+    "absent": null
+  },
+  {
+    "file": "image-data-in-single-bytes.png",
+    "group": "damage",
+    "why": "Valid, with the image data split into one chunk per byte: thousands of chunks, each with its own header and checksum, to make a reader do a great deal of work for very little.",
+    "detect": "png",
+    "mismatch": false,
+    "guard": "ok",
+    "node": "succeeds",
+    "browser": "succeeds",
+    "note": null,
+    "absent": null
+  },
+  {
+    "file": "five-thousand-comments.png",
+    "group": "damage",
+    "why": "Valid, with five thousand comments ahead of the picture.",
+    "detect": "png",
+    "mismatch": false,
+    "guard": "ok",
+    "node": "succeeds",
+    "browser": "succeeds",
+    "note": null,
+    "absent": null
+  },
+  {
+    "file": "zero-gamma.png",
+    "group": "damage",
+    "why": "Declares a gamma of zero, which a reader that applies it divides by.",
+    "detect": "png",
+    "mismatch": false,
+    "guard": "ok",
+    "node": "succeeds",
+    "browser": "either",
+    "note": null,
+    "absent": null
+  },
+  {
+    "file": "claims-a-million-frames.png",
+    "group": "damage",
+    "why": "Announces itself as an animation of a million frames and contains one picture. A reader that allocates per announced frame runs out of memory.",
+    "detect": "png",
+    "mismatch": false,
+    "guard": "ok",
+    "node": "succeeds",
+    "browser": "either",
+    "note": null,
+    "absent": null
+  },
+  {
+    "file": "interlaced.png",
+    "group": "unusual",
+    "why": "Valid, with its rows interlaced in seven passes, the way PNGs were saved for slow connections.",
+    "detect": "png",
+    "mismatch": false,
+    "guard": "ok",
+    "node": "succeeds",
+    "browser": "succeeds",
+    "note": null,
+    "absent": null
   }
 ]

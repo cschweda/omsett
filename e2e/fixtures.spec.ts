@@ -36,6 +36,9 @@ test('PNG → WebP with whichever engine this browser gets', async ({ page, brow
 
 test('PNG → WebP forced through vips', async ({ page, browserName }) => {
   test.skip(browserName !== 'chromium', 'the forced-engine run is specified for Chromium')
+  // Test settings in the address bar are honored on localhost only, by design.
+  const remote = process.env.BASE_URL && !/\/\/(?:localhost|127\.0\.0\.1)[:/]/.test(`${process.env.BASE_URL}/`)
+  test.skip(Boolean(remote), 'a public address ignores ?engine')
   const { engine, output } = await convertFixture(page, '/?engine=vips')
   expect(engine).toBe('vips')
   await expectRealWebp(output)

@@ -15,7 +15,8 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit -p tsconfig.json && pnpm -r typecheck",
     "e2e": "playwright test",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "security:docs": "node scripts/security-docs.ts"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.11.0",

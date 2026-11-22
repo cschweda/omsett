@@ -56,7 +56,12 @@ export function createVipsEngine(host: VipsHost): Engine {
         // A converter must not hand back half a picture as if it were whole, so damage is fatal.
         image = vips.Image.newFromBuffer(bytes, '', { fail_on: 'error' })
         onProgress(0.4)
-        const encoded = image.writeToBuffer(`.${to.extensions[0]}`, { Q: qualityOption(input.options) })
+        // keep: 'none' leaves out EXIF, XMP and other metadata. Without it libvips copies them
+        // into the output, and a photograph's location would travel with the converted file.
+        const encoded = image.writeToBuffer(`.${to.extensions[0]}`, {
+          Q: qualityOption(input.options),
+          keep: 'none',
+        })
         throwIfAborted(signal)
         onProgress(1)
         // Copy out of the WASM heap: the view is only valid until the next allocation.

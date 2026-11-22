@@ -50,6 +50,8 @@ const formats = computed(() => registry.formats.map((f) => f.name))
             <li>It goes by what a file contains, not what it is called.</li>
             <li>It refuses a damaged file instead of quietly returning half of one.</li>
             <li>It refuses a file too large to handle safely, and says so, instead of freezing the tab.</li>
+            <li>It stops a conversion that runs too long, instead of leaving you waiting.</li>
+            <li>It removes author, location and other metadata from what it produces, and tells you so.</li>
           </ul>
         </div>
       </StepSection>
@@ -76,7 +78,8 @@ const formats = computed(() => registry.formats.map((f) => f.name))
           </p>
           <p>
             For how it works underneath, see <NuxtLink to="/technical">Technical details</NuxtLink>. For what has
-            changed lately, see <NuxtLink to="/whats-new">What’s new</NuxtLink>.
+            changed lately, see <NuxtLink to="/whats-new">What’s new</NuxtLink>. For how it has been attacked and
+            what was found, see <NuxtLink to="/security">Security</NuxtLink>.
           </p>
         </div>
       </StepSection>

@@ -176,6 +176,12 @@ const trapGroups: Record<string, string> = {
         </div>
         <div class="prose">
           <p>
+            Every conversion also runs against a clock: 30 seconds, plus 3 for each megapixel, at most 10 minutes.
+            Past that the worker is stopped and the file is reported as having taken too long, so a file that sends
+            an engine into a loop cannot hold the page. The <NuxtLink to="/security">Security</NuxtLink> page
+            records each audit and what it found.
+          </p>
+          <p>
             Among them is a real decompression bomb, a small valid file that expands to 400 megapixels, which is
             refused from its header without being decoded. There are also {{ facts.cases }} sound edge-case files
             and a sample in each of {{ facts.sampleFormats }} image formats, most of them waiting for the formats

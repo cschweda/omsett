@@ -62,7 +62,7 @@ GOOD = SIGNATURE + ihdr(W, H) + idat(rgba_rows(W, H)) + IEND
 
 
 # --- manifest ---------------------------------------------------------------------------------
-def trap(name, data, why, detect, guard="ok", node="none", browser=None, mismatch=False, group="", note=None):
+def trap(name, data, why, detect, guard="ok", node="none", browser=None, mismatch=False, group="", note=None, absent=None):
     """
     detect   what identification must say: a format id, 'unregistered', or 'unknown'
     guard    'refused' if the size and pixel guard must stop it before any decode
@@ -72,6 +72,8 @@ def trap(name, data, why, detect, guard="ok", node="none", browser=None, mismatc
              partial picture (Firefox everywhere, WebKit on Linux) while others refuse them.
              That is a known gap, not a goal: see fixtures/README.md.
     note     the exact reason the app must show, where a generic one will not do
+    absent   text that must not appear anywhere in the converted file (a payload hidden in the
+             input's metadata, which a conversion must not carry across)
     """
     with open(os.path.join(OUT, name), "wb") as out:
         out.write(data)
@@ -86,6 +88,7 @@ def trap(name, data, why, detect, guard="ok", node="none", browser=None, mismatc
             "node": node,
             "browser": node if browser is None else browser,
             "note": note,
+            "absent": absent,
         }
     )
 
@@ -375,6 +378,315 @@ trap(
     "one-bit-grey.png",
     SIGNATURE + ihdr(64, 40, depth=1, colour=0) + idat(bytes(bits)) + IEND,
     "Valid, one bit a pixel.",
+    "png",
+    node="succeeds",
+    group=G,
+)
+
+
+# ================================================================================================
+# Second batch: adversarial files. Each reproduces the *shape* of an attack on an image reader
+# (resource exhaustion, an index or length that points outside its table, a payload smuggled in
+# metadata, a file that is two formats at once) without containing anything harmful itself.
+# ================================================================================================
+
+SMALL_W, SMALL_H = 64, 40
+SMALL = rgba_rows(SMALL_W, SMALL_H)
+PAYLOAD = "OMSETT-TRAP-PAYLOAD"
+
+# --- more files that are not what they say --------------------------------------------------------
+G = "identity"
+trap(
+    "gif-header-then-script.png",
+    b"GIF89a" + b"/*" + bytes(20) + b"*/=1;<script>alert(1)</script>",
+    "The classic two-in-one: bytes that open like a GIF and continue as a script. Identified as "
+    "the GIF it opens as, which is not a supported format, and never run.",
+    "unregistered",
+    group=G,
+)
+trap(
+    "entity-expansion.svg",
+    b'<?xml version="1.0"?>\n<!DOCTYPE lolz [<!ENTITY a "aaaaaaaaaa">'
+    + b"".join(
+        f'<!ENTITY {chr(98 + i)} "{("&" + chr(97 + i) + ";") * 10}">'.encode() for i in range(8)
+    )
+    + b']>\n<svg xmlns="http://www.w3.org/2000/svg"><text>&i;</text></svg>\n',
+    "An XML entity bomb (\"billion laughs\"): a kilobyte that expands to a gigabyte of text if "
+    "parsed. It must be recognized as markup and never parsed.",
+    "unregistered",
+    group=G,
+)
+trap(
+    "svg-fetches-elsewhere.svg",
+    b'<?xml version="1.0"?>\n<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">'
+    b'<image xlink:href="https://example.invalid/track.png" width="1" height="1"/>'
+    b'<script xlink:href="https://example.invalid/x.js"/></svg>\n',
+    "Markup that asks for a picture and a script from another site. Nothing may be requested.",
+    "unregistered",
+    group=G,
+)
+trap(
+    "utf16-text.png",
+    "﻿This is text in UTF-16, with a byte-order mark.\n".encode("utf-16"),
+    "Text in an encoding whose first bytes can be mistaken for a binary signature.",
+    "unknown",
+    group=G,
+)
+trap(
+    "png-then-zip.png",
+    GOOD + b"PK\x03\x04" + bytes(26) + b"PK\x05\x06" + bytes(18),
+    "A sound PNG with a ZIP archive attached to its end: one file, two formats. It is the PNG "
+    "it opens as, and only the picture is converted.",
+    "png",
+    node="succeeds",
+    group=G,
+)
+trap(
+    "script-in-metadata.png",
+    SIGNATURE
+    + ihdr(SMALL_W, SMALL_H)
+    + chunk(b"tEXt", b"Comment\x00<script>alert('" + PAYLOAD.encode() + b"')</script>")
+    + chunk(
+        b"iTXt",
+        b"XML:com.adobe.xmp\x00\x00\x00\x00\x00"
+        + b'<x:xmpmeta xmlns:x="adobe:ns:meta/"><rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">'
+        b'<rdf:Description xmlns:dc="http://purl.org/dc/elements/1.1/"><dc:creator>'
+        + PAYLOAD.encode()
+        + b"</dc:creator></rdf:Description></rdf:RDF></x:xmpmeta>",
+    )
+    + chunk(
+        b"eXIf",
+        b"MM\x00\x2a\x00\x00\x00\x08\x00\x01\x01\x0e\x00\x02"
+        + struct.pack(">II", len(PAYLOAD) + 1, 26)
+        + bytes(4)
+        + PAYLOAD.encode()
+        + b"\x00",
+    )
+    + idat(SMALL)
+    + IEND,
+    "A sound picture whose comment, XMP and EXIF metadata all carry a marked payload, one of "
+    "them a script. The picture converts; none of the payload may reach the output, whichever "
+    "engine does the work.",
+    "png",
+    node="succeeds",
+    absent=PAYLOAD,
+    group=G,
+)
+
+# --- more files that lie about their size ----------------------------------------------------------
+G = "size"
+trap(
+    "rowbytes-overflow.png",
+    SIGNATURE + ihdr(0x40000000, 1, depth=16),
+    "One row, a billion pixels wide at 16 bits a channel: eight gigabytes for a single row, a "
+    "size that overflows the 32-bit arithmetic older readers used for it.",
+    "png",
+    guard="refused",
+    group=G,
+)
+trap(
+    "sign-bit-size.png",
+    SIGNATURE + ihdr(0x80000000, 0x80000000),
+    "A width and height with the top bit set, which a reader that treats them as signed numbers "
+    "sees as negative.",
+    "png",
+    guard="refused",
+    group=G,
+)
+tall = 100000
+squeeze = zlib.compressobj(9)
+tall_data = b"".join(squeeze.compress(b"\x00\x00") for _ in range(tall)) + squeeze.flush()
+trap(
+    "tall-1x100000.png",
+    SIGNATURE + ihdr(1, tall, depth=1, colour=0) + chunk(b"IDAT", tall_data) + IEND,
+    "Valid, one pixel wide and a hundred thousand tall. Tiny in pixels, so the size guard lets "
+    "it through; far taller than WebP can hold, so the target must refuse it.",
+    "png",
+    node="fails",
+    note="Too large for WebP, which holds 16383 pixels a side at most",
+    group=G,
+)
+big = 8000
+big_row = b"\x00" + bytes(big // 8)
+squeeze = zlib.compressobj(9)
+big_data = b"".join(squeeze.compress(big_row) for _ in range(big)) + squeeze.flush()
+trap(
+    "large-8000x8000.png",
+    SIGNATURE + ihdr(big, big, depth=1, colour=0) + chunk(b"IDAT", big_data) + IEND,
+    "Valid and genuinely large: 64 megapixels in a file of a few kilobytes. Allowed by the guard "
+    "and too big for the canvas engine, so it must be handed to libvips and convert, without "
+    "the tab running out of memory.",
+    "png",
+    node="succeeds",
+    group=G,
+)
+
+# --- more damage: the shapes that have broken image readers before ---------------------------------
+G = "damage"
+bad_adler = bytearray(zlib.compress(SMALL, 9))
+bad_adler[-4:] = b"\xde\xad\xbe\xef"
+trap(
+    "inner-checksum-wrong.png",
+    SIGNATURE + ihdr(SMALL_W, SMALL_H) + chunk(b"IDAT", bytes(bad_adler)) + IEND,
+    "The outer checksum is right; the one inside the compressed data, which is only checked "
+    "after everything has been decompressed, is wrong.",
+    "png",
+    node="fails",
+    browser="either",
+    group=G,
+)
+trap(
+    "too-much-image-data.png",
+    SIGNATURE + ihdr(SMALL_W, SMALL_H) + idat(SMALL + SMALL) + IEND,
+    "Twice as many rows as the header declares. A reader that writes what it is given, instead "
+    "of what it allocated for, writes past the end of its buffer.",
+    "png",
+    node="succeeds",
+    browser="either",
+    group=G,
+)
+out_of_range = b"".join(b"\x00" + bytes([200]) * SMALL_W for _ in range(SMALL_H))
+trap(
+    "palette-index-out-of-range.png",
+    SIGNATURE
+    + ihdr(SMALL_W, SMALL_H, colour=3)
+    + chunk(b"PLTE", bytes((255, 0, 0, 0, 0, 255)))
+    + idat(out_of_range)
+    + IEND,
+    "A two-colour palette, and pixels that all ask for colour number 200. A reader that looks "
+    "it up without checking reads memory that is not the palette.",
+    "png",
+    node="succeeds",
+    browser="either",
+    group=G,
+)
+trap(
+    "palette-wrong-length.png",
+    SIGNATURE
+    + ihdr(SMALL_W, SMALL_H, colour=3)
+    + chunk(b"PLTE", bytes((255, 0, 0, 0, 0, 255, 7)))
+    + idat(b"".join(b"\x00" + bytes(SMALL_W) for _ in range(SMALL_H)))
+    + IEND,
+    "A palette of seven bytes. Colours take three bytes each, so the last one is cut short.",
+    "png",
+    node="fails",
+    browser="either",
+    group=G,
+)
+trap(
+    "transparency-longer-than-palette.png",
+    SIGNATURE
+    + ihdr(SMALL_W, SMALL_H, colour=3)
+    + chunk(b"PLTE", bytes((255, 0, 0, 0, 0, 255)))
+    + chunk(b"tRNS", bytes(256))
+    + idat(b"".join(b"\x00" + bytes(SMALL_W) for _ in range(SMALL_H)))
+    + IEND,
+    "Two colours in the palette, and 256 transparency entries for them.",
+    "png",
+    node="succeeds",
+    browser="either",
+    group=G,
+)
+trap(
+    "unknown-critical-chunk.png",
+    SIGNATURE + ihdr(SMALL_W, SMALL_H) + chunk(b"CRIT", b"must be understood") + idat(SMALL) + IEND,
+    "Contains a chunk marked as essential that no reader knows. The format says a reader that "
+    "does not understand an essential chunk must give up.",
+    "png",
+    node="fails",
+    browser="either",
+    group=G,
+)
+trap(
+    "interlace-flag-lies.png",
+    SIGNATURE
+    + chunk(b"IHDR", struct.pack(">IIBBBBB", SMALL_W, SMALL_H, 8, 6, 0, 0, 1))
+    + idat(SMALL)
+    + IEND,
+    "The header says the rows are interlaced; the data is laid out as if they were not.",
+    "png",
+    node="fails",
+    browser="either",
+    group=G,
+)
+trap(
+    "colour-profile-bomb.png",
+    SIGNATURE
+    + ihdr(SMALL_W, SMALL_H)
+    + chunk(b"iCCP", b"bomb\x00\x00" + zlib.compress(bytes(64 * 1024 * 1024), 9))
+    + idat(SMALL)
+    + IEND,
+    "A sound picture with a colour profile that expands to 64 MB of nothing. Unlike a comment, "
+    "a profile is something a reader wants to load.",
+    "png",
+    node="succeeds",
+    browser="either",
+    group=G,
+)
+whole = zlib.compress(SMALL, 9)
+trap(
+    "image-data-in-single-bytes.png",
+    SIGNATURE + ihdr(SMALL_W, SMALL_H) + b"".join(chunk(b"IDAT", whole[i : i + 1]) for i in range(len(whole))) + IEND,
+    "Valid, with the image data split into one chunk per byte: thousands of chunks, each with "
+    "its own header and checksum, to make a reader do a great deal of work for very little.",
+    "png",
+    node="succeeds",
+    group=G,
+)
+trap(
+    "five-thousand-comments.png",
+    SIGNATURE + ihdr(SMALL_W, SMALL_H) + b"".join(chunk(b"tEXt", b"k%04d\x00v" % i) for i in range(5000)) + idat(SMALL) + IEND,
+    "Valid, with five thousand comments ahead of the picture.",
+    "png",
+    node="succeeds",
+    group=G,
+)
+trap(
+    "zero-gamma.png",
+    SIGNATURE + ihdr(SMALL_W, SMALL_H) + chunk(b"gAMA", struct.pack(">I", 0)) + idat(SMALL) + IEND,
+    "Declares a gamma of zero, which a reader that applies it divides by.",
+    "png",
+    node="succeeds",
+    browser="either",
+    group=G,
+)
+trap(
+    "claims-a-million-frames.png",
+    SIGNATURE + ihdr(SMALL_W, SMALL_H) + chunk(b"acTL", struct.pack(">II", 1_000_000, 0)) + idat(SMALL) + IEND,
+    "Announces itself as an animation of a million frames and contains one picture. A reader "
+    "that allocates per announced frame runs out of memory.",
+    "png",
+    node="succeeds",
+    browser="either",
+    group=G,
+)
+
+# --- one more sound file a careless reader gets wrong ----------------------------------------------
+G = "unusual"
+
+
+def adam7(width, height):
+    """The same gradient as rgba_rows, laid out in the seven passes of an interlaced PNG."""
+    raw = bytearray()
+    passes = ((0, 0, 8, 8), (4, 0, 8, 8), (0, 4, 4, 8), (2, 0, 4, 4), (0, 2, 2, 4), (1, 0, 2, 2), (0, 1, 1, 2))
+    for x0, y0, dx, dy in passes:
+        if x0 >= width:
+            continue
+        for y in range(y0, height, dy):
+            raw.append(0)
+            for x in range(x0, width, dx):
+                raw += bytes((255 * x // max(1, width - 1), 255 * y // max(1, height - 1), 160, 255))
+    return bytes(raw)
+
+
+trap(
+    "interlaced.png",
+    SIGNATURE
+    + chunk(b"IHDR", struct.pack(">IIBBBBB", SMALL_W, SMALL_H, 8, 6, 0, 0, 1))
+    + idat(adam7(SMALL_W, SMALL_H))
+    + IEND,
+    "Valid, with its rows interlaced in seven passes, the way PNGs were saved for slow "
+    "connections.",
     "png",
     node="succeeds",
     group=G,
