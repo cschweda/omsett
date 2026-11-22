@@ -92,7 +92,7 @@ What VERT actually runs, per `src/lib/converters`: `wasm-vips` and `@imagemagick
 **Rules that keep this honest:**
 
 1. Every conversion has a tier in the format registry. In code there are two: `browser` (Tiers 1 and 2 above) and `native` (Tier 3). The UI shows one of three badges before the user clicks Convert: "on your device", "needs the desktop app", or "via your server" (only on a self-hosted copy of the web app that has an omsettd behind it).
-2. The web app treats a server as optional and absent by default. omsett.com has no server and no way to be pointed at one: its Content-Security-Policy is `connect-src 'self'`, so the page cannot send data to any other origin, which is what makes the privacy promise checkable rather than merely stated. A server exists only behind the self-hosted `omsett-web` image, where Caddy proxies `/api/*` to omsettd on the same origin.
+2. The web app treats a server as optional and absent by default. omsett.com has no server and no way to be pointed at one: its Content-Security-Policy is `connect-src 'self'`, on the page and on every worker, so nothing in it can send data to any other origin, which is what makes the privacy promise checkable rather than merely stated. A server exists only behind the self-hosted `omsett-web` image, where Caddy proxies `/api/*` to omsettd on the same origin.
 3. On the public site Tier 3 targets are never hidden and never broken: they show as "Get the desktop app". If a self-hosted copy's omsettd is unreachable, the badge falls back to the same. The site stays fully functional as a Tier 1/2 tool.
 4. omsettd never stores files. Input is streamed in, output streamed back, temp files deleted on completion or after 10 minutes.
 5. The desktop app (Electron) collapses the tiers: it ships the same web app plus a bundled ffmpeg, and can shell out to LibreOffice, Calibre, Ghostscript and Pandoc if present, so Tier 3 runs on the user's own machine with no server at all.
@@ -117,7 +117,7 @@ This ordering also decides the roadmap: the desktop app arrives before video, so
 
 | Piece | Lives | Deploys via | Notes |
 | --- | --- | --- | --- |
-| `omsett.com` — Nuxt 4 static site + WASM engines + PWA | Netlify Pro | Feature PRs merge into a long-lived `staging` branch (a free branch deploy); `staging` merges into `main` only on an explicit release, because each production build costs 15 Netlify credits | `_headers`: COOP/COEP, a CSP with `connect-src 'self'`, long-cache the `.wasm` by content hash |
+| `omsett.com` — Nuxt 4 static site + WASM engines + PWA | Netlify Pro | Feature PRs merge into a long-lived `staging` branch (a free branch deploy); `staging` merges into `main` only on an explicit release, because each production build costs 15 Netlify credits | The page's CSP is a `<meta>` tag in the HTML; `_headers` carries COOP/COEP, the worker CSP on worker scripts, and a long cache on the `.wasm` by content hash |
 | Desktop app (full suite) | GitHub Releases | electron-builder in GitHub Actions (macOS signed + notarized, Windows signed, Linux AppImage/deb) | Same Nuxt build inside an Electron shell (as Drafter); ffmpeg bundled, other engines installed on first use; auto-update via electron-updater |
 | CLI `npx omsett` | npm | GitHub Actions on tag | Shares the registry; Tier 1 via WASM in Node, Tier 3 by shelling out to local binaries |
 | `omsettd` (self-host only, Phase 4) | Wherever the user runs Docker: homelab, office box, or your droplet if you want a private one | `ghcr.io/cschweda/omsettd` image + `docker-compose.yml` | Never a public endpoint you operate |
@@ -474,7 +474,7 @@ The Kickoff Prompt holds the authoritative version of this and the registry type
 | Updates | `electron-updater` against GitHub Releases, check on launch, apply on quit; release notes shown in-app |
 | Signing | macOS: Developer ID + notarization via the Apple Developer Program ($99/yr; you're enrolling now, so macOS is first-class from Phase 3, and the same certificate covers Drafter). Store the `notarytool` credentials once as GitHub Actions secrets and both apps' release workflows share them. Windows: [Azure Artifact Signing](https://azure.microsoft.com/en-us/pricing/details/trusted-signing/) (formerly Trusted Signing), Basic tier at $9.99/month for 5,000 signatures and one certificate profile; individuals in the US are eligible, identity validation takes a few days, certificates rotate daily with timestamping, `electron-builder` supports it natively. Not EV, so SmartScreen reputation still accrues over time, but signed from day one. Linux: AppImage + `.deb`, unsigned. Total signing cost for both platforms and both apps: about $220/yr |
 | Size | \~120 MB installer with ffmpeg; \~40 MB without. Both published; the picker tells a user without ffmpeg what they're missing |
-| Accessibility | Same DOM as the web app, so the same WCAG 2.2 AA surface; native menus with accelerators; `app.setAccessibilitySupportEnabled(true)`; tested with VoiceOver and NVDA like the site |
+| Accessibility | Same DOM as the web app, so the same WCAG 2.2 AA surface; native menus with accelerators; `app.setAccessibilitySupportEnabled(true)`; tested with VoiceOver and NVDA in the final phase, like the site |
 | CLI inside the app | "Install `omsett` command" menu item symlinks the bundled CLI onto the PATH, VS Code-style |
 
 **What the desktop app changes in the picker:** every Tier 3 tile becomes live, badges read "on this computer," and the memory ceiling disappears (native engines stream from disk). The web app and the desktop app are otherwise pixel-identical, which is the point of one codebase.
@@ -518,6 +518,8 @@ Electron has no mobile build and bundling ffmpeg or LibreOffice into a phone app
 
 **Omsett meets WCAG 2.2 AA itself and treats the accessibility of its *output* as a feature.** Neither competitor does either; for a tool built by the person who runs ICJIA's Title II program, both are table stakes.
 
+**When this happens: the final phase.** All interface accessibility work (audits, the axe gate in CI, keyboard and focus checks, NVDA and VoiceOver testing, and the fixes they call for) is Phase 6, after the app works. Auditing an interface that is still being built means doing the work twice. Until then nothing below is audited or enforced, and no change is made for accessibility's sake; what Phase 0 already built (a real file input, a radio-group picker, a polite live region) stays in place, untouched. The list is the target, not the current state.
+
 **The interface:**
 
 - Every action is keyboard-reachable: Tab to the drop zone, Enter/Space to browse, arrow keys across the picker tiles, Enter to select, a single "Convert" shortcut (`Ctrl/Cmd+Enter`).
@@ -525,7 +527,7 @@ Electron has no mobile build and bundling ffmpeg or LibreOffice into a phone app
 - Progress uses `aria-live="polite"` region announcements at 25/50/75/100%, not per-percent chatter. Completion is announced in the same polite region with the result count; nothing in a conversion is urgent enough for `assertive`.
 - Drop zone is also a real `<input type="file">`; drag-and-drop is an enhancement, never the only path.
 - Dark mode is default but respects `prefers-color-scheme` and `prefers-reduced-motion`; all text at 4.5:1 or better against `#0d0d0d`; focus rings are 2 px and never suppressed.
-- Tested with NVDA and VoiceOver before each release using the voicecap/axecap tooling you already have; axe-core runs in CI on the built site.
+- In the final phase, and from then on before each release: tested with NVDA and VoiceOver using the voicecap/axecap tooling you already have, with axe-core running in CI on the built site.
 
 **The output:**
 
@@ -536,7 +538,7 @@ Electron has no mobile build and bundling ffmpeg or LibreOffice into a phone app
 
 **Privacy, stated plainly on the page and kept:**
 
-- Tier 1/2 conversions never make a network request with file data. This is the headline promise. It is verifiable in DevTools and enforced by the site's Content-Security-Policy (`connect-src 'self'`): the page cannot send anything to another origin even if a dependency tried.
+- Tier 1/2 conversions never make a network request with file data. This is the headline promise. It is verifiable in DevTools and enforced by `connect-src 'self'` in two Content-Security-Policies, one on the page and one on every worker script: neither can send anything to another origin even if a dependency tried.
 - omsett.com has no Tier 3 upload path at all. On a self-hosted copy, sending a file to that copy's own omsettd is opt-in per conversion and labeled before the click.
 - omsettd stores nothing beyond the life of the job; logs record sizes and formats, never filenames or content.
 - No analytics beyond Netlify's server-side counts. No cookies. No accounts.
@@ -588,7 +590,7 @@ omsett/
 │  ├─ engines/        Engine interface + one folder per engine (vips, ffmpeg, pandoc, …)
 │  └─ detect/         Magic-byte detection, metadata readers (exifr etc.)
 ├─ fixtures/          One real sample file per input format (Git LFS)
-├─ e2e/               Playwright gate flows + axe
+├─ e2e/               Playwright gate flows (axe tests parked until the final phase)
 ├─ docs/              This suite, as Markdown
 ├─ docker-compose.yml Homelab: web + omsettd
 └─ netlify.toml
@@ -609,7 +611,7 @@ omsett/
 | Reverse proxy | Caddy | Caddy inside the `omsett-web` image sets COOP/COEP for self-hosters |
 | Desktop | Electron (electron-vite + electron-builder) | Same shell as Drafter; bundled Chromium makes WebCodecs/WASM behave identically on every OS; \~120 MB with ffmpeg |
 | Tests | Vitest for unit + registry graph checks; Playwright for the drop→pick→download flow; fixture corpus through every edge in CI | The corpus is the real test suite |
-| CI | GitHub Actions: lint, typecheck, fixtures, axe-core, Playwright, electron-builder matrix on tag |  |
+| CI | GitHub Actions: lint, typecheck, fixtures, Playwright, electron-builder matrix on tag; axe-core joins in the final phase |  |
 | Hosting | Netlify Pro (web), GitHub Releases (desktop), npm (CLI), GHCR (self-host images) |  |
 | License | MIT, personal project under github.com/cschweda/omsett (decided) |  |
 
@@ -623,7 +625,20 @@ omsett/
 
 ```
 
-Response headers are defined once in `apps/web/security-headers.ts` and written after the build into Netlify's `_headers` file and a snippet the self-host `Caddyfile` imports, so the two hosts cannot drift. The set: COOP `same-origin` and COEP `require-corp` on everything; a Content-Security-Policy whose `connect-src 'self'` is the enforcement behind the privacy promise; and a one-year immutable cache plus `Cross-Origin-Resource-Policy: same-origin` on `/engines/*`.
+Policies and response headers are defined once in `apps/web/security-headers.ts` and written out after the build, so the two hosts cannot drift. COOP `same-origin` and COEP `require-corp` go on everything, and `/engines/*` gets a one-year immutable cache plus `Cross-Origin-Resource-Policy: same-origin`.
+
+**There are two Content-Security-Policies, because a browser governs a page and a worker separately.** A worker answers to the policy on its own script's response, not to the page's.
+
+| Policy | Delivered as | What it allows |
+| --- | --- | --- |
+| Document | A `<meta>` tag written into each built HTML file | Scripts from this origin and the build's own inline scripts, by hash. No eval of any kind |
+| Worker | A response header on `/_nuxt/workers/*` and `/engines/*` only | The same, plus `'wasm-unsafe-eval'` and `'unsafe-eval'` |
+
+Both carry `connect-src 'self'`, which is the enforcement behind the privacy promise.
+
+The worker policy allows eval because libvips's JavaScript bindings (Emscripten's embind) build their call wrappers with `new Function`, and other Emscripten engines are likely to need the same. Confining that to the conversion worker keeps it away from the page, where the DOM and the user's input live; the worker runs no third-party script and cannot reach the network. The document policy is a `<meta>` tag for two reasons: a header on `/*` would also land on worker scripts and override their allowance (two policies on one response are both enforced), and a policy inside the HTML still applies when the files are hosted somewhere that cannot set headers. Framing is refused with `X-Frame-Options: DENY`, since a `<meta>` policy cannot carry `frame-ancestors`.
+
+**Rule for every later engine:** if it needs eval, it runs in a worker served from one of those two paths. The page's policy is never loosened for an engine.
 
 COOP/COEP enable `SharedArrayBuffer` for multi-threaded `wasm-vips` and `ffmpeg.wasm`. The cost is that cross-origin resources need CORP headers, so engines are self-hosted under `/engines/` rather than pulled from a CDN like unpkg.
 
@@ -631,16 +646,17 @@ COOP/COEP enable `SharedArrayBuffer` for multi-threaded `wasm-vips` and `ffmpeg.
 
 ## Roadmap
 
-**Six phases, each gated by one conversion working end to end in public, no dates attached.** Phase 0 is small on purpose: the first thing on omsett.com should be a single working conversion with all the plumbing behind it, not a format list.
+**Seven phases, each gated by one thing working end to end in public, no dates attached.** Phase 0 is small on purpose: the first thing on omsett.com should be a single working conversion with all the plumbing behind it, not a format list.
 
 | Phase | Scope | Gate |
 | --- | --- | --- |
-| 0 · Foundation | Monorepo, registry, engine interface, fixture CI; Netlify deploy; CI with fixtures, axe and Playwright | PNG to WebP end to end on omsett.com |
-| 1 · Images, data, archives, fonts, PWA | Raster and vector formats, data, archives, fonts; OpenGraph, favicon, responsive presets; installable | Squish parity; axe clean; NVDA pass |
+| 0 · Foundation | Monorepo, registry, engine interface, fixture CI; Netlify deploy; CI with fixtures and Playwright | PNG to WebP end to end on omsett.com |
+| 1 · Images, data, archives, fonts, PWA | Raster and vector formats, data, archives, fonts; OpenGraph, favicon, responsive presets; installable | Squish parity |
 | 2 · Documents, audio, ebooks, subtitles | pandoc-wasm, ffmpeg audio build, SheetJS, PDF tools; fidelity warnings and multi-step router live; the Typst spike for PDF in the browser | DOCX to Markdown and EPUB, and WAV to MP3, in the browser; DOCX to PDF in the browser decided one way or the other by the spike |
 | 3 · Desktop app and CLI | Electron installers; bundled ffmpeg, local LibreOffice, Calibre; npx omsett; accessibility check on PDF output | DOC to tagged PDF locally; installers on 3 OSes |
 | 4 · Video | WebCodecs video in the browser; full ffmpeg in the desktop app; self-hosted omsettd (Docker) for teams and phones | 10-minute MOV to MP4 with progress, offline |
 | 5 · Plugins (filee parity) | CAD, 3D, geospatial, HWP as registry plugins; community-contributed engines | — |
+| 6 · Accessibility | The whole interface, once it exists: WCAG 2.2 AA audit, axe gate back in CI, keyboard and focus checks, NVDA and VoiceOver testing, and every fix those call for; the same pass over the desktop app and CLI | axe clean; NVDA and VoiceOver pass on web and desktop |
 
 The desktop app lands before video on purpose: once it exists, the long tail of video and all heavy office conversions run on the user's own machine, and nothing you operate ever carries them. Common-codec video runs in the browser via WebCodecs from Phase 4.
 
@@ -662,6 +678,7 @@ The desktop app lands before video on purpose: once it exists, the long tail of 
 | --- | --- | --- |
 | WASM engine download sizes deter first-time users | Medium | Lazy load per engine; show "12 MB once" before the click; service-worker cache; Canvas fast-path means most image jobs need nothing |
 | COOP/COEP headers break something unexpected (e.g., a future embed) | Low | Single-purpose site; no third-party embeds planned |
+| A WASM engine needs JavaScript eval, which a strict policy forbids | Happened in Phase 0 (libvips) | Two policies: the page allows no eval; worker scripts carry their own policy that does. Both keep `connect-src 'self'` |
 | Browser memory kills a tab on a big file | Medium | Size estimate before convert; route to desktop above 500 MB; never silently try |
 | Format long tail is endless and distracts from the core | High | Registry is data; fixture corpus gates every addition; v1 scope is fixed to the matrix above |
 | Native engines (LibreOffice, Calibre) complicate the desktop installer; code-signing identity validation takes patience | Medium | Bundle only ffmpeg; detect the rest on PATH and offer a one-click install via Homebrew/winget/apt, as filee does. Enroll in the Apple Developer Program and Azure Artifact Signing (about $220/yr together, covering Drafter too) and wire both into CI before Phase 3 starts, since validation is the slow part |

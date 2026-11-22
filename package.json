@@ -1,0 +1,33 @@
+{
+  "name": "omsett",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "packageManager": "pnpm@10.34.9",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "dev": "pnpm --filter web dev",
+    "build": "pnpm --filter web generate && pnpm --filter web write-headers",
+    "test": "vitest run",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit -p tsconfig.json && pnpm -r typecheck",
+    "e2e": "playwright test",
+    "format": "prettier --write ."
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.11.0",
+    "@nuxt/eslint-config": "^1.17.0",
+    "@omsett/detect": "workspace:*",
+    "@omsett/engines": "workspace:*",
+    "@omsett/registry": "workspace:*",
+    "@playwright/test": "^1.65.1",
+    "@types/node": "^24.0.0",
+    "eslint": "^10.0.0",
+    "prettier": "^3.0.0",
+    "typescript": "^5.9.0",
+    "vitest": "^5.0.0"
+  }
+}
