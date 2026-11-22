@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { QueueFile } from '~/composables/useConversionQueue'
+import { switchedOffReason } from '@omsett/registry'
 import { formatBytes } from '~/utils/format-bytes'
 
 const props = defineProps<{ entry: QueueFile }>()
@@ -16,6 +17,9 @@ const label = computed(() => {
 const note = computed(() => {
   if (props.entry.error) return props.entry.error
   if (props.entry.problem) return props.entry.problem
+  if (props.entry.detection.kind === 'unregistered') {
+    return switchedOffReason(props.entry.detection.ext) ?? 'Unsupported format'
+  }
   if (!known.value) return 'Unsupported format'
   if (props.entry.mismatch) return `Named like another format, but the contents are ${known.value.format.name}.`
   return ''

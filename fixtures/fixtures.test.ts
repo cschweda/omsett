@@ -3,7 +3,7 @@ import { createRequire } from 'node:module'
 import { detect, MAX_PIXELS } from '@omsett/detect'
 import { engineInfo } from '@omsett/engines'
 import { createNodeEngines } from '@omsett/engines/node'
-import { deriveEdges, engineIds, formatById, registry } from '@omsett/registry'
+import { deriveEdges, engineIds, everything, formatById, registry } from '@omsett/registry'
 import { describe, expect, it } from 'vitest'
 
 const nodeEngines = createNodeEngines()
@@ -19,7 +19,7 @@ async function fixturesFor(formatId: string): Promise<Array<{ name: string; blob
 
 describe('engine table', () => {
   it('has an implementation fact sheet for every capability, and a capability for every engine', () => {
-    expect(engineIds(registry).sort()).toEqual(Object.keys(engineInfo).sort())
+    expect(engineIds(everything).sort()).toEqual(Object.keys(engineInfo).sort())
   })
 
   it('declares a license and a source for every engine', () => {

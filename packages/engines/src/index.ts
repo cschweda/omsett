@@ -1,5 +1,7 @@
 export * from './types'
-export { canvasInfo, engineInfo, vipsHeifInfo, vipsInfo, vipsJxlInfo, vipsModules } from './info'
+export { canvasInfo, engineInfo, heifInfo, vipsHeifInfo, vipsInfo, vipsJxlInfo, vipsModules } from './info'
+export { createHeifEngine, type HeifHost, type HeifModule } from './heif'
+export { encodePng } from './png-encode'
 export { createCanvasEngine } from './canvas'
 export { createVipsEngine, type VipsHost, type VipsImage, type VipsModule } from './vips'
 export { outputName, safeBaseName } from './util'

@@ -2,6 +2,7 @@ import { capabilities } from './capabilities'
 import { formats } from './formats'
 import { overrides } from './overrides'
 import { traitWarnings } from './trait-warnings'
+import { applySwitches, switches } from './switches'
 import type { Format, Registry } from './types'
 
 export * from './types'
@@ -9,8 +10,20 @@ export { createRouter, MAX_HOPS } from './router'
 export { deriveEdges } from './derive'
 export { lossyToLossy, traitWarnings } from './trait-warnings'
 
-/** The real registry: every format and capability Omsett ships. */
-export const registry: Registry = { formats, capabilities, overrides, traitWarnings }
+export { applySwitches, switches, type Switch } from './switches'
+
+/** Everything Omsett can ship, before any off switch is applied. */
+export const everything: Registry = { formats, capabilities, overrides, traitWarnings }
+
+/** The real registry: every format and capability Omsett offers, with off switches applied. */
+export const registry: Registry = applySwitches(everything, switches)
+
+/** Why a detected file is not handled, if its format is switched off; otherwise undefined. */
+export function switchedOffReason(ext: string): string | undefined {
+  const format = everything.formats.find((f) => f.detect.includes(ext))
+  const entry = format && switches[format.id]
+  return entry && !entry.on ? entry.whenOff : undefined
+}
 
 export function formatById(reg: Registry, id: string): Format | undefined {
   return reg.formats.find((f) => f.id === id)

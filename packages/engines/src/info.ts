@@ -45,6 +45,16 @@ export const vipsJxlInfo: EngineInfo = {
   sourceUrl: 'https://github.com/kleisauke/wasm-vips',
 }
 
+// libheif with libde265, from libheif-js: the loader script and its WebAssembly binary.
+export const heifInfo: EngineInfo = {
+  id: 'heif',
+  sizeBytes: 1_463_506 + 91_255,
+  runtimes: ['browser', 'node'],
+  // libheif and libde265 are both LGPL-3.0.
+  license: 'LGPL-3.0-or-later',
+  sourceUrl: 'https://github.com/catdad-experiments/libheif-js',
+}
+
 /** The libvips module each engine needs, by file name, beyond libvips itself. */
 export const vipsModules: Record<string, string[]> = {
   [vipsInfo.id]: [],
@@ -57,4 +67,5 @@ export const engineInfo: Record<string, EngineInfo> = {
   [vipsInfo.id]: vipsInfo,
   [vipsHeifInfo.id]: vipsHeifInfo,
   [vipsJxlInfo.id]: vipsJxlInfo,
+  [heifInfo.id]: heifInfo,
 }

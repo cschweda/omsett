@@ -15,12 +15,15 @@ const samples: Record<string, string> = {
   tiff: 'tiff/sample.tiff',
   avif: 'avif/sample.avif',
   jxl: 'jxl/sample.jxl',
+  heic: 'heic/sample.heic',
 }
 const path = (id: string) => fileURLToPath(new URL(`../fixtures/${samples[id]}`, import.meta.url))
 
 test('there is a sample for every format that can be read', () => {
   const readable = new Set(registry.capabilities.flatMap((c) => c.reads))
-  expect([...readable].sort()).toEqual(Object.keys(samples).sort())
+  // A format that is switched off is not in the registry, and needs no sample while it is.
+  const expected = Object.keys(samples).filter((id) => formatById(registry, id))
+  expect([...readable].sort()).toEqual(expected.sort())
 })
 
 for (const edge of deriveEdges(registry).edges) {
@@ -47,3 +50,20 @@ for (const edge of deriveEdges(registry).edges) {
     expect(edge.candidates.map((c) => c.engine)).toContain(engine)
   })
 }
+
+test('a HEIC photograph becomes a JPEG in two steps: decoded to PNG, then encoded', async ({ page }) => {
+  test.skip(!formatById(registry, 'heic'), 'HEIC is switched off')
+  await open(page)
+  await page.locator('#file-input').setInputFiles(path('heic'))
+  await expect(page.locator('.file-card')).toContainText('HEIC')
+  await expect(page.locator('.file-card')).toContainText('320 × 200')
+  // Nothing is written as HEIC, and the picker says so.
+  await page.locator('[role="radio"][data-format="jpeg"]').click()
+  await page.getByTestId('convert').click()
+  const link = page.getByTestId('download')
+  await expect(link).toBeVisible({ timeout: 30_000 })
+  const output = await describeDownload(page, () => link.click())
+  expect(output.found).toMatchObject({ kind: 'known', dimensions: { width: 320, height: 200 } })
+  expect(output.found.kind === 'known' && output.found.format.id).toBe('jpeg')
+  expect(output.name).toBe('sample.jpg')
+})

@@ -2,6 +2,7 @@
 // by keyboard alone, with nothing leaving the page's origin.
 import { readFile } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
+import { registry } from '@omsett/registry'
 import { expect, test, type Page } from '@playwright/test'
 import { describeDownload, expectNoSeriousViolations, expectPrivate, FIXTURE, open, watch } from './helpers'
 
@@ -129,7 +130,7 @@ test('the picker waits for a file, then offers what that file can become', async
   await open(page)
   // Nothing dropped: no choices yet, only what the app handles.
   await expect(page.getByTestId('picker-waiting')).toContainText('Drop a file to see what it can become.')
-  await expect(page.getByTestId('picker-waiting')).toContainText('WebP, JPEG, PNG, AVIF, GIF, TIFF, JPEG XL')
+  await expect(page.getByTestId('picker-waiting')).toContainText(registry.formats.map((f) => f.name).join(', '))
   await expect(page.getByRole('radio')).toHaveCount(0)
 
   await page.locator('#file-input').setInputFiles(FIXTURE)

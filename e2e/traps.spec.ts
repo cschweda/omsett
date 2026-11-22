@@ -7,7 +7,7 @@ import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { expect, test, type Page } from '@playwright/test'
 import { detect } from '@omsett/detect'
-import { registry } from '@omsett/registry'
+import { registry, switches } from '@omsett/registry'
 import { describeDownload, FIXTURE, open } from './helpers'
 
 interface Trap {
@@ -63,7 +63,11 @@ for (const trap of traps) {
     const note = card.getByTestId('file-note')
     const convert = page.getByTestId('convert')
 
-    if (trap.detect === 'unknown' || trap.detect === 'unregistered') {
+    if (switches[trap.detect]?.on === false) {
+      // Its format is switched off: named for what it is, given the reason, and not converted.
+      await expect(note).toHaveText(switches[trap.detect]!.whenOff)
+      await expect(convert).toBeDisabled()
+    } else if (trap.detect === 'unknown' || trap.detect === 'unregistered') {
       await expect(note).toHaveText('Unsupported format')
       await expect(convert).toBeDisabled()
     } else if (trap.guard === 'refused') {

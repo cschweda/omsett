@@ -34,7 +34,7 @@ When a format ships, update its row here, in the same change.
 | PNG, JPEG, WebP, GIF, TIFF | yes | yes | Browser | libvips; canvas for PNG | Done |
 | AVIF | yes | yes | Browser | libvips + heif module | Done |
 | JPEG XL | yes | yes | Browser | libvips + jxl module | Done |
-| HEIC / HEIF | yes | no | Browser | libheif (WASM), as its own engine | Planned (read). libvips's heif module opens a HEIC header but cannot decode it: no HEVC decoder in that build. Writing is declined on the site: HEVC encoding needs a patent licence. Desktop, through FFmpeg, if at all |
+| HEIC / HEIF | yes | no | Browser | libheif + libde265 (WASM), the `heif` engine | Done (read). Decoded to PNG, then on to any other format. Can be switched off in one line: `packages/registry/src/switches.ts`. Not written: no HEVC encoder is shipped (x265 is GPL, and encoding carries more patent exposure than decoding) |
 | SVG, SVGZ (to a raster image) | yes | no | Browser | libvips + resvg module | Planned |
 | BMP, ICO, CUR, ICNS, TGA, PPM/PGM/PBM/PAM, QOI, PCX, DDS, SGI, Sun Raster | yes | yes | Browser | ImageMagick (WASM) | Planned. Needs a second engine and a damage test per format |
 | JPEG 2000, APNG, MNG | yes | yes | Browser | ImageMagick (WASM) | Planned |
@@ -70,7 +70,7 @@ When a format ships, update its row here, in the same change.
 | Images, Markdown, HTML, text to PDF | Browser | pdf-lib; Typst (to be proven) | Planned |
 | Compress; PDF/A | Desktop | Ghostscript, qpdf | Planned |
 | PDF to DOCX, XLSX, PPTX, SVG | Desktop | LibreOffice | Planned |
-| Accessibility check | A link out to audit.icjia.app on the web; veraPDF on the desktop | — | Planned, with the PDF work. Decided 22 November 2026: a link, not an upload, and no privileged token. Shown beside a PDF or document result. The audit's shareable results page should be reachable from Omsett; how the report's address gets back without Omsett sending the file is to be settled then |
+| Accessibility check | Browser, by request: the file is sent to audit.icjia.app only when the person asks; veraPDF on the desktop | audit.icjia.app's public API | Planned, with the PDF work. Decided 22 November 2026: an opt-in upload, worded plainly ("this sends the file to audit.icjia.app"), no privileged token, and a link to the audit's shareable results page shown in Omsett. Needs the security policy to allow that one origin, the audit API to accept requests from omsett.com, and the site's promise reworded to "nothing leaves unless you ask" |
 | PDF to HWPX | Declined | — | See HWP |
 
 ## Documents
@@ -208,7 +208,7 @@ When a format ships, update its row here, in the same change.
 
 ## Suggested order
 
-1. The rest of the images: HEIC (read), SVG; then the ImageMagick set. AVIF and JPEG XL are done.
+1. The rest of the images: SVG; then the ImageMagick set. AVIF, JPEG XL and HEIC (read) are done.
 2. Data, subtitles, fonts: small JavaScript libraries, no large downloads.
 3. Archives, then audio.
 4. Documents and e-books through Pandoc; then the PDF tools.

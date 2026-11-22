@@ -359,6 +359,18 @@ for folder, ext, label in (("avif", "avif", "AVIF"), ("jxl", "jxl", "JPEG XL")):
         group=G,
     )
 
+# HEIC, decoded by libheif. A file cut short is refused. One whose compressed data is altered is
+# not always: HEVC carries no checksum, so the decoder cannot tell, and returns a damaged picture.
+heic_sound = read("heic", "sample.heic")
+trap(
+    "truncated.heic",
+    heic_sound[: len(heic_sound) // 2],
+    "A sound HEIC file cut off halfway through.",
+    "heic",
+    node="fails",
+    group=G,
+)
+
 # === 4. Sound files in shapes a careless reader gets wrong ============================================
 G = "unusual"
 deep = bytearray()

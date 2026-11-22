@@ -5,6 +5,7 @@ import { HEADER_BYTES, readDimensions, type Dimensions } from './dimensions'
 export { readDimensions, type Dimensions } from './dimensions'
 export { MAX_BYTES, MAX_PIXELS, MAX_WORKING_BYTES, TOO_LARGE, pixelCount, sizeProblem, workingBytes } from './guard'
 export { structureProblem } from './structure'
+export { crc32 } from './png-structure'
 
 export type Detection =
   | { kind: 'known'; format: Format; ext: string; mime: string; dimensions: Dimensions | null }
