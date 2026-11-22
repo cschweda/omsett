@@ -1,0 +1,7 @@
+pnpm-lock.yaml
+.nuxt
+.output
+node_modules
+docs
+brand
+apps/web/public
