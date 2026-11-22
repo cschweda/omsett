@@ -34,9 +34,17 @@ corepack enable       # provides the pnpm version pinned in package.json
 pnpm --version        # 10.x
 ```
 
-If Node is older, install 24 the same way the audit app's Node was installed. Nothing here
-changes what the audit app uses unless you replace the system Node; if it relies on an older
-one, install 24 alongside it with a version manager.
+The build also works on Node 22 (the first deploy ran on 22.23), with a warning that the project
+asks for 24. To build on 24 without touching the system Node that the audit app runs on, install
+nvm for the `forge` user:
+
+```
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.41.0/install.sh | bash
+```
+
+Nothing else is needed. `scripts/publish-static.sh` looks for nvm, and when it finds it, installs
+and switches to the version in `.nvmrc` for that deploy only. The first line of its output says
+which Node it used. Without nvm it uses the system Node.
 
 ### 3. Create the site in Forge
 

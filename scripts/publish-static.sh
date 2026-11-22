@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 # Builds the site and publishes it without ever serving a half-written build.
 #
 #     scripts/publish-static.sh [SITE_DIR]
@@ -19,6 +19,23 @@ stamp=$(date +%Y%m%dT%H%M%S)
 release="$site/releases/$stamp"
 
 cd "$repo"
+
+# Use the Node version named in .nvmrc when nvm is installed; otherwise whatever `node` is.
+# nvm only changes this shell, so other sites on the same server keep the Node they run on.
+NVM_DIR=${NVM_DIR:-$HOME/.nvm}
+if [ -s "$NVM_DIR/nvm.sh" ]; then
+  set +eu # nvm is not written for strict mode
+  . "$NVM_DIR/nvm.sh"
+  nvm install >/dev/null && nvm use >/dev/null # both read .nvmrc; install is a no-op when present
+  switched=$?
+  set -eu
+  [ "$switched" -eq 0 ] || { echo "nvm could not switch to the version in .nvmrc"; exit 1; }
+  # pnpm comes from corepack, which is per Node version.
+  export COREPACK_ENABLE_DOWNLOAD_PROMPT=0
+  corepack enable >/dev/null 2>&1 || true
+fi
+echo "Building with node $(node --version), pnpm $(pnpm --version)"
+
 if [ -z "${SKIP_BUILD:-}" ]; then
   pnpm install --frozen-lockfile
   pnpm build

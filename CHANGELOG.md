@@ -22,6 +22,8 @@ Every change to Omsett is recorded here, newest first, in the same pull request 
   headers as an nginx snippet, `scripts/publish-static.sh` builds and switches to the new build
   in one step, and `docs/deploy-digitalocean.md` has the setup. CI runs the conversion tests
   through the reference nginx config.
+- `scripts/publish-static.sh` switches to the Node version in `.nvmrc` when nvm is installed,
+  for that deploy only, and reports which Node it built with.
 - The deployment guide now covers Forge's "Zero downtime deployments" setting (leave it off) and
   where the web directory is set.
 - **No staging branch.** Deploys on the droplet cost nothing, so changes go to `main`.
