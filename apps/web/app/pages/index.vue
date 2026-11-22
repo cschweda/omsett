@@ -59,6 +59,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
 
 <template>
   <div>
+    <WhatsNewBanner />
     <header class="masthead">
       <h1 class="wordmark">omsett<span class="dot">.</span></h1>
       <p class="tagline">Drop a file. Pick a format.<br>Nothing leaves your device.</p>

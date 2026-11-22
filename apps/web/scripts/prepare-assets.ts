@@ -63,16 +63,41 @@ function inline(markdown: string): Inline[] {
   return parts
 }
 interface Group { title: string; items: Inline[][] }
-interface Release { title: string; intro: Inline[][]; groups: Group[] }
+interface Release {
+  title: string
+  /** The line beginning "Released", if the version has one. */
+  released: string
+  intro: Inline[][]
+  /** The opening of the intro, at most three sentences: the home page's "What's new" banner. */
+  teaser: string
+  groups: Group[]
+}
+/**
+ * The first `count` sentences of a paragraph. A sentence ends at a full stop, question mark or
+ * exclamation mark that is followed by a space or the end, so "omsett.com" does not end one.
+ */
+function sentences(text: string, count: number): string {
+  let found = 0
+  for (let i = 0; i < text.length; i++) {
+    const ends = '.!?'.includes(text[i]!) && (i + 1 === text.length || /\s/.test(text[i + 1]!))
+    if (ends && ++found === count) return text.slice(0, i + 1).trim()
+  }
+  return text.trim()
+}
 const releases: Release[] = []
 let pending: string[] = []
 let target: 'intro' | 'item' | null = null
 const flush = () => {
   const release = releases.at(-1)
   if (release && pending.length) {
-    const text = inline(pending.join(' '))
+    const plain = pending.join(' ')
+    const text = inline(plain)
     if (target === 'item') release.groups.at(-1)!.items.push(text)
-    else release.intro.push(text)
+    else if (plain.startsWith('Released ')) release.released = plain
+    else {
+      release.teaser ||= sentences(plain.replaceAll('**', '').replaceAll('`', ''), 3)
+      release.intro.push(text)
+    }
   }
   pending = []
   target = null
@@ -80,7 +105,7 @@ const flush = () => {
 for (const line of (await readFile(join(repo, 'CHANGELOG.md'), 'utf8')).split('\n')) {
   if (line.startsWith('## ')) {
     flush()
-    releases.push({ title: line.slice(3).trim(), intro: [], groups: [] })
+    releases.push({ title: line.slice(3).trim(), released: '', intro: [], teaser: '', groups: [] })
   } else if (!releases.length) {
     continue // the file's own title and preamble
   } else if (line.startsWith('### ')) {

@@ -3,12 +3,24 @@
 Every change to Omsett is recorded here, newest first, in the same pull request that makes it.
 Changes not yet given a version number go under a heading named "Unreleased" at the top.
 
+The paragraph that opens a version is its teaser: the home page shows its first three sentences
+in the "What's new" banner, so keep it to two or three sentences on what a visitor will notice.
+A line beginning "Released" gives the date.
+
 ## 0.2.0
 
-Released 22 November 2026. The first version on omsett.com.
+Released 22 November 2026.
+
+Omsett has a new look, set in one typeface on a strict grid, and is live at omsett.com. You can
+now compare a picture before and after converting and choose its quality, and metadata such as
+author and location is always removed. New pages explain how it works and record every
+security audit.
 
 ### Added
 
+- **A "What's new" banner** at the top of the converter: two or three sentences on the latest
+  version, leading to the full list. It can be dismissed, and returns with the next version.
+- **The version number in the footer**, linked to that version's entry in What's new.
 - **A Security page**, and `SECURITY.md`, recording every audit: what was looked for, what was
   found, each finding's severity, how it was identified, and how it was dealt with. Newest
   first, the latest open and the rest collapsed. The page, the file, and the README's Security

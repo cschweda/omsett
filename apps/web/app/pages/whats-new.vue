@@ -22,6 +22,7 @@ const slug = (name: string) => `release-${name.toLowerCase().replace(/[^a-z0-9]+
         :heading-id="slug(release.title)"
       >
         <div class="release" data-testid="release">
+          <p v-if="release.released" class="released figures">{{ release.released }}</p>
           <p v-for="(paragraph, index) in release.intro" :key="`intro-${index}`" class="lead-text">
             <InlineText :parts="paragraph" />
           </p>
@@ -48,6 +49,10 @@ const slug = (name: string) => `release-${name.toLowerCase().replace(/[^a-z0-9]+
 }
 .release p {
   margin: 0;
+}
+.released {
+  font-size: var(--text-small);
+  color: var(--muted);
 }
 .group-title {
   margin: 0 0 0.5rem;

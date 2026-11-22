@@ -91,6 +91,35 @@ test('the footer shows the version, and it leads to that version in the changelo
   await expect(heading).toBeInViewport()
 })
 
+test('the home page teases what is new, briefly, and leads to the full list', async ({ page }) => {
+  await page.goto('/')
+  const banner = page.getByTestId('whats-new-banner')
+  await expect(banner).toBeVisible()
+  // A teaser, not the list: at most three sentences.
+  const teaser = ((await page.getByTestId('whats-new-teaser').textContent()) ?? '').trim()
+  const count = (teaser.match(/[.!?]+(?=\s|$)/g) ?? []).length
+  expect(count, teaser).toBeGreaterThanOrEqual(1)
+  expect(count, teaser).toBeLessThanOrEqual(3)
+  // It is the opening of the newest entry in the changelog.
+  const changelog = readFileSync(new URL('../CHANGELOG.md', import.meta.url), 'utf8').replace(/\s+/g, ' ')
+  expect(changelog).toContain(teaser.replace(/\s+/g, ' '))
+
+  await page.getByTestId('whats-new-link').click()
+  await expect(page).toHaveURL(/\/whats-new\/?#release-/)
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('What’s new')
+  // The other pages do not carry it.
+  await expect(page.getByTestId('whats-new-banner')).toHaveCount(0)
+})
+
+test('the banner can be dismissed and stays dismissed', async ({ page }) => {
+  await page.goto('/')
+  await page.getByTestId('whats-new-dismiss').click()
+  await expect(page.getByTestId('whats-new-banner')).toHaveCount(0)
+  await page.reload()
+  await expect(page.getByRole('button', { name: 'Convert', exact: true })).toBeVisible()
+  await expect(page.getByTestId('whats-new-banner')).toHaveCount(0)
+})
+
 test('what’s new is the changelog', async ({ page }) => {
   const changelog = readFileSync(new URL('../CHANGELOG.md', import.meta.url), 'utf8')
   const releases = changelog.split('\n').filter((line) => line.startsWith('## '))

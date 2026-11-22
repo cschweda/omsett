@@ -116,7 +116,8 @@ build by `apps/web/scripts/write-headers.ts`.
   before it is live, which is most of the time.
 - **Keep the record current, in the same change.** When a feature is added or behaviour changes:
   - `CHANGELOG.md`, under "Unreleased" (added, changed, fixed, or known). The site's What's new
-    page is generated from it.
+    page is generated from it, and the paragraph that opens the newest version is the home
+    page's "What's new" banner: two or three sentences on what a visitor will notice.
   - The About and Technical details pages (`apps/web/app/pages`). Their figures and tables are
     read from the registry and the repository, so they update themselves; their prose and the
     diagrams in `app/utils/diagrams.ts` do not, and must be edited when the process they
