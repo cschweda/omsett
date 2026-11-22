@@ -43,6 +43,11 @@ const manifest = {
 }
 await writeFile(join(generatedDir, 'engine-assets.json'), JSON.stringify(manifest, null, 2) + '\n')
 
+// An engine's own license and notices travel with its binary.
+const vipsRoot = join(vipsLib, '..')
+await copyFile(join(vipsRoot, 'LICENSE'), join(enginesDir, 'vips.LICENSE.txt'))
+await copyFile(join(vipsRoot, 'THIRD-PARTY-NOTICES.md'), join(enginesDir, 'vips.THIRD-PARTY-NOTICES.md'))
+
 await copyFile(join(repo, 'fixtures', 'png', 'sample.png'), join(web, 'public', 'sample.png'))
 
 const fonts: Array<[pkg: string, file: string]> = [

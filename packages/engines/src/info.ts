@@ -19,7 +19,8 @@ export const vipsInfo: EngineInfo = {
   // by a test, so it cannot drift when wasm-vips is upgraded.
   sizeBytes: 5_237_817,
   runtimes: ['browser', 'node'],
-  license: 'MIT AND LGPL-2.1-or-later',
+  // wasm-vips itself is MIT; the libvips it carries is used under LGPL-3.0-or-later.
+  license: 'MIT AND LGPL-3.0-or-later',
   sourceUrl: 'https://github.com/kleisauke/wasm-vips',
 }
 

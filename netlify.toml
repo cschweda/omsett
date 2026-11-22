@@ -1,0 +1,12 @@
+# Build settings only. Response headers and the Content-Security-Policy are generated after the
+# build by apps/web/scripts/write-headers.ts from apps/web/security-headers.ts.
+#
+# Node and pnpm versions come from .nvmrc and package.json's packageManager field.
+[build]
+  command = "pnpm --filter web generate && pnpm --filter web write-headers"
+  publish = "apps/web/.output/public"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

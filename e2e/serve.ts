@@ -21,6 +21,7 @@ const types: Record<string, string> = {
   '.png': 'image/png',
   '.woff2': 'font/woff2',
   '.md': 'text/markdown; charset=utf-8',
+  '.txt': 'text/plain; charset=utf-8',
 }
 
 interface Rule {

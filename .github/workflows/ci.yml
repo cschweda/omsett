@@ -1,0 +1,66 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [staging]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Lint, typecheck, test, e2e
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm audit --prod --audit-level=high
+      - run: pnpm build
+      - run: pnpm exec playwright install --with-deps chromium firefox webkit
+      - run: pnpm e2e
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: |
+            playwright-report
+            test-results
+          retention-days: 7
+
+  docker:
+    name: Docker image
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build
+        run: docker build -f apps/web/Dockerfile -t omsett-web:ci .
+      - name: Run as the compose file runs it
+        run: |
+          docker run -d --name omsett -p 8080:8080 --read-only --cap-drop ALL \
+            --tmpfs /data:mode=1777 --tmpfs /config:mode=1777 omsett-web:ci
+          for i in $(seq 1 20); do curl -fsS http://localhost:8080/ > /dev/null && break; sleep 1; done
+      - name: Smoke
+        run: |
+          set -eux
+          test "$(docker inspect -f '{{.Config.User}}' omsett)" = "10001"
+          curl -fsS http://localhost:8080/config.json | grep -q '"server":false'
+          curl -fsSI http://localhost:8080/ | grep -qi 'cross-origin-embedder-policy: require-corp'
+          curl -fsS http://localhost:8080/ | grep -q "connect-src 'self' blob:"
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/api/health)" = "404"
+      - if: always()
+        run: docker logs omsett || true
