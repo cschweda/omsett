@@ -1,6 +1,6 @@
 import { detect, nameDisagrees, pixelCount, sizeProblem, type Detection } from '@omsett/detect'
 import type { Edge, Route } from '@omsett/registry'
-import { formatById } from '@omsett/registry'
+import { dimensionProblem, formatById } from '@omsett/registry'
 import { registry, router } from '~/utils/registry'
 
 export interface QueueFile {
@@ -27,6 +27,9 @@ export interface QueueResult {
   engine: string
   inputBytes: number
 }
+
+/** A failure whose message is written for the user and can be shown as it is. */
+class Refusal extends Error {}
 
 let nextId = 0
 const uid = () => `f${++nextId}`
@@ -225,14 +228,18 @@ export function useConversionQueue() {
       const route = router.route(source, target.format.id)
       try {
         if (!route) throw new Error("This file couldn't be converted")
+        // Known from the header before any work starts: will the target hold a picture this size?
+        const size = entry.detection.kind === 'known' ? entry.detection.dimensions : null
+        const tooLarge = size && dimensionProblem(target.format, size.width, size.height)
+        if (tooLarge) throw new Refusal(tooLarge)
         fresh.push(...((await runFile(entry, route)) ?? []))
         entry.progress = 1
         entry.status = 'done'
         done++
-      } catch {
+      } catch (error) {
         entry.status = 'error'
         entry.progress = 1
-        entry.error = "This file couldn't be converted"
+        entry.error = error instanceof Refusal ? error.message : "This file couldn't be converted"
       }
     }
 

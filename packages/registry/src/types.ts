@@ -37,6 +37,8 @@ export interface Format {
   lossy: 'never' | 'always' | 'optional'
   /** What the format can carry. PNG: ['alpha', 'metadata'] */
   traits: Trait[]
+  /** The largest width or height, in pixels, the format can hold. WebP: 16383. */
+  maxDimension?: number
 }
 
 export interface Warning {

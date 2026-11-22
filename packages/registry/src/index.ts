@@ -31,6 +31,17 @@ export function acceptAttribute(reg: Registry): string {
   return [...parts].join(',')
 }
 
+/**
+ * Why a picture of this size cannot be written as this format, or null if it can.
+ * Some encoders quietly shrink or crop an oversized picture instead of failing; asking here
+ * first means the user is told, not handed a different picture.
+ */
+export function dimensionProblem(to: Format, width: number, height: number): string | null {
+  if (to.maxDimension === undefined) return null
+  if (width <= to.maxDimension && height <= to.maxDimension) return null
+  return `Too large for ${to.name}, which holds ${to.maxDimension} pixels a side at most`
+}
+
 /** Every engine id named by a capability. */
 export function engineIds(reg: Registry): string[] {
   return [...new Set(reg.capabilities.map((c) => c.engine))]

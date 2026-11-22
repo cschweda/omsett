@@ -71,17 +71,8 @@ dir apng;  ff -framerate 4 -i "$work/frame%d.png" -plays 0 -f apng "$out/apng/sa
 
 node "$tools/vips-samples.mjs" "$work/pattern.png" "$cases/animated.gif" "$out"
 
-# Files that lie, or are broken on purpose.
-cp "$out/jpeg/sample.jpg" "$cases/jpeg-named.png"              # a JPEG wearing a .png name
-head -c 20000 "$out/png/sample.png" > "$cases/truncated.png"   # a real PNG, cut short
-printf 'This is a text file, not an image.\n' > "$cases/not-an-image.png"
-: > "$cases/empty.png"
-# A 33-byte file whose header declares 30000 × 30000 and which contains no pixels at all.
-python3 - "$cases/declares-30000x30000.png" <<'PY'
-import struct, sys, zlib
-ihdr = struct.pack(">IIBBBBB", 30000, 30000, 8, 6, 0, 0, 0)
-crc = struct.pack(">I", zlib.crc32(b"IHDR" + ihdr) & 0xFFFFFFFF)
-open(sys.argv[1], "wb").write(b"\x89PNG\r\n\x1a\n" + struct.pack(">I", 13) + b"IHDR" + ihdr + crc)
-PY
+# Files that lie or are broken on purpose are traps, not cases. They read some of the samples
+# written above, so they are made last.
+python3 "$tools/make-traps.py"
 
 echo "samples written under $out"

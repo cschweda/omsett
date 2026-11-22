@@ -7,9 +7,13 @@ type Reader = (bytes: Uint8Array) => Dimensions | null
 
 const view = (bytes: Uint8Array) => new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength)
 
-/** PNG: the IHDR chunk is always first, so width and height sit at bytes 16–23. */
+/**
+ * PNG: the IHDR chunk must come first, which puts width and height at bytes 16–23. If the first
+ * chunk is something else, those bytes are not a size and are not read as one.
+ */
 const png: Reader = (bytes) => {
   if (bytes.length < 24) return null
+  if (String.fromCharCode(...bytes.subarray(12, 16)) !== 'IHDR') return null
   const v = view(bytes)
   return { width: v.getUint32(16), height: v.getUint32(20) }
 }
