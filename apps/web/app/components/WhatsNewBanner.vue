@@ -60,9 +60,11 @@ function dismiss() {
   padding: 1rem 0 1.25rem;
   border-bottom: 1px solid var(--rule);
 }
+/* Room on both sides of the bar: between it and the words above, and the version beneath. */
 .mark {
   align-self: flex-start;
-  padding-bottom: 0.125rem;
+  padding-bottom: 0.4rem;
+  margin-bottom: 0.45rem;
   border-bottom: 3px solid var(--highlight);
 }
 .label {
@@ -108,6 +110,7 @@ function dismiss() {
   }
   .mark {
     align-self: baseline;
+    margin-bottom: 0;
   }
   .dismiss {
     grid-column: 1 / -1;

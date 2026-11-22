@@ -37,7 +37,7 @@ every browser, where some used to return half a picture.
 - An engine checks a picture's real size as soon as it knows it, in case the header lied.
 - A preview that cannot be drawn (a browser cannot display a TIFF) is no longer reported as a
   problem with the file.
-- The "What's new" banner marks its label with an underline in place of a full-width rule.
+- The "What's new" banner marks its label with a green underline in place of a full-width rule.
 - Diagrams on the Technical details page are centered.
 - The self-host image's base images are pinned by digest, and the deployment guide checks nvm's
   installer against a hash before running it.
