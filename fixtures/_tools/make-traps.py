@@ -162,6 +162,34 @@ trap(
 
 # === 2. Files that lie about their size ============================================================
 G = "size"
+bmp_huge = bytearray(read("bmp", "sample.bmp"))
+bmp_huge[18:26] = struct.pack("<ii", 50000, 50000)
+trap(
+    "huge-declared.bmp",
+    bytes(bmp_huge),
+    "A small BMP whose header states 50,000 pixels a side. Refused from the header.",
+    "bmp",
+    guard="refused",
+    group=G,
+)
+trap(
+    "huge-declared.qoi",
+    b"qoif" + struct.pack(">II", 50000, 50000) + bytes([4, 0]) + bytes(7) + b"\x01",
+    "Twenty-two bytes of QOI that state 50,000 pixels a side. Refused from the header.",
+    "qoi",
+    guard="refused",
+    group=G,
+)
+psd_huge = bytearray(read("psd", "sample.psd"))
+psd_huge[14:22] = struct.pack(">II", 300000, 300000)
+trap(
+    "huge-declared.psd",
+    bytes(psd_huge),
+    "A Photoshop file whose header states 300,000 pixels a side, ten times what the format allows.",
+    "psd",
+    guard="refused",
+    group=G,
+)
 trap(
     "huge-declared.svg",
     b'<svg xmlns="http://www.w3.org/2000/svg" width="200000" height="200000"><rect width="10" height="10"/></svg>\n',
@@ -379,6 +407,34 @@ trap(
     heic_sound[: len(heic_sound) // 2],
     "A sound HEIC file cut off halfway through.",
     "heic",
+    node="fails",
+    group=G,
+)
+
+# The formats ImageMagick reads. Each is cut off halfway; each must be refused, not half-drawn.
+for folder, ext, label in (
+    ("bmp", "bmp", "BMP"),
+    ("qoi", "qoi", "QOI"),
+    ("psd", "psd", "Photoshop"),
+    ("ico", "ico", "icon"),
+    ("jp2", "jp2", "JPEG 2000"),
+):
+    sound = read(folder, f"sample.{ext}")
+    trap(
+        f"truncated.{ext}",
+        sound[: len(sound) // 2],
+        f"A sound {label} file cut off halfway through.",
+        ext,
+        node="fails",
+        group=G,
+    )
+ico_sound = bytearray(read("ico", "sample.ico"))
+ico_sound[18:22] = struct.pack("<I", 0x7FFFFFF0)  # where the first picture is said to start
+trap(
+    "bad-offset.ico",
+    bytes(ico_sound),
+    "An icon whose directory points two gigabytes past the end of the file for its picture.",
+    "ico",
     node="fails",
     group=G,
 )

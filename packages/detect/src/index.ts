@@ -24,6 +24,10 @@ export async function detect(blob: Blob, formats: Format[]): Promise<Detection> 
     // SVG is text and has no magic bytes: the most the library can say is "XML", or nothing.
     const root = !found || found.ext === 'xml' ? svgRoot(head) : null
     if (root) found = { ext: 'svg', mime: 'image/svg+xml' }
+    // QOI has a signature the library does not know: the letters "qoif".
+    if (!found && head[0] === 0x71 && head[1] === 0x6F && head[2] === 0x69 && head[3] === 0x66) {
+      found = { ext: 'qoi', mime: 'image/qoi' }
+    }
     if (!found) return { kind: 'unknown' }
     const format = formats.find((f) => f.detect.includes(found.ext))
     if (!format) return { kind: 'unregistered', ext: found.ext, mime: found.mime }

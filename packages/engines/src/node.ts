@@ -3,6 +3,7 @@ import { createRequire } from 'node:module'
 import { createHeifEngine, type HeifModule } from './heif'
 import { engineInfo, resvgFonts, vipsModules } from './info'
 import { createResvgEngine, type ResvgHost } from './resvg'
+import { createMagickEngine, type MagickApi } from './magick'
 import { createVipsEngine, type VipsModule } from './vips'
 import type { Engine } from './types'
 
@@ -28,6 +29,13 @@ export function createNodeEngines(): Record<string, Engine> {
       const factory = require('libheif-js/libheif-wasm/libheif.js') as (options: object) => HeifModule
       const wasmBinary = await readFile(require.resolve('libheif-js/libheif-wasm/libheif.wasm'))
       return factory({ wasmBinary })
+    },
+  })
+  engines.magick = createMagickEngine({
+    async init() {
+      const magick = await import('@imagemagick/magick-wasm')
+      await magick.initializeImageMagick(await readFile(require.resolve('@imagemagick/magick-wasm/magick.wasm')))
+      return magick as unknown as MagickApi
     },
   })
   engines.resvg = createResvgEngine({

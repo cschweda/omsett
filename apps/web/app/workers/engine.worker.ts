@@ -3,6 +3,7 @@
 import {
   createCanvasEngine,
   createHeifEngine,
+  createMagickEngine,
   createResvgEngine,
   createVipsEngine,
   engineInfo,
@@ -10,6 +11,7 @@ import {
   type ConvertOutput,
   type Engine,
   type HeifModule,
+  type MagickApi,
   type ResvgHost,
   type VipsModule,
 } from '@omsett/engines'
@@ -84,6 +86,13 @@ async function loadResvg() {
 }
 const resvgFonts = () => Promise.all(assets.resvg.fonts.map(async (font) => new Uint8Array(await verified(font))))
 
+/** Start ImageMagick from its verified binary. Its loader is part of this worker's own code. */
+async function loadMagick() {
+  const [magick, wasm] = await Promise.all([import('@imagemagick/magick-wasm'), verified(assets.magick.wasm)])
+  await magick.initializeImageMagick(new Uint8Array(wasm))
+  return magick as unknown as MagickApi
+}
+
 // Threads need SharedArrayBuffer, which needs cross-origin isolation (and so HTTPS).
 const threadsAvailable = async () => self.crossOriginIsolated === true && typeof SharedArrayBuffer !== 'undefined'
 
@@ -96,6 +105,7 @@ const engines: Record<string, Engine> = Object.fromEntries(
     ),
     createHeifEngine({ init: loadHeif }),
     createResvgEngine({ init: loadResvg, fonts: resvgFonts }),
+    createMagickEngine({ init: loadMagick }),
   ].map((engine) => [engine.id, engine]),
 )
 

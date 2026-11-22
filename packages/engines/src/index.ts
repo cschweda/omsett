@@ -3,6 +3,8 @@ export { canvasInfo, engineInfo, heifInfo, resvgFonts, resvgInfo, vipsHeifInfo, 
 export { createHeifEngine, type HeifHost, type HeifModule } from './heif'
 export { encodePng } from './png-encode'
 export { createResvgEngine, type ResvgHost } from './resvg'
+export { createMagickEngine, type MagickApi, type MagickHost } from './magick'
+export { magickInfo } from './info'
 export { createCanvasEngine } from './canvas'
 export { createVipsEngine, type VipsHost, type VipsImage, type VipsModule } from './vips'
 export { outputName, safeBaseName } from './util'

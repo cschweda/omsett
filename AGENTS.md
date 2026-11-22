@@ -101,6 +101,11 @@ build by `apps/web/scripts/write-headers.ts`.
 - **A format can be switched off in one line**, in `packages/registry/src/switches.ts`. Off, it
   is gone from the registry and so from the whole app; `everything` is the registry before
   switches. HEIC has one, because of HEVC patents. Tests must pass with a switch either way.
+- **ImageMagick is always told what it is reading.** The `magick` engine passes the detected
+  format as the coder and never lets ImageMagick guess: some of what it can guess its way into
+  (scripts, drawings that name other files) is not a picture. Do not add an unhinted read.
+- **Kill a leftover test server after a rebuild.** `pnpm e2e` reuses a server already on its
+  port, and one started before `pnpm build` can go on serving the old build's policies.
 - **Formats are ranked by their order in `formats/index.ts`.** The first four a file can become
   are shown as large tiles, the rest as a list.
 - **Engines must agree on what they leave out.** Both drop metadata, declared as `drops` on the

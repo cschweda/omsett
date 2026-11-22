@@ -51,6 +51,9 @@ const manifest = {
     script: await hashed(join(heifLib, 'libheif.js'), 'libheif', 'js'),
     wasm: await hashed(join(heifLib, 'libheif.wasm'), 'libheif', 'wasm'),
   },
+  magick: {
+    wasm: await hashed(fromEngines.resolve('@imagemagick/magick-wasm/magick.wasm'), 'magick', 'wasm'),
+  },
   resvg: {
     wasm: await hashed(fromEngines.resolve('@resvg/resvg-wasm/index_bg.wasm'), 'resvg', 'wasm'),
     fonts: await Promise.all(
@@ -66,6 +69,10 @@ const vipsRoot = join(vipsLib, '..')
 await copyFile(join(vipsRoot, 'LICENSE'), join(enginesDir, 'vips.LICENSE.txt'))
 await copyFile(join(vipsRoot, 'THIRD-PARTY-NOTICES.md'), join(enginesDir, 'vips.THIRD-PARTY-NOTICES.md'))
 await copyFile(join(heifLib, 'LICENSE'), join(enginesDir, 'libheif.LICENSE.txt'))
+await copyFile(
+  join(dirname(fromEngines.resolve('@imagemagick/magick-wasm/magick.wasm')), '..', '..', 'NOTICE'),
+  join(enginesDir, 'magick.NOTICE.txt'),
+)
 
 await copyFile(join(repo, 'fixtures', 'png', 'sample.png'), join(web, 'public', 'sample.png'))
 

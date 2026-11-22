@@ -40,8 +40,8 @@ describe('detect', () => {
   })
 
   it('reports a real format with no registry entry as unregistered', async () => {
-    const bmp = await readFile(new URL('../../../fixtures/bmp/sample.bmp', import.meta.url))
-    await expect(detect(new Blob([bmp]), formats)).resolves.toMatchObject({ kind: 'unregistered', ext: 'bmp' })
+    const icns = await readFile(new URL('../../../fixtures/icns/sample.icns', import.meta.url))
+    await expect(detect(new Blob([icns]), formats)).resolves.toMatchObject({ kind: 'unregistered', ext: 'icns' })
   })
 
   it('recognises an SVG by its root element, whatever comes before it', async () => {
@@ -71,6 +71,11 @@ describe('detect', () => {
       ['avif/sample.avif', { width: 320, height: 200 }],
       ['jxl/sample.jxl', { width: 320, height: 200 }],
       ['svg/sample.svg', { width: 320, height: 200 }],
+      ['bmp/sample.bmp', { width: 320, height: 200 }],
+      ['qoi/sample.qoi', { width: 320, height: 200 }],
+      ['psd/sample.psd', { width: 320, height: 200 }],
+      ['ico/sample.ico', { width: 256, height: 256 }],
+      ['jp2/sample.jp2', { width: 320, height: 200 }],
     ] as const) {
       const bytes = await readFile(new URL(`../../../fixtures/${file}`, import.meta.url))
       expect(await detect(new Blob([bytes]), formats), file).toMatchObject({ kind: 'known', dimensions: size })
