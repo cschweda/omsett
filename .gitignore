@@ -16,3 +16,4 @@ apps/web/app/generated/
 # test output
 test-results/
 playwright-report/
+apps/web/public/fonts/

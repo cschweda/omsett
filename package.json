@@ -13,7 +13,7 @@
     "build": "pnpm --filter web generate && pnpm --filter web write-headers",
     "test": "vitest run",
     "lint": "eslint .",
-    "typecheck": "pnpm -r typecheck",
+    "typecheck": "tsc --noEmit -p tsconfig.json && pnpm -r typecheck",
     "e2e": "playwright test",
     "format": "prettier --write ."
   },

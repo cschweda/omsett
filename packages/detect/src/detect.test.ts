@@ -5,16 +5,10 @@ import { detect, nameDisagrees, sizeProblem, TOO_LARGE } from './index'
 
 const formats = registry.formats
 
-/** The smallest valid JPEG: a 1×1 baseline image. */
-const TINY_JPEG = Buffer.from(
-  '/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAAMCAgICAgMCAgIDAwMDBAYEBAQEBAgGBgUGCQgKCgkICQkKDA8MCgsOCwkJDRENDg8QEBEQCgwSExIQEw8QEBD/yQALCAABAAEBAREA/8wABgAQEAX/2gAIAQEAAD8A0s8g/9k=',
-  'base64',
-)
-
 /** PNG signature plus an IHDR chunk declaring the given size. No pixel data at all. */
 function pngHeader(width: number, height: number): Uint8Array<ArrayBuffer> {
   const bytes = new Uint8Array(33)
-  bytes.set([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 13, 0x49, 0x48, 0x44, 0x52])
+  bytes.set([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0, 0, 0, 13, 0x49, 0x48, 0x44, 0x52])
   const view = new DataView(bytes.buffer)
   view.setUint32(16, width)
   view.setUint32(20, height)
@@ -31,10 +25,11 @@ describe('detect', () => {
   })
 
   it('detects a JPEG renamed .png as JPEG', async () => {
-    const file = new File([TINY_JPEG], 'photo.png', { type: 'image/png' })
+    const jpeg = await readFile(new URL('../../../fixtures/jpeg/sample.jpg', import.meta.url))
+    const file = new File([jpeg], 'photo.png', { type: 'image/png' })
     const found = await detect(file, formats)
     expect(found.kind === 'known' && found.format.id).toBe('jpeg')
-    expect(found.kind === 'known' && found.dimensions).toEqual({ width: 1, height: 1 })
+    expect(found.kind === 'known' && found.dimensions).toEqual({ width: 320, height: 168 })
     expect(found.kind === 'known' && nameDisagrees(file.name, found.format)).toBe(true)
   })
 

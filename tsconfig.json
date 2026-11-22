@@ -1,0 +1,13 @@
+{
+  "extends": "./tsconfig.base.json",
+  "include": [
+    "e2e",
+    "fixtures",
+    "playwright.config.ts",
+    "vitest.config.ts",
+    "apps/web/scripts",
+    "apps/web/security-headers.ts",
+    "apps/web/test",
+    "apps/web/app/utils/server-health.ts"
+  ]
+}

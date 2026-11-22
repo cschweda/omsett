@@ -19,9 +19,9 @@ const jpeg: Reader = (bytes) => {
   const v = view(bytes)
   let offset = 2
   while (offset + 9 < bytes.length) {
-    if (bytes[offset] !== 0xff) return null
+    if (bytes[offset] !== 0xFF) return null
     const marker = bytes[offset + 1]!
-    const isFrame = marker >= 0xc0 && marker <= 0xcf && marker !== 0xc4 && marker !== 0xc8 && marker !== 0xcc
+    const isFrame = marker >= 0xC0 && marker <= 0xCF && marker !== 0xC4 && marker !== 0xC8 && marker !== 0xCC
     if (isFrame) return { height: v.getUint16(offset + 5), width: v.getUint16(offset + 7) }
     offset += 2 + v.getUint16(offset + 2)
   }
@@ -39,11 +39,11 @@ const webp: Reader = (bytes) => {
     return { width, height }
   }
   if (chunk === 'VP8 ') {
-    return { width: v.getUint16(26, true) & 0x3fff, height: v.getUint16(28, true) & 0x3fff }
+    return { width: v.getUint16(26, true) & 0x3FFF, height: v.getUint16(28, true) & 0x3FFF }
   }
   if (chunk === 'VP8L') {
     const bits = v.getUint32(21, true)
-    return { width: (bits & 0x3fff) + 1, height: ((bits >> 14) & 0x3fff) + 1 }
+    return { width: (bits & 0x3FFF) + 1, height: ((bits >> 14) & 0x3FFF) + 1 }
   }
   return null
 }
