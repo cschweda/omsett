@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+- **Compare slider.** After a picture is converted, the result shows the original and the
+  converted file one over the other, with a divider to drag between them.
+- **Quality setting.** Targets whose encoder has one (WebP) show a quality slider, defaulting to
+  80. Moving it after a conversion converts again, so the comparison and the file size follow.
+- Sample images in 28 formats, and a set of edge-case files, under `fixtures/`.
+- Fixed: workers were refused by the browser under `pnpm dev`.
+
 ## 0.1.0
 
 Phase 0: PNG → WebP in the browser.
