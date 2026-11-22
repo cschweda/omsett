@@ -1,0 +1,112 @@
+// Trap files in real browsers. fixtures/_traps/manifest.json says what must happen to each file;
+// fixtures/traps.test.ts checks the same list against libvips in Node.
+//
+// Whatever a trap is, three things hold: the page survives, the file ends in a state the user
+// can read, and a good file still converts afterwards.
+import { readFileSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
+import { expect, test, type Page } from '@playwright/test'
+import { describeDownload, FIXTURE, open } from './helpers'
+
+interface Trap {
+  file: string
+  why: string
+  detect: string
+  mismatch: boolean
+  guard: 'ok' | 'refused'
+  browser: 'none' | 'succeeds' | 'fails' | 'either'
+  note: string | null
+}
+
+const dir = new URL('../fixtures/_traps/', import.meta.url)
+const traps = JSON.parse(readFileSync(new URL('manifest.json', dir), 'utf8')) as Trap[]
+
+/** The size a PNG header declares, straight from the trap's bytes. */
+function declaredSize(file: string) {
+  const bytes = readFileSync(new URL(file, dir))
+  return { width: bytes.readUInt32BE(16), height: bytes.readUInt32BE(20) }
+}
+
+async function convertGoodFile(page: Page) {
+  await page.locator('#file-input').setInputFiles(FIXTURE)
+  await page.getByRole('radio', { name: /WebP/ }).click()
+  await page.getByTestId('convert').click()
+  await expect(page.locator('.file-card[data-status="done"]')).toHaveCount(1, { timeout: 20_000 })
+  await expect(page.getByTestId('download')).toBeVisible()
+}
+
+for (const trap of traps) {
+  test(`${trap.file}: ${trap.why}`, async ({ page }) => {
+    const problems: string[] = []
+    page.on('crash', () => problems.push('the page crashed'))
+    page.on('pageerror', (error) => problems.push(`uncaught: ${error.message}`))
+    page.on('dialog', (dialog) => {
+      problems.push(`a dialog opened: ${dialog.message()}`)
+      void dialog.dismiss()
+    })
+
+    await open(page)
+    await page.locator('#file-input').setInputFiles(fileURLToPath(new URL(trap.file, dir)))
+    const card = page.locator('.file-card')
+    await expect(card).toHaveCount(1)
+    const note = card.getByTestId('file-note')
+    const convert = page.getByTestId('convert')
+
+    if (trap.detect === 'unknown' || trap.detect === 'unregistered') {
+      await expect(note).toHaveText('Unsupported format')
+      await expect(convert).toBeDisabled()
+    } else if (trap.guard === 'refused') {
+      await expect(note).toHaveText('This image is too large to convert in a browser')
+      await expect(convert).toBeDisabled()
+    } else if (trap.browser === 'none') {
+      // Identified, but nothing converts from this format yet.
+      if (trap.mismatch) await expect(note).toContainText('the contents are')
+      for (const tile of await page.getByRole('radio').all()) {
+        await expect(tile).toHaveAttribute('aria-disabled', 'true')
+      }
+      await expect(convert).toBeDisabled()
+    } else {
+      await page.getByRole('radio', { name: /WebP/ }).click()
+      await convert.click()
+      await expect(card).toHaveAttribute('data-status', /^(done|error)$/, { timeout: 30_000 })
+      const outcome = (await card.getAttribute('data-status')) === 'done' ? 'succeeds' : 'fails'
+      if (trap.browser !== 'either') expect(outcome, 'conversion').toBe(trap.browser)
+
+      if (outcome === 'fails') {
+        await expect(note).toHaveText(trap.note ?? "This file couldn't be converted")
+        await expect(page.getByTestId('download')).toHaveCount(0)
+      } else {
+        // If a browser forgives the damage, what it hands back must still be a real WebP of the
+        // size the file declared, not something else under a .webp name.
+        const link = page.getByTestId('download')
+        const output = await describeDownload(page, () => link.click())
+        expect(output.found.kind === 'known' && output.found.format.id).toBe('webp')
+        expect(output.found.kind === 'known' && output.found.dimensions).toEqual(declaredSize(trap.file))
+      }
+      if (trap.browser === 'either') console.log(`[traps] ${test.info().project.name} ${trap.file}: ${outcome}`)
+    }
+
+    // The trap is spent. A good file must still convert on the same page.
+    await card.getByRole('button', { name: /Remove/ }).click()
+    await expect(card).toHaveCount(0)
+    await convertGoodFile(page)
+    expect(problems).toEqual([])
+  })
+}
+
+test('a file name is shown as text, never run as markup', async ({ page }) => {
+  const dialogs: string[] = []
+  page.on('dialog', (dialog) => {
+    dialogs.push(dialog.message())
+    void dialog.dismiss()
+  })
+  await open(page)
+  const name = '"><img src=x onerror=alert(1)>.png'
+  await page.locator('#file-input').setInputFiles({ name, mimeType: 'image/png', buffer: readFileSync(FIXTURE) })
+  await expect(page.locator('.file-card .name')).toHaveText(name)
+  await expect(page.locator('.file-card img')).toHaveCount(0)
+  await page.getByRole('radio', { name: /WebP/ }).click()
+  await page.getByTestId('convert').click()
+  await expect(page.getByTestId('download')).toHaveAttribute('download', '"><img src=x onerror=alert(1)>.webp')
+  expect(dialogs).toEqual([])
+})

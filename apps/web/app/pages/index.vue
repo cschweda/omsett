@@ -23,6 +23,14 @@ function onKeydown(event: KeyboardEvent) {
   }
 }
 
+function sourceOf(sourceId: string) {
+  const entry = queue.files.value.find((f) => f.id === sourceId)
+  return {
+    blob: entry?.file,
+    formatId: entry?.detection.kind === 'known' ? entry.detection.format.id : undefined,
+  }
+}
+
 function convertAnother() {
   queue.reset()
   void engines.probe()
@@ -64,6 +72,12 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
         @select="queue.select"
       />
 
+      <QualityControl
+        v-if="queue.quality.value !== null && queue.defaultQuality.value !== null"
+        v-model="queue.quality.value"
+        :suggested="queue.defaultQuality.value"
+      />
+
       <div class="convert">
         <UButton
           size="xl"
@@ -84,7 +98,13 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
       <section v-if="queue.results.value.length" aria-labelledby="results-heading" class="results">
         <h2 id="results-heading" class="heading">Results</h2>
         <ul class="cards" aria-label="Converted files">
-          <ResultCard v-for="result in queue.results.value" :key="result.id" :result="result" />
+          <ResultCard
+            v-for="result in queue.results.value"
+            :key="result.id"
+            :result="result"
+            :source="sourceOf(result.sourceId).blob"
+            :source-format-id="sourceOf(result.sourceId).formatId"
+          />
         </ul>
         <!-- TODO(phase-1): "Download all as ZIP" when there is more than one result. -->
         <UButton

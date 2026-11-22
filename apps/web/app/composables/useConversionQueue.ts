@@ -1,6 +1,6 @@
 import { detect, nameDisagrees, pixelCount, sizeProblem, type Detection } from '@omsett/detect'
 import type { Edge, Route } from '@omsett/registry'
-import { formatById } from '@omsett/registry'
+import { dimensionProblem, formatById } from '@omsett/registry'
 import { registry, router } from '~/utils/registry'
 
 export interface QueueFile {
@@ -28,6 +28,9 @@ export interface QueueResult {
   inputBytes: number
 }
 
+/** A failure whose message is written for the user and can be shown as it is. */
+class Refusal extends Error {}
+
 let nextId = 0
 const uid = () => `f${++nextId}`
 
@@ -39,6 +42,8 @@ export function useConversionQueue() {
   const results = ref<QueueResult[]>([])
   const targetId = ref<string | null>(null)
   const converting = ref(false)
+  /** The user's quality setting, 1–100. Null when the selected target has no such setting. */
+  const quality = ref<number | null>(null)
   /** `?engine=<id>` forces one engine, so each path can be exercised on purpose. */
   const forcedEngine = import.meta.client ? new URLSearchParams(location.search).get('engine') : null
 
@@ -50,6 +55,16 @@ export function useConversionQueue() {
   )
   const targets = computed(() => router.targetsFor(sourceIds.value))
   const selected = computed(() => targets.value.find((t) => t.format.id === targetId.value && t.route) ?? null)
+  /**
+   * The quality the registry suggests for the selected target, or null if its encoder has no
+   * quality setting. Read from the capability's default options, so no format is named here.
+   */
+  const defaultQuality = computed(() => {
+    const options = selected.value?.route?.edges.at(-1)?.candidates[0]?.defaultOptions
+    return typeof options?.quality === 'number' ? options.quality : null
+  })
+  watch(defaultQuality, (value) => (quality.value = value), { immediate: true })
+
   const canConvert = computed(() => !converting.value && convertible.value.length > 0 && selected.value !== null)
   const overall = computed(() => {
     const active = files.value.filter((f) => f.status !== 'ready')
@@ -130,30 +145,36 @@ export function useConversionQueue() {
     if (entry.detection.kind !== 'known') return
     let blob: Blob = entry.file
     let name = entry.file.name
-    let engineUsed = ''
     // Dimensions are only known for the file as dropped; later hops are not pixel-checked.
     let pixels = pixelCount(entry.detection.dimensions)
 
+    const produced: QueueResult[] = []
     for (const [hop, edge] of route.edges.entries()) {
       const from = formatById(registry, edge.from)!
       const to = formatById(registry, edge.to)!
+      const last = hop === route.edges.length - 1
       // The first engine that remains runs. If it throws, the next is tried once.
       const attempts = viable(edge, pixels).slice(0, 2)
-      let produced: Blob | null = null
+      let next: Blob | null = null
       for (const candidate of attempts) {
+        // The user's quality applies to the final encode, and only if that encoder has one.
+        const options =
+          last && quality.value !== null && 'quality' in candidate.defaultOptions
+            ? { ...candidate.defaultOptions, quality: quality.value }
+            : candidate.defaultOptions
         try {
           const outputs = await engines.convert(
             candidate.engine,
-            { blob, name, from, to, options: candidate.defaultOptions },
+            { blob, name, from, to, options },
             (fraction) => {
               entry.progress = (hop + fraction) / route.edges.length
             },
           )
-          const last = hop === route.edges.length - 1
           if (last) {
-            for (const output of outputs) {
-              results.value.push({
-                id: uid(),
+            for (const [index, output] of outputs.entries()) {
+              produced.push({
+                // Stable across re-conversions, so a result card keeps its place and its state.
+                id: `${entry.id}:${index}`,
                 sourceId: entry.id,
                 name: output.name,
                 formatId: output.format,
@@ -165,26 +186,26 @@ export function useConversionQueue() {
           }
           const first = outputs[0]
           if (!first) throw new Error('The engine returned nothing')
-          produced = first.blob
+          next = first.blob
           name = first.name
-          engineUsed = candidate.engine
           break
         } catch (error) {
           console.warn(`[omsett] ${candidate.engine} failed on ${entry.file.name}`, error)
         }
       }
-      if (!produced) throw new Error("This file couldn't be converted")
-      blob = produced
+      if (!next) throw new Error("This file couldn't be converted")
+      blob = next
       pixels = 0
     }
-    return engineUsed
+    return produced
   }
 
   async function convertAll() {
     const target = selected.value
     if (!canConvert.value || !target?.route) return
     converting.value = true
-    results.value = []
+    // Earlier results stay on screen until their replacements are ready.
+    const fresh: QueueResult[] = []
     const queue = convertible.value
     for (const entry of queue) {
       entry.status = 'converting'
@@ -207,18 +228,23 @@ export function useConversionQueue() {
       const route = router.route(source, target.format.id)
       try {
         if (!route) throw new Error("This file couldn't be converted")
-        await runFile(entry, route)
+        // Known from the header before any work starts: will the target hold a picture this size?
+        const size = entry.detection.kind === 'known' ? entry.detection.dimensions : null
+        const tooLarge = size && dimensionProblem(target.format, size.width, size.height)
+        if (tooLarge) throw new Refusal(tooLarge)
+        fresh.push(...((await runFile(entry, route)) ?? []))
         entry.progress = 1
         entry.status = 'done'
         done++
-      } catch {
+      } catch (error) {
         entry.status = 'error'
         entry.progress = 1
-        entry.error = "This file couldn't be converted"
+        entry.error = error instanceof Refusal ? error.message : "This file couldn't be converted"
       }
     }
 
     stop()
+    results.value = fresh
     converting.value = false
     const failed = queue.length - done
     const count = `${done} ${done === 1 ? 'file' : 'files'} converted.`
@@ -229,7 +255,20 @@ export function useConversionQueue() {
     )
   }
 
+  // Once there is a result, moving the quality setting converts again, so the comparison and
+  // the size follow the slider.
+  let requeue: ReturnType<typeof setTimeout> | undefined
+  watch(quality, (value, previous) => {
+    if (value === null || previous === null || results.value.length === 0) return
+    clearTimeout(requeue)
+    requeue = setTimeout(function again() {
+      if (converting.value) requeue = setTimeout(again, 150)
+      else void convertAll()
+    }, 350)
+  })
+
   function reset() {
+    clearTimeout(requeue)
     engines.terminate()
     for (const entry of files.value) entry.thumbnail?.close()
     files.value = []
@@ -245,6 +284,8 @@ export function useConversionQueue() {
     targetId,
     selected,
     converting,
+    quality,
+    defaultQuality,
     canConvert,
     overall,
     forcedEngine,

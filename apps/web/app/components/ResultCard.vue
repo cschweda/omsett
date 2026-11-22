@@ -2,16 +2,40 @@
 import type { QueueResult } from '~/composables/useConversionQueue'
 import { formatBytes, formatDelta } from '~/utils/format-bytes'
 
-const props = defineProps<{ result: QueueResult }>()
+import { formatById } from '@omsett/registry'
+import { registry } from '~/utils/registry'
 
-// One object URL per card, revoked when the card goes away. Nothing outlives the session.
+const props = defineProps<{
+  result: QueueResult
+  /** The file this was converted from, and its format, for the comparison. */
+  source?: Blob
+  sourceFormatId?: string
+}>()
+
+// One object URL per output, revoked when it is replaced or the card goes away.
 const url = ref('')
-onMounted(() => {
-  url.value = URL.createObjectURL(props.result.blob)
-})
-onBeforeUnmount(() => {
+function release() {
   if (url.value) URL.revokeObjectURL(url.value)
+  url.value = ''
+}
+onMounted(() => {
+  watch(
+    () => props.result.blob,
+    (blob) => {
+      release()
+      url.value = URL.createObjectURL(blob)
+    },
+    { immediate: true },
+  )
 })
+onBeforeUnmount(release)
+
+const from = computed(() => (props.sourceFormatId ? formatById(registry, props.sourceFormatId) : undefined))
+const to = computed(() => formatById(registry, props.result.formatId))
+// Picture to picture: there is something to look at side by side.
+const comparable = computed(
+  () => props.source !== undefined && from.value?.category === 'image' && to.value?.category === 'image',
+)
 
 const delta = computed(() => formatDelta(props.result.inputBytes, props.result.blob.size))
 </script>
@@ -22,8 +46,8 @@ const delta = computed(() => formatDelta(props.result.inputBytes, props.result.b
       <div class="meta">
         <p class="name mono">{{ result.name }}</p>
         <p class="facts mono">
-          <span>{{ formatBytes(result.blob.size) }}</span>
-          <span v-if="delta" class="muted">{{ delta }}</span>
+          <span data-testid="output-size" :data-bytes="result.blob.size">{{ formatBytes(result.blob.size) }}</span>
+          <span v-if="delta" class="muted" data-testid="delta">{{ delta }}</span>
           <span class="muted">converted on your device by {{ result.engine }}</span>
         </p>
       </div>
@@ -31,7 +55,13 @@ const delta = computed(() => formatDelta(props.result.inputBytes, props.result.b
         Download<span class="sr-only"> {{ result.name }}</span>
       </a>
     </div>
-    <!-- TODO(phase-1): before/after preview slider for image → image. -->
+    <CompareSlider
+      v-if="comparable && source"
+      :before="source"
+      :after="result.blob"
+      :before-label="`${from?.name} · ${formatBytes(result.inputBytes)}`"
+      :after-label="`${to?.name} · ${formatBytes(result.blob.size)}`"
+    />
   </UCard>
 </template>
 

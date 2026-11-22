@@ -14,9 +14,12 @@ export default defineNuxtConfig({
   nitro: { preset: 'static' },
 
   // Production headers and policies come from security-headers.ts via scripts/write-headers.ts.
-  // The dev server only needs cross-origin isolation, so threads work while developing.
+  // The dev server only needs cross-origin isolation, so threads work while developing. Both
+  // halves are needed: Nitro serves the page, Vite serves the scripts, and a worker script is
+  // refused by an isolated page unless its own response carries the embedder policy too.
   $development: {
     routeRules: { '/**': { headers: isolation } },
+    vite: { server: { headers: isolation } },
   },
 
   runtimeConfig: {
