@@ -72,11 +72,12 @@ A new engine also needs an implementation in [`packages/engines/src/`](packages/
 | Phase | Gate |
 | --- | --- |
 | 0 · Foundation | PNG → WebP end to end on omsett.com |
-| 1 · Images, data, archives, fonts, PWA | Squish parity; axe clean; NVDA pass |
+| 1 · Images, data, archives, fonts, PWA | Squish parity |
 | 2 · Documents, audio, ebooks, subtitles | DOCX → Markdown/EPUB and WAV → MP3 in the browser |
 | 3 · Desktop app and CLI | DOC → tagged PDF locally; installers on 3 OSes |
 | 4 · Video | 10-minute MOV → MP4 with progress, offline |
 | 5 · Plugins | CAD, 3D, geospatial, HWP as registry plugins |
+| 6 · Accessibility | WCAG 2.2 AA audit of the finished interface; axe clean; NVDA and VoiceOver pass |
 
 ## Related
 

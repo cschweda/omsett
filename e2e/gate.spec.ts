@@ -5,6 +5,11 @@ import { fileURLToPath } from 'node:url'
 import { expect, test, type Page } from '@playwright/test'
 import { describeDownload, expectNoSeriousViolations, expectPrivate, FIXTURE, open, watch } from './helpers'
 
+// Accessibility work (audits, keyboard-order and focus checks, screen reader testing, and any
+// fixes they call for) is deferred to the final phase. These tests are parked, not deleted:
+// set this to false to bring them back.
+const ACCESSIBILITY_DEFERRED = true
+
 /** A short name for whatever has focus, and whether its focus indicator is drawn. */
 async function focused(page: Page) {
   return page.evaluate(() => {
@@ -75,6 +80,7 @@ test.describe('gate', () => {
   })
 
   test('keyboard order and visible focus', async ({ page }) => {
+    test.skip(ACCESSIBILITY_DEFERRED, 'accessibility work is deferred to the final phase')
     await open(page)
     await page.locator('#file-input').setInputFiles(FIXTURE)
     await page.getByRole('radio', { name: /WebP/ }).click()
@@ -162,6 +168,7 @@ for (const theme of ['dark', 'light'] as const) {
     // Playwright's Firefox build segfaults its content process (signal 11) whenever an axe scan
     // and a conversion happen in the same page, in either order. Conversions alone and scans
     // alone are fine there, and the same markup is scanned in the other two browsers.
+    test.skip(ACCESSIBILITY_DEFERRED, 'accessibility work is deferred to the final phase')
     test.skip(browserName === 'firefox', 'axe + worker conversion crashes Playwright Firefox')
 
     await open(page)

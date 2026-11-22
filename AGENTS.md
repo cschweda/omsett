@@ -43,8 +43,11 @@ These are invariants. A change that breaks one is wrong even if it works.
    `e2e/gate.spec.ts`.
 7. **Every engine is tested where it really runs.** Engines whose `runtimes` include `node` run
    the fixtures in Vitest; browser-only engines run them in Playwright.
-8. **Accessibility is a build failure.** axe `serious` or `critical` violations fail CI. Every
-   control is keyboard-reachable; every state change is announced, politely.
+8. **Accessibility work waits for the final phase.** Until then: no audits, no axe gate, no
+   screen reader testing, and no changes made for accessibility's sake. What already exists (the
+   real file input, the radio-group picker, the live region) stays as it is; do not remove it and
+   do not extend it. The axe and keyboard-order tests in `e2e/gate.spec.ts` are parked behind
+   `ACCESSIBILITY_DEFERRED`.
 9. **One screen.** `pages/index.vue` is the whole app.
 10. **A server is optional and absent by default.** `useServerHealth` is the only code that knows
     one might exist, and it only talks to its own origin. There is no field for a server URL.
@@ -74,7 +77,7 @@ build by `apps/web/scripts/write-headers.ts`.
 - **Safari cannot encode WebP from a canvas** and answers with a PNG. The canvas engine probes
   for this (`available()`), and Safari falls through to libvips.
 - **Playwright's Firefox build crashes** (content process, signal 11) when an axe scan and a
-  conversion happen in the same page, so the axe tests skip Firefox. Its test profile also needs
+  conversion happen in the same page, so the axe tests (parked for now) skip Firefox. Its test profile also needs
   a preference to treat a WebP link as a download (see `playwright.config.ts`).
 - **GitHub Actions are pinned to commit SHAs**, with the release in a trailing comment. Keep it
   that way when adding or updating one; look the SHA up, do not guess it.

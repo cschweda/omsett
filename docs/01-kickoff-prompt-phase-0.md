@@ -41,15 +41,15 @@ The directory is not empty. It already holds `docs/` (the design doc and this pr
 2. `packages/registry`: typed `Format`, `Capability`, and `EdgeOverride` records; edges **derived** from capabilities, never written by hand; a `Router` that finds the cheapest path between two formats (Dijkstra, max 3 hops, lossless preferred). Three formats registered: `png`, `webp`, `jpeg`. Two capabilities: `canvas` and `vips`, each reading `png` and writing `webp`. JPEG is registered so that a dropped JPEG is named correctly and shown as having no conversions yet; it has no reader or writer in Phase 0.
 3. `packages/detect`: format detection by magic bytes using `file-type`, never by extension alone, plus image dimensions read from the header without decoding.
 4. `packages/engines`: the `Engine` interface, a `canvas` engine (zero download, browser only) that converts PNG → WebP via `OffscreenCanvas`, and a `vips` engine (`wasm-vips`, browser and Node) behind the same interface. Engines are plain async modules that know nothing about workers.
-5. `apps/web`: a single-screen Nuxt 4 + Nuxt UI app. Drop zone, file cards, target picker rendered from the registry, Convert button, result cards with Download. Dark by default. Fully keyboard-operable and screen-reader-announced. Every engine runs in a Web Worker. Deployed to Netlify with COOP/COEP, a Content-Security-Policy in the page, and a second one on its worker scripts.
+5. `apps/web`: a single-screen Nuxt 4 + Nuxt UI app. Drop zone, file cards, target picker rendered from the registry, Convert button, result cards with Download. Dark by default. Every engine runs in a Web Worker. Deployed to Netlify with COOP/COEP, a Content-Security-Policy in the page, and a second one on its worker scripts.
 6. `useServerHealth` composable: fetches same-origin `/config.json` (`{ "server": boolean }`). When `server` is false it does nothing more. When true it probes same-origin `GET /api/health` with a 3 s timeout. It exposes `{ state: 'absent' | 'reachable' | 'unreachable', engines: string[], maxBytes: number | null }`. In Phase 0 nothing consumes it except a footer line. Absent is the normal state and must never produce an error or a toast. There is no field for typing a server URL, anywhere.
 7. `fixtures/`: one real PNG (not generated at test time), a Vitest run that puts it through every Node-capable engine, and a Playwright run that puts it through the browser engines in Chromium, Firefox, and WebKit.
 8. Docker for self-hosters: `apps/web/Dockerfile` (build stage runs `nuxt generate`; runtime stage is `caddy:2-alpine` serving the static output with the same headers as Netlify) and a root `docker-compose.yml` with the `web` service only, plus a commented-out `omsettd` service block marked `# Phase 4`. `docker compose up` on a clean machine must yield a working PNG → WebP at `http://localhost:8080`.
-9. CI: GitHub Actions running lint, typecheck, Vitest, Playwright + axe-core against the built site, and `docker build` of the web image on every PR.
+9. CI: GitHub Actions running lint, typecheck, Vitest, Playwright against the built site, and `docker build` of the web image on every PR.
 
 **Do not build:** any other conversion, any preset, the PWA manifest, the Electron app, the CLI, multi-file ZIP download, the Adjust panel, i18n, analytics, a settings page, or native engines inside the Docker image. Leave clear `TODO(phase-1)` markers where they will go.
 
-**Gate:** on the pull request's Netlify Deploy Preview, a stranger can drop a PNG, choose WebP, click Convert, and download a valid WebP, using only a keyboard if they choose, with no request leaving the page's origin (verifiable in DevTools). The same works from `docker compose up` on a clean machine. CI is green. Chris merges the PR into `staging`, checks the staging branch deploy, and releases `staging` to `main` when he chooses; omsett.com then serves the same build.
+**Gate:** on the pull request's Netlify Deploy Preview, a stranger can drop a PNG, choose WebP, click Convert, and download a valid WebP, with no request leaving the page's origin (verifiable in DevTools). The same works from `docker compose up` on a clean machine. CI is green. Chris merges the PR into `staging`, checks the staging branch deploy, and releases `staging` to `main` when he chooses; omsett.com then serves the same build.
 
 ## Tech stack, pinned
 
@@ -65,7 +65,7 @@ The directory is not empty. It already holds `docs/` (the design doc and this pr
 | Detection | `file-type` (ESM, browser build) | No extension sniffing as the only signal |
 | Self-host | Docker: `caddy:2-alpine` serving the static build; Docker Compose at the root | No Kubernetes, no Helm; no server container in Phase 0 |
 | Server | None in Phase 0. Phase 4 adds `omsettd` (Hono on Node 24) as a self-host-only image | No Netlify Functions, ever; no public server |
-| Tests | Vitest (unit + Node fixtures), Playwright on Chromium, Firefox, and WebKit (the gate flow + browser fixtures), `@axe-core/playwright` |  |
+| Tests | Vitest (unit + Node fixtures), Playwright on Chromium, Firefox, and WebKit (the gate flow + browser fixtures). `@axe-core/playwright` is installed but its tests are parked until the final phase |  |
 | Lint/format | ESLint flat config with `@nuxt/eslint`, Prettier |  |
 | CI | GitHub Actions |  |
 | Hosting | Netlify (web); GitHub Releases (desktop, later); GHCR (self-host images) | No DigitalOcean in Phase 0 |
@@ -120,10 +120,10 @@ omsett/
 │  ├─ png/sample.png             a real file, committed
 │  └─ fixtures.test.ts           Node-capable engines × fixtures
 ├─ e2e/
-│  ├─ gate.spec.ts               the Phase 0 gate, in Playwright, with axe
+│  ├─ gate.spec.ts               the Phase 0 gate, in Playwright (axe tests parked)
 │  └─ fixtures.spec.ts           browser engines × fixtures, three browsers
 ├─ .github/workflows/
-│  ├─ ci.yml                     lint, typecheck, test, e2e + axe, docker build
+│  ├─ ci.yml                     lint, typecheck, test, e2e, docker build
 │  └─ release.yml                on tag: push omsett-web image to GHCR
 ├─ brand/                         existing; leave as is
 ├─ docs/                          existing; leave as is
@@ -150,7 +150,7 @@ These are invariants. A PR that breaks one is wrong even if it works.
 5. **Detection by content, not name.** `packages/detect` reads magic bytes. Extension is a hint for the UI label only. A mismatch (a `.png` that is a JPEG) is reported to the user and the detected format wins.
 6. **Nothing leaves the origin.** The page makes no request to any other origin, ever, and no request carrying file bytes to its own. This is enforced by `connect-src 'self' blob:` in the page's Content-Security-Policy and again in the policy every worker script carries, not by good intentions, and asserted in the E2E test.
 7. **Every engine is tested where it really runs.** Engines whose `runtimes` include `node` run the fixtures in Vitest. Engines that are browser-only run the same fixtures in Playwright. No engine ships with neither.
-8. **Accessibility is a build failure, not a review comment.** axe-core violations at `serious` or `critical` fail CI. Every interactive element is keyboard-reachable; every state change is announced.
+8. **Accessibility work waits for the final phase.** No audits, no axe gate, no screen reader testing, and no changes made for accessibility's sake until the app works and that phase begins. Build with ordinary semantic HTML as a matter of course (a real file input, real buttons), and leave it there: do not audit it, tune it, or extend it now, and do not remove what exists.
 9. **One screen.** `pages/index.vue` is the whole app in Phase 0. No routing, no modals for the happy path.
 10. **A server is optional and absent by default.** `useServerHealth` is the only code that knows a server might exist, and it only ever talks to its own origin. No feature may require a server; a missing or unreachable one is a normal state with no error UI.
 11. **Every engine declares its license.** An engine record without `license` and `sourceUrl` fails a registry test, and every engine appears in `THIRD-PARTY-NOTICES.md`.
@@ -456,6 +456,8 @@ Phase 0 is complete only when every box in the first two lists is checked. Run t
 
 **Automated (CI must be green)**
 
+Accessibility checks (axe, keyboard order and focus, screen readers) are not part of this list. They belong to the final phase; their tests exist in `e2e/gate.spec.ts`, parked behind `ACCESSIBILITY_DEFERRED`.
+
 - [ ] `pnpm lint`, `pnpm typecheck`, `pnpm test` pass from a clean clone with `--frozen-lockfile`.
 - [ ] `fixtures/fixtures.test.ts`: `sample.png` → WebP through `vips` in Node produces a WebP with identical width and height and a smaller byte size.
 - [ ] `e2e/fixtures.spec.ts`: the same fixture converts in Chromium, Firefox, and WebKit with the default engine, and in Chromium with `?engine=vips`. Each output's bytes start with `RIFF…WEBP` and its dimensions match the input. The test logs which engine ran in each browser.
@@ -463,8 +465,6 @@ Phase 0 is complete only when every box in the first two lists is checked. Run t
 - [ ] Detection tests: a JPEG renamed `.png` is detected as JPEG; an empty file and a 10-byte garbage file return `unknown` without throwing; a small PNG whose header declares 30000 × 30000 is refused by the pixel guard with no decode attempted.
 - [ ] `useServerHealth` tests: `server: false` → `absent` with no further fetch; `server: true` with `/api/health` unreachable → `unreachable` after the timeout with no thrown error; a mocked `/api/health` → `reachable` with parsed `engines` and `maxBytes`.
 - [ ] Playwright `gate.spec.ts` against the built static site: drop fixture → focus the picker with Tab → reach WebP with arrow keys → select → `Ctrl+Enter` → download link appears → downloaded bytes start with `RIFF…WEBP`. After load: no request to another origin, no request with a body, no CSP violation in the console, `crossOriginIsolated === true`; the page's policy allows no eval; every worker script response carries the worker policy.
-- [ ] Keyboard order in Playwright: Tab reaches, in order, Choose files, the picker (one stop), Convert, Download, the footer controls; arrow keys reach every tile, dimmed ones included; the focused element always has a visible outline.
-- [ ] axe-core on the loaded page and after conversion, in dark and in light mode: zero `serious` or `critical` violations.
 - [ ] At a 375 px viewport: `document.documentElement.scrollWidth` does not exceed the viewport width.
 - [ ] `pnpm audit --prod` reports no `high` or `critical`.
 
@@ -475,7 +475,6 @@ Phase 0 is complete only when every box in the first two lists is checked. Run t
 
 **For Chris (you cannot do these; do not mark them)**
 
-- [ ] VoiceOver or NVDA announces: file added with its format; the selected target; progress at 25/50/75; completion with count.
 - [ ] A real phone: tiles wrap, the drop zone is tappable, a photo converts.
 - [ ] A 50 MB PNG converts without the tab dying.
 - [ ] Safari on a Mac: the conversion yields a real WebP (the result card shows which engine ran).
@@ -495,7 +494,7 @@ Phase 0 is complete only when every box in the first two lists is checked. Run t
 - **Work on a `phase-0` branch and open one pull request into `staging`** (`gh pr create --base staging`). Push the branch as you go; the PR's Deploy Preview is where the work is checked. Never push to `main`, never open or merge a PR into `main`, and never merge into `staging` without being told to. A production build costs Netlify credits and happens only when Chris says so, as one merge-commit PR from `staging` into `main`.
 - **Commit in small, labeled steps:** `feat(registry): …`, `feat(web): …`, `chore(ci): …`. Each commit builds and passes tests. No `Co-Authored-By` line and no other AI attribution trailer on any commit.
 - **Never weaken a test to make it pass.** If a test is wrong, say so and propose the fix; if the code is wrong, fix the code.
-- **Never report a check you did not run.** If you cannot run something (a screen reader, a physical phone), say so and leave it on Chris's list.
+- **Never report a check you did not run.** If you cannot run something (a physical phone, a real Safari), say so and leave it on Chris's list.
 - **No placeholder content in the UI.** No lorem ipsum, no tiles for formats that aren't registered, no sample conversions that aren't real.
 - **Explain the format** field is real copy: write the `explain` paragraph for PNG, WebP, and JPEG as a thoughtful editor would for a non-technical writer, not as a spec.
 - **When something pinned won't work**, stop, state the problem in two sentences, offer one alternative with its trade-off, and wait.

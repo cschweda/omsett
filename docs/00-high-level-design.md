@@ -474,7 +474,7 @@ The Kickoff Prompt holds the authoritative version of this and the registry type
 | Updates | `electron-updater` against GitHub Releases, check on launch, apply on quit; release notes shown in-app |
 | Signing | macOS: Developer ID + notarization via the Apple Developer Program ($99/yr; you're enrolling now, so macOS is first-class from Phase 3, and the same certificate covers Drafter). Store the `notarytool` credentials once as GitHub Actions secrets and both apps' release workflows share them. Windows: [Azure Artifact Signing](https://azure.microsoft.com/en-us/pricing/details/trusted-signing/) (formerly Trusted Signing), Basic tier at $9.99/month for 5,000 signatures and one certificate profile; individuals in the US are eligible, identity validation takes a few days, certificates rotate daily with timestamping, `electron-builder` supports it natively. Not EV, so SmartScreen reputation still accrues over time, but signed from day one. Linux: AppImage + `.deb`, unsigned. Total signing cost for both platforms and both apps: about $220/yr |
 | Size | \~120 MB installer with ffmpeg; \~40 MB without. Both published; the picker tells a user without ffmpeg what they're missing |
-| Accessibility | Same DOM as the web app, so the same WCAG 2.2 AA surface; native menus with accelerators; `app.setAccessibilitySupportEnabled(true)`; tested with VoiceOver and NVDA like the site |
+| Accessibility | Same DOM as the web app, so the same WCAG 2.2 AA surface; native menus with accelerators; `app.setAccessibilitySupportEnabled(true)`; tested with VoiceOver and NVDA in the final phase, like the site |
 | CLI inside the app | "Install `omsett` command" menu item symlinks the bundled CLI onto the PATH, VS Code-style |
 
 **What the desktop app changes in the picker:** every Tier 3 tile becomes live, badges read "on this computer," and the memory ceiling disappears (native engines stream from disk). The web app and the desktop app are otherwise pixel-identical, which is the point of one codebase.
@@ -518,6 +518,8 @@ Electron has no mobile build and bundling ffmpeg or LibreOffice into a phone app
 
 **Omsett meets WCAG 2.2 AA itself and treats the accessibility of its *output* as a feature.** Neither competitor does either; for a tool built by the person who runs ICJIA's Title II program, both are table stakes.
 
+**When this happens: the final phase.** All interface accessibility work (audits, the axe gate in CI, keyboard and focus checks, NVDA and VoiceOver testing, and the fixes they call for) is Phase 6, after the app works. Auditing an interface that is still being built means doing the work twice. Until then nothing below is audited or enforced, and no change is made for accessibility's sake; what Phase 0 already built (a real file input, a radio-group picker, a polite live region) stays in place, untouched. The list is the target, not the current state.
+
 **The interface:**
 
 - Every action is keyboard-reachable: Tab to the drop zone, Enter/Space to browse, arrow keys across the picker tiles, Enter to select, a single "Convert" shortcut (`Ctrl/Cmd+Enter`).
@@ -525,7 +527,7 @@ Electron has no mobile build and bundling ffmpeg or LibreOffice into a phone app
 - Progress uses `aria-live="polite"` region announcements at 25/50/75/100%, not per-percent chatter. Completion is announced in the same polite region with the result count; nothing in a conversion is urgent enough for `assertive`.
 - Drop zone is also a real `<input type="file">`; drag-and-drop is an enhancement, never the only path.
 - Dark mode is default but respects `prefers-color-scheme` and `prefers-reduced-motion`; all text at 4.5:1 or better against `#0d0d0d`; focus rings are 2 px and never suppressed.
-- Tested with NVDA and VoiceOver before each release using the voicecap/axecap tooling you already have; axe-core runs in CI on the built site.
+- In the final phase, and from then on before each release: tested with NVDA and VoiceOver using the voicecap/axecap tooling you already have, with axe-core running in CI on the built site.
 
 **The output:**
 
@@ -588,7 +590,7 @@ omsett/
 │  ├─ engines/        Engine interface + one folder per engine (vips, ffmpeg, pandoc, …)
 │  └─ detect/         Magic-byte detection, metadata readers (exifr etc.)
 ├─ fixtures/          One real sample file per input format (Git LFS)
-├─ e2e/               Playwright gate flows + axe
+├─ e2e/               Playwright gate flows (axe tests parked until the final phase)
 ├─ docs/              This suite, as Markdown
 ├─ docker-compose.yml Homelab: web + omsettd
 └─ netlify.toml
@@ -609,7 +611,7 @@ omsett/
 | Reverse proxy | Caddy | Caddy inside the `omsett-web` image sets COOP/COEP for self-hosters |
 | Desktop | Electron (electron-vite + electron-builder) | Same shell as Drafter; bundled Chromium makes WebCodecs/WASM behave identically on every OS; \~120 MB with ffmpeg |
 | Tests | Vitest for unit + registry graph checks; Playwright for the drop→pick→download flow; fixture corpus through every edge in CI | The corpus is the real test suite |
-| CI | GitHub Actions: lint, typecheck, fixtures, axe-core, Playwright, electron-builder matrix on tag |  |
+| CI | GitHub Actions: lint, typecheck, fixtures, Playwright, electron-builder matrix on tag; axe-core joins in the final phase |  |
 | Hosting | Netlify Pro (web), GitHub Releases (desktop), npm (CLI), GHCR (self-host images) |  |
 | License | MIT, personal project under github.com/cschweda/omsett (decided) |  |
 
@@ -644,16 +646,17 @@ COOP/COEP enable `SharedArrayBuffer` for multi-threaded `wasm-vips` and `ffmpeg.
 
 ## Roadmap
 
-**Six phases, each gated by one conversion working end to end in public, no dates attached.** Phase 0 is small on purpose: the first thing on omsett.com should be a single working conversion with all the plumbing behind it, not a format list.
+**Seven phases, each gated by one thing working end to end in public, no dates attached.** Phase 0 is small on purpose: the first thing on omsett.com should be a single working conversion with all the plumbing behind it, not a format list.
 
 | Phase | Scope | Gate |
 | --- | --- | --- |
-| 0 · Foundation | Monorepo, registry, engine interface, fixture CI; Netlify deploy; CI with fixtures, axe and Playwright | PNG to WebP end to end on omsett.com |
-| 1 · Images, data, archives, fonts, PWA | Raster and vector formats, data, archives, fonts; OpenGraph, favicon, responsive presets; installable | Squish parity; axe clean; NVDA pass |
+| 0 · Foundation | Monorepo, registry, engine interface, fixture CI; Netlify deploy; CI with fixtures and Playwright | PNG to WebP end to end on omsett.com |
+| 1 · Images, data, archives, fonts, PWA | Raster and vector formats, data, archives, fonts; OpenGraph, favicon, responsive presets; installable | Squish parity |
 | 2 · Documents, audio, ebooks, subtitles | pandoc-wasm, ffmpeg audio build, SheetJS, PDF tools; fidelity warnings and multi-step router live; the Typst spike for PDF in the browser | DOCX to Markdown and EPUB, and WAV to MP3, in the browser; DOCX to PDF in the browser decided one way or the other by the spike |
 | 3 · Desktop app and CLI | Electron installers; bundled ffmpeg, local LibreOffice, Calibre; npx omsett; accessibility check on PDF output | DOC to tagged PDF locally; installers on 3 OSes |
 | 4 · Video | WebCodecs video in the browser; full ffmpeg in the desktop app; self-hosted omsettd (Docker) for teams and phones | 10-minute MOV to MP4 with progress, offline |
 | 5 · Plugins (filee parity) | CAD, 3D, geospatial, HWP as registry plugins; community-contributed engines | — |
+| 6 · Accessibility | The whole interface, once it exists: WCAG 2.2 AA audit, axe gate back in CI, keyboard and focus checks, NVDA and VoiceOver testing, and every fix those call for; the same pass over the desktop app and CLI | axe clean; NVDA and VoiceOver pass on web and desktop |
 
 The desktop app lands before video on purpose: once it exists, the long tail of video and all heavy office conversions run on the user's own machine, and nothing you operate ever carries them. Common-codec video runs in the browser via WebCodecs from Phase 4.
 
