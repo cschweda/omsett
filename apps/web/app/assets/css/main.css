@@ -1,0 +1,101 @@
+@import 'tailwindcss';
+@import '@nuxt/ui';
+@import './tokens.css';
+
+@font-face {
+  font-family: 'Space Grotesk';
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+  src: url('/fonts/space-grotesk-latin-500-normal.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Space Grotesk';
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+  src: url('/fonts/space-grotesk-latin-700-normal.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  src: url('/fonts/jetbrains-mono-latin-400-normal.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+  src: url('/fonts/jetbrains-mono-latin-500-normal.woff2') format('woff2');
+}
+
+@theme {
+  --font-sans: 'Space Grotesk', 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+
+  /* Omsett blue as a Tailwind palette, so Nuxt UI can use it as `primary`. */
+  --color-omsett-50: #eef2ff;
+  --color-omsett-100: #dfe7ff;
+  --color-omsett-200: #c2d1ff;
+  --color-omsett-300: #9bb3ff;
+  --color-omsett-400: #6b8dff;
+  --color-omsett-500: #3b6cff;
+  --color-omsett-600: #2c56e0;
+  --color-omsett-700: #2444b8;
+  --color-omsett-800: #1f3990;
+  --color-omsett-900: #1c3070;
+  --color-omsett-950: #121d45;
+}
+
+/* Point Nuxt UI's own variables at the brand tokens, in both modes. */
+:root,
+.dark {
+  --ui-primary: var(--accent);
+  --ui-bg: var(--bg);
+  --ui-bg-elevated: var(--surface);
+  --ui-text: var(--ink);
+  --ui-text-highlighted: var(--ink);
+  --ui-text-muted: var(--muted);
+  --ui-text-dimmed: var(--muted);
+  --ui-text-toned: var(--muted);
+  --ui-border: var(--rule);
+  --ui-border-accented: var(--rule-strong);
+  --ui-radius: 0.25rem;
+}
+
+html {
+  background: var(--bg);
+  color: var(--ink);
+}
+
+body {
+  font-family: var(--font-sans);
+  font-weight: 500;
+}
+
+/* Focus is always visible: 2px ring, 2px offset, never removed. */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.mono {
+  font-family: var(--font-mono);
+}
+
+.muted {
+  color: var(--muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

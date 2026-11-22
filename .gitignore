@@ -8,3 +8,12 @@ dist/
 .env.*
 !.env.example
 *.log
+# generated at install/build time by apps/web/scripts/prepare-assets.ts
+apps/web/public/engines/*
+!apps/web/public/engines/README.md
+apps/web/public/sample.png
+apps/web/app/generated/
+# test output
+test-results/
+playwright-report/
+apps/web/public/fonts/

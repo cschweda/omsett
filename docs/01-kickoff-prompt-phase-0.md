@@ -9,7 +9,7 @@ Nov 1, 2026 · Christopher Schweda · revised Nov 22, 2026
 Have ready before you start:
 
 - This directory under git, with the initial commit (the existing `docs/`, `brand/`, `README.md`, `LICENSE`) pushed to `github.com/cschweda/omsett` on `main` and on a long-lived `staging` branch cut from it. MIT license, personal project (decided). Once Netlify is connected, `main` is production and receives nothing further until a release.
-- A Netlify site connected to that repo: production branch `main`, a branch deploy enabled for `staging`, Deploy Previews on, build command and publish dir left blank (the prompt supplies `netlify.toml`). Production builds cost 15 credits each; branch deploys and Deploy Previews are free. Turn off the Netlify Drawer on Deploy Previews; the site's Content-Security-Policy would block its injected script.
+- A Netlify site connected to that repo: production branch `main`, a branch deploy enabled for `staging`, Deploy Previews on, build command and publish dir left blank (the prompt supplies `netlify.toml`). Production builds cost 15 credits each; branch deploys and Deploy Previews are free. Turn off the Netlify Drawer on Deploy Previews; the page's Content-Security-Policy would block its injected script.
 - Docker Desktop or Docker Engine locally, to verify the self-host image builds.
 - Nothing on the DigitalOcean droplet. It is not part of Phase 0.
 
@@ -41,15 +41,15 @@ The directory is not empty. It already holds `docs/` (the design doc and this pr
 2. `packages/registry`: typed `Format`, `Capability`, and `EdgeOverride` records; edges **derived** from capabilities, never written by hand; a `Router` that finds the cheapest path between two formats (Dijkstra, max 3 hops, lossless preferred). Three formats registered: `png`, `webp`, `jpeg`. Two capabilities: `canvas` and `vips`, each reading `png` and writing `webp`. JPEG is registered so that a dropped JPEG is named correctly and shown as having no conversions yet; it has no reader or writer in Phase 0.
 3. `packages/detect`: format detection by magic bytes using `file-type`, never by extension alone, plus image dimensions read from the header without decoding.
 4. `packages/engines`: the `Engine` interface, a `canvas` engine (zero download, browser only) that converts PNG → WebP via `OffscreenCanvas`, and a `vips` engine (`wasm-vips`, browser and Node) behind the same interface. Engines are plain async modules that know nothing about workers.
-5. `apps/web`: a single-screen Nuxt 4 + Nuxt UI app. Drop zone, file cards, target picker rendered from the registry, Convert button, result cards with Download. Dark by default. Fully keyboard-operable and screen-reader-announced. Every engine runs in a Web Worker. Deployed to Netlify with COOP/COEP and a Content-Security-Policy.
+5. `apps/web`: a single-screen Nuxt 4 + Nuxt UI app. Drop zone, file cards, target picker rendered from the registry, Convert button, result cards with Download. Dark by default. Every engine runs in a Web Worker. Deployed to Netlify with COOP/COEP, a Content-Security-Policy in the page, and a second one on its worker scripts.
 6. `useServerHealth` composable: fetches same-origin `/config.json` (`{ "server": boolean }`). When `server` is false it does nothing more. When true it probes same-origin `GET /api/health` with a 3 s timeout. It exposes `{ state: 'absent' | 'reachable' | 'unreachable', engines: string[], maxBytes: number | null }`. In Phase 0 nothing consumes it except a footer line. Absent is the normal state and must never produce an error or a toast. There is no field for typing a server URL, anywhere.
 7. `fixtures/`: one real PNG (not generated at test time), a Vitest run that puts it through every Node-capable engine, and a Playwright run that puts it through the browser engines in Chromium, Firefox, and WebKit.
 8. Docker for self-hosters: `apps/web/Dockerfile` (build stage runs `nuxt generate`; runtime stage is `caddy:2-alpine` serving the static output with the same headers as Netlify) and a root `docker-compose.yml` with the `web` service only, plus a commented-out `omsettd` service block marked `# Phase 4`. `docker compose up` on a clean machine must yield a working PNG → WebP at `http://localhost:8080`.
-9. CI: GitHub Actions running lint, typecheck, Vitest, Playwright + axe-core against the built site, and `docker build` of the web image on every PR.
+9. CI: GitHub Actions running lint, typecheck, Vitest, Playwright against the built site, and `docker build` of the web image on every PR.
 
 **Do not build:** any other conversion, any preset, the PWA manifest, the Electron app, the CLI, multi-file ZIP download, the Adjust panel, i18n, analytics, a settings page, or native engines inside the Docker image. Leave clear `TODO(phase-1)` markers where they will go.
 
-**Gate:** on the pull request's Netlify Deploy Preview, a stranger can drop a PNG, choose WebP, click Convert, and download a valid WebP, using only a keyboard if they choose, with no request leaving the page's origin (verifiable in DevTools). The same works from `docker compose up` on a clean machine. CI is green. Chris merges the PR into `staging`, checks the staging branch deploy, and releases `staging` to `main` when he chooses; omsett.com then serves the same build.
+**Gate:** on the pull request's Netlify Deploy Preview, a stranger can drop a PNG, choose WebP, click Convert, and download a valid WebP, with no request leaving the page's origin (verifiable in DevTools). The same works from `docker compose up` on a clean machine. CI is green. Chris merges the PR into `staging`, checks the staging branch deploy, and releases `staging` to `main` when he chooses; omsett.com then serves the same build.
 
 ## Tech stack, pinned
 
@@ -65,7 +65,7 @@ The directory is not empty. It already holds `docs/` (the design doc and this pr
 | Detection | `file-type` (ESM, browser build) | No extension sniffing as the only signal |
 | Self-host | Docker: `caddy:2-alpine` serving the static build; Docker Compose at the root | No Kubernetes, no Helm; no server container in Phase 0 |
 | Server | None in Phase 0. Phase 4 adds `omsettd` (Hono on Node 24) as a self-host-only image | No Netlify Functions, ever; no public server |
-| Tests | Vitest (unit + Node fixtures), Playwright on Chromium, Firefox, and WebKit (the gate flow + browser fixtures), `@axe-core/playwright` |  |
+| Tests | Vitest (unit + Node fixtures), Playwright on Chromium, Firefox, and WebKit (the gate flow + browser fixtures). `@axe-core/playwright` is installed but its tests are parked until the final phase |  |
 | Lint/format | ESLint flat config with `@nuxt/eslint`, Prettier |  |
 | CI | GitHub Actions |  |
 | Hosting | Netlify (web); GitHub Releases (desktop, later); GHCR (self-host images) | No DigitalOcean in Phase 0 |
@@ -82,7 +82,7 @@ omsett/
 │  ├─ web/                      Nuxt 4 app (static)
 │  │  ├─ app/
 │  │  │  ├─ components/         DropZone, FileCard, TargetPicker, TargetTile, ResultCard, TierBadge
-│  │  │  ├─ composables/        useConversionQueue, useEngines, useAnnouncer, useServerHealth
+│  │  │  ├─ composables/        useConversionQueue, useEngines, usePoliteAnnouncer, useServerHealth
 │  │  │  ├─ workers/            engine.worker.ts (Comlink host for packages/engines), thumbnail.worker.ts
 │  │  │  ├─ pages/index.vue     the one screen
 │  │  │  └─ app.vue
@@ -90,8 +90,8 @@ omsett/
 │  │  ├─ public/fonts/           Space Grotesk 500/700, JetBrains Mono 400/500 (woff2, self-hosted)
 │  │  ├─ public/config.json      {"server": false}
 │  │  ├─ public/og.png           copied from brand/og.png
-│  │  ├─ security-headers.ts     the one definition of every response header
-│  │  ├─ scripts/write-headers.ts  post-generate: writes Netlify _headers and a Caddy snippet
+│  │  ├─ security-headers.ts     the one definition of both policies and every response header
+│  │  ├─ scripts/write-headers.ts  post-generate: policy <meta> into the HTML, Netlify _headers, Caddy snippet
 │  │  ├─ Dockerfile              build → caddy:2-alpine serving the static output
 │  │  ├─ Caddyfile               imports the generated header snippet
 │  │  ├─ nuxt.config.ts
@@ -120,10 +120,10 @@ omsett/
 │  ├─ png/sample.png             a real file, committed
 │  └─ fixtures.test.ts           Node-capable engines × fixtures
 ├─ e2e/
-│  ├─ gate.spec.ts               the Phase 0 gate, in Playwright, with axe
+│  ├─ gate.spec.ts               the Phase 0 gate, in Playwright (axe tests parked)
 │  └─ fixtures.spec.ts           browser engines × fixtures, three browsers
 ├─ .github/workflows/
-│  ├─ ci.yml                     lint, typecheck, test, e2e + axe, docker build
+│  ├─ ci.yml                     lint, typecheck, test, e2e, docker build
 │  └─ release.yml                on tag: push omsett-web image to GHCR
 ├─ brand/                         existing; leave as is
 ├─ docs/                          existing; leave as is
@@ -148,9 +148,9 @@ These are invariants. A PR that breaks one is wrong even if it works.
 3. **Engines are lazy.** No `.wasm` is fetched until a conversion that needs it is requested, and the UI shows the download size before the first fetch.
 4. **Two tiers, named everywhere the same way:** `browser` (WASM or a native browser API; runs on the public site) and `native` (needs ffmpeg/LibreOffice-class binaries). In Phase 0 `native` exists in the types, the router, and the `TierBadge` component ("needs the desktop app"), exercised by tests against a synthetic registry; no real capability uses it.
 5. **Detection by content, not name.** `packages/detect` reads magic bytes. Extension is a hint for the UI label only. A mismatch (a `.png` that is a JPEG) is reported to the user and the detected format wins.
-6. **Nothing leaves the origin.** The page makes no request to any other origin, ever, and no request carrying file bytes to its own. This is enforced by the Content-Security-Policy (`connect-src 'self' blob:`), not by good intentions, and asserted in the E2E test.
+6. **Nothing leaves the origin.** The page makes no request to any other origin, ever, and no request carrying file bytes to its own. This is enforced by `connect-src 'self' blob:` in the page's Content-Security-Policy and again in the policy every worker script carries, not by good intentions, and asserted in the E2E test.
 7. **Every engine is tested where it really runs.** Engines whose `runtimes` include `node` run the fixtures in Vitest. Engines that are browser-only run the same fixtures in Playwright. No engine ships with neither.
-8. **Accessibility is a build failure, not a review comment.** axe-core violations at `serious` or `critical` fail CI. Every interactive element is keyboard-reachable; every state change is announced.
+8. **Accessibility work waits for the final phase.** No audits, no axe gate, no screen reader testing, and no changes made for accessibility's sake until the app works and that phase begins. Build with ordinary semantic HTML as a matter of course (a real file input, real buttons), and leave it there: do not audit it, tune it, or extend it now, and do not remove what exists.
 9. **One screen.** `pages/index.vue` is the whole app in Phase 0. No routing, no modals for the happy path.
 10. **A server is optional and absent by default.** `useServerHealth` is the only code that knows a server might exist, and it only ever talks to its own origin. No feature may require a server; a missing or unreachable one is a normal state with no error UI.
 11. **Every engine declares its license.** An engine record without `license` and `sourceUrl` fails a registry test, and every engine appears in `THIRD-PARTY-NOTICES.md`.
@@ -329,7 +329,7 @@ Engines have no `supports()`. What an engine converts is in its `Capability` and
 
 - One primary button, disabled until a file and a target are chosen. Shortcut `Ctrl/Cmd+Enter`.
 - Per-file `UProgress`; overall percentage mirrored into `document.title` ("42% — Omsett").
-- `useAnnouncer` writes to a single `role="status"` (`aria-live="polite"`) region: at 25/50/75%, and on completion "1 file converted. Download ready." Nothing uses `assertive`; no part of a conversion is urgent.
+- `usePoliteAnnouncer` (named apart from Nuxt's built-in `useAnnouncer`, which can also speak assertively) writes to a single `role="status"` (`aria-live="polite"`) region: at 25/50/75%, and on completion "1 file converted. Download ready." Nothing uses `assertive`; no part of a conversion is urgent.
 
 **Results region**
 
@@ -374,20 +374,35 @@ Why same-origin only: a page served over HTTPS cannot call an `http://` address 
   status = 200
 ```
 
-**Headers are defined once**, in `apps/web/security-headers.ts`, and written after `nuxt generate` by `scripts/write-headers.ts` into two places: `.output/public/_headers` for Netlify and a snippet the `Caddyfile` imports. The two hosts can then never drift. The set:
+**Every policy and header is defined once**, in `apps/web/security-headers.ts`, and written after `nuxt generate` by `scripts/write-headers.ts`. The two hosts can then never drift.
+
+**There are two Content-Security-Policies, because a page and a worker are governed separately.** A worker is bound by the policy on its own script's response, not by the page's.
+
+| Policy | Delivered as | Value |
+| --- | --- | --- |
+| Document | A `<meta http-equiv>` tag written into every built HTML file, directly after the charset declaration | `default-src 'self'; script-src 'self' <hashes>; worker-src 'self' blob:; connect-src 'self' blob:; img-src 'self' blob: data:; style-src 'self' 'unsafe-inline'; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'` |
+| Worker | A response header on worker scripts only: `/_nuxt/workers/*` and `/engines/*` | `default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'unsafe-eval'; worker-src 'self' blob:; connect-src 'self' blob:` |
+
+- **Why the worker policy allows `'unsafe-eval'`.** `wasm-vips` builds its call wrappers with `new Function` (Emscripten's embind), which a browser treats as eval. The allowance is confined to the worker that runs libvips. The page itself allows no eval of any kind, not even `'wasm-unsafe-eval'`, because the page never instantiates WebAssembly.
+- **Why the document policy is a `<meta>` tag.** A `Content-Security-Policy` header on `/*` would also reach worker scripts, and two policies on one response are both enforced, so the strict one would block libvips. In the HTML, the policy governs the page only, and it travels with the files to any host, including one that cannot set headers.
+- **`connect-src 'self' blob:` is in both policies.** It is the directive the privacy promise rests on and is not negotiable. Neither the page nor a worker can send anything to another origin.
+- **`<hashes>`** are SHA-256 hashes of the inline scripts in the built HTML (Nuxt's import map, its config script, and the color-mode script), computed by `write-headers.ts`. If hashing proves unworkable, stop and say so; do not fall back to `'unsafe-inline'` for scripts on your own.
+- **Workers are emitted under `/_nuxt/workers/`** (`vite.worker.rollupOptions.output.entryFileNames` in `nuxt.config.ts`), so that one path rule covers them. `write-headers.ts` fails the build if a worker script lands anywhere else: a worker served without the header would run with no policy at all.
+- **Never add a `Content-Security-Policy` header to `/*`.**
+
+The response headers, written to `.output/public/_headers` for Netlify and to a snippet the `Caddyfile` imports:
 
 | Path | Header | Value |
 | --- | --- | --- |
 | `/*` | `Cross-Origin-Opener-Policy` | `same-origin` |
 | `/*` | `Cross-Origin-Embedder-Policy` | `require-corp` |
-| `/*` | `Content-Security-Policy` | `default-src 'self'; script-src 'self' 'wasm-unsafe-eval' <hashes>; worker-src 'self' blob:; connect-src 'self' blob:; img-src 'self' blob: data:; style-src 'self' 'unsafe-inline'; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'; frame-ancestors 'none'` |
+| `/*` | `X-Frame-Options` | `DENY` (a `<meta>` policy cannot carry `frame-ancestors`) |
 | `/*` | `X-Content-Type-Options` | `nosniff` |
 | `/*` | `Referrer-Policy` | `strict-origin-when-cross-origin` |
 | `/*` | `Permissions-Policy` | `camera=(), microphone=(), geolocation=()` |
+| `/_nuxt/workers/*`, `/engines/*` | `Content-Security-Policy` | the worker policy above |
 | `/engines/*` | `Cache-Control` | `public, max-age=31536000, immutable` |
 | `/engines/*` | `Cross-Origin-Resource-Policy` | `same-origin` |
-
-`<hashes>` are SHA-256 hashes of whatever inline scripts the generated `index.html` contains (Nuxt's payload script and the color-mode script are the likely ones), computed by `write-headers.ts` from the built file. `connect-src 'self' blob:` is the directive the privacy promise rests on and is not negotiable. If hashing the inline scripts proves unworkable, stop and say so; do not fall back to `'unsafe-inline'` for scripts on your own.
 
 COOP/COEP are required for `SharedArrayBuffer`, which multi-threaded `wasm-vips` needs. Verify that `crossOriginIsolated === true` on the deployed site and fail the E2E test if it isn't. All `.wasm` must be served from the same origin under `/engines/`; copy them there at build time with content hashes in the filename. Do not load engines from unpkg or jsDelivr.
 
@@ -415,7 +430,7 @@ services:
 ## Security requirements
 
 - **Untrusted input everywhere.** Every dropped file is hostile until decoded. Dimensions are checked from the header before decoding; decoding happens in a worker, so a crash kills the worker, not the page; catch and surface it as "This file couldn't be read" with a Remove button.
-- **Nothing leaves the origin.** Enforced by the CSP and by the E2E test (assert that after load there is no request to another origin and no request with a body). There is no code path in `apps/web` that sends a `Blob` anywhere. `useServerHealth` sends only same-origin `GET`s with no body.
+- **Nothing leaves the origin.** Enforced by both policies and by the E2E test (assert that after load there is no request to another origin and no request with a body, that the page's policy contains no eval allowance, and that every worker script arrived with `connect-src 'self' blob:`). There is no code path in `apps/web` that sends a `Blob` anywhere. `useServerHealth` sends only same-origin `GET`s with no body.
 - **Object URLs are revoked** after download or on component unmount; no leaked blobs across sessions.
 - **No user-supplied URLs.** The app never fetches an address a user typed.
 - **Dependencies:** pin exact versions in `package.json` for engines (`wasm-vips`, `file-type`); run `pnpm audit --prod` in CI and fail on `high`. Verify `.wasm` integrity by comparing a build-time SHA-256 before instantiation.
@@ -441,15 +456,15 @@ Phase 0 is complete only when every box in the first two lists is checked. Run t
 
 **Automated (CI must be green)**
 
+Accessibility checks (axe, keyboard order and focus, screen readers) are not part of this list. They belong to the final phase; their tests exist in `e2e/gate.spec.ts`, parked behind `ACCESSIBILITY_DEFERRED`.
+
 - [ ] `pnpm lint`, `pnpm typecheck`, `pnpm test` pass from a clean clone with `--frozen-lockfile`.
 - [ ] `fixtures/fixtures.test.ts`: `sample.png` → WebP through `vips` in Node produces a WebP with identical width and height and a smaller byte size.
 - [ ] `e2e/fixtures.spec.ts`: the same fixture converts in Chromium, Firefox, and WebKit with the default engine, and in Chromium with `?engine=vips`. Each output's bytes start with `RIFF…WEBP` and its dimensions match the input. The test logs which engine ran in each browser.
 - [ ] Registry tests: the real-registry and synthetic-registry router cases listed under "Router behavior to test explicitly"; every capability has an engine and every engine a capability; every engine has `license` and `sourceUrl`.
 - [ ] Detection tests: a JPEG renamed `.png` is detected as JPEG; an empty file and a 10-byte garbage file return `unknown` without throwing; a small PNG whose header declares 30000 × 30000 is refused by the pixel guard with no decode attempted.
 - [ ] `useServerHealth` tests: `server: false` → `absent` with no further fetch; `server: true` with `/api/health` unreachable → `unreachable` after the timeout with no thrown error; a mocked `/api/health` → `reachable` with parsed `engines` and `maxBytes`.
-- [ ] Playwright `gate.spec.ts` against the built static site: drop fixture → focus the picker with Tab → reach WebP with arrow keys → select → `Ctrl+Enter` → download link appears → downloaded bytes start with `RIFF…WEBP`. After load: no request to another origin, no request with a body, no CSP violation in the console, `crossOriginIsolated === true`.
-- [ ] Keyboard order in Playwright: Tab reaches, in order, Choose files, the picker (one stop), Convert, Download, the footer controls; arrow keys reach every tile, dimmed ones included; the focused element always has a visible outline.
-- [ ] axe-core on the loaded page and after conversion, in dark and in light mode: zero `serious` or `critical` violations.
+- [ ] Playwright `gate.spec.ts` against the built static site: drop fixture → focus the picker with Tab → reach WebP with arrow keys → select → `Ctrl+Enter` → download link appears → downloaded bytes start with `RIFF…WEBP`. After load: no request to another origin, no request with a body, no CSP violation in the console, `crossOriginIsolated === true`; the page's policy allows no eval; every worker script response carries the worker policy.
 - [ ] At a 375 px viewport: `document.documentElement.scrollWidth` does not exceed the viewport width.
 - [ ] `pnpm audit --prod` reports no `high` or `critical`.
 
@@ -460,7 +475,6 @@ Phase 0 is complete only when every box in the first two lists is checked. Run t
 
 **For Chris (you cannot do these; do not mark them)**
 
-- [ ] VoiceOver or NVDA announces: file added with its format; the selected target; progress at 25/50/75; completion with count.
 - [ ] A real phone: tiles wrap, the drop zone is tappable, a photo converts.
 - [ ] A 50 MB PNG converts without the tab dying.
 - [ ] Safari on a Mac: the conversion yields a real WebP (the result card shows which engine ran).
@@ -480,7 +494,7 @@ Phase 0 is complete only when every box in the first two lists is checked. Run t
 - **Work on a `phase-0` branch and open one pull request into `staging`** (`gh pr create --base staging`). Push the branch as you go; the PR's Deploy Preview is where the work is checked. Never push to `main`, never open or merge a PR into `main`, and never merge into `staging` without being told to. A production build costs Netlify credits and happens only when Chris says so, as one merge-commit PR from `staging` into `main`.
 - **Commit in small, labeled steps:** `feat(registry): …`, `feat(web): …`, `chore(ci): …`. Each commit builds and passes tests. No `Co-Authored-By` line and no other AI attribution trailer on any commit.
 - **Never weaken a test to make it pass.** If a test is wrong, say so and propose the fix; if the code is wrong, fix the code.
-- **Never report a check you did not run.** If you cannot run something (a screen reader, a physical phone), say so and leave it on Chris's list.
+- **Never report a check you did not run.** If you cannot run something (a physical phone, a real Safari), say so and leave it on Chris's list.
 - **No placeholder content in the UI.** No lorem ipsum, no tiles for formats that aren't registered, no sample conversions that aren't real.
 - **Explain the format** field is real copy: write the `explain` paragraph for PNG, WebP, and JPEG as a thoughtful editor would for a non-technical writer, not as a spec.
 - **When something pinned won't work**, stop, state the problem in two sentences, offer one alternative with its trade-off, and wait.

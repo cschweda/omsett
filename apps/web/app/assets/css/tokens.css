@@ -1,0 +1,39 @@
+/* Brand tokens. Defined here and nowhere else. */
+:root {
+  --bg: #f4f4f2;
+  --ink: #0d0d0d;
+  /* #8a8a86 is the dark-mode muted; on the light ground it needs to be darker to reach 4.5:1 */
+  --muted: #5a5a56;
+  --rule: #d6d6d1;
+  /* control outlines need 3:1 against the ground; hairlines do not */
+  --rule-strong: #777773;
+  --surface: #ffffff;
+  --accent: #3b6cff;
+  --on-accent: #ffffff;
+
+  /* One accent per category, so the picker reads as a color-coded chart.
+     Secondary: used for marks and bars, never for text. */
+  --cat-image: #3b6cff;
+  --cat-vector: #8b5cf6;
+  --cat-pdf: #ef4444;
+  --cat-document: #0ea5e9;
+  --cat-spreadsheet: #22c55e;
+  --cat-presentation: #f97316;
+  --cat-text: #a3a3a3;
+  --cat-data: #eab308;
+  --cat-ebook: #14b8a6;
+  --cat-audio: #ec4899;
+  --cat-subtitle: #84cc16;
+  --cat-archive: #a16207;
+  --cat-font: #6366f1;
+  --cat-video: #f43f5e;
+}
+
+.dark {
+  --bg: #0d0d0d;
+  --ink: #f4f4f2;
+  --muted: #8a8a86;
+  --rule: #2a2a28;
+  --rule-strong: #6b6b67;
+  --surface: #151514;
+}

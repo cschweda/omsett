@@ -1,0 +1,17 @@
+**/node_modules
+**/.nuxt
+**/.output
+.git
+.github
+.vscode
+brand
+docs
+e2e
+test-results
+playwright-report
+apps/web/public/engines/*.js
+apps/web/public/engines/*.wasm
+apps/web/public/engines/vips.*
+apps/web/public/fonts
+apps/web/public/sample.png
+apps/web/app/generated
