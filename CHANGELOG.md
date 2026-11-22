@@ -37,6 +37,11 @@ Every change to Omsett is recorded here, newest first, in the same pull request 
 
 ### Fixed
 
+- **A deploy took the live site down.** On Linux, `scripts/publish-static.sh` did not switch to
+  the new build on any publish after the first; the site stayed on the first build until pruning
+  deleted it, and then every page was a 404. The switch now uses an atomic rename, the script
+  refuses to report success or prune unless the site really points at the new build, and pruning
+  never removes the live one. CI now publishes five times in a row and checks the result.
 - Workers were refused by the browser under `pnpm dev`, so nothing converted in development.
 - libvips converted damaged files into partial pictures without saying so. Damage is now an error.
 - Some libvips failures were thrown as raw WebAssembly exceptions and could not be reported.

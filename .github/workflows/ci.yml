@@ -36,7 +36,12 @@ jobs:
       # run the conversion tests against it, so the generated nginx headers are known to work.
       - name: Serve the build with nginx
         run: |
-          SKIP_BUILD=1 scripts/publish-static.sh "$RUNNER_TEMP/site"
+          # Publish five times: the switch to a new release once failed on every publish after
+          # the first, and the pruning that followed took the live site down.
+          for i in 1 2 3 4 5; do SKIP_BUILD=1 scripts/publish-static.sh "$RUNNER_TEMP/site"; sleep 1; done
+          test "$(readlink "$RUNNER_TEMP/site/live")" = "releases/$(ls "$RUNNER_TEMP/site/releases" | sort | tail -1)"
+          test "$(ls "$RUNNER_TEMP/site/releases" | wc -l)" -eq 3
+          test -f "$RUNNER_TEMP/site/live/public/index.html"
           sed "s#OMSETT_ROOT#/srv/omsett/live#g" apps/web/nginx/omsett.conf > "$RUNNER_TEMP/nginx.conf"
           docker run -d --name nginx -p 8082:8080 \
             -v "$RUNNER_TEMP/site:/srv/omsett:ro" \

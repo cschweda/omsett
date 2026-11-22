@@ -34,9 +34,8 @@ if [ -s "$NVM_DIR/nvm.sh" ]; then
   export COREPACK_ENABLE_DOWNLOAD_PROMPT=0
   corepack enable >/dev/null 2>&1 || true
 fi
-echo "Building with node $(node --version), pnpm $(pnpm --version)"
-
 if [ -z "${SKIP_BUILD:-}" ]; then
+  echo "Building with node $(node --version), pnpm $(pnpm --version)"
   pnpm install --frozen-lockfile
   pnpm build
 fi
@@ -50,11 +49,25 @@ if [ -e "$site/live/headers.nginx" ] && ! cmp -s "$site/live/headers.nginx" "$re
   echo "NOTE: headers.nginx changed. Reload nginx for the new headers to take effect."
 fi
 
-# Atomic swap: build the new link beside the old one, then rename over it.
+# Switch to the new release. `live` is a link to a directory, and a plain `mv` onto such a link
+# moves the new link INSIDE the old release instead of replacing it. GNU mv needs -T to rename
+# over the link, which is atomic. BSD mv (macOS) has no -T, so there the link is replaced with
+# ln -sfn, which is not atomic but is only ever used on a developer's machine.
 ln -sfn "releases/$stamp" "$site/live.next"
-mv -f "$site/live.next" "$site/live" 2>/dev/null || { rm -rf "$site/live"; mv "$site/live.next" "$site/live"; }
+if ! mv -Tf "$site/live.next" "$site/live" 2>/dev/null; then
+  rm -f "$site/live.next"
+  ln -sfn "releases/$stamp" "$site/live"
+fi
 
-# Keep the newest three releases.
-ls -1d "$site"/releases/*/ 2>/dev/null | sort -r | tail -n +4 | xargs rm -rf 2>/dev/null || true
+# Never report success, or prune anything, unless the site really is the new release.
+if [ "$(readlink "$site/live")" != "releases/$stamp" ] || [ ! -f "$site/live/public/index.html" ]; then
+  echo "ERROR: $site/live does not point at the new release. Nothing was pruned."
+  exit 1
+fi
+
+# Keep the newest three releases, and never the one that is live.
+for old in $(ls -1d "$site"/releases/*/ 2>/dev/null | sort -r | tail -n +4); do
+  [ "$(cd "$old" && pwd -P)" = "$(cd "$site/live" && pwd -P)" ] || rm -rf "$old"
+done
 
 echo "Published $stamp → $site/live"

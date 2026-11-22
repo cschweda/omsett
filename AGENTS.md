@@ -89,6 +89,8 @@ build by `apps/web/scripts/write-headers.ts`.
   failure mode gets a trap; add it in `fixtures/_tools/make-traps.py`.
 - **libvips forgives damaged files unless told not to.** The engine loads with
   `fail_on: 'error'`. Do not remove it.
+- **`mv` onto a link to a directory moves into it.** `scripts/publish-static.sh` uses `mv -T`
+  for that reason. macOS and Linux differ here; test deploy scripts on Linux, more than once.
 - **A canvas has a size limit**; `maxPixels` on the engine sends larger images to libvips.
 
 ## Working agreements
