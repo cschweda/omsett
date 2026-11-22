@@ -39,6 +39,11 @@ export interface Format {
   traits: Trait[]
   /** The largest width or height, in pixels, the format can hold. WebP: 16383. */
   maxDimension?: number
+  /**
+   * Set when Omsett reads this format but will not write it, with the reason in a sentence.
+   * Shown wherever the format would otherwise be offered as a target.
+   */
+  readOnly?: string
 }
 
 export interface Warning {

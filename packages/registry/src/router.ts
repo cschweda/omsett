@@ -66,6 +66,7 @@ export function createRouter(registry: Registry): Router {
 
   function reasonFor(from: Format, to: Format): string {
     if (from.id === to.id) return `Already ${to.name}`
+    if (to.readOnly) return to.readOnly
     return derived.blocked.get(`${from.id}>${to.id}`) ?? `No converter from ${from.name} to ${to.name} yet`
   }
 

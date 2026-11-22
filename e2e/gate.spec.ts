@@ -129,12 +129,12 @@ test('the picker waits for a file, then offers what that file can become', async
   await open(page)
   // Nothing dropped: no choices yet, only what the app handles.
   await expect(page.getByTestId('picker-waiting')).toContainText('Drop a file to see what it can become.')
-  await expect(page.getByTestId('picker-waiting')).toContainText('WebP, JPEG, PNG, GIF, TIFF')
+  await expect(page.getByTestId('picker-waiting')).toContainText('WebP, JPEG, PNG, AVIF, GIF, TIFF, JPEG XL')
   await expect(page.getByRole('radio')).toHaveCount(0)
 
   await page.locator('#file-input').setInputFiles(FIXTURE)
   await expect(page.getByTestId('picker-waiting')).toHaveCount(0)
-  for (const id of ['webp', 'jpeg', 'gif', 'tiff']) {
+  for (const id of ['webp', 'jpeg', 'avif', 'gif', 'tiff', 'jxl']) {
     await expect(page.locator(`[role="radio"][data-format="${id}"]`)).toHaveAttribute('aria-disabled', 'false')
   }
   await expect(page.getByRole('radio', { name: /WebP/ })).toContainText('on your device')

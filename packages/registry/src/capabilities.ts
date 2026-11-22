@@ -22,6 +22,15 @@ const png: WriteSpec = { format: 'png', lossy: false, drops: DROPPED }
 const gif: WriteSpec = { format: 'gif', lossy: true, drops: DROPPED }
 const tiff: WriteSpec = { format: 'tiff', lossy: false, defaultOptions: { compression: 'lzw' }, drops: DROPPED }
 
+// AVIF is slow to write. Effort 2 is about ten times quicker than libvips's default for a file a
+// few percent larger, which is the right trade for something a person is waiting on.
+const avif: WriteSpec = { format: 'avif', lossy: true, defaultOptions: { quality: 55, effort: 2 }, drops: DROPPED }
+const jxl: WriteSpec = { format: 'jxl', lossy: true, defaultOptions: { quality: 85 }, drops: DROPPED }
+
+/** What plain libvips reads and writes. Its two optional modules add to this, never replace it. */
+const CORE = ['png', 'jpeg', 'webp', 'gif', 'tiff']
+const CORE_WRITES = [webp, jpeg, png, gif, tiff]
+
 export const capabilities: Capability[] = [
   {
     engine: 'canvas',
@@ -30,11 +39,18 @@ export const capabilities: Capability[] = [
     writes: [webp, jpeg],
     priority: 10,
   },
-  {
-    engine: 'vips',
-    tier: 'browser',
-    reads: ['png', 'jpeg', 'webp', 'gif', 'tiff'],
-    writes: [webp, jpeg, png, gif, tiff],
-    priority: 20,
-  },
+  { engine: 'vips', tier: 'browser', reads: CORE, writes: CORE_WRITES, priority: 20 },
+
+  // libvips with its HEIF module, which reads and writes AVIF. Loaded only when AVIF is
+  // involved, so nobody converting a PNG to a JPEG pays for it. An engine may have more than
+  // one entry; these two keep it from being offered for pairs plain libvips covers.
+  //
+  // The module can open a HEIC file's header but cannot decode its pixels: this build of
+  // libvips has no HEVC decoder. HEIC needs a decoder of its own (see docs/format-roadmap.md).
+  { engine: 'vips-heif', tier: 'browser', reads: CORE, writes: [avif], priority: 30 },
+  { engine: 'vips-heif', tier: 'browser', reads: ['avif'], writes: CORE_WRITES, priority: 30 },
+
+  // libvips with its JPEG XL module, on the same terms.
+  { engine: 'vips-jxl', tier: 'browser', reads: CORE, writes: [jxl], priority: 30 },
+  { engine: 'vips-jxl', tier: 'browser', reads: ['jxl'], writes: CORE_WRITES, priority: 30 },
 ]

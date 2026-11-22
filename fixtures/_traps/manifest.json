@@ -324,6 +324,54 @@
     "absent": null
   },
   {
+    "file": "truncated.avif",
+    "group": "damage",
+    "why": "A sound AVIF file cut off halfway through.",
+    "detect": "avif",
+    "mismatch": false,
+    "guard": "ok",
+    "node": "fails",
+    "browser": "fails",
+    "note": null,
+    "absent": null
+  },
+  {
+    "file": "corrupt-data.avif",
+    "group": "damage",
+    "why": "A sound AVIF file with a hundred bytes of its picture data inverted.",
+    "detect": "avif",
+    "mismatch": false,
+    "guard": "ok",
+    "node": "fails",
+    "browser": "fails",
+    "note": null,
+    "absent": null
+  },
+  {
+    "file": "truncated.jxl",
+    "group": "damage",
+    "why": "A sound JPEG XL file cut off halfway through.",
+    "detect": "jxl",
+    "mismatch": false,
+    "guard": "ok",
+    "node": "fails",
+    "browser": "fails",
+    "note": null,
+    "absent": null
+  },
+  {
+    "file": "corrupt-data.jxl",
+    "group": "damage",
+    "why": "A sound JPEG XL file with a hundred bytes of its picture data inverted.",
+    "detect": "jxl",
+    "mismatch": false,
+    "guard": "ok",
+    "node": "fails",
+    "browser": "fails",
+    "note": null,
+    "absent": null
+  },
+  {
     "file": "sixteen-bit.png",
     "group": "unusual",
     "why": "Valid, 16 bits a channel.",

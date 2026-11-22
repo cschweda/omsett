@@ -24,7 +24,37 @@ export const vipsInfo: EngineInfo = {
   sourceUrl: 'https://github.com/kleisauke/wasm-vips',
 }
 
+// libvips with one of its optional modules. A separate engine, so the module is fetched only
+// by someone who needs it. The size is the module plus libvips itself, which a browser will
+// usually have cached already.
+export const vipsHeifInfo: EngineInfo = {
+  id: 'vips-heif',
+  sizeBytes: 5_237_817 + 3_802_681,
+  runtimes: ['browser', 'node'],
+  // libheif and libaom join libvips here: LGPL-3.0-or-later and BSD-2-Clause.
+  license: 'MIT AND LGPL-3.0-or-later AND BSD-2-Clause',
+  sourceUrl: 'https://github.com/kleisauke/wasm-vips',
+}
+
+export const vipsJxlInfo: EngineInfo = {
+  id: 'vips-jxl',
+  sizeBytes: 5_237_817 + 2_224_543,
+  runtimes: ['browser', 'node'],
+  // libjxl is BSD-3-Clause.
+  license: 'MIT AND LGPL-3.0-or-later AND BSD-3-Clause',
+  sourceUrl: 'https://github.com/kleisauke/wasm-vips',
+}
+
+/** The libvips module each engine needs, by file name, beyond libvips itself. */
+export const vipsModules: Record<string, string[]> = {
+  [vipsInfo.id]: [],
+  [vipsHeifInfo.id]: ['vips-heif.wasm'],
+  [vipsJxlInfo.id]: ['vips-jxl.wasm'],
+}
+
 export const engineInfo: Record<string, EngineInfo> = {
   [canvasInfo.id]: canvasInfo,
   [vipsInfo.id]: vipsInfo,
+  [vipsHeifInfo.id]: vipsHeifInfo,
+  [vipsJxlInfo.id]: vipsJxlInfo,
 }

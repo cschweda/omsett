@@ -336,6 +336,29 @@ trap(
     group=G,
 )
 
+# AVIF and JPEG XL, read by libvips's optional modules. Each must refuse what is damaged too.
+for folder, ext, label in (("avif", "avif", "AVIF"), ("jxl", "jxl", "JPEG XL")):
+    sound = read(folder, f"sample.{ext}")
+    trap(
+        f"truncated.{ext}",
+        sound[: len(sound) // 2],
+        f"A sound {label} file cut off halfway through.",
+        ext,
+        node="fails",
+        group=G,
+    )
+    flipped = bytearray(sound)
+    for i in range(len(flipped) - 400, len(flipped) - 300):
+        flipped[i] ^= 0xFF
+    trap(
+        f"corrupt-data.{ext}",
+        bytes(flipped),
+        f"A sound {label} file with a hundred bytes of its picture data inverted.",
+        ext,
+        node="fails",
+        group=G,
+    )
+
 # === 4. Sound files in shapes a careless reader gets wrong ============================================
 G = "unusual"
 deep = bytearray()
