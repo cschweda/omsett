@@ -76,6 +76,8 @@ build by `apps/web/scripts/write-headers.ts`.
 - **Playwright's Firefox build crashes** (content process, signal 11) when an axe scan and a
   conversion happen in the same page, so the axe tests skip Firefox. Its test profile also needs
   a preference to treat a WebP link as a download (see `playwright.config.ts`).
+- **GitHub Actions are pinned to commit SHAs**, with the release in a trailing comment. Keep it
+  that way when adding or updating one; look the SHA up, do not guess it.
 - **A canvas has a size limit**; `maxPixels` on the engine sends larger images to libvips.
 
 ## Working agreements

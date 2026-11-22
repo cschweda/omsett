@@ -1,6 +1,7 @@
 # Build context is the repository root:  docker build -f apps/web/Dockerfile .
 
-FROM node:24-alpine AS build
+# The output is static files, the same on every architecture, so build on the builder's own.
+FROM --platform=$BUILDPLATFORM node:24-alpine AS build
 WORKDIR /repo
 RUN corepack enable
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.base.json .nvmrc ./
