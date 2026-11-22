@@ -7,6 +7,30 @@ The paragraph that opens a version is its teaser: the home page shows its first 
 in the "What's new" banner, so keep it to two or three sentences on what a visitor will notice.
 A line beginning "Released" gives the date.
 
+## 0.8.0
+
+Released 22 November 2026.
+
+Omsett now reads 22 image formats. This release adds TGA, the Netpbm family, PCX, SGI, Sun
+Raster, OpenEXR, Radiance HDR and compressed SVG, and writes TGA and Netpbm.
+
+### Added
+
+- **TGA and Netpbm (PPM, PGM, PBM, PAM), read and written; PCX, SGI, Sun Raster, OpenEXR and
+  Radiance HDR, read**, all through ImageMagick. For the two high-range formats the picker says
+  that brightness beyond what a screen shows is cut off.
+- **SVGZ**, the compressed form of SVG. It is unpacked with a limit of 64 MB before it is drawn.
+- **Detection for formats with no signature of their own.** TGA has none, so every field of its
+  header must agree before a file is called one; a TGA is also told apart from an icon, which
+  starts with the same bytes.
+- Twelve trap files: each of the eight formats cut off halfway, a Netpbm and a TGA that state
+  an impossible size, a compressed SVG that unpacks to a quarter of a gigabyte, and a
+  compressed text file named as one.
+
+### Known
+
+- ICNS, the Mac icon format, is not read: this build of ImageMagick cannot decode it.
+
 ## 0.7.0
 
 Released 22 November 2026.

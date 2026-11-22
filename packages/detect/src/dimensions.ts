@@ -158,13 +158,6 @@ const psd: Reader = (bytes) => {
   return { width: v.getUint32(18), height: v.getUint32(14) }
 }
 
-/** QOI: width then height, big-endian, after the four-byte signature. */
-const qoi: Reader = (bytes) => {
-  if (bytes.length < 12) return null
-  const v = view(bytes)
-  return { width: v.getUint32(4), height: v.getUint32(8) }
-}
-
 /** ICO holds several sizes; the largest is the one that is read. A stated 0 means 256. */
 const ico: Reader = (bytes) => {
   if (bytes.length < 6) return null
@@ -189,7 +182,7 @@ const jp2: Reader = (bytes) => {
 }
 
 /** Keyed by `file-type` ext value. A format with no reader simply has unknown dimensions. */
-const readers: Record<string, Reader> = { png, apng: png, jpg: jpeg, webp, gif, tif: tiff, avif: heif, heic: heif, jxl, bmp, psd, qoi, ico, jp2 }
+const readers: Record<string, Reader> = { png, apng: png, jpg: jpeg, webp, gif, tif: tiff, avif: heif, heic: heif, jxl, bmp, psd, ico, jp2 }
 
 /** How much of the file a header reader may need. */
 export const HEADER_BYTES = 512 * 1024

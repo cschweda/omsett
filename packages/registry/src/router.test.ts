@@ -34,9 +34,12 @@ describe('router, real registry', () => {
   it('lists formats in order of general usefulness, and routes every pair that can be written', () => {
     const all = createRouter(everything)
     const ids = everything.formats.map((f) => f.id)
-    expect(ids).toEqual(['webp', 'jpeg', 'png', 'avif', 'gif', 'tiff', 'jxl', 'bmp', 'qoi', 'heic', 'svg', 'psd', 'ico', 'jp2'])
+    expect(ids).toEqual([
+      'webp', 'jpeg', 'png', 'avif', 'gif', 'tiff', 'jxl', 'bmp', 'tga', 'qoi', 'pnm',
+      'heic', 'svg', 'svgz', 'psd', 'ico', 'jp2', 'exr', 'hdr', 'pcx', 'sgi', 'ras',
+    ])
     const readOnly = new Set(everything.formats.filter((f) => f.readOnly).map((f) => f.id))
-    expect([...readOnly].sort()).toEqual(['heic', 'ico', 'jp2', 'psd', 'svg'])
+    expect([...readOnly].sort()).toEqual(['exr', 'hdr', 'heic', 'ico', 'jp2', 'pcx', 'psd', 'ras', 'sgi', 'svg', 'svgz'])
     // Every pair converts, directly or through a step in between; nothing is written as HEIC.
     for (const from of ids) {
       for (const to of ids) expect(all.route(from, to) === null, `${from} → ${to}`).toBe(from === to || readOnly.has(to))
@@ -75,7 +78,7 @@ describe('router, real registry', () => {
 
   it('offers plain libvips, not a module, for the pairs plain libvips covers', () => {
     for (const edge of deriveEdges(registry).edges) {
-      if ([edge.from, edge.to].some((id) => ['avif', 'jxl', 'heic', 'svg', 'bmp', 'qoi', 'psd', 'ico', 'jp2'].includes(id))) continue
+      if ([edge.from, edge.to].some((id) => !['png', 'jpeg', 'webp', 'gif', 'tiff'].includes(id))) continue
       for (const c of edge.candidates) expect(['canvas', 'vips'], `${edge.from} → ${edge.to}`).toContain(c.engine)
     }
   })

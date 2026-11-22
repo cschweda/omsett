@@ -1,12 +1,15 @@
 import type { Format } from '@omsett/registry'
 import { fileTypeFromBuffer } from 'file-type'
 import { HEADER_BYTES, readDimensions, type Dimensions } from './dimensions'
+import { gunzip } from './gzip'
+import { sniff } from './signatures'
 import { svgDimensions, svgRoot } from './svg'
 
 export { readDimensions, type Dimensions } from './dimensions'
 export { MAX_BYTES, MAX_PIXELS, MAX_WORKING_BYTES, TOO_LARGE, pixelCount, sizeProblem, workingBytes } from './guard'
 export { structureProblem } from './structure'
 export { crc32 } from './png-structure'
+export { gunzip } from './gzip'
 
 export type Detection =
   | { kind: 'known'; format: Format; ext: string; mime: string; dimensions: Dimensions | null }
@@ -24,9 +27,24 @@ export async function detect(blob: Blob, formats: Format[]): Promise<Detection> 
     // SVG is text and has no magic bytes: the most the library can say is "XML", or nothing.
     const root = !found || found.ext === 'xml' ? svgRoot(head) : null
     if (root) found = { ext: 'svg', mime: 'image/svg+xml' }
-    // QOI has a signature the library does not know: the letters "qoif".
-    if (!found && head[0] === 0x71 && head[1] === 0x6F && head[2] === 0x69 && head[3] === 0x66) {
-      found = { ext: 'qoi', mime: 'image/qoi' }
+    let dimensions: Dimensions | null | undefined
+    // Formats the library does not know, each by its own signature.
+    // A TGA begins with the same bytes as an icon or cursor. An icon file says how many pictures
+    // it holds, and that is never none; where it says none, the file is not an icon.
+    const emptyIcon = (found?.ext === 'ico' || found?.ext === 'cur') && head[4] === 0 && head[5] === 0
+    if (emptyIcon) found = undefined
+    const sniffed = found ? null : sniff(head)
+    if (sniffed) {
+      found = sniffed
+      dimensions = sniffed.dimensions
+    }
+    // A gzip file that opens into an SVG is an SVGZ. Only its first kilobytes are inflated.
+    if (found?.ext === 'gz') {
+      const inner = svgRoot((await gunzip(blob.slice(0, HEADER_BYTES), 64 * 1024)).bytes)
+      if (inner) {
+        found = { ext: 'svgz', mime: 'image/svg+xml' }
+        dimensions = svgDimensions(inner)
+      }
     }
     if (!found) return { kind: 'unknown' }
     const format = formats.find((f) => f.detect.includes(found.ext))
@@ -36,7 +54,7 @@ export async function detect(blob: Blob, formats: Format[]): Promise<Detection> 
       format,
       ext: found.ext,
       mime: found.mime,
-      dimensions: root ? svgDimensions(root) : readDimensions(found.ext, head),
+      dimensions: dimensions !== undefined ? dimensions : root ? svgDimensions(root) : readDimensions(found.ext, head),
     }
   } catch {
     return { kind: 'unknown' }

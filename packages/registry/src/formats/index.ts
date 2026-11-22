@@ -1,3 +1,11 @@
+import { tga } from './tga'
+import { pnm } from './pnm'
+import { pcx } from './pcx'
+import { sgi } from './sgi'
+import { ras } from './ras'
+import { hdr } from './hdr'
+import { exr } from './exr'
+import { svgz } from './svgz'
 import type { Format } from '../types'
 import { avif } from './avif'
 import { bmp } from './bmp'
@@ -18,4 +26,7 @@ import { webp } from './webp'
  * Order here is the order targets are offered in: the first few a file can become are shown
  * large, the rest in the list beneath. So this is a ranking, most generally useful first.
  */
-export const formats: Format[] = [webp, jpeg, png, avif, gif, tiff, jxl, bmp, qoi, heic, svg, psd, ico, jp2]
+export const formats: Format[] = [
+  webp, jpeg, png, avif, gif, tiff, jxl, bmp, tga, qoi, pnm,
+  heic, svg, svgz, psd, ico, jp2, exr, hdr, pcx, sgi, ras,
+]

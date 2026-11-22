@@ -36,13 +36,16 @@ When a format ships, update its row here, in the same change.
 | JPEG XL | yes | yes | Browser | libvips + jxl module | Done |
 | HEIC / HEIF | yes | no | Browser | libheif + libde265 (WASM), the `heif` engine | Done (read). Decoded to PNG, then on to any other format. Can be switched off in one line: `packages/registry/src/switches.ts`. Not written: no HEVC encoder is shipped (x265 is GPL, and encoding carries more patent exposure than decoding) |
 | SVG (to a raster image) | yes | no | Browser | resvg (WASM), the `resvg` engine | Done. Drawn to PNG, then on to any other format. Text is drawn in Inter (Latin only); linked pictures are left out; no script runs. libvips's own SVG module was tried first and dropped: it has no fonts, so all text vanished |
-| SVGZ | yes | no | Browser | gunzip, then resvg | Planned |
-| BMP, QOI | yes | yes | Browser | ImageMagick (WASM), the `magick` engine | Done |
+| SVGZ | yes | no | Browser | gunzip with a limit, then resvg | Done |
+| BMP, QOI, TGA, Netpbm (PPM, PGM, PBM, PAM) | yes | yes | Browser | ImageMagick (WASM), the `magick` engine | Done |
 | ICO | yes | no | Browser | ImageMagick (WASM) | Done (read, the largest size in the file). Writing waits for a "favicon" preset that resizes |
-| CUR, ICNS, TGA, PPM/PGM/PBM/PAM, PCX, DDS, SGI, Sun Raster | yes | yes | Browser | ImageMagick (WASM) | Planned. ImageMagick reads them all; each still needs detection by content (several have no signature), a size reader and trap files |
+| PCX, SGI, Sun Raster | yes | no | Browser | ImageMagick (WASM) | Done (read). No demand for writing them |
+| CUR, DDS | yes | yes | Browser | ImageMagick (WASM) | Planned. Each needs a sample, detection by content and trap files |
+| ICNS | yes | yes | Browser | to be found | Planned. This ImageMagick build cannot read it |
 | JPEG 2000 | yes | no | Browser | ImageMagick (WASM) | Done (read). Writing is planned |
 | APNG, MNG | yes | yes | Browser | ImageMagick (WASM) | Planned |
-| OpenEXR, Radiance HDR, FITS | yes | some | Browser | ImageMagick (WASM) | Planned |
+| OpenEXR, Radiance HDR | yes | no | Browser | ImageMagick (WASM) | Done (read). Brightness beyond what a screen shows is cut off, and the picker says so |
+| FITS | yes | no | Browser | ImageMagick (WASM) | Planned |
 | PSD | yes | no | Browser | ImageMagick (WASM) | Done (read, flattened). Layers are not kept |
 | PSB | yes | no | Browser | ImageMagick (WASM) | Planned |
 | Camera RAW (CR2, CR3, NEF, ARW, DNG, …) | yes | no | Browser | LibRaw (WASM) | Planned. Large files may be sent to the desktop app |
@@ -213,7 +216,7 @@ When a format ships, update its row here, in the same change.
 
 ## Suggested order
 
-1. The rest of the images: the remaining ImageMagick formats, and SVGZ. AVIF, JPEG XL, HEIC, SVG, BMP, QOI, PSD, ICO and JPEG 2000 are done.
+1. Images are largely done: 22 formats. Left: CUR, DDS, ICNS, FITS, APNG, PSB, camera RAW, DICOM, and writing ICO and JPEG 2000.
 2. Data, subtitles, fonts: small JavaScript libraries, no large downloads.
 3. Archives, then audio.
 4. Documents and e-books through Pandoc; then the PDF tools.

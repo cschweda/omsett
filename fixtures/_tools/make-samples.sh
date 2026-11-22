@@ -46,10 +46,10 @@ dir ico;   sips -s format ico "$work/square256.png" --out "$out/ico/sample.ico" 
 dir icns;  sips -s format icns "$work/square256.png" --out "$out/icns/sample.icns" >/dev/null
 
 # The Netpbm family: colour, grey, bitmap, with-alpha, floating point.
-dir ppm;   ff -i "$work/opaque.png" "$out/ppm/sample.ppm"
-dir pgm;   ff -i "$work/opaque.png" -pix_fmt gray "$out/pgm/sample.pgm"
-dir pbm;   ff -i "$work/opaque.png" -pix_fmt monob "$out/pbm/sample.pbm"
-dir pam;   ff -i "$work/pattern.png" "$out/pam/sample.pam"
+dir pnm;   ff -i "$work/opaque.png" "$out/pnm/sample.ppm"
+dir pnm;   ff -i "$work/opaque.png" -pix_fmt gray "$out/pnm/sample.pgm"
+dir pnm;   ff -i "$work/opaque.png" -pix_fmt monob "$out/pnm/sample.pbm"
+dir pnm;   ff -i "$work/pattern.png" "$out/pnm/sample.pam"
 dir pfm;   ff -i "$work/opaque.png" -vf scale=160:100 "$out/pfm/sample.pfm"
 dir xbm;   ff -i "$work/opaque.png" -pix_fmt monow "$out/xbm/sample.xbm"
 dir wbmp;  ff -i "$work/opaque.png" -pix_fmt monob "$out/wbmp/sample.wbmp"
