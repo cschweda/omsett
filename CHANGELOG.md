@@ -1,8 +1,11 @@
 # Changelog
 
 Every change to Omsett is recorded here, newest first, in the same pull request that makes it.
+Changes not yet given a version number go under a heading named "Unreleased" at the top.
 
-## Unreleased
+## 0.2.0
+
+Released 22 November 2026. The first version on omsett.com.
 
 ### Added
 

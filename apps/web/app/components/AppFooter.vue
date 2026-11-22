@@ -1,8 +1,12 @@
 <script setup lang="ts">
+import facts from '~/generated/facts.json'
 import { CHANGELOG, pages, REPOSITORY } from '~/utils/links'
 
 const { state } = useServerHealth()
 const { public: config } = useRuntimeConfig()
+
+// The version leads to its own entry in What's new, which is the changelog.
+const release = `/whats-new#release-${facts.version.replace(/[^a-z0-9]+/gi, '-')}`
 
 const status = computed(() => {
   const base = 'Conversions run on your device.'
@@ -35,7 +39,10 @@ const status = computed(() => {
 
     <div class="state">
       <p data-testid="status">{{ status }}</p>
-      <p class="figures">Build {{ config.commit }}</p>
+      <p class="figures">
+        <NuxtLink :to="release" class="text-button version" data-testid="version">Version {{ facts.version }}</NuxtLink>
+        <span class="build">build {{ config.commit }}</span>
+      </p>
       <ThemeToggle data-testid="theme-toggle" />
     </div>
   </footer>
@@ -75,6 +82,13 @@ const status = computed(() => {
   margin: 0;
   padding: 0;
   list-style: none;
+}
+.version {
+  color: var(--ink);
+  font-weight: 700;
+}
+.build {
+  margin-left: 0.625rem;
 }
 .state {
   grid-column: 9 / -1;

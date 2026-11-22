@@ -6,6 +6,7 @@ useHead({ title: 'What’s new — Omsett' })
 
 // "Unreleased" is the changelog's working name for changes that are live but not yet numbered.
 const title = (name: string) => (name === 'Unreleased' ? 'Latest' : `Version ${name}`)
+// The footer's version link points at these ids, so they are built the same way there.
 const slug = (name: string) => `release-${name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`
 </script>
 

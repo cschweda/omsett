@@ -75,6 +75,22 @@ test('technical details counts its traps from the repository and draws its diagr
   expectPrivate(page, seen)
 })
 
+test('the footer shows the version, and it leads to that version in the changelog', async ({ page }) => {
+  const { version } = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')) as { version: string }
+  const changelog = readFileSync(new URL('../CHANGELOG.md', import.meta.url), 'utf8')
+  // The version in the footer is one the changelog actually describes.
+  expect(changelog).toContain(`## ${version}`)
+
+  await page.goto('/')
+  const link = page.getByTestId('version')
+  await expect(link).toHaveText(`Version ${version}`)
+  await link.click()
+  await expect(page).toHaveURL(new RegExp(`/whats-new/?#release-${version.replaceAll('.', '-')}$`))
+  const heading = page.locator(`#release-${version.replaceAll('.', '-')}`)
+  await expect(heading).toHaveText(`Version ${version}`)
+  await expect(heading).toBeInViewport()
+})
+
 test('what’s new is the changelog', async ({ page }) => {
   const changelog = readFileSync(new URL('../CHANGELOG.md', import.meta.url), 'utf8')
   const releases = changelog.split('\n').filter((line) => line.startsWith('## '))
