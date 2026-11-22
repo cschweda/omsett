@@ -2,9 +2,9 @@
 // fixtures/_traps/manifest.json says what must happen to each; this runs them through
 // detection, the size guard, and libvips in Node. e2e/traps.spec.ts does the same in browsers.
 import { readFile } from 'node:fs/promises'
-import { detect, nameDisagrees, sizeProblem } from '@omsett/detect'
+import { detect, MAX_PIXELS, nameDisagrees, sizeProblem } from '@omsett/detect'
 import { createNodeEngines } from '@omsett/engines/node'
-import { createRouter, deriveEdges, formatById, registry } from '@omsett/registry'
+import { createRouter, deriveEdges, formatById, registry, type Format } from '@omsett/registry'
 import { describe, expect, it } from 'vitest'
 import manifest from './_traps/manifest.json'
 
@@ -13,17 +13,19 @@ const router = createRouter(registry)
 const derived = deriveEdges(registry)
 const png = formatById(registry, 'png')!
 const webp = formatById(registry, 'webp')!
-const options = derived.edge('png', 'webp')!.candidates.find((c) => c.engine === 'vips')!.defaultOptions
 
 const load = async (file: string) => new File([await readFile(new URL(`./_traps/${file}`, import.meta.url))], file)
 
-function convert(blob: Blob, name: string) {
+/** Convert with libvips at its registered defaults, as the app would. */
+function convert(blob: Blob, name: string, from: Format, to: Format) {
+  const candidate = derived.edge(from.id, to.id)!.candidates.find((c) => c.engine === 'vips')!
   return engine.convert({
     blob,
     name,
-    from: png,
-    to: webp,
-    options,
+    from,
+    to,
+    options: candidate.defaultOptions,
+    maxPixels: MAX_PIXELS,
     signal: new AbortController().signal,
     onProgress: () => {},
   })
@@ -32,7 +34,7 @@ function convert(blob: Blob, name: string) {
 /** A trap may fail, but it may not take the engine down with it. */
 async function expectEngineStillWorks() {
   const good = await readFile(new URL('./png/sample.png', import.meta.url))
-  const [output] = await convert(new Blob([good]), 'sample.png')
+  const [output] = await convert(new Blob([good]), 'sample.png', png, webp)
   const found = await detect(output!.blob, registry.formats)
   expect(found.kind === 'known' && found.format.id).toBe('webp')
 }
@@ -68,8 +70,10 @@ describe('trap files', () => {
         return
       }
 
-      // 3. A format with no route is never handed to an engine.
-      if (!router.route(found.format.id, webp.id)) {
+      // 3. Convert it to something it is not: WebP, or PNG if it is a WebP already.
+      const from = found.format
+      const to = from.id === webp.id ? png : webp
+      if (!router.route(from.id, to.id)) {
         expect(trap.node, 'no route, so no engine').toBe('none')
         return
       }
@@ -78,10 +82,10 @@ describe('trap files', () => {
       //    no hang, no crash, no output that is not what it claims to be.
       let outcome: 'succeeds' | 'fails'
       try {
-        const outputs = await convert(file, file.name)
+        const outputs = await convert(file, file.name, from, to)
         expect(outputs).toHaveLength(1)
         const after = await detect(outputs[0]!.blob, registry.formats)
-        expect(after.kind === 'known' && after.format.id, 'output is really WebP').toBe('webp')
+        expect(after.kind === 'known' && after.format.id, `output is really ${to.name}`).toBe(to.id)
         expect(after.kind === 'known' && after.dimensions, 'output keeps the declared size').toEqual(
           found.dimensions,
         )

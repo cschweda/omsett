@@ -67,10 +67,9 @@ def trap(name, data, why, detect, guard="ok", node="none", browser=None, mismatc
     detect   what identification must say: a format id, 'unregistered', or 'unknown'
     guard    'refused' if the size and pixel guard must stop it before any decode
     node     what libvips in Node must do with it: 'fails', 'succeeds', or 'none' (never reached)
-    browser  the same for the app in a browser. Defaults to the Node expectation. 'either' marks
-             the five damaged files that some browsers' own decoders forgive and turn into a
-             partial picture (Firefox everywhere, WebKit on Linux) while others refuse them.
-             That is a known gap, not a goal: see fixtures/README.md.
+    browser  the same for the app in a browser. Defaults to the Node expectation, and no trap
+             differs: a PNG's structure is verified before a browser's own decoder is allowed
+             near it, so a forgiving decoder never gets the chance to return half a picture.
     note     the exact reason the app must show, where a generic one will not do
     absent   text that must not appear anywhere in the converted file (a payload hidden in the
              input's metadata, which a conversion must not carry across)
@@ -124,24 +123,28 @@ trap(
 trap(
     "jpeg-named.png",
     read("jpeg", "sample.jpg"),
-    "A real JPEG with a .png name. The contents win over the name.",
+    "A real JPEG with a .png name. The contents win over the name, and it converts as a JPEG.",
     "jpeg",
+    node="succeeds",
     mismatch=True,
     group=G,
 )
 trap(
     "webp-named.png",
     read("webp", "sample.webp"),
-    "A real WebP with a .png name.",
+    "A real WebP with a .png name. It converts as the WebP it is.",
     "webp",
+    node="succeeds",
     mismatch=True,
     group=G,
 )
 trap(
     "gif-named.png",
     read("gif", "sample.gif"),
-    "A real GIF, a format the registry does not know yet, with a .png name.",
-    "unregistered",
+    "A real GIF with a .png name. It converts as the GIF it is.",
+    "gif",
+    node="succeeds",
+    mismatch=True,
     group=G,
 )
 trap(
@@ -222,7 +225,6 @@ trap(
     "A sound PNG cut off 60% of the way through.",
     "png",
     node="fails",
-    browser="either",
     group=G,
 )
 trap(
@@ -239,7 +241,6 @@ trap(
     "Well-formed, but holds only half the rows its header promises.",
     "png",
     node="fails",
-    browser="either",
     group=G,
 )
 good_idat = zlib.compress(rgba_rows(W, H), 9)
@@ -252,7 +253,6 @@ trap(
     "decompressing it reveals the damage.",
     "png",
     node="fails",
-    browser="either",
     group=G,
 )
 trap(
@@ -261,7 +261,6 @@ trap(
     "The image data is intact but its checksum is wrong.",
     "png",
     node="fails",
-    browser="either",
     group=G,
 )
 trap(
@@ -289,7 +288,6 @@ trap(
     "Every row is marked with a filter type (9) that does not exist.",
     "png",
     node="fails",
-    browser="either",
     group=G,
 )
 trap(
@@ -400,8 +398,10 @@ trap(
     "gif-header-then-script.png",
     b"GIF89a" + b"/*" + bytes(20) + b"*/=1;<script>alert(1)</script>",
     "The classic two-in-one: bytes that open like a GIF and continue as a script. Identified as "
-    "the GIF it opens as, which is not a supported format, and never run.",
-    "unregistered",
+    "the GIF it opens as, refused as a broken one, and never run.",
+    "gif",
+    node="fails",
+    mismatch=True,
     group=G,
 )
 trap(
@@ -532,7 +532,6 @@ trap(
     "after everything has been decompressed, is wrong.",
     "png",
     node="fails",
-    browser="either",
     group=G,
 )
 trap(
@@ -542,7 +541,6 @@ trap(
     "of what it allocated for, writes past the end of its buffer.",
     "png",
     node="succeeds",
-    browser="either",
     group=G,
 )
 out_of_range = b"".join(b"\x00" + bytes([200]) * SMALL_W for _ in range(SMALL_H))
@@ -557,7 +555,6 @@ trap(
     "it up without checking reads memory that is not the palette.",
     "png",
     node="succeeds",
-    browser="either",
     group=G,
 )
 trap(
@@ -570,7 +567,6 @@ trap(
     "A palette of seven bytes. Colours take three bytes each, so the last one is cut short.",
     "png",
     node="fails",
-    browser="either",
     group=G,
 )
 trap(
@@ -584,7 +580,6 @@ trap(
     "Two colours in the palette, and 256 transparency entries for them.",
     "png",
     node="succeeds",
-    browser="either",
     group=G,
 )
 trap(
@@ -594,7 +589,6 @@ trap(
     "does not understand an essential chunk must give up.",
     "png",
     node="fails",
-    browser="either",
     group=G,
 )
 trap(
@@ -606,7 +600,6 @@ trap(
     "The header says the rows are interlaced; the data is laid out as if they were not.",
     "png",
     node="fails",
-    browser="either",
     group=G,
 )
 trap(
@@ -620,7 +613,6 @@ trap(
     "a profile is something a reader wants to load.",
     "png",
     node="succeeds",
-    browser="either",
     group=G,
 )
 whole = zlib.compress(SMALL, 9)
@@ -647,7 +639,6 @@ trap(
     "Declares a gamma of zero, which a reader that applies it divides by.",
     "png",
     node="succeeds",
-    browser="either",
     group=G,
 )
 trap(
@@ -657,7 +648,6 @@ trap(
     "that allocates per announced frame runs out of memory.",
     "png",
     node="succeeds",
-    browser="either",
     group=G,
 )
 

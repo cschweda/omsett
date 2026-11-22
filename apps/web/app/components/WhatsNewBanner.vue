@@ -35,7 +35,7 @@ function dismiss() {
 <template>
   <aside v-if="visible && latest" class="banner" aria-label="What’s new" data-testid="whats-new-banner">
     <p class="label">
-      <span>What’s new</span>
+      <span class="mark">What’s new</span>
       <span class="version figures">{{ title }}</span>
     </p>
     <p class="teaser">
@@ -48,7 +48,8 @@ function dismiss() {
 </template>
 
 <style scoped>
-/* On the page's grid: label column, text, and the way out. Blue marks it as news. */
+/* On the page's grid: label column, text, and the way out. No rule of its own above it: the
+   navigation's is enough. The label alone is marked, with an underline in the highlight colour. */
 .banner {
   display: grid;
   grid-template-columns: repeat(12, minmax(0, 1fr));
@@ -56,9 +57,13 @@ function dismiss() {
   row-gap: 0.5rem;
   align-items: start;
   margin: calc(clamp(2rem, 6vw, 4.5rem) * -1 + 1.25rem) 0 clamp(2rem, 6vw, 4rem);
-  padding: 1rem 0 1.125rem;
-  border-top: 3px solid var(--accent);
+  padding: 1rem 0 1.25rem;
   border-bottom: 1px solid var(--rule);
+}
+.mark {
+  align-self: flex-start;
+  padding-bottom: 0.125rem;
+  border-bottom: 3px solid var(--highlight);
 }
 .label {
   grid-column: 1 / span 3;
@@ -100,6 +105,9 @@ function dismiss() {
     flex-direction: row;
     gap: 0.75rem;
     align-items: baseline;
+  }
+  .mark {
+    align-self: baseline;
   }
   .dismiss {
     grid-column: 1 / -1;

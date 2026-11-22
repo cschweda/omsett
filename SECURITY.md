@@ -25,6 +25,92 @@ A finding is **Fixed** when a test shows it, **Open** when it is not yet dealt w
 Newest first. The latest is expanded; earlier ones open when clicked.
 
 <details open>
+<summary><strong>22 November 2026: Follow-up: closing two open findings</strong> (3 findings: 1 medium, 1 low, 1 info; 2 fixed, 1 open, 0 accepted)</summary>
+
+The red/blue audit left three findings open. This pass closed the two that were the project's to close: damaged files that some browsers converted into partial pictures, and build inputs referenced by a movable tag. The third is a line in the server's own configuration.
+
+**Scope**
+
+- OMS-005: damaged files decoded by a browser's own, forgiving decoder.
+- OMS-013: container base images and an installer referenced by tag.
+- The new formats added in the same change (JPEG, GIF, TIFF as sources and targets), checked against both findings so that neither was reopened.
+
+**Method**
+
+- A structural checker for PNG was written and run against every PNG file in the test set: thirteen sound files, ten of them traps, had to pass, and eighteen damaged or dishonest ones had to be refused, each for the stated reason.
+- The full trap set was then run in Chromium, Firefox, and WebKit with the browser-dependent allowance removed from the test manifest, so any browser that still returned a partial picture would fail the build.
+- Every one of the twenty conversions was run in all three browsers from a real sample file.
+
+**What held**
+
+- All 53 trap files now have one required outcome in every browser, the same as in Node. None is marked browser-dependent.
+- The new source formats did not reopen OMS-005: they are read by libvips only, which treats damage as an error.
+
+**Findings**
+
+| ID | Severity | Finding | Status |
+| --- | --- | --- | --- |
+| OMS-005 | Medium | Some browsers' own decoders turn a damaged file into a partial picture | Fixed |
+| OMS-013 | Low | Container base images and the nvm installer are referenced by tag, not by digest | Fixed |
+| OMS-015 | Info | The host's template sends a deprecated protection header | Open |
+
+#### OMS-005: Some browsers' own decoders turn a damaged file into a partial picture
+
+**Severity:** Medium · **Status:** Fixed · **Area:** Integrity of output
+
+**Identification**
+
+Open since the first review. When the browser's own encoder did a conversion, the browser's own decoder read the file. Firefox's, and WebKit's on Linux, forgive damage: given a PNG that was cut short, missing rows, corrupted, or carrying a wrong checksum, they returned the part they could read, and Omsett converted that part and reported success.
+
+Adding formats would have widened it. Every browser decodes JPEG and GIF leniently too, and a truncated JPEG is the commonest damaged file there is: an interrupted download.
+
+**Mitigation**
+
+Omsett now verifies a PNG's structure itself, in the worker, before the browser is allowed to decode it. The check reads no pixels. It confirms the signature; that every chunk fits in the file and has a correct checksum; that the header comes first and describes a legal picture; that the palette is well-formed; that no essential chunk is unknown; and that the image data decompresses to exactly the number of bytes the header implies, with a legal filter on every row and no pixel pointing outside its palette.
+
+A file that fails is not decoded by the browser. It is handed to libvips, which either converts it properly (a file missing only its end marker, for instance) or refuses it. Either way the browser's forgiving decoder never sees it.
+
+For every other format the browser's decoder is not used at all. The canvas engine is registered to read PNG only, the one format the app can vouch for; JPEG, WebP, GIF, and TIFF are read by libvips, which treats damage as an error. A test fails if any other format is ever given to the canvas engine.
+
+The cost is that converting from JPEG, WebP, GIF, or TIFF always needs libvips (a 5 MB download, once), where a browser could have done it with nothing. That was judged worth it: a converter must not return half a picture.
+
+**Verification:** Eighteen damaged or dishonest PNG traps are each refused by the checker for the expected reason, and thirteen sound files pass. With the browser-dependent allowance removed, all 53 traps produce the required outcome in Chromium, Firefox, and WebKit, on macOS and on Linux.
+
+#### OMS-013: Container base images and the nvm installer are referenced by tag, not by digest
+
+**Severity:** Low · **Status:** Fixed · **Area:** Supply chain
+
+**Identification**
+
+The self-host image was built from node:24-alpine and caddy:2-alpine by tag, and the deployment guide piped nvm's installer from a version tag straight into a shell. A tag can be repointed by whoever controls the upstream repository, and a script piped into a shell runs whatever the server sends at that moment.
+
+**Mitigation**
+
+Both base images are now pinned by digest in the Dockerfile.
+
+The deployment guide now fetches nvm's installer by commit, checks it against a recorded SHA-256, and runs it only if the hash matches.
+
+Dependabot is configured to propose new image digests, new action versions, and dependency updates weekly, so the pins do not become a way of never patching.
+
+**Verification:** CI builds the image from the pinned digests on every change. The recorded hash was computed from the installer at the pinned commit.
+
+#### OMS-015: The host's template sends a deprecated protection header
+
+**Severity:** Info · **Status:** Open · **Area:** Server configuration
+
+**Identification**
+
+Unchanged. The server's site template adds X-XSS-Protection: 1; mode=block, which current guidance says to drop.
+
+**Mitigation**
+
+Still open. It is one line in the site's nginx configuration, which is edited by the operator and not generated by the build.
+
+**Verification:** None needed.
+
+</details>
+
+<details>
 <summary><strong>22 November 2026: Red/blue audit of the converter and its hosting</strong> (10 findings: 3 medium, 5 low, 2 info; 6 fixed, 3 open, 1 accepted)</summary>
 
 An attacker's pass over the whole of Omsett as deployed: what a hostile file, a hostile file name, a crafted link, or a network in the middle can make it do. Followed by the defender's pass that fixed what was found.

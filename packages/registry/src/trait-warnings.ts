@@ -6,6 +6,7 @@ export const traitWarnings: Record<Trait, Warning> = {
   metadata: { id: 'metadata-lost', text: 'Author, location and other metadata are removed.' },
   'multi-page': { id: 'pages-lost', text: 'Only the first page will be kept.' },
   layers: { id: 'layers-lost', text: 'Layers will be merged into one image.' },
+  'full-color': { id: 'colors-reduced', text: 'Reduced to 256 colours.' },
 }
 
 export const lossyToLossy: Warning = {

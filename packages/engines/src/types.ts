@@ -27,6 +27,11 @@ export interface ConvertInput {
   signal: AbortSignal
   /** 0..1, called at most ~10×/s */
   onProgress: (fraction: number) => void
+  /**
+   * The most pixels the picture may turn out to have. An engine checks this as soon as it knows
+   * the real size, because a header can lie and some formats do not state a size up front.
+   */
+  maxPixels?: number
 }
 
 export interface ConvertOutput {
@@ -38,8 +43,11 @@ export interface ConvertOutput {
 }
 
 export interface Engine extends EngineInfo {
-  /** Cheap runtime probe; must not download the engine. */
-  available(): Promise<boolean>
+  /**
+   * Cheap runtime probe; must not download the engine. With a target, answers for writing that
+   * format in particular: a browser may encode one format and not another.
+   */
+  available(target?: Format): Promise<boolean>
   /** Idempotent; resolves immediately when cached. */
   load(): Promise<void>
   convert(input: ConvertInput): Promise<ConvertOutput[]>

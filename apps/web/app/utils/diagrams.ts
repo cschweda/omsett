@@ -10,14 +10,16 @@ export const pipeline = `flowchart TD
   route -->|none| none["Target is dimmed, with the reason"]
   route -->|found| fits["Will the target hold a picture this size?"]
   fits -->|no| refused
-  fits -->|yes| engine["Convert in a background worker"]
+  fits -->|yes| verify["Is the file sound?<br/>(its structure is checked,<br/>or a strict engine reads it)"]
+  verify -->|damaged| failed
+  verify -->|sound| engine["Convert in a background worker"]
   engine -->|fails| failed["Shown as: couldn't be converted"]
   engine -->|runs past its time limit| stopped["Worker stopped;<br/>shown as: took too long"]
   engine -->|succeeds| result["Result: download and compare"]
 `
 
 export const engines = `flowchart TD
-  ask["A conversion is needed"] --> probe{"Can the browser's own<br/>encoder write the target?"}
+  ask["A conversion is needed"] --> probe{"Is the file a PNG that passes<br/>the structure check, and can the<br/>browser's encoder write the target?"}
   probe -->|"yes, and the picture is<br/>within the canvas limit"| canvas["Canvas engine<br/>nothing to download"]
   probe -->|no| vips["libvips engine<br/>fetched once, then cached"]
   canvas -->|"fails, or returns<br/>the wrong format"| vips

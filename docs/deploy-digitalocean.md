@@ -39,8 +39,13 @@ asks for 24. To build on 24 without touching the system Node that the audit app 
 nvm for the `forge` user:
 
 ```
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.41.0/install.sh | bash
+curl -fsSLo /tmp/nvm-install.sh https://raw.githubusercontent.com/nvm-sh/nvm/4e8758a801eea9479b32a904f31093e410ddaba4/install.sh
+echo "045932fe05f0d4247c946f2ec0ec4026dbfd8ce88a5f67ea28d8ea833227f48b  /tmp/nvm-install.sh" | sha256sum -c && bash /tmp/nvm-install.sh
 ```
+
+That is nvm 0.41.0, fetched by its commit and checked against a known hash before it runs, so
+the installer cannot be swapped for something else. Piping a download straight into a shell
+runs whatever the server sends.
 
 Then, before the next deploy, pin nvm's default to the system Node:
 

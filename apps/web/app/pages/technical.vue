@@ -86,6 +86,12 @@ const trapGroups: Record<string, string> = {
             An engine is the code that does a conversion. Several can cover the same pair of formats; they are tried
             in order. An engine is fetched only when a conversion needs it, and then cached.
           </p>
+          <p>
+            A browser's own decoder forgives a damaged file and returns the part it could read. So the browser's
+            engine is given PNG only, and only after Omsett has checked the file's structure itself: every chunk and
+            checksum, and that the image data is exactly as long as the header says. Every other format is read by
+            libvips, which treats damage as an error.
+          </p>
         </div>
         <MermaidDiagram :code="engineChoice" caption="Choosing an engine. Safari cannot write WebP from a canvas and answers with a PNG, which is why the output is checked." />
         <div class="table-wrap">

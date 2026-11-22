@@ -1,4 +1,4 @@
-import { detect, nameDisagrees, pixelCount, sizeProblem, type Detection } from '@omsett/detect'
+import { detect, MAX_PIXELS, nameDisagrees, pixelCount, sizeProblem, type Detection } from '@omsett/detect'
 import type { Edge, Route } from '@omsett/registry'
 import { dimensionProblem, formatById } from '@omsett/registry'
 import { conversionBudgetMs, MAX_FILES, testHook, TimedOut } from '~/utils/limits'
@@ -63,6 +63,8 @@ export function useConversionQueue() {
     convertible.value.map((f) => (f.detection.kind === 'known' ? f.detection.format.id : '')),
   )
   const targets = computed(() => router.targetsFor(sourceIds.value))
+  /** Nothing to offer yet: what a file can become depends on the file. */
+  const waiting = computed(() => convertible.value.length === 0)
   const selected = computed(() => targets.value.find((t) => t.format.id === targetId.value && t.route) ?? null)
   /**
    * The quality the registry suggests for the selected target, or null if its encoder has no
@@ -123,8 +125,8 @@ export function useConversionQueue() {
             else bitmap.close()
           })
           .catch(() => {
-            const current = files.value.find((f) => f.id === entry.id)
-            if (current) current.error = "This file couldn't be read"
+            // No preview. That is not a verdict on the file: a browser cannot draw a TIFF, and
+            // it converts all the same. A damaged file is reported when it is converted.
           })
       }
     }
@@ -151,7 +153,8 @@ export function useConversionQueue() {
       const info = engines.info[candidate.engine]
       if (!info || !info.runtimes.includes('browser')) return false
       if (forcedEngine) return candidate.engine === forcedEngine
-      if (engines.availability.value[candidate.engine] !== true) return false
+      // Can this browser run the engine, and write this particular format with it?
+      if (engines.availability.value[`${candidate.engine}>${edge.to}`] !== true) return false
       return info.maxPixels === undefined || pixels <= info.maxPixels
     })
   }
@@ -181,7 +184,7 @@ export function useConversionQueue() {
         try {
           const outputs = await engines.convert(
             candidate.engine,
-            { blob, name, from, to, options },
+            { blob, name, from, to, options, maxPixels: MAX_PIXELS },
             (fraction) => {
               entry.progress = (hop + fraction) / route.edges.length
             },
@@ -301,6 +304,7 @@ export function useConversionQueue() {
     files,
     results,
     targets,
+    waiting,
     targetId,
     selected,
     converting,

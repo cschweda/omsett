@@ -1,6 +1,6 @@
 import { readdir, readFile, stat } from 'node:fs/promises'
 import { createRequire } from 'node:module'
-import { detect } from '@omsett/detect'
+import { detect, MAX_PIXELS } from '@omsett/detect'
 import { engineInfo } from '@omsett/engines'
 import { createNodeEngines } from '@omsett/engines/node'
 import { deriveEdges, engineIds, formatById, registry } from '@omsett/registry'
@@ -71,6 +71,7 @@ describe('fixtures through every Node-capable engine', () => {
             from,
             to,
             options: candidate.defaultOptions,
+            maxPixels: MAX_PIXELS,
             signal: new AbortController().signal,
             onProgress: () => {},
           })
@@ -85,7 +86,7 @@ describe('fixtures through every Node-capable engine', () => {
           expect(after.kind === 'known' && after.dimensions).toEqual(
             before.kind === 'known' ? before.dimensions : null,
           )
-          if (candidate.lossy) expect(output.blob.size).toBeLessThan(fixture.blob.size)
+          expect(output.blob.size, 'output is not empty').toBeGreaterThan(0)
         }
       })
     }

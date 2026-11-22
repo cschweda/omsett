@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { NOTICES, REPOSITORY } from '~/utils/links'
+import { deriveEdges } from '@omsett/registry'
 import { registry } from '~/utils/registry'
 
 useHead({ title: 'About — Omsett' })
 
 const formats = computed(() => registry.formats.map((f) => f.name))
+const conversions = deriveEdges(registry).edges.length
 </script>
 
 <template>
@@ -20,9 +22,9 @@ const formats = computed(() => registry.formats.map((f) => f.name))
             drop is read, converted, and handed back inside the tab you have open.
           </p>
           <p>
-            It is at an early stage. Today it knows {{ formats.length }} formats ({{ formats.join(', ') }}) and one
-            conversion between them. The parts that every later format will use are in place, and more formats are
-            the next piece of work.
+            It is at an early stage. Today it converts between {{ formats.length }} image formats
+            ({{ formats.join(', ') }}): {{ conversions }} conversions in all. More formats, and then documents and
+            sound, are the work ahead.
           </p>
         </div>
       </StepSection>

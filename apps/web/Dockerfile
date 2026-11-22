@@ -1,7 +1,9 @@
 # Build context is the repository root:  docker build -f apps/web/Dockerfile .
 
 # The output is static files, the same on every architecture, so build on the builder's own.
-FROM --platform=$BUILDPLATFORM node:24-alpine AS build
+# Base images are pinned by digest: a tag can be moved to different contents, a digest cannot.
+# Dependabot proposes new digests weekly (.github/dependabot.yml).
+FROM --platform=$BUILDPLATFORM node:24-alpine@sha256:116b800c3754b440ee0aa3ed2f20f5bf3d99a554bfd9adeea09ea8017f6e85f5 AS build
 WORKDIR /repo
 RUN corepack enable
 # CHANGELOG.md is read by the build: the site's What's new page is generated from it.
@@ -14,7 +16,7 @@ COPY apps/web ./apps/web
 RUN pnpm install --frozen-lockfile --filter "web..."
 RUN pnpm --filter web generate && pnpm --filter web write-headers
 
-FROM caddy:2-alpine
+FROM caddy:2-alpine@sha256:003a97808e781aa9f7e75cc2f43d34d461099031faf5e20faefb9f61126836f0
 # The stock binary carries a file capability (bind low ports). With every capability dropped,
 # the kernel refuses to exec it as a non-root user, so the capability is removed: Caddy listens
 # on 8080 and needs none.

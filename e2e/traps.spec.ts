@@ -6,6 +6,8 @@
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { expect, test, type Page } from '@playwright/test'
+import { detect } from '@omsett/detect'
+import { registry } from '@omsett/registry'
 import { describeDownload, FIXTURE, open } from './helpers'
 
 interface Trap {
@@ -14,7 +16,7 @@ interface Trap {
   detect: string
   mismatch: boolean
   guard: 'ok' | 'refused'
-  browser: 'none' | 'succeeds' | 'fails' | 'either'
+  browser: 'none' | 'succeeds' | 'fails'
   note: string | null
   absent: string | null
 }
@@ -22,10 +24,10 @@ interface Trap {
 const dir = new URL('../fixtures/_traps/', import.meta.url)
 const traps = JSON.parse(readFileSync(new URL('manifest.json', dir), 'utf8')) as Trap[]
 
-/** The size a PNG header declares, straight from the trap's bytes. */
-function declaredSize(file: string) {
-  const bytes = readFileSync(new URL(file, dir))
-  return { width: bytes.readUInt32BE(16), height: bytes.readUInt32BE(20) }
+/** The size the trap file itself declares, read from its header as the app reads it. */
+async function declaredSize(file: string) {
+  const found = await detect(new Blob([readFileSync(new URL(file, dir))]), registry.formats)
+  return found.kind === 'known' ? found.dimensions : null
 }
 
 async function convertGoodFile(page: Page) {
@@ -75,27 +77,28 @@ for (const trap of traps) {
       }
       await expect(convert).toBeDisabled()
     } else {
-      await page.getByRole('radio', { name: /WebP/ }).click()
+      // Convert it to something it is not: WebP, or PNG if it is a WebP already.
+      const target = trap.detect === 'webp' ? 'png' : 'webp'
+      if (trap.mismatch) await expect(note).toContainText('the contents are')
+      await page.locator(`[role="radio"][data-format="${target}"]`).click()
       await convert.click()
       await expect(card).toHaveAttribute('data-status', /^(done|error)$/, { timeout: 30_000 })
       const outcome = (await card.getAttribute('data-status')) === 'done' ? 'succeeds' : 'fails'
-      if (trap.browser !== 'either') expect(outcome, 'conversion').toBe(trap.browser)
+      expect(outcome, 'conversion').toBe(trap.browser)
 
       if (outcome === 'fails') {
         await expect(note).toHaveText(trap.note ?? "This file couldn't be converted")
         await expect(page.getByTestId('download')).toHaveCount(0)
       } else {
-        // If a browser forgives the damage, what it hands back must still be a real WebP of the
-        // size the file declared, not something else under a .webp name.
+        // What comes back is really the format asked for, at the size the file declared.
         const link = page.getByTestId('download')
         const output = await describeDownload(page, () => link.click())
-        expect(output.found.kind === 'known' && output.found.format.id).toBe('webp')
-        expect(output.found.kind === 'known' && output.found.dimensions).toEqual(declaredSize(trap.file))
+        expect(output.found.kind === 'known' && output.found.format.id).toBe(target)
+        expect(output.found.kind === 'known' && output.found.dimensions).toEqual(await declaredSize(trap.file))
         if (trap.absent) {
           expect(output.bytes.toString('latin1').includes(trap.absent), `output carries "${trap.absent}"`).toBe(false)
         }
       }
-      if (trap.browser === 'either') console.log(`[traps] ${test.info().project.name} ${trap.file}: ${outcome}`)
     }
 
     // The trap is spent. A good file must still convert on the same page.

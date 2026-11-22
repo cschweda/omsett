@@ -94,6 +94,12 @@ build by `apps/web/scripts/write-headers.ts`.
   `pnpm security:docs` after editing, or a test fails. Never mark a finding fixed without a test.
 - **Every conversion has a time limit** (`apps/web/app/utils/limits.ts`); past it the worker is
   terminated. A new engine needs no code for this, but must be safe to kill at any moment.
+- **A browser's decoder is never trusted with a file the app has not verified.** The canvas
+  engine reads PNG only, after `structureProblem` has passed it. To let the canvas read another
+  format, first write a structure check for it in `packages/detect`; until then libvips reads it.
+  A registry test fails if any other format is given to the canvas.
+- **Formats are ranked by their order in `formats/index.ts`.** The first four a file can become
+  are shown as large tiles, the rest as a list.
 - **Engines must agree on what they leave out.** Both drop metadata, declared as `drops` on the
   capability. If one engine for a pair kept it, what leaks would depend on the browser.
 - **Settings in the address bar are for tests and work on localhost only** (`testHook`).

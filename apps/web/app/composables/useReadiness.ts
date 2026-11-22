@@ -12,7 +12,9 @@ export function useReadiness() {
   const probed = computed(() => Object.keys(engines.availability.value).length > 0)
   /** Conversions this browser has at least one working engine for. */
   const working = computed(() =>
-    edges.filter((edge) => edge.candidates.some((c) => engines.availability.value[c.engine] === true)),
+    edges.filter((edge) =>
+      edge.candidates.some((c) => engines.availability.value[`${c.engine}>${edge.to}`] === true),
+    ),
   )
   const state = computed<'checking' | 'ready' | 'limited' | 'unavailable'>(() => {
     if (!probed.value) return 'checking'

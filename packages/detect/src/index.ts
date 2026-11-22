@@ -3,7 +3,8 @@ import { fileTypeFromBuffer } from 'file-type'
 import { HEADER_BYTES, readDimensions, type Dimensions } from './dimensions'
 
 export { readDimensions, type Dimensions } from './dimensions'
-export { MAX_BYTES, MAX_WORKING_BYTES, TOO_LARGE, pixelCount, sizeProblem, workingBytes } from './guard'
+export { MAX_BYTES, MAX_PIXELS, MAX_WORKING_BYTES, TOO_LARGE, pixelCount, sizeProblem, workingBytes } from './guard'
+export { structureProblem } from './structure'
 
 export type Detection =
   | { kind: 'known'; format: Format; ext: string; mime: string; dimensions: Dimensions | null }
