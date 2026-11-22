@@ -94,7 +94,17 @@ const home = computed(() => route.path === '/')
   height: 0.5rem;
   background: var(--rule-strong);
 }
+/* Green when this browser can convert, red when it cannot or only partly can, grey while
+   that is still being worked out. The words beside it say the same thing. */
+.mark {
+  width: 0.625rem;
+  height: 0.625rem;
+}
 .status[data-state='ready'] .mark {
-  background: var(--accent);
+  background: var(--positive);
+}
+.status[data-state='limited'] .mark,
+.status[data-state='unavailable'] .mark {
+  background: var(--signal);
 }
 </style>

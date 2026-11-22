@@ -39,6 +39,8 @@ every browser, where some used to return half a picture.
   problem with the file.
 - The "What's new" banner marks its label with a green underline in place of a full-width rule.
 - Diagrams on the Technical details page are centered.
+- The readiness mark in the navigation is green when the browser can convert and red when it
+  cannot.
 - The self-host image's base images are pinned by digest, and the deployment guide checks nvm's
   installer against a hash before running it.
 

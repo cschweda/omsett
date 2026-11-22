@@ -15,9 +15,10 @@
   --accent-text: #2450e0;
   /* Signal red. Used for one thing only: something went wrong. */
   --signal: #c8200d;
-  /* Highlight. Marks what is new, and nothing else. A bright green on the dark ground; on the
-     light ground, where that would wash out, a deep one. */
-  --highlight: #0a7d47;
+  /* Green says good news: ready to convert, and what is new. A bright green on the dark
+     ground; on the light ground, where that would wash out, a deep one. */
+  --positive: #0a7d47;
+  --highlight: var(--positive);
 
   /* The grid: twelve columns, one gutter, one margin. Everything sits on it. */
   --gutter: 24px;
@@ -56,5 +57,5 @@
   --surface: #171716;
   --accent-text: #7d9dff;
   --signal: #ff6b57;
-  --highlight: #2fe38f;
+  --positive: #2fe38f;
 }

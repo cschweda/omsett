@@ -141,5 +141,5 @@ build by `apps/web/scripts/write-headers.ts`.
 - **README:** the og:image is the first thing in the file, with any badges directly under it.
 - **Design.** Swiss: one typeface (Helvetica Neue, else Inter), the twelve-column grid in
   `tokens.css`, rules instead of boxes, square corners, no shadows, no second typeface. Blue is
-  the accent; red means something went wrong and nothing else. Tokens live in `tokens.css` only.
+  the accent; red means something went wrong or cannot be done; green means ready, or new. Tokens live in `tokens.css` only.
 - **Tone:** plain, short, no cheerleading.
