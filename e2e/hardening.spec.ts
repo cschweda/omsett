@@ -7,7 +7,12 @@ import { FIXTURE, open } from './helpers'
 
 const TINY = readFileSync(fileURLToPath(new URL('../fixtures/_cases/tiny-1x1.png', import.meta.url)))
 
+// Settings in the address bar are honored on localhost only, so the tests that rely on one
+// cannot run against a public address. That they are ignored there is itself the fix for OMS-010.
+const remote = Boolean(process.env.BASE_URL) && !/\/\/(?:localhost|127\.0\.0\.1)[:/]/.test(`${process.env.BASE_URL}/`)
+
 test('a conversion that runs past its time limit is stopped, and the page carries on', async ({ page }) => {
+  test.skip(remote, 'a public address ignores ?timeout')
   // ?timeout shortens the limit to one millisecond; it is honored on localhost only.
   await open(page, '/?timeout=1')
   await page.locator('#file-input').setInputFiles(FIXTURE)
