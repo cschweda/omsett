@@ -1,6 +1,7 @@
 <script setup lang="ts">
+import { CHANGELOG, pages, REPOSITORY } from '~/utils/links'
+
 const { state } = useServerHealth()
-const colorMode = useColorMode()
 const { public: config } = useRuntimeConfig()
 
 const status = computed(() => {
@@ -9,56 +10,84 @@ const status = computed(() => {
   if (state.value === 'unreachable') return `${base} The server isn't answering.`
   return base
 })
-
-const dark = computed(() => colorMode.value === 'dark')
-function toggle() {
-  colorMode.preference = dark.value ? 'light' : 'dark'
-}
 </script>
 
 <template>
   <footer class="footer">
-    <p>
-      Open source · Free · Accessible · MIT ·
-      <UTooltip :text="`Build ${config.commit}`">
-        <a href="https://github.com/cschweda/omsett" class="link">GitHub</a>
-      </UTooltip>
-    </p>
-    <p class="mono meaning">omsett · Norwegian — to translate; to convert</p>
-    <p data-testid="status">{{ status }}</p>
-    <UButton
-      :label="dark ? 'Switch to light mode' : 'Switch to dark mode'"
-      color="neutral"
-      variant="outline"
-      size="sm"
-      class="toggle"
-      data-testid="theme-toggle"
-      @click="toggle"
-    />
+    <div class="about">
+      <p>Omsett is free and open source, under the MIT license.</p>
+      <p>“Omsett” is Norwegian: to translate, to convert.</p>
+    </div>
+
+    <nav class="links" aria-label="Footer">
+      <ul>
+        <li><NuxtLink to="/" class="text-button">Converter</NuxtLink></li>
+        <li v-for="page in pages" :key="page.to">
+          <NuxtLink :to="page.to" class="text-button">{{ page.label }}</NuxtLink>
+        </li>
+        <li><NuxtLink to="/status" class="text-button">Status</NuxtLink></li>
+      </ul>
+      <ul>
+        <li><a :href="REPOSITORY" class="text-button">GitHub repository</a></li>
+        <li><a :href="CHANGELOG" class="text-button">Changelog</a></li>
+      </ul>
+    </nav>
+
+    <div class="state">
+      <p data-testid="status">{{ status }}</p>
+      <p class="figures">Build {{ config.commit }}</p>
+      <ThemeToggle data-testid="theme-toggle" />
+    </div>
   </footer>
 </template>
 
 <style scoped>
 .footer {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.375rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid var(--rule);
-  font-size: 0.875rem;
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  column-gap: var(--gutter);
+  row-gap: 1.5rem;
+  margin-top: 1rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--ink);
+  font-size: var(--text-small);
   color: var(--muted);
 }
 .footer p {
   margin: 0;
 }
-.link {
-  color: var(--ink);
-  text-decoration: underline;
-  text-underline-offset: 3px;
+.about {
+  grid-column: 1 / span 3;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
-.toggle {
-  margin-top: 0.5rem;
-  color: var(--ink);
+.links {
+  grid-column: 4 / span 5;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: var(--gutter);
+}
+.links ul {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.state {
+  grid-column: 9 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+}
+@media (max-width: 760px) {
+  .about,
+  .links,
+  .state {
+    grid-column: 1 / -1;
+  }
 }
 </style>

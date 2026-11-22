@@ -11,19 +11,5 @@ const label = computed(() => {
 </script>
 
 <template>
-  <UBadge
-    :label="label"
-    :color="tier === 'browser' ? 'primary' : 'neutral'"
-    variant="outline"
-    size="sm"
-    class="tier-badge mono"
-    :data-tier="tier"
-  />
+  <span class="tier" :data-tier="tier">{{ label }}</span>
 </template>
-
-<style scoped>
-.tier-badge {
-  color: var(--ink);
-  white-space: nowrap;
-}
-</style>

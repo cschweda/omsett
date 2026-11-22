@@ -44,9 +44,16 @@ export function useEngines() {
   /** Engines whose code has been fetched this session. */
   const loaded = useState<string[]>('engines-loaded', () => [])
 
+  /** Never throws: a browser that cannot start the worker simply has no engines. */
   async function probe() {
-    const { api, crashed } = engineWorker()
-    availability.value = await Promise.race([api.availability(), crashed])
+    const current = engineWorker()
+    try {
+      availability.value = await Promise.race([current.api.availability(), current.crashed])
+    } catch (error) {
+      console.warn('[omsett] the engine worker could not start', error)
+      availability.value = Object.fromEntries(Object.keys(engineInfo).map((id) => [id, false]))
+      if (engineHost === current) terminate()
+    }
   }
 
   async function convert(

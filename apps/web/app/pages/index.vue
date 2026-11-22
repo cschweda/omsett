@@ -1,11 +1,10 @@
 <script setup lang="ts">
-// The one screen: Drop, Pick, Results.
+// The one screen, in three numbered moves: files, format, result.
 const queue = useConversionQueue()
 const engines = useEngines()
 const server = useServerHealth()
-const { message } = usePoliteAnnouncer()
 
-const dropZone = useTemplateRef<{ focus: () => void }>('dropZone')
+const dropZone = useTemplateRef<{ focus: () => void; loadSample: () => Promise<void> }>('dropZone')
 const secure = ref(true)
 const isMac = ref(false)
 
@@ -37,67 +36,80 @@ function convertAnother() {
   void nextTick(() => dropZone.value?.focus())
 }
 
-onMounted(() => {
+onMounted(async () => {
   secure.value = window.isSecureContext
   isMac.value = /Mac|iPhone|iPad/.test(navigator.platform)
   window.addEventListener('keydown', onKeydown)
-  void engines.probe()
-  void server.refresh()
+  await engines.probe()
+
+  // Development only: `?demo` loads the sample and converts it, so the finished state can be
+  // looked at without clicking through. Removed from production builds.
+  if (import.meta.dev && new URLSearchParams(location.search).has('demo')) {
+    await dropZone.value?.loadSample()
+    for (let i = 0; i < 50 && queue.files.value.length === 0; i++) await new Promise((r) => setTimeout(r, 100))
+    const first = queue.targets.value.find((t) => t.route)
+    if (first) {
+      queue.select(first.format.id)
+      await queue.convertAll()
+    }
+  }
 })
 onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
 </script>
 
 <template>
-  <div class="page">
-    <header class="header">
+  <div>
+    <header class="masthead">
       <h1 class="wordmark">omsett<span class="dot">.</span></h1>
-      <p class="tagline">Drop a file. Pick a format. Nothing leaves your device.</p>
+      <p class="tagline">Drop a file. Pick a format.<br>Nothing leaves your device.</p>
     </header>
 
-    <main class="main">
+    <main>
       <p v-if="!secure" class="insecure" data-testid="insecure">
         This copy of Omsett is being served without HTTPS, so some conversions are unavailable.
       </p>
 
-      <DropZone ref="dropZone" @files="queue.add" />
+      <StepSection :step="1" title="Files" heading-id="step-files">
+        <DropZone ref="dropZone" @files="queue.add" />
+        <ul v-if="queue.files.value.length" class="rows" aria-label="Files to convert">
+          <FileCard v-for="entry in queue.files.value" :key="entry.id" :entry="entry" @remove="queue.remove" />
+        </ul>
+      </StepSection>
 
-      <ul v-if="queue.files.value.length" class="cards" aria-label="Files to convert">
-        <FileCard v-for="entry in queue.files.value" :key="entry.id" :entry="entry" @remove="queue.remove" />
-      </ul>
+      <StepSection :step="2" title="Convert to" heading-id="pick-heading">
+        <TargetPicker
+          :targets="queue.targets.value"
+          :model-value="queue.targetId.value"
+          :via-server="server.state.value === 'reachable'"
+          labelledby="pick-heading"
+          @select="queue.select"
+        />
 
-      <TargetPicker
-        :targets="queue.targets.value"
-        :model-value="queue.targetId.value"
-        :via-server="server.state.value === 'reachable'"
-        @select="queue.select"
-      />
+        <QualityControl
+          v-if="queue.quality.value !== null && queue.defaultQuality.value !== null"
+          v-model="queue.quality.value"
+          :suggested="queue.defaultQuality.value"
+        />
 
-      <QualityControl
-        v-if="queue.quality.value !== null && queue.defaultQuality.value !== null"
-        v-model="queue.quality.value"
-        :suggested="queue.defaultQuality.value"
-      />
+        <div class="convert">
+          <UButton
+            size="xl"
+            label="Convert"
+            :disabled="!queue.canConvert.value"
+            :loading="queue.converting.value"
+            class="convert-button"
+            data-testid="convert"
+            @click="queue.convertAll"
+          />
+          <span class="shortcut">
+            <UKbd :value="isMac ? '⌘' : 'Ctrl'" />
+            <UKbd value="Enter" />
+          </span>
+        </div>
+      </StepSection>
 
-      <div class="convert">
-        <UButton
-          size="xl"
-          :disabled="!queue.canConvert.value"
-          :loading="queue.converting.value"
-          class="convert-button"
-          data-testid="convert"
-          @click="queue.convertAll"
-        >
-          Convert <span aria-hidden="true">→</span>
-        </UButton>
-        <span class="shortcut muted">
-          <UKbd :value="isMac ? '⌘' : 'Ctrl'" />
-          <UKbd value="Enter" />
-        </span>
-      </div>
-
-      <section v-if="queue.results.value.length" aria-labelledby="results-heading" class="results">
-        <h2 id="results-heading" class="heading">Results</h2>
-        <ul class="cards" aria-label="Converted files">
+      <StepSection v-if="queue.results.value.length" :step="3" title="Result" heading-id="results-heading">
+        <ul class="rows" aria-label="Converted files">
           <ResultCard
             v-for="result in queue.results.value"
             :key="result.id"
@@ -107,63 +119,59 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
           />
         </ul>
         <!-- TODO(phase-1): "Download all as ZIP" when there is more than one result. -->
-        <UButton
-          label="Convert another"
-          color="neutral"
-          variant="outline"
-          class="another"
-          data-testid="another"
-          @click="convertAnother"
-        />
-      </section>
+        <div>
+          <button type="button" class="button" data-testid="another" @click="convertAnother">Convert another</button>
+        </div>
+      </StepSection>
     </main>
-
-    <AppFooter />
-
-    <!-- The app's single live region. Polite: nothing in a conversion is urgent. -->
-    <div role="status" aria-live="polite" class="sr-only" data-testid="announcer">{{ message }}</div>
   </div>
 </template>
 
 <style scoped>
-.page {
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 2rem 24px 3rem;
-  display: flex;
-  flex-direction: column;
-  gap: 2rem;
+/* The wordmark is the one loud thing on the page. Everything under it is quiet. */
+.masthead {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  column-gap: var(--gutter);
+  align-items: end;
+  padding-bottom: 2.5rem;
 }
 .wordmark {
-  margin: 0;
-  font-size: clamp(3rem, 10vw, 5rem);
+  grid-column: 1 / span 8;
+  margin: 0 0 0 -0.045em;
+  font-size: clamp(4.5rem, 15vw, 11rem);
   font-weight: 700;
-  line-height: 1;
-  letter-spacing: -0.055em;
+  line-height: 0.82;
+  letter-spacing: -0.06em;
 }
 .dot {
   color: var(--accent);
 }
 .tagline {
-  margin: 0.5rem 0 0;
-  font-size: 1.125rem;
-  color: var(--muted);
-}
-.main {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
-.insecure {
+  grid-column: 9 / -1;
   margin: 0;
-  padding: 0.75rem 1rem;
-  border: 1px solid var(--rule-strong);
-  border-radius: 4px;
+  font-size: var(--text-lead);
+  font-weight: 500;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
 }
-.cards {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
+@media (max-width: 760px) {
+  .wordmark,
+  .tagline {
+    grid-column: 1 / -1;
+  }
+  .tagline {
+    margin-top: 1.25rem;
+  }
+}
+
+.insecure {
+  margin: 0 0 1.5rem;
+  padding: 0.75rem 1rem;
+  border-left: 3px solid var(--accent);
+  background: var(--surface);
+}
+.rows {
   margin: 0;
   padding: 0;
 }
@@ -175,37 +183,30 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
 }
 /* 20px bold counts as large text, where white on Omsett blue passes (4.4:1 against a 3:1 bar). */
 .convert-button {
-  font-size: 1.25rem;
-  font-weight: 700;
-  padding: 0.75rem 1.75rem;
+  padding: 0.9rem 2.5rem;
+  border-radius: 0;
   background: var(--accent);
   color: var(--on-accent);
+  font-size: var(--text-lead);
+  font-weight: 700;
+  letter-spacing: -0.01em;
   /* No color transition: halfway between the disabled and enabled colors the label is unreadable. */
   transition: none;
+}
+.convert-button:hover:not(:disabled) {
+  background: var(--ink);
+  color: var(--bg);
 }
 .convert-button:disabled {
   background: transparent;
   color: var(--muted);
-  box-shadow: inset 0 0 0 2px var(--rule-strong);
+  box-shadow: inset 0 0 0 1px var(--rule-strong);
   opacity: 1;
 }
 .shortcut {
   display: inline-flex;
   gap: 0.25rem;
   align-items: center;
-}
-.results {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-.heading {
-  margin: 0;
-  font-size: 1.5rem;
-  font-weight: 700;
-}
-.another {
-  align-self: flex-start;
-  color: var(--ink);
+  color: var(--muted);
 }
 </style>

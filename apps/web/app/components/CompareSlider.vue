@@ -62,9 +62,9 @@ watch(
     >
       <canvas ref="afterCanvas" class="layer" data-side="after" />
       <canvas ref="beforeCanvas" class="layer before" data-side="before" />
-      <span class="tag left mono">{{ beforeLabel }}</span>
-      <span class="tag right mono">{{ afterLabel }}</span>
-      <span class="divider" aria-hidden="true"><span class="grip mono">↔</span></span>
+      <span class="tag left figures">{{ beforeLabel }}</span>
+      <span class="tag right figures">{{ afterLabel }}</span>
+      <span class="divider" aria-hidden="true"><span class="grip" /></span>
       <input
         v-model.number="position"
         type="range"
@@ -76,22 +76,20 @@ watch(
         data-testid="compare-control"
       >
     </div>
-    <figcaption class="caption muted">
-      Drag the divider. {{ beforeLabel }} is on the left, {{ afterLabel }} on the right.
-    </figcaption>
+    <figcaption class="caption">Drag the line to compare the original, left, with the result, right.</figcaption>
   </figure>
 </template>
 
 <style scoped>
 .compare {
-  margin: 0.75rem 0 0;
+  grid-column: 1 / -1;
+  margin: 1rem 0 0;
 }
 .stage {
   position: relative;
   /* Never taller than most of the window; the width follows, so the picture is never stretched. */
   width: 100%;
   overflow: hidden;
-  border: 1px solid var(--rule);
   /* A checkerboard behind both pictures, so transparency reads as transparency. */
   background-color: #fff;
   background-image:
@@ -114,18 +112,19 @@ watch(
 }
 .tag {
   position: absolute;
-  top: 0.5rem;
-  padding: 0.125rem 0.5rem;
+  top: 0;
+  padding: 0.25rem 0.625rem;
   background: #0d0d0d;
   color: #f4f4f2;
-  font-size: 0.75rem;
+  font-size: var(--text-small);
+  font-weight: 700;
   pointer-events: none;
 }
 .left {
-  left: 0.5rem;
+  left: 0;
 }
 .right {
-  right: 0.5rem;
+  right: 0;
 }
 .divider {
   position: absolute;
@@ -143,13 +142,9 @@ watch(
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  display: grid;
-  place-items: center;
-  width: 2.25rem;
-  height: 2.25rem;
-  border-radius: 50%;
+  width: 0.75rem;
+  height: 2.75rem;
   background: #f4f4f2;
-  color: #0d0d0d;
   box-shadow: 0 0 0 1px #0d0d0d;
 }
 /* A real range input does the work: it covers the stage, invisible, and takes mouse, touch, and keys. */
@@ -167,7 +162,8 @@ watch(
   outline-offset: 2px;
 }
 .caption {
-  margin-top: 0.375rem;
-  font-size: 0.8125rem;
+  margin-top: 0.5rem;
+  font-size: var(--text-small);
+  color: var(--muted);
 }
 </style>

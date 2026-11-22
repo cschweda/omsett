@@ -21,6 +21,9 @@ const note = computed(() => {
   return ''
 })
 
+// A note is either information (a mislabeled file) or a failure. Only a failure is red.
+const failed = computed(() => Boolean(props.entry.error || props.entry.problem || !known.value))
+
 // Draw the worker-made bitmap; the page itself never decodes the file.
 watch(
   () => [props.entry.thumbnail, canvas.value] as const,
@@ -35,94 +38,100 @@ watch(
 </script>
 
 <template>
-  <UCard as="li" class="file-card" :data-status="entry.status" :ui="{ body: 'p-3 sm:p-3' }">
-    <div class="row">
-      <div class="thumb" aria-hidden="true">
-        <canvas v-show="entry.thumbnail" ref="canvas" />
-      </div>
-      <div class="meta">
-        <p class="name mono">{{ entry.file.name }}</p>
-        <p class="facts">
-          <UBadge :label="label" color="neutral" variant="subtle" size="sm" class="mono format" />
-          <span class="mono muted">{{ formatBytes(entry.file.size) }}</span>
-          <span v-if="known?.dimensions" class="mono muted">
-            {{ known.dimensions.width }} × {{ known.dimensions.height }}
-          </span>
-        </p>
-        <p v-if="note" class="note" data-testid="file-note">{{ note }}</p>
-      </div>
-      <UButton
-        label="Remove"
-        color="neutral"
-        variant="outline"
-        size="sm"
-        :aria-label="`Remove ${entry.file.name}`"
-        class="remove"
-        @click="$emit('remove', entry.id)"
-      />
+  <li class="file-card" :data-status="entry.status">
+    <div class="thumb" aria-hidden="true">
+      <canvas v-show="entry.thumbnail" ref="canvas" />
     </div>
+    <div class="meta">
+      <p class="name">{{ entry.file.name }}</p>
+      <p class="facts figures">
+        <span class="format">{{ label }}</span>
+        <span>{{ formatBytes(entry.file.size) }}</span>
+        <span v-if="known?.dimensions">{{ known.dimensions.width }} × {{ known.dimensions.height }}</span>
+      </p>
+      <p v-if="note" class="note" :class="{ wrong: failed }" data-testid="file-note">{{ note }}</p>
+    </div>
+    <button
+      type="button"
+      class="text-button remove"
+      :aria-label="`Remove ${entry.file.name}`"
+      @click="$emit('remove', entry.id)"
+    >
+      Remove
+    </button>
     <UProgress
       v-if="entry.status !== 'ready'"
       :model-value="Math.round(entry.progress * 100)"
       :max="100"
-      size="sm"
+      size="xs"
       class="progress"
       :aria-label="`Converting ${entry.file.name}`"
     />
-  </UCard>
+  </li>
 </template>
 
 <style scoped>
 .file-card {
-  list-style: none;
-  background: var(--surface);
-}
-.row {
-  display: flex;
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr) auto;
+  column-gap: 1rem;
   align-items: center;
-  gap: 0.75rem;
+  padding: 0.875rem 0;
+  border-top: 1px solid var(--rule);
+  list-style: none;
+}
+.file-card:last-child {
+  border-bottom: 1px solid var(--rule);
 }
 .thumb {
-  flex: none;
-  width: 64px;
-  height: 64px;
+  width: 56px;
+  height: 56px;
   display: grid;
   place-items: center;
-  border: 1px solid var(--rule);
-  background: var(--bg);
+  background: var(--surface);
 }
 .thumb canvas {
-  max-width: 64px;
-  max-height: 64px;
-}
-.meta {
-  min-width: 0;
-  flex: 1;
+  max-width: 56px;
+  max-height: 56px;
 }
 .name {
   margin: 0;
+  font-weight: 500;
   overflow-wrap: anywhere;
 }
 .facts {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
-  gap: 0.5rem;
-  margin: 0.25rem 0 0;
-  font-size: 0.875rem;
+  gap: 0 0.875rem;
+  margin: 0.125rem 0 0;
+  font-size: var(--text-small);
+  color: var(--muted);
 }
 .format {
   color: var(--ink);
+  font-weight: 700;
 }
 .note {
   margin: 0.25rem 0 0;
-  font-size: 0.875rem;
+  font-size: var(--text-small);
+}
+.note.wrong {
+  color: var(--signal);
+  font-weight: 700;
+}
+.note.wrong::before {
+  content: '';
+  display: inline-block;
+  width: 0.5rem;
+  height: 0.5rem;
+  margin-right: 0.45rem;
+  background: var(--signal);
 }
 .remove {
-  color: var(--ink);
-  flex: none;
+  font-size: var(--text-small);
 }
 .progress {
+  grid-column: 1 / -1;
   margin-top: 0.75rem;
 }
 </style>

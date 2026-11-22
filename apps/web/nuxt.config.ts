@@ -11,7 +11,11 @@ export default defineNuxtConfig({
   modules: ['@nuxt/ui'],
   css: ['~/assets/css/main.css'],
 
-  nitro: { preset: 'static' },
+  // Each page is written out as its own index.html, so a plain file server can answer for it.
+  nitro: {
+    preset: 'static',
+    prerender: { routes: ['/', '/about', '/technical', '/whats-new', '/status'] },
+  },
 
   // Production headers and policies come from security-headers.ts via scripts/write-headers.ts.
   // The dev server only needs cross-origin isolation, so threads work while developing. Both
@@ -31,7 +35,8 @@ export default defineNuxtConfig({
 
   // Fonts are self-hosted from public/fonts; nothing is fetched from a font service.
   ui: { fonts: false },
-  colorMode: { preference: 'dark', fallback: 'dark' },
+  // Follows the device. Where the device does not say, ink on paper: the Swiss default.
+  colorMode: { preference: 'system', fallback: 'light' },
   // Icons are bundled; the app never calls the Iconify API.
   icon: { provider: 'none', fallbackToApi: false, clientBundle: { scan: true } },
 

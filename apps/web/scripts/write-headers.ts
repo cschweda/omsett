@@ -16,7 +16,8 @@ const DATA_TYPES = /type\s*=\s*["']?(?:application\/json|application\/ld\+json)/
 const INLINE_SCRIPT = /<script\b([^>]*)>([\s\S]*?)<\/script>/gi
 const POLICY_META = /<meta http-equiv="Content-Security-Policy"[^>]*>/i
 
-const pages = (await readdir(publicDir)).filter((name) => name.endsWith('.html'))
+// Every page, at any depth: each route is prerendered as its own index.html.
+const pages = (await readdir(publicDir, { recursive: true })).filter((name) => name.endsWith('.html'))
 const sources = new Map<string, string>()
 const hashes = new Set<string>()
 for (const name of pages) {
@@ -86,9 +87,9 @@ const nginx = [
   '',
   directives(siteWide, ''),
   '',
-  '# The app shell is revalidated on every visit, so a deploy is seen at once. Everything it',
-  '# loads has a content hash in its name.',
-  'location = /index.html {',
+  '# Pages are revalidated on every visit, so a deploy is seen at once. Everything they load',
+  '# has a content hash in its name.',
+  'location ~* \\.html$ {',
   directives({ ...siteWide, 'Cache-Control': 'no-cache' }, '    '),
   '}',
   ...[...scoped].flatMap(([path, headers]) => [

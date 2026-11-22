@@ -2,6 +2,14 @@
   <img src="brand/og.png" alt="Omsett — open-source file converter. Drop a file. Pick a format. Nothing leaves your device.">
 </p>
 
+<p align="center">
+  <a href="https://forge.laravel.com/chris-schweda/aged-autumn-jm7/3514825"><img src="https://img.shields.io/endpoint?url=https%3A%2F%2Fforge.laravel.com%2Fsite-badges%2F43519b34-25cc-454e-9f75-ce22271fdc1f&style=plastic" alt="Laravel Forge site deployment status"></a>
+  <a href="https://github.com/cschweda/omsett/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/cschweda/omsett/ci.yml?branch=main&label=tests&style=plastic" alt="Test status"></a>
+  <a href="https://omsett.com"><img src="https://img.shields.io/website?url=https%3A%2F%2Fomsett.com&label=omsett.com&style=plastic" alt="Website status"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/cschweda/omsett?style=plastic" alt="MIT license"></a>
+  <a href="CHANGELOG.md"><img src="https://img.shields.io/github/last-commit/cschweda/omsett?label=updated&style=plastic" alt="Last updated"></a>
+</p>
+
 # Omsett
 
 **Drop a file. Pick a format. Nothing leaves your device.**
@@ -10,7 +18,7 @@ Omsett is a free, open-source, accessible file converter. Every conversion that 
 
 *Omsett* is Norwegian: to translate; to convert.
 
-> **Status: pre-alpha.** Phase 0 is built: one real conversion, PNG → WebP, running entirely in the browser, with the plumbing every later format will use. Watch or star to follow along.
+> **Status: pre-alpha, and live at [omsett.com](https://omsett.com).** One real conversion so far, PNG → WebP, running entirely in the browser, with the plumbing every later format will use. The site's own [About](https://omsett.com/about), [Technical details](https://omsett.com/technical), and [What's new](https://omsett.com/whats-new) pages are kept current with the code.
 
 ## What it will do
 
