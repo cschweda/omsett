@@ -7,6 +7,30 @@ The paragraph that opens a version is its teaser: the home page shows its first 
 in the "What's new" banner, so keep it to two or three sentences on what a visitor will notice.
 A line beginning "Released" gives the date.
 
+## 0.7.0
+
+Released 22 November 2026.
+
+Omsett now reads Photoshop files, Windows icons, JPEG 2000, BMP and QOI, and writes BMP and QOI.
+A Photoshop file comes out as the finished picture with its layers merged; an icon comes out at
+its largest size.
+
+### Added
+
+- **PSD, ICO, JPEG 2000, BMP and QOI as sources; BMP and QOI as targets.** They are read by
+  ImageMagick, compiled for the browser. It is large (15.5 MB, about 5.5 MB as sent), so it is
+  fetched only when one of these formats is involved, and the picker says so first.
+- ImageMagick is always told which format it is reading, from the file's contents, and is never
+  left to guess.
+- Nine trap files: each of the five formats cut off halfway, an icon that points outside its own
+  file, and a BMP, a QOI and a Photoshop file that state an impossible size.
+
+### Known
+
+- ICO, PSD and JPEG 2000 are read but not written.
+- A file with altered pixel data but a whole structure converts, as an altered picture: these
+  formats carry no checksum.
+
 ## 0.6.0
 
 Released 22 November 2026.

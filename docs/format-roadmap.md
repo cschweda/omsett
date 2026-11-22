@@ -37,10 +37,14 @@ When a format ships, update its row here, in the same change.
 | HEIC / HEIF | yes | no | Browser | libheif + libde265 (WASM), the `heif` engine | Done (read). Decoded to PNG, then on to any other format. Can be switched off in one line: `packages/registry/src/switches.ts`. Not written: no HEVC encoder is shipped (x265 is GPL, and encoding carries more patent exposure than decoding) |
 | SVG (to a raster image) | yes | no | Browser | resvg (WASM), the `resvg` engine | Done. Drawn to PNG, then on to any other format. Text is drawn in Inter (Latin only); linked pictures are left out; no script runs. libvips's own SVG module was tried first and dropped: it has no fonts, so all text vanished |
 | SVGZ | yes | no | Browser | gunzip, then resvg | Planned |
-| BMP, ICO, CUR, ICNS, TGA, PPM/PGM/PBM/PAM, QOI, PCX, DDS, SGI, Sun Raster | yes | yes | Browser | ImageMagick (WASM) | Planned. Needs a second engine and a damage test per format |
-| JPEG 2000, APNG, MNG | yes | yes | Browser | ImageMagick (WASM) | Planned |
+| BMP, QOI | yes | yes | Browser | ImageMagick (WASM), the `magick` engine | Done |
+| ICO | yes | no | Browser | ImageMagick (WASM) | Done (read, the largest size in the file). Writing waits for a "favicon" preset that resizes |
+| CUR, ICNS, TGA, PPM/PGM/PBM/PAM, PCX, DDS, SGI, Sun Raster | yes | yes | Browser | ImageMagick (WASM) | Planned. ImageMagick reads them all; each still needs detection by content (several have no signature), a size reader and trap files |
+| JPEG 2000 | yes | no | Browser | ImageMagick (WASM) | Done (read). Writing is planned |
+| APNG, MNG | yes | yes | Browser | ImageMagick (WASM) | Planned |
 | OpenEXR, Radiance HDR, FITS | yes | some | Browser | ImageMagick (WASM) | Planned |
-| PSD, PSB | yes | no | Browser | ImageMagick (WASM) | Planned (flattened). Layers are not kept |
+| PSD | yes | no | Browser | ImageMagick (WASM) | Done (read, flattened). Layers are not kept |
+| PSB | yes | no | Browser | ImageMagick (WASM) | Planned |
 | Camera RAW (CR2, CR3, NEF, ARW, DNG, …) | yes | no | Browser | LibRaw (WASM) | Planned. Large files may be sent to the desktop app |
 | DICOM | yes | no | Browser | ImageMagick or dicom.ts | Planned |
 | iPhone Live Photo (LIVP) | yes | no | Browser | unzip to HEIC + MOV | Planned |
@@ -209,7 +213,7 @@ When a format ships, update its row here, in the same change.
 
 ## Suggested order
 
-1. The rest of the images: the ImageMagick set, and SVGZ. AVIF, JPEG XL, HEIC (read) and SVG (read) are done.
+1. The rest of the images: the remaining ImageMagick formats, and SVGZ. AVIF, JPEG XL, HEIC, SVG, BMP, QOI, PSD, ICO and JPEG 2000 are done.
 2. Data, subtitles, fonts: small JavaScript libraries, no large downloads.
 3. Archives, then audio.
 4. Documents and e-books through Pandoc; then the PDF tools.

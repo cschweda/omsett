@@ -65,6 +65,15 @@ export const resvgInfo: EngineInfo = {
   sourceUrl: 'https://github.com/thx/resvg-js',
 }
 
+// ImageMagick, from magick-wasm: one large binary and a loader that is bundled with the app.
+export const magickInfo: EngineInfo = {
+  id: 'magick',
+  sizeBytes: 15_488_888,
+  runtimes: ['browser', 'node'],
+  license: 'Apache-2.0',
+  sourceUrl: 'https://github.com/dlemstra/magick-wasm',
+}
+
 /** The font files resvg is given, from @fontsource/inter. */
 export const resvgFonts = ['inter-latin-400-normal.woff2', 'inter-latin-700-normal.woff2']
 
@@ -82,4 +91,5 @@ export const engineInfo: Record<string, EngineInfo> = {
   [vipsJxlInfo.id]: vipsJxlInfo,
   [heifInfo.id]: heifInfo,
   [resvgInfo.id]: resvgInfo,
+  [magickInfo.id]: magickInfo,
 }

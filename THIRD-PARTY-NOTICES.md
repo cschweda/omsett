@@ -75,6 +75,16 @@ encoder, so it does not read or write HEIC.
   OFL-1.1.
 - **Source:** <https://github.com/thx/resvg-js>, which builds <https://github.com/linebender/resvg>.
 
+### magick-wasm 0.0.46
+
+- **What it is:** ImageMagick 7 compiled to WebAssembly. It reads and writes the formats nothing
+  else here does. Shipped as `magick.wasm` (15.5 MB), fetched only when one of those is converted.
+- **License:** Apache-2.0 for magick-wasm; ImageMagick is under the ImageMagick License, and the
+  libraries built into it keep their own. Its `NOTICE` file is served at
+  `/engines/magick.NOTICE.txt`.
+- **Source:** <https://github.com/dlemstra/magick-wasm>, which builds
+  <https://github.com/ImageMagick/ImageMagick>.
+
 ### canvas
 
 The browser's own `OffscreenCanvas` encoder. Nothing is downloaded; the wrapper around it is

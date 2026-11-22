@@ -27,6 +27,9 @@ const tiff: WriteSpec = { format: 'tiff', lossy: false, defaultOptions: { compre
 const avif: WriteSpec = { format: 'avif', lossy: true, defaultOptions: { quality: 55, effort: 2 }, drops: DROPPED }
 const jxl: WriteSpec = { format: 'jxl', lossy: true, defaultOptions: { quality: 85 }, drops: DROPPED }
 
+const bmp: WriteSpec = { format: 'bmp', lossy: false, drops: DROPPED }
+const qoi: WriteSpec = { format: 'qoi', lossy: false, drops: DROPPED }
+
 /** What plain libvips reads and writes. Its two optional modules add to this, never replace it. */
 const CORE = ['png', 'jpeg', 'webp', 'gif', 'tiff']
 const CORE_WRITES = [webp, jpeg, png, gif, tiff]
@@ -58,6 +61,12 @@ export const capabilities: Capability[] = [
   // resvg draws an SVG and hands back a PNG, on the same terms as HEIC: other engines go on
   // from there. It is given Omsett's own typeface, since a browser tab has no fonts to offer.
   { engine: 'resvg', tier: 'browser', reads: ['svg'], writes: [png], priority: 30 },
+
+  // ImageMagick, for the long tail of formats nothing else here reads. It is large, so it is
+  // the last resort: it reads these to PNG and writes them from PNG, and every other pair goes
+  // through that step. Each file is read as the one format it was identified as, never guessed.
+  { engine: 'magick', tier: 'browser', reads: ['bmp', 'qoi', 'psd', 'ico', 'jp2'], writes: [png], priority: 40 },
+  { engine: 'magick', tier: 'browser', reads: ['png'], writes: [bmp, qoi], priority: 40 },
 
   // libvips with its JPEG XL module, on the same terms.
   { engine: 'vips-jxl', tier: 'browser', reads: CORE, writes: [jxl], priority: 30 },

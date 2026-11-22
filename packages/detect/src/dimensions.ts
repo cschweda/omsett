@@ -144,8 +144,52 @@ const jxl: Reader = (bytes) => {
   return { width, height }
 }
 
+/** BMP: width and height are little-endian at 18 and 22; a negative height means top-down. */
+const bmp: Reader = (bytes) => {
+  if (bytes.length < 26) return null
+  const v = view(bytes)
+  return { width: Math.abs(v.getInt32(18, true)), height: Math.abs(v.getInt32(22, true)) }
+}
+
+/** PSD: height then width, big-endian, at 14 and 18. */
+const psd: Reader = (bytes) => {
+  if (bytes.length < 22) return null
+  const v = view(bytes)
+  return { width: v.getUint32(18), height: v.getUint32(14) }
+}
+
+/** QOI: width then height, big-endian, after the four-byte signature. */
+const qoi: Reader = (bytes) => {
+  if (bytes.length < 12) return null
+  const v = view(bytes)
+  return { width: v.getUint32(4), height: v.getUint32(8) }
+}
+
+/** ICO holds several sizes; the largest is the one that is read. A stated 0 means 256. */
+const ico: Reader = (bytes) => {
+  if (bytes.length < 6) return null
+  const count = view(bytes).getUint16(4, true)
+  let best: Dimensions | null = null
+  for (let i = 0; i < count && 6 + i * 16 + 2 <= bytes.length; i++) {
+    const found = { width: bytes[6 + i * 16]! || 256, height: bytes[7 + i * 16]! || 256 }
+    if (!best || found.width * found.height > best.width * best.height) best = found
+  }
+  return best
+}
+
+/** JPEG 2000: the "ihdr" box gives height then width. */
+const jp2: Reader = (bytes) => {
+  for (let i = 4; i + 12 <= bytes.length; i++) {
+    if (bytes[i] === 0x69 && bytes[i + 1] === 0x68 && bytes[i + 2] === 0x64 && bytes[i + 3] === 0x72) {
+      const v = view(bytes)
+      return { width: v.getUint32(i + 8), height: v.getUint32(i + 4) }
+    }
+  }
+  return null
+}
+
 /** Keyed by `file-type` ext value. A format with no reader simply has unknown dimensions. */
-const readers: Record<string, Reader> = { png, apng: png, jpg: jpeg, webp, gif, tif: tiff, avif: heif, heic: heif, jxl }
+const readers: Record<string, Reader> = { png, apng: png, jpg: jpeg, webp, gif, tif: tiff, avif: heif, heic: heif, jxl, bmp, psd, qoi, ico, jp2 }
 
 /** How much of the file a header reader may need. */
 export const HEADER_BYTES = 512 * 1024

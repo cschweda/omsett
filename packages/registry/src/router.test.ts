@@ -27,17 +27,19 @@ describe('router, real registry', () => {
     for (const edge of deriveEdges(registry).edges) {
       const engines = edge.candidates.map((c) => c.engine)
       if (edge.from !== 'png') expect(engines, `${edge.from} → ${edge.to}`).not.toContain('canvas')
-      for (const engine of engines) expect(engine === 'canvas' || engine === 'heif' || engine === 'resvg' || engine.startsWith('vips')).toBe(true)
+      for (const engine of engines) expect(engine === 'canvas' || ['heif', 'resvg', 'magick'].includes(engine) || engine.startsWith('vips')).toBe(true)
     }
   })
 
-  it('converts between seven formats, in order of general usefulness, and reads HEIC and SVG', () => {
+  it('lists formats in order of general usefulness, and routes every pair that can be written', () => {
     const all = createRouter(everything)
     const ids = everything.formats.map((f) => f.id)
-    expect(ids).toEqual(['webp', 'jpeg', 'png', 'avif', 'gif', 'tiff', 'jxl', 'heic', 'svg'])
+    expect(ids).toEqual(['webp', 'jpeg', 'png', 'avif', 'gif', 'tiff', 'jxl', 'bmp', 'qoi', 'heic', 'svg', 'psd', 'ico', 'jp2'])
+    const readOnly = new Set(everything.formats.filter((f) => f.readOnly).map((f) => f.id))
+    expect([...readOnly].sort()).toEqual(['heic', 'ico', 'jp2', 'psd', 'svg'])
     // Every pair converts, directly or through a step in between; nothing is written as HEIC.
     for (const from of ids) {
-      for (const to of ids) expect(all.route(from, to) === null, `${from} → ${to}`).toBe(from === to || to === 'heic' || to === 'svg')
+      for (const to of ids) expect(all.route(from, to) === null, `${from} → ${to}`).toBe(from === to || readOnly.has(to))
     }
     // HEIC is decoded to PNG first, without loss, and goes on from there.
     expect(all.route('heic', 'png')!.edges.map((e) => e.candidates[0]!.engine)).toEqual(['heif'])
@@ -73,7 +75,7 @@ describe('router, real registry', () => {
 
   it('offers plain libvips, not a module, for the pairs plain libvips covers', () => {
     for (const edge of deriveEdges(registry).edges) {
-      if ([edge.from, edge.to].some((id) => ['avif', 'jxl', 'heic', 'svg'].includes(id))) continue
+      if ([edge.from, edge.to].some((id) => ['avif', 'jxl', 'heic', 'svg', 'bmp', 'qoi', 'psd', 'ico', 'jp2'].includes(id))) continue
       for (const c of edge.candidates) expect(['canvas', 'vips'], `${edge.from} → ${edge.to}`).toContain(c.engine)
     }
   })
@@ -85,8 +87,11 @@ describe('router, real registry', () => {
     expect(lost('jpeg', 'webp')).toContain('lossy-to-lossy')
     expect(lost('gif', 'webp')).toContain('animation-lost')
     expect(lost('tiff', 'png')).toContain('pages-lost')
-    // every engine drops metadata, and says so
+    expect(lost('psd', 'png')).toContain('layers-lost')
+    // every engine drops metadata, and says so wherever both formats could have carried it
+    const carries = (id: string) => registry.formats.find((f) => f.id === id)!.traits.includes('metadata')
     for (const edge of deriveEdges(registry).edges) {
+      if (!carries(edge.from) || !carries(edge.to)) continue
       expect(edge.warnings.map((w) => w.id), `${edge.from} → ${edge.to}`).toContain('metadata-lost')
     }
   })

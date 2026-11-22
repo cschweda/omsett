@@ -17,6 +17,11 @@ const samples: Record<string, string> = {
   jxl: 'jxl/sample.jxl',
   heic: 'heic/sample.heic',
   svg: 'svg/sample.svg',
+  bmp: 'bmp/sample.bmp',
+  qoi: 'qoi/sample.qoi',
+  psd: 'psd/sample.psd',
+  ico: 'ico/sample.ico',
+  jp2: 'jp2/sample.jp2',
 }
 const path = (id: string) => fileURLToPath(new URL(`../fixtures/${samples[id]}`, import.meta.url))
 
