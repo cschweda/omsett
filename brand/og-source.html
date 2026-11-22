@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<style>
+  @font-face { font-family: "Space Grotesk"; font-weight: 700; src: url("node_modules/@fontsource/space-grotesk/files/space-grotesk-latin-700-normal.woff2") format("woff2"); }
+  @font-face { font-family: "Space Grotesk"; font-weight: 500; src: url("node_modules/@fontsource/space-grotesk/files/space-grotesk-latin-500-normal.woff2") format("woff2"); }
+  @font-face { font-family: "JetBrains Mono"; font-weight: 400; src: url("node_modules/@fontsource/jetbrains-mono/files/jetbrains-mono-latin-400-normal.woff2") format("woff2"); }
+  @font-face { font-family: "JetBrains Mono"; font-weight: 500; src: url("node_modules/@fontsource/jetbrains-mono/files/jetbrains-mono-latin-500-normal.woff2") format("woff2"); }
+
+  :root {
+    --bg: #0d0d0d;
+    --ink: #f4f4f2;
+    --muted: #8a8a86;
+    --rule: #2a2a28;
+    --accent: #3b6cff;       /* omsett blue */
+    --accent-ink: #0d0d0d;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1200px; height: 630px; background: var(--bg); overflow: hidden; }
+  body { font-family: "Space Grotesk", Inter, sans-serif; color: var(--ink); position: relative; }
+
+  /* 12-column Swiss grid, 48px margins, 24px gutters */
+  .grid {
+    position: absolute; inset: 0; padding: 48px;
+    display: grid; grid-template-columns: repeat(12, 1fr); grid-template-rows: auto 1fr auto; column-gap: 24px;
+  }
+  .hairline { position: absolute; left: 48px; right: 48px; height: 1px; background: var(--rule); }
+  .hairline.top { top: 96px; }
+  .hairline.bottom { bottom: 96px; }
+
+  .kicker {
+    grid-column: 1 / 9; white-space: nowrap; grid-row: 1;
+    font-family: "JetBrains Mono", monospace; font-weight: 500; font-size: 17px; letter-spacing: 0.14em;
+    text-transform: uppercase; color: var(--muted); padding-top: 2px;
+  }
+  .kicker b { color: var(--ink); font-weight: 500; }
+
+  .mark { grid-column: 1 / 9; grid-row: 2; align-self: center; }
+  .wordmark {
+    font-weight: 700; font-size: 216px; line-height: 0.86; letter-spacing: -0.055em; color: var(--ink);
+    margin-left: -8px; /* optical alignment of the o */
+  }
+  .meaning {
+    font-family: "JetBrains Mono", monospace; font-weight: 400; font-size: 20px; letter-spacing: 0.02em;
+    color: var(--muted); margin-top: 26px; padding-left: 4px;
+  }
+  .meaning b { color: var(--ink); font-weight: 500; }
+  .meaning i { font-style: normal; color: var(--accent); }
+  .wordmark .dot { color: var(--accent); }
+
+  .tagline {
+    grid-column: 1 / 8; grid-row: 3; align-self: end;
+    font-weight: 500; font-size: 28px; line-height: 1.2; letter-spacing: -0.01em; color: var(--ink);
+  }
+  .tagline span { color: var(--muted); }
+
+  /* accent block, columns 9–12, full height */
+  .block {
+    position: absolute; top: 0; right: 0; width: 352px; height: 630px; background: var(--accent);
+    padding: 48px 40px; display: flex; flex-direction: column; justify-content: space-between;
+  }
+  .pairs { font-family: "JetBrains Mono", monospace; font-weight: 500; font-size: 26px; line-height: 1.55; color: var(--accent-ink); letter-spacing: -0.01em; }
+  .pairs div { display: grid; grid-template-columns: 1fr 34px 1fr; align-items: baseline; }
+  .pairs .to { text-align: right; }
+  .pairs .arr { text-align: center; opacity: 0.6; }
+  .bigarrow {
+    font-weight: 700; font-size: 300px; line-height: 0.7; color: var(--accent-ink); letter-spacing: -0.08em;
+    margin-left: -10px; margin-bottom: -22px;
+  }
+  .domain {
+    font-family: "JetBrains Mono", monospace; font-weight: 500; font-size: 20px; letter-spacing: 0.08em;
+    color: var(--accent-ink);
+  }
+</style>
+</head>
+<body>
+  <div class="hairline top"></div>
+  <div class="hairline bottom"></div>
+  <div class="grid">
+    <div class="kicker"><b>Open source</b> &nbsp;·&nbsp; <b>Free</b> &nbsp;·&nbsp; <b>Accessible</b> &nbsp;·&nbsp; Runs in your browser</div>
+    <div class="mark">
+      <div class="wordmark">omsett<span class="dot">.</span></div>
+      <div class="meaning"><b>omsett</b> &nbsp;<i>Norwegian</i>&nbsp; — to translate; to convert</div>
+    </div>
+    <div class="tagline">Drop a file. Pick a format.<br><span>Nothing leaves your device.</span></div>
+  </div>
+  <div class="block">
+    <div class="pairs">
+      <div><span>heic</span><span class="arr">→</span><span class="to">jpg</span></div>
+      <div><span>wav</span><span class="arr">→</span><span class="to">mp3</span></div>
+      <div><span>docx</span><span class="arr">→</span><span class="to">pdf</span></div>
+      <div><span>png</span><span class="arr">→</span><span class="to">webp</span></div>
+    </div>
+    <div class="bigarrow">→</div>
+    <div class="domain">omsett.com</div>
+  </div>
+</body>
+</html>
