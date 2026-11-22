@@ -173,7 +173,7 @@ services:
 
 ## UI / UX
 
-**One screen, three moves: drop, pick, download.** Dark by default, big type, big targets, and nothing on the page that isn't one of those three moves. The "infographic" feel comes from making the format picker itself the visual centerpiece rather than from decoration.
+**One screen, three moves: drop, pick, download.** Big type, big targets, and nothing on the page that isn't one of those three moves. The "infographic" feel comes from making the format picker itself the visual centerpiece rather than from decoration.
 
 **The flow:**
 
@@ -203,20 +203,33 @@ services:
 
 **Mobile.** Same screen; the picker becomes a horizontally scrolling category strip with a bottom-sheet tile grid. On Android and desktop Chromium the share sheet can send a file straight into Omsett via the PWA `share_target`; iOS has no `share_target`, so iPhone users open the PWA and choose the file.
 
+### As built, and how it scales
+
+The interface as built sets the three moves as three numbered bands on a twelve-column grid: a label column on the left, the work on the right. A format is not a box but a word, set at 40 px under a rule in its category's color; the chosen one inverts. Around the converter sit four information pages (About, Technical details, What's new, Status) and a navigation at the top and bottom of every page. Technical details and What's new are generated from the registry, the repository, and the changelog, so they describe the build they belong to.
+
+**Does it hold with two hundred formats and real transcoding options?** The bands and the grid do. The picker, as it stands, does not, and three things have to change as formats arrive:
+
+- **Density.** Forty-pixel names work for three to eight targets. An image has about thirty. The picker needs two tiers: the few targets most people want, set large and grouped by intent ("for the web", "for print"), and beneath them the full list as a compact index in columns, with a field to filter it by typing.
+- **Before a file is dropped,** the picker should not list every format dimmed. It should say that the choices depend on the file, and perhaps show the index of what is supported.
+- **Options.** Quality is one setting. Bitrate, sample rate, dimensions, and codec will follow. Each engine should declare its settings, and the band should draw them as a short table of label and control: the two or three that matter open, the rest behind one disclosure.
+- **Mixed batches.** One target for every dropped file stops working when a PNG and a WAV are dropped together. Files should be grouped by kind, each group with its own picker.
+
+None of this is built. It is the design work Phase 1 starts with.
+
 ## Brand & og:image
 
-**Omsett is Swiss in structure but not in costume: a 12-column grid, one accent, asymmetric blocks, and a wordmark in a grotesk that is deliberately not Helvetica.** That last choice keeps it visually separate from Fotobogen, which owns the Helvetica-and-hairlines look in your portfolio.
+**Omsett is Swiss, in structure and in dress: a twelve-column grid with a label column, one typeface, rules instead of boxes, and one accent.** The first plan avoided Helvetica to keep Omsett apart from Fotobogen; in use, the rounder Space Grotesk and the monospace read as blocky, so the type was changed to the real thing. What keeps the two projects apart now is the blue and the layout, not the letterforms.
 
 | Element | Omsett | Why / how it differs from Fotobogen |
 | --- | --- | --- |
-| Wordmark | `omsett.` in Space Grotesk Bold, lowercase, tracking −5.5%, with the full stop in the accent color | Space Grotesk has a rounder, slightly technical personality; the accent period reads as "done" and as a file-extension dot |
+| Wordmark | `omsett.` in Helvetica Neue Bold, lowercase, tracking −6%, with the full stop in the accent color | The accent period reads as "done" and as a file-extension dot |
 | Accent | **Omsett blue `#3b6cff`** on `#0d0d0d` | A single cool, saturated blue; a nod to the Norwegian name without flags or fjords. Fotobogen keeps the classic Swiss red/black/white lane |
-| Type system | Space Grotesk for display and UI labels; JetBrains Mono for anything that is a format, extension, path, or number; Inter as the body fallback | Mono for extensions makes the picker read as data; Fotobogen uses one Helvetica-like family throughout |
+| Type system | One family for everything: Helvetica Neue where the device has it, self-hosted Inter where it does not. No monospace: sizes and counts line up through tabular numerals. Hierarchy comes from size and weight alone | A second face made the picker look like a code editor; one face makes it look like a timetable |
 | Motif | The arrow `→`: between extensions, as a block-scale glyph, as the Convert button icon | Conversion is the whole product; the arrow is the only picture it needs |
 | Grid | 12 columns, 48 px margins, 24 px gutters, hairlines at `#2a2a28` | Same discipline as Fotobogen, different voice |
-| Light mode | Inverted: `#f4f4f2` ground, ink `#0d0d0d`, the same blue | The blue is chosen to pass 4.5:1 as text on both grounds |
+| Theme | Dark by default on every page (`#0d0d0d` ground, ink `#f4f4f2`), charts and tables included. Light inverts the two, is one click away, and is remembered | The brand blue is about 4.4:1 on both grounds, a shade short of small-text contrast, so text in blue uses a deeper cut (`#2450e0` on light, `#7d9dff` on dark) and the brand blue is kept for rules, blocks, and large type |
 
-**og:image (1200×630).** Left two-thirds: kicker in mono caps ("OPEN SOURCE · FREE · ACCESSIBLE · RUNS IN YOUR BROWSER" — the four promises, with accessibility named as a feature on the image itself), the wordmark at 216 px, a mono line beneath it giving the name's meaning ("omsett · Norwegian — to translate; to convert", with "Norwegian" in the accent), and the tagline "Drop a file. Pick a format. / Nothing leaves your device." Right third: a solid blue block carrying four mono pairs (`heic → jpg`, `wav → mp3`, `docx → pdf`, `png → webp`), a 300 px black arrow, and `omsett.com`. Delivered as `omsett-og.png` (1200×630), a 2× version, and the HTML source that rendered them, so the same file is the first fixture for Omsett's own OpenGraph preset: the preset's job is to produce exactly this shape from any image.
+**og:image (1200×630).** Left two-thirds: kicker in mono caps ("OPEN SOURCE · FREE · ACCESSIBLE · RUNS IN YOUR BROWSER" — the four promises, with accessibility named as a feature on the image itself), the wordmark at 216 px, a mono line beneath it giving the name's meaning ("omsett · Norwegian — to translate; to convert", with "Norwegian" in the accent), and the tagline "Drop a file. Pick a format. / Nothing leaves your device." Right third: a solid blue block carrying four pairs (HEIC → JPEG, WAV → MP3, DOCX → PDF, PNG → WebP), a 300 px black arrow, and `omsett.com`. (The image was redrawn in Helvetica Neue with the interface; the description of its type earlier in this paragraph is the first version's.) Delivered as `omsett-og.png` (1200×630), a 2× version, and the HTML source that rendered them, so the same file is the first fixture for Omsett's own OpenGraph preset: the preset's job is to produce exactly this shape from any image.
 
 **Where it goes.** `apps/web/public/og.png`; `<meta property="og:image" content="https://omsett.com/og.png">` plus `og:image:width/height`, `twitter:card=summary_large_image`, and a `theme-color` of `#0d0d0d`. The favicon pack is generated from the wordmark's accent-dot on `#0d0d0d` by the favicon preset itself — Omsett should be the first site to use its own presets.
 

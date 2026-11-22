@@ -1,8 +1,7 @@
 <script setup lang="ts">
+import { formatById } from '@omsett/registry'
 import type { QueueResult } from '~/composables/useConversionQueue'
 import { formatBytes, formatDelta } from '~/utils/format-bytes'
-
-import { formatById } from '@omsett/registry'
 import { registry } from '~/utils/registry'
 
 const props = defineProps<{
@@ -36,71 +35,64 @@ const to = computed(() => formatById(registry, props.result.formatId))
 const comparable = computed(
   () => props.source !== undefined && from.value?.category === 'image' && to.value?.category === 'image',
 )
-
 const delta = computed(() => formatDelta(props.result.inputBytes, props.result.blob.size))
 </script>
 
 <template>
-  <UCard as="li" class="result-card" :data-engine="result.engine" :ui="{ body: 'p-3 sm:p-3' }">
-    <div class="row">
-      <div class="meta">
-        <p class="name mono">{{ result.name }}</p>
-        <p class="facts mono">
-          <span data-testid="output-size" :data-bytes="result.blob.size">{{ formatBytes(result.blob.size) }}</span>
-          <span v-if="delta" class="muted" data-testid="delta">{{ delta }}</span>
-          <span class="muted">converted on your device by {{ result.engine }}</span>
-        </p>
-      </div>
-      <a class="download" :href="url || undefined" :download="result.name" data-testid="download">
-        Download<span class="sr-only"> {{ result.name }}</span>
-      </a>
+  <li class="result-card" :data-engine="result.engine">
+    <div class="meta">
+      <p class="name">{{ result.name }}</p>
+      <p class="facts figures">
+        <span data-testid="output-size" :data-bytes="result.blob.size">{{ formatBytes(result.blob.size) }}</span>
+        <span v-if="delta" class="delta" data-testid="delta">{{ delta }}</span>
+        <span>converted on your device by {{ result.engine }}</span>
+      </p>
     </div>
+    <a class="button solid" :href="url || undefined" :download="result.name" data-testid="download">
+      Download<span class="sr-only"> {{ result.name }}</span>
+    </a>
     <CompareSlider
       v-if="comparable && source"
       :before="source"
       :after="result.blob"
-      :before-label="`${from?.name} · ${formatBytes(result.inputBytes)}`"
-      :after-label="`${to?.name} · ${formatBytes(result.blob.size)}`"
+      :before-label="`${from?.name} ${formatBytes(result.inputBytes)}`"
+      :after-label="`${to?.name} ${formatBytes(result.blob.size)}`"
     />
-  </UCard>
+  </li>
 </template>
 
 <style scoped>
 .result-card {
-  list-style: none;
-  background: var(--surface);
-}
-.row {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: 1rem;
   align-items: center;
-  gap: 0.75rem;
-}
-.meta {
-  min-width: 0;
-  flex: 1 1 12rem;
+  padding: 0.875rem 0 1.5rem;
+  border-top: 1px solid var(--rule);
+  list-style: none;
 }
 .name {
   margin: 0;
+  font-size: var(--text-lead);
+  font-weight: 700;
+  letter-spacing: -0.015em;
   overflow-wrap: anywhere;
 }
 .facts {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.75rem;
-  margin: 0.25rem 0 0;
-  font-size: 0.875rem;
+  gap: 0 0.875rem;
+  margin: 0.125rem 0 0;
+  font-size: var(--text-small);
+  color: var(--muted);
 }
-.download {
-  flex: none;
-  padding: 0.5rem 1rem;
-  border: 2px solid var(--ink);
-  border-radius: 4px;
+.facts > :first-child {
+  color: var(--ink);
   font-weight: 700;
-  text-decoration: none;
 }
-.download:hover {
-  background: var(--ink);
-  color: var(--bg);
+/* How much smaller: the figure people came for. */
+.delta {
+  color: var(--accent-text);
+  font-weight: 700;
 }
 </style>

@@ -6,28 +6,29 @@ defineProps<{ suggested: number }>()
 
 <template>
   <div class="quality">
-    <label for="quality" class="label">
-      Quality <output class="mono value" for="quality">{{ quality }}</output>
-    </label>
-    <div class="track">
-      <span class="end muted">smaller file</span>
-      <input
-        id="quality"
-        v-model.number="quality"
-        type="range"
-        min="1"
-        max="100"
-        step="1"
-        data-testid="quality"
-        class="range"
-      >
-      <span class="end muted">closer to the original</span>
+    <div class="head">
+      <label for="quality" class="label">Quality</label>
+      <output class="value figures" for="quality">{{ quality }}</output>
     </div>
-    <p class="hint muted">
+    <input
+      id="quality"
+      v-model.number="quality"
+      type="range"
+      min="1"
+      max="100"
+      step="1"
+      data-testid="quality"
+      class="range"
+    >
+    <div class="ends">
+      <span>Smaller file</span>
+      <span>Closer to the original</span>
+    </div>
+    <p class="hint">
       <template v-if="quality === suggested">
         {{ suggested }} is a good default: a much smaller file, with a difference few people can see.
       </template>
-      <button v-else type="button" class="reset" data-testid="quality-reset" @click="quality = suggested">
+      <button v-else type="button" class="text-button" data-testid="quality-reset" @click="quality = suggested">
         Back to {{ suggested }}
       </button>
     </p>
@@ -39,37 +40,37 @@ defineProps<{ suggested: number }>()
   display: flex;
   flex-direction: column;
   gap: 0.375rem;
-  max-width: 34rem;
+  max-width: 36rem;
+}
+.head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
 }
 .label {
   font-weight: 700;
 }
 .value {
-  margin-left: 0.5rem;
-  font-weight: 500;
-}
-.track {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
+  font-size: var(--text-title);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.035em;
+  color: var(--accent-text);
 }
 .range {
-  flex: 1;
-  min-width: 8rem;
+  width: 100%;
   accent-color: var(--accent);
 }
-.end,
-.hint {
-  font-size: 0.8125rem;
+.ends {
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--text-small);
+  color: var(--muted);
 }
 .hint {
-  margin: 0;
+  margin: 0.25rem 0 0;
   min-height: 1.25rem;
-}
-.reset {
-  color: var(--ink);
-  text-decoration: underline;
-  text-underline-offset: 3px;
-  cursor: pointer;
+  font-size: var(--text-small);
+  color: var(--muted);
 }
 </style>

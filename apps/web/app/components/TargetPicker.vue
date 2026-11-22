@@ -7,6 +7,8 @@ const props = defineProps<{
   targets: Target[]
   modelValue: string | null
   viaServer: boolean
+  /** id of the heading that names this group. */
+  labelledby: string
 }>()
 const emit = defineEmits<{ select: [id: string] }>()
 
@@ -76,50 +78,41 @@ function onKeydown(event: KeyboardEvent) {
 </script>
 
 <template>
-  <section aria-labelledby="pick-heading">
-    <h2 id="pick-heading" class="heading">Convert to</h2>
-    <div ref="group" role="radiogroup" aria-labelledby="pick-heading" class="groups" @keydown="onKeydown">
-      <div v-for="g in groups" :key="g.category" class="group">
-        <h3 class="category mono">{{ g.label }}</h3>
-        <div class="grid">
-          <TargetTile
-            v-for="target in g.targets"
-            :key="target.format.id"
-            :target="target"
-            :selected="modelValue === target.format.id"
-            :tabbable="tabStop === target.format.id"
-            :download="download(target)"
-            :via-server="viaServer"
-            @select="emit('select', $event)"
-          />
-        </div>
+  <div ref="group" role="radiogroup" :aria-labelledby="labelledby" class="groups" @keydown="onKeydown">
+    <div v-for="g in groups" :key="g.category" class="group">
+      <h3 class="category">{{ g.label }}</h3>
+      <div class="grid">
+        <TargetTile
+          v-for="target in g.targets"
+          :key="target.format.id"
+          :target="target"
+          :selected="modelValue === target.format.id"
+          :tabbable="tabStop === target.format.id"
+          :download="download(target)"
+          :via-server="viaServer"
+          @select="emit('select', $event)"
+        />
       </div>
     </div>
-  </section>
+  </div>
 </template>
 
 <style scoped>
-.heading {
-  margin: 0 0 0.75rem;
-  font-size: 1.5rem;
-  font-weight: 700;
-}
-.category {
-  margin: 0 0 0.5rem;
-  font-size: 0.8125rem;
-  font-weight: 500;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--muted);
-}
 .groups {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: 2rem;
 }
+.category {
+  margin: 0 0 0.75rem;
+  font-size: var(--text-small);
+  font-weight: 400;
+  color: var(--muted);
+}
+/* Three tiles to the nine content columns, so each tile is three columns of the page grid. */
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 180px), 1fr));
+  gap: var(--gutter);
 }
 </style>

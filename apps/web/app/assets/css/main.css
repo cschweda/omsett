@@ -2,38 +2,36 @@
 @import '@nuxt/ui';
 @import './tokens.css';
 
+/* Inter, self-hosted, for devices without Helvetica Neue. A font file is fetched only when the
+   browser actually needs it, so a Mac or an iPhone downloads nothing. */
 @font-face {
-  font-family: 'Space Grotesk';
-  font-weight: 500;
-  font-style: normal;
-  font-display: swap;
-  src: url('/fonts/space-grotesk-latin-500-normal.woff2') format('woff2');
-}
-@font-face {
-  font-family: 'Space Grotesk';
-  font-weight: 700;
-  font-style: normal;
-  font-display: swap;
-  src: url('/fonts/space-grotesk-latin-700-normal.woff2') format('woff2');
-}
-@font-face {
-  font-family: 'JetBrains Mono';
+  font-family: 'Inter';
   font-weight: 400;
   font-style: normal;
   font-display: swap;
-  src: url('/fonts/jetbrains-mono-latin-400-normal.woff2') format('woff2');
+  src: url('/fonts/inter-latin-400-normal.woff2') format('woff2');
 }
 @font-face {
-  font-family: 'JetBrains Mono';
+  font-family: 'Inter';
   font-weight: 500;
   font-style: normal;
   font-display: swap;
-  src: url('/fonts/jetbrains-mono-latin-500-normal.woff2') format('woff2');
+  src: url('/fonts/inter-latin-500-normal.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Inter';
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+  src: url('/fonts/inter-latin-700-normal.woff2') format('woff2');
 }
 
 @theme {
-  --font-sans: 'Space Grotesk', 'Inter', ui-sans-serif, system-ui, sans-serif;
-  --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  /* Helvetica Neue first. Inter comes before plain "Helvetica" on purpose: Windows quietly
+     answers "Helvetica" with Arial, and Inter is the better stand-in. */
+  --font-sans: 'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif;
+  /* No second typeface. Figures line up through tabular numerals instead. */
+  --font-mono: 'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif;
 
   /* Omsett blue as a Tailwind palette, so Nuxt UI can use it as `primary`. */
   --color-omsett-50: #eef2ff;
@@ -62,7 +60,7 @@
   --ui-text-toned: var(--muted);
   --ui-border: var(--rule);
   --ui-border-accented: var(--rule-strong);
-  --ui-radius: 0.25rem;
+  --ui-radius: 0rem;
 }
 
 html {
@@ -72,7 +70,11 @@ html {
 
 body {
   font-family: var(--font-sans);
-  font-weight: 500;
+  font-size: var(--text-body);
+  font-weight: 400;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 /* Focus is always visible: 2px ring, 2px offset, never removed. */
@@ -81,12 +83,154 @@ body {
   outline-offset: 2px;
 }
 
-.mono {
-  font-family: var(--font-mono);
+/* Sizes, counts and dimensions: same face, figures of equal width so columns line up. */
+.figures {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum';
 }
 
 .muted {
   color: var(--muted);
+}
+
+/* The two kinds of button the app has. Square, flat, no shadow. */
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.625rem 1.25rem;
+  border: 1px solid var(--ink);
+  border-radius: 0;
+  background: transparent;
+  color: var(--ink);
+  font-size: var(--text-body);
+  font-weight: 700;
+  line-height: 1.2;
+  text-decoration: none;
+  cursor: pointer;
+}
+.button:hover {
+  background: var(--ink);
+  color: var(--bg);
+}
+.button.solid {
+  background: var(--ink);
+  color: var(--bg);
+}
+.button.solid:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
+}
+
+.text-button {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  font: inherit;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.text-button:hover {
+  color: var(--accent-text);
+}
+
+/* Running text on the information pages. */
+.prose {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+  max-width: 62ch;
+}
+.prose p,
+.prose ul {
+  margin: 0;
+}
+.prose ul {
+  padding-left: 1.1rem;
+  list-style: square;
+}
+.prose li + li {
+  margin-top: 0.375rem;
+}
+.prose a {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+.prose a:hover {
+  color: var(--accent-text);
+}
+.prose code,
+.plain-code {
+  padding: 0.05em 0.3em;
+  background: var(--surface);
+  font-family: inherit;
+  font-size: 0.95em;
+}
+.lead-text {
+  font-size: var(--text-lead);
+  font-weight: 500;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+}
+
+/* Tables are set the Swiss way: rules between rows, nothing boxed, figures aligned right. */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-body);
+}
+.table th,
+.table td {
+  padding: 0.625rem 1rem 0.625rem 0;
+  border-top: 1px solid var(--rule);
+  text-align: left;
+  vertical-align: top;
+}
+.table thead th {
+  border-top: 0;
+  padding-top: 0;
+  font-size: var(--text-small);
+  font-weight: 400;
+  color: var(--muted);
+}
+.table tbody th {
+  font-weight: 700;
+}
+.table .num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.table-wrap {
+  overflow-x: auto;
+}
+
+/* A fact as a figure: the number large, what it counts beneath. */
+.figure-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(128px, 1fr));
+  gap: var(--gutter);
+  margin: 0;
+}
+.figure-row div {
+  padding-top: 0.5rem;
+  border-top: 3px solid var(--accent);
+}
+.figure-row dt {
+  font-size: var(--text-small);
+  color: var(--muted);
+}
+.figure-row dd {
+  margin: 0;
+  font-size: clamp(2.5rem, 6vw, 4rem);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.045em;
+  font-variant-numeric: tabular-nums;
 }
 
 @media (prefers-reduced-motion: reduce) {

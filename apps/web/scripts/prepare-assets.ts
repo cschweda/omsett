@@ -50,12 +50,82 @@ await copyFile(join(vipsRoot, 'THIRD-PARTY-NOTICES.md'), join(enginesDir, 'vips.
 
 await copyFile(join(repo, 'fixtures', 'png', 'sample.png'), join(web, 'public', 'sample.png'))
 
+// The "What's new" page is the changelog itself, parsed here so the two cannot drift.
+type Inline = { kind: 'text' | 'strong' | 'code'; text: string }
+function inline(markdown: string): Inline[] {
+  const parts: Inline[] = []
+  for (const piece of markdown.split(/(\*\*[^*]+\*\*|`[^`]+`)/)) {
+    if (!piece) continue
+    if (piece.startsWith('**')) parts.push({ kind: 'strong', text: piece.slice(2, -2) })
+    else if (piece.startsWith('`')) parts.push({ kind: 'code', text: piece.slice(1, -1) })
+    else parts.push({ kind: 'text', text: piece })
+  }
+  return parts
+}
+interface Group { title: string; items: Inline[][] }
+interface Release { title: string; intro: Inline[][]; groups: Group[] }
+const releases: Release[] = []
+let pending: string[] = []
+let target: 'intro' | 'item' | null = null
+const flush = () => {
+  const release = releases.at(-1)
+  if (release && pending.length) {
+    const text = inline(pending.join(' '))
+    if (target === 'item') release.groups.at(-1)!.items.push(text)
+    else release.intro.push(text)
+  }
+  pending = []
+  target = null
+}
+for (const line of (await readFile(join(repo, 'CHANGELOG.md'), 'utf8')).split('\n')) {
+  if (line.startsWith('## ')) {
+    flush()
+    releases.push({ title: line.slice(3).trim(), intro: [], groups: [] })
+  } else if (!releases.length) {
+    continue // the file's own title and preamble
+  } else if (line.startsWith('### ')) {
+    flush()
+    releases.at(-1)!.groups.push({ title: line.slice(4).trim(), items: [] })
+  } else if (line.startsWith('- ')) {
+    flush()
+    if (!releases.at(-1)!.groups.length) releases.at(-1)!.groups.push({ title: '', items: [] })
+    pending = [line.slice(2).trim()]
+    target = 'item'
+  } else if (line.trim() === '') {
+    flush()
+  } else {
+    pending.push(line.trim())
+    target ??= 'intro'
+  }
+}
+flush()
+await writeFile(join(generatedDir, 'changelog.json'), JSON.stringify(releases, null, 2) + '\n')
+
+// Facts the Technical details page states as numbers. Counted here from the repository on every
+// build, so the page is right by construction and never needs editing when a file is added.
+interface Trap { group: string }
+const traps = JSON.parse(await readFile(join(repo, 'fixtures', '_traps', 'manifest.json'), 'utf8')) as Trap[]
+const trapGroups: Record<string, number> = {}
+for (const trap of traps) trapGroups[trap.group] = (trapGroups[trap.group] ?? 0) + 1
+const fixtureDirs = (await readdir(join(repo, 'fixtures'), { withFileTypes: true })).filter(
+  (entry) => entry.isDirectory() && !entry.name.startsWith('_'),
+)
+const facts = {
+  traps: { total: traps.length, groups: trapGroups },
+  sampleFormats: fixtureDirs.length,
+  cases: (await readdir(join(repo, 'fixtures', '_cases'))).length,
+  version: (JSON.parse(await readFile(join(repo, 'package.json'), 'utf8')) as { version: string }).version,
+  built: new Date().toISOString().slice(0, 10),
+}
+await writeFile(join(generatedDir, 'facts.json'), JSON.stringify(facts, null, 2) + '\n')
+
+// Inter stands in for Helvetica Neue on devices that do not have it (see main.css).
 const fonts: Array<[pkg: string, file: string]> = [
-  ['@fontsource/space-grotesk', 'space-grotesk-latin-500-normal.woff2'],
-  ['@fontsource/space-grotesk', 'space-grotesk-latin-700-normal.woff2'],
-  ['@fontsource/jetbrains-mono', 'jetbrains-mono-latin-400-normal.woff2'],
-  ['@fontsource/jetbrains-mono', 'jetbrains-mono-latin-500-normal.woff2'],
+  ['@fontsource/inter', 'inter-latin-400-normal.woff2'],
+  ['@fontsource/inter', 'inter-latin-500-normal.woff2'],
+  ['@fontsource/inter', 'inter-latin-700-normal.woff2'],
 ]
+for (const stale of await readdir(fontsDir)) await rm(join(fontsDir, stale))
 for (const [pkg, file] of fonts) {
   const source = join(dirname(fromWeb.resolve(`${pkg}/package.json`)), 'files', file)
   await copyFile(source, join(fontsDir, file))

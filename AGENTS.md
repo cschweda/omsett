@@ -49,7 +49,9 @@ These are invariants. A change that breaks one is wrong even if it works.
    real file input, the radio-group picker, the live region) stays as it is; do not remove it and
    do not extend it. The axe and keyboard-order tests in `e2e/gate.spec.ts` are parked behind
    `ACCESSIBILITY_DEFERRED`.
-9. **One screen.** `pages/index.vue` is the whole app.
+9. **The converter is one screen.** `pages/index.vue` is the whole tool: no steps across pages,
+   no modals on the happy path. The information pages (About, Technical details, What's new,
+   Status) sit beside it and never stand between a person and a conversion.
 10. **A server is optional and absent by default.** `useServerHealth` is the only code that knows
     one might exist, and it only talks to its own origin. There is no field for a server URL.
 11. **Every engine declares its license** (`license`, `sourceUrl` in
@@ -91,6 +93,9 @@ build by `apps/web/scripts/write-headers.ts`.
   `fail_on: 'error'`. Do not remove it.
 - **`mv` onto a link to a directory moves into it.** `scripts/publish-static.sh` uses `mv -T`
   for that reason. macOS and Linux differ here; test deploy scripts on Linux, more than once.
+- **Restart `pnpm dev` after editing `nuxt.config.ts` or installing a package.** Nuxt's own
+  restart drops the isolation headers Vite sends, and then no worker starts and nothing converts.
+  In dev, `?demo` loads and converts the sample, and `?theme=light` or `?theme=dark` sets the theme.
 - **A canvas has a size limit**; `maxPixels` on the engine sends larger images to libvips.
 
 ## Working agreements
@@ -99,8 +104,14 @@ build by `apps/web/scripts/write-headers.ts`.
   rebuilds the live site from `main` on every push (see `docs/deploy-digitalocean.md`); a deploy
   costs nothing. Use a short-lived branch and a pull request when CI should vouch for a change
   before it is live, which is most of the time.
-- **Changelog.** Every change goes into `CHANGELOG.md` under "Unreleased", in the same pull
-  request that makes it: added, changed, fixed, or known. A release renames that section.
+- **Keep the record current, in the same change.** When a feature is added or behaviour changes:
+  - `CHANGELOG.md`, under "Unreleased" (added, changed, fixed, or known). The site's What's new
+    page is generated from it.
+  - The About and Technical details pages (`apps/web/app/pages`). Their figures and tables are
+    read from the registry and the repository, so they update themselves; their prose and the
+    diagrams in `app/utils/diagrams.ts` do not, and must be edited when the process they
+    describe changes.
+  - `README.md`, the design doc, and this file, wherever they describe what changed.
 - **Commits** are small and labeled (`feat(registry): …`, `fix(web): …`, `chore(ci): …`), and
   each builds and passes tests. No `Co-Authored-By` line and no other AI attribution trailer.
 - **Decide small things; ask about big ones.** Anything that changes the public shape (the
@@ -110,4 +121,7 @@ build by `apps/web/scripts/write-headers.ts`.
 - **No placeholder content in the UI.** No tiles for formats that are not registered.
 - **`explain` is real copy**, written for a non-technical reader.
 - **README:** the og:image is the first thing in the file, with any badges directly under it.
+- **Design.** Swiss: one typeface (Helvetica Neue, else Inter), the twelve-column grid in
+  `tokens.css`, rules instead of boxes, square corners, no shadows, no second typeface. Blue is
+  the accent; red means something went wrong and nothing else. Tokens live in `tokens.css` only.
 - **Tone:** plain, short, no cheerleading.

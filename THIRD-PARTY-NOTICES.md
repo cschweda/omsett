@@ -66,6 +66,7 @@ Omsett's own MIT code (`packages/engines/src/canvas`).
 | Comlink | 4.4.2 | Apache-2.0 | <https://github.com/GoogleChromeLabs/comlink> |
 | file-type | 22.3.0 | MIT | <https://github.com/sindresorhus/file-type> |
 | Lucide icons (via `@iconify-json/lucide`) | 1.2.158 | ISC | <https://github.com/lucide-icons/lucide> |
+| Mermaid (Technical details page only) | 12.x | MIT | <https://github.com/mermaid-js/mermaid> |
 
 The bundle also contains the smaller packages these depend on, under MIT, ISC, or BSD licenses.
 
@@ -73,8 +74,10 @@ The bundle also contains the smaller packages these depend on, under MIT, ISC, o
 
 | Font | Version | License | Source |
 | --- | --- | --- | --- |
-| Space Grotesk (via `@fontsource/space-grotesk`) | 5.3.0 | SIL Open Font License 1.1 | <https://github.com/floriankarsten/space-grotesk> |
-| JetBrains Mono (via `@fontsource/jetbrains-mono`) | 5.3.0 | SIL Open Font License 1.1 | <https://github.com/JetBrains/JetBrainsMono> |
+| Inter (via `@fontsource/inter`) | 5.x | SIL Open Font License 1.1 | <https://github.com/rsms/inter> |
+
+Inter is served only to devices that do not have Helvetica Neue, which is used where present
+and is not distributed with Omsett.
 
 ## Design credit
 

@@ -62,74 +62,74 @@ onMounted(async () => {
 })
 onBeforeUnmount(() => window.removeEventListener('paste', onPaste))
 
-defineExpose({ focus: () => input.value?.focus() })
+defineExpose({ focus: () => input.value?.focus(), loadSample })
 </script>
 
 <template>
-  <section
+  <div
     class="drop"
     :class="{ dragging }"
-    aria-labelledby="drop-heading"
     @dragenter.prevent="dragging = true"
     @dragover.prevent="dragging = true"
     @dragleave.prevent="dragging = false"
     @drop.prevent="onDrop"
   >
-    <h2 id="drop-heading" class="sr-only">Files</h2>
-    <!-- A real file input is the control; drag-and-drop is an enhancement. -->
-    <input
-      id="file-input"
-      ref="input"
-      class="sr-only file-input"
-      type="file"
-      multiple
-      :accept="accept"
-      aria-describedby="drop-hint"
-      @change="onChange"
-    >
-    <label for="file-input" class="choose">Choose files</label>
-    <p id="drop-hint" class="hint">or drop them here · nothing leaves your device</p>
-    <UButton
-      :label="sampleLabel"
-      color="neutral"
-      variant="link"
-      :loading="loadingSample"
-      data-testid="sample"
-      class="sample"
-      @click="loadSample"
-    />
-  </section>
+    <p class="call">Drop files here</p>
+    <div class="actions">
+      <!-- A real file input is the control; drag-and-drop is an enhancement. -->
+      <input
+        id="file-input"
+        ref="input"
+        class="sr-only file-input"
+        type="file"
+        multiple
+        :accept="accept"
+        aria-describedby="drop-hint"
+        @change="onChange"
+      >
+      <label for="file-input" class="button choose">Choose files</label>
+      <button type="button" class="text-button" data-testid="sample" :disabled="loadingSample" @click="loadSample">
+        {{ sampleLabel }}
+      </button>
+    </div>
+    <p id="drop-hint" class="hint">You can also paste an image. Files are converted in this tab and are never uploaded.</p>
+  </div>
 </template>
 
 <style scoped>
 .drop {
-  min-height: 240px;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0.75rem;
-  padding: 2rem 1.5rem;
-  border: 2px dashed var(--rule-strong);
-  border-radius: 4px;
-  text-align: center;
+  justify-content: flex-end;
+  gap: 1rem;
+  min-height: 240px;
+  padding: var(--gutter);
+  background: var(--surface);
 }
 .drop.dragging {
-  border-color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  background: var(--accent);
+  color: var(--on-accent);
 }
-.choose {
-  display: inline-block;
-  padding: 0.75rem 1.5rem;
-  border: 2px solid var(--ink);
-  border-radius: 4px;
-  font-size: 1.25rem;
+.drop.dragging .hint,
+.drop.dragging .text-button {
+  color: var(--on-accent);
+}
+.drop.dragging .choose {
+  border-color: var(--on-accent);
+  color: var(--on-accent);
+}
+.call {
+  margin: 0;
+  font-size: var(--text-title);
   font-weight: 700;
-  cursor: pointer;
+  line-height: 1;
+  letter-spacing: -0.03em;
 }
-.choose:hover {
-  background: var(--ink);
-  color: var(--bg);
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1.25rem;
 }
 /* The input is visually hidden, so its focus ring is drawn on its label. */
 .file-input:focus-visible + .choose {
@@ -137,12 +137,9 @@ defineExpose({ focus: () => input.value?.focus() })
   outline-offset: 2px;
 }
 .hint {
-  color: var(--muted);
   margin: 0;
-}
-.sample {
-  color: var(--ink);
-  text-decoration: underline;
-  text-underline-offset: 3px;
+  max-width: 44ch;
+  font-size: var(--text-small);
+  color: var(--muted);
 }
 </style>

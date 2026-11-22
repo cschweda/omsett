@@ -4,7 +4,8 @@
 FROM --platform=$BUILDPLATFORM node:24-alpine AS build
 WORKDIR /repo
 RUN corepack enable
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.base.json .nvmrc ./
+# CHANGELOG.md is read by the build: the site's What's new page is generated from it.
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.base.json .nvmrc CHANGELOG.md ./
 COPY packages ./packages
 COPY fixtures ./fixtures
 COPY apps/web ./apps/web

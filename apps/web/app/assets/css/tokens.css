@@ -7,12 +7,27 @@
   --rule: #d6d6d1;
   /* control outlines need 3:1 against the ground; hairlines do not */
   --rule-strong: #777773;
-  --surface: #ffffff;
+  --surface: #ebebe8;
   --accent: #3b6cff;
   --on-accent: #ffffff;
+  /* The blue set as text. On the light ground the brand blue is a shade too pale to read at
+     small sizes, so text uses a deeper cut of it; rules and blocks keep the brand blue. */
+  --accent-text: #2450e0;
+  /* Signal red. Used for one thing only: something went wrong. */
+  --signal: #c8200d;
+
+  /* The grid: twelve columns, one gutter, one margin. Everything sits on it. */
+  --gutter: 24px;
+  --margin: clamp(20px, 4vw, 48px);
+
+  /* Type scale. One family; hierarchy comes from size and weight alone. */
+  --text-small: 0.8125rem; /* 13 */
+  --text-body: 0.9375rem; /* 15 */
+  --text-lead: 1.25rem; /* 20 */
+  --text-title: 2.5rem; /* 40 */
 
   /* One accent per category, so the picker reads as a color-coded chart.
-     Secondary: used for marks and bars, never for text. */
+     Secondary: used for rules and marks, never for text. */
   --cat-image: #3b6cff;
   --cat-vector: #8b5cf6;
   --cat-pdf: #ef4444;
@@ -35,5 +50,7 @@
   --muted: #8a8a86;
   --rule: #2a2a28;
   --rule-strong: #6b6b67;
-  --surface: #151514;
+  --surface: #171716;
+  --accent-text: #7d9dff;
+  --signal: #ff6b57;
 }
