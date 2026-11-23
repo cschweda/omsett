@@ -8,6 +8,7 @@ import {
   createArchiveEngine,
   createScriptEngine,
   createPdfEngine,
+  describeFile,
   zipFiles,
   createFontEngine,
   createFontWoff2Engine,
@@ -18,6 +19,7 @@ import {
   engineInfo,
   vipsModules,
   type ConvertOutput,
+  type Detail,
   type Engine,
   type HeifModule,
   type MagickApi,
@@ -168,6 +170,12 @@ const api = {
     if (!engine) throw new Error(`Unknown engine: ${id}`)
     // Cancellation is the page terminating this worker; nothing here can outlive it.
     return engine.convert({ ...request, signal: new AbortController().signal, onProgress })
+  },
+
+  /** What a file holds beside what it shows: who made it, when, with what. Read here, never on the page. */
+  async describe(blob: Blob, formatId: string): Promise<Detail[]> {
+    const format = formatById(registry, formatId)
+    return format ? describeFile(blob, format) : []
   },
 
   /** Several finished files → one ZIP, so a batch can be downloaded in one go. */

@@ -4,6 +4,7 @@
 import { existsSync } from 'node:fs'
 import { readFile } from 'node:fs/promises'
 import { detect, MAX_PIXELS, nameDisagrees, sizeProblem } from '@omsett/detect'
+import { describeFile } from '@omsett/engines'
 import { createNodeEngines } from '@omsett/engines/node'
 import { createRouter, deriveEdges, formatById, registry, switches, type Format } from '@omsett/registry'
 import { afterEach, describe, expect, it } from 'vitest'
@@ -97,6 +98,9 @@ describe('trap files', () => {
         return
       }
       expect(nameDisagrees(file.name, found.format), 'name disagrees with contents').toBe(trap.mismatch)
+
+      // 1b. Asking what the file holds never fails, whatever the file: a list comes back.
+      expect(Array.isArray(await describeFile(file, found.format)), 'details are a list').toBe(true)
 
       // 2. The guard decides from the header alone, before anything is decoded.
       const refused = sizeProblem(file.size, found.dimensions) !== null

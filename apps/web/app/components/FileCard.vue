@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { Detail } from '@omsett/engines'
 import type { QueueFile } from '~/composables/useConversionQueue'
 import { switchedOffReason } from '@omsett/registry'
 import { formatBytes } from '~/utils/format-bytes'
@@ -42,6 +43,31 @@ const stage = computed(() => {
   return ''
 })
 
+// What the file holds beside what it shows: asked for when the person asks, and read in the
+// worker. What is known without reading the file is listed first, and at once.
+const open = ref(false)
+const reading = ref(false)
+const found = ref<Detail[] | null>(null)
+const basics = computed<Detail[]>(() => {
+  const file = props.entry.file
+  const changed = file.lastModified ? new Date(file.lastModified) : null
+  return [
+    { label: 'Kind', value: known.value ? known.value.format.name : label.value },
+    { label: 'Size', value: `${formatBytes(file.size)} (${file.size.toLocaleString('en')} bytes)` },
+    ...(known.value?.dimensions ? [{ label: 'Dimensions', value: `${known.value.dimensions.width} × ${known.value.dimensions.height} pixels` }] : []),
+    // The date is the one this device keeps for the file. It is not inside the file, and so is not converted.
+    ...(changed && !Number.isNaN(changed.getTime()) ? [{ label: 'Last changed on this device', value: changed.toLocaleString() }] : []),
+  ]
+})
+async function toggle() {
+  open.value = !open.value
+  if (!open.value || found.value !== null || !known.value) return
+  reading.value = true
+  found.value = await useEngines().describe(props.entry.file, known.value.format.id)
+  reading.value = false
+}
+const FATE = { removed: 'removed when converted', kept: 'kept' }
+
 // Only a picture has a preview. Anything else gets no empty square where one would be.
 const pictured = computed(() => known.value !== null && ['image', 'vector'].includes(known.value.format.category))
 
@@ -75,14 +101,34 @@ watch(
       </p>
       <p v-if="note" class="note" :class="{ wrong: failed }" data-testid="file-note">{{ note }}</p>
     </div>
-    <button
-      type="button"
-      class="text-button remove"
-      :aria-label="`Remove ${entry.file.name}`"
-      @click="$emit('remove', entry.id)"
-    >
-      Remove
-    </button>
+    <div class="actions">
+      <button type="button" class="text-button" :aria-expanded="open" data-testid="details-toggle" @click="toggle">
+        {{ open ? 'Hide details' : 'Details' }}<span class="sr-only"> of {{ entry.file.name }}</span>
+      </button>
+      <button
+        type="button"
+        class="text-button remove"
+        :aria-label="`Remove ${entry.file.name}`"
+        @click="$emit('remove', entry.id)"
+      >
+        Remove
+      </button>
+    </div>
+    <div v-if="open" class="details" data-testid="details">
+      <dl>
+        <div v-for="detail in [...basics, ...(found ?? [])]" :key="detail.label">
+          <dt>{{ detail.label }}</dt>
+          <dd>
+            {{ detail.value }}
+            <span v-if="detail.fate" class="fate" :class="detail.fate" :data-fate="detail.fate">{{ FATE[detail.fate] }}</span>
+          </dd>
+        </div>
+      </dl>
+      <p v-if="reading" class="details-note" data-testid="details-reading">Reading the file</p>
+      <p v-else-if="found !== null && found.length === 0" class="details-note" data-testid="details-none">
+        Nothing more is recorded in this file, or nothing Omsett reads.
+      </p>
+    </div>
     <div v-if="entry.status !== 'ready'" class="progress">
       <div
         class="bar"
@@ -161,8 +207,58 @@ watch(
   margin-right: 0.45rem;
   background: var(--signal);
 }
-.remove {
+.actions {
+  display: flex;
+  gap: 1rem;
   font-size: var(--text-small);
+}
+.details {
+  grid-column: 1 / -1;
+  margin-top: 0.75rem;
+  padding: 0.625rem 0.75rem;
+  background: var(--surface);
+  font-size: var(--text-small);
+}
+.details dl {
+  margin: 0;
+}
+.details dl > div {
+  display: grid;
+  grid-template-columns: minmax(8rem, 14rem) minmax(0, 1fr);
+  column-gap: 1rem;
+  padding: 0.25rem 0;
+  border-top: 1px solid var(--rule);
+}
+.details dl > div:first-child {
+  border-top: 0;
+}
+.details dt {
+  color: var(--muted);
+}
+.details dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+/* What converting does with it: red for what is taken out, green for what stays. */
+.fate {
+  margin-left: 0.5rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.fate.removed {
+  color: var(--signal);
+}
+.fate.kept {
+  color: var(--positive);
+}
+.details-note {
+  margin: 0.5rem 0 0;
+  color: var(--muted);
+}
+@media (max-width: 520px) {
+  .details dl > div {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 .progress {
   grid-column: 1 / -1;

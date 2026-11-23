@@ -145,6 +145,12 @@ build by `apps/web/scripts/write-headers.ts`.
 - **What a document's author deleted or hid is never carried across**: tracked deletions,
   hidden text, comments, author names; and from a presentation, hidden slides and speaker
   notes. There is a trap for each.
+- **Binary formats are fuzzed on every run** (`fixtures/fuzz.test.ts`), in a child process with a
+  watchdog. A new binary format is picked up from the registry; it needs only its `sample.*`.
+  A hang, a wrong result or more than three engine deaths fails the run. Do not raise that
+  number to get a format in: find the file that kills the engine and make a trap of it.
+- **What a file holds is read by `describeFile`** (`packages/engines/src/details`), in the
+  worker, and never throws. It is shown as text. Mark what a conversion removes as `removed`.
 - **Every format has a code trap, and every code trap is run to every target**
   (`fixtures/code-traps.test.ts`). A new format gets one in the "code" section of
   `make-traps.py`, with the payload wherever the format holds text. `expectNoCodeRan` runs after
