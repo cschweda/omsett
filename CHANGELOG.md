@@ -17,13 +17,28 @@ patterns inside patterns is refused instead of being left to run.
 
 ### Added
 
+- **Your own words in the names of converted files.** In Settings, under File names: words
+  to put before the name, after it, or both, so that "report.docx" can be saved as
+  "omsett-report-converted.html". Kept on your device only.
+- **Settings now says exactly what counting visits means**: what is sent, what is never sent,
+  that there are no cookies, what happens to your address, and that none of Plausible's code
+  runs here.
 - **Check accessibility on a converted file too.** A Word document or a workbook that Omsett
   has just made has the same "Check accessibility" control as a file you added, asked the
   same way: nothing is sent until you say so.
 - **What's new explains what a "trap file" is**, for anyone meeting the term for the first time.
 
+### Fixed
+
+- **"Markdown" no longer loses its last letter** on a narrow format tile. A format's name is
+  now sized to the tile it is in.
+
 ### Changed
 
+- The README describes Omsett as it is, with pictures; its list of formats is written from
+  the code and checked on every change.
+- Setting a copy of Omsett up to count visits or to check accessibility is now two lines in
+  its settings and a deploy. The server rules are written by the build.
 - **In a file's details, "removed when converted" and "kept" line up in a column of their own**,
   so the list can be read at a glance.
 

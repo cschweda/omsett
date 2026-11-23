@@ -103,6 +103,11 @@ build by `apps/web/scripts/write-headers.ts`.
   minutes, add a shard.
 - **GitHub Actions are pinned to commit SHAs**, with the release in a trailing comment. Keep it
   that way when adding or updating one; look the SHA up, do not guess it.
+- **The README's figures and format table are generated** (`pnpm readme:facts`, from the
+  registry, the trap list and `test-count.json`), and a test fails when they are stale. After a
+  change that adds a format, a trap or a test: `pnpm test && pnpm tests:count && pnpm readme:facts`.
+  Its prose and its screenshots (`docs/screenshots/`, made by `e2e/readme-screenshots.spec.ts`)
+  are kept current by hand, in the same change that alters what they show.
 - **The Trust page's figures are counted, never typed.** Tests are counted from a real run:
   after adding or removing a test, run `pnpm test && pnpm tests:count` and commit
   `test-count.json`. CI runs `pnpm tests:count --check` and fails if it is out of date.
@@ -200,6 +205,9 @@ build by `apps/web/scripts/write-headers.ts`.
   names `useConversionQueue` knows (`OFFERED`). The page shows a control for each key the
   selected conversion has; nothing in the page names a format. To offer a choice for some
   sources only, give those sources their own capability entry, as tables have.
+- **What a copy passes on to another server is written by the build** (`forwardingRules` in
+  `apps/web/security-headers.ts`, into `headers.nginx`), from `OMSETT_VISITS_SITE` and
+  `OMSETT_ACCESSIBILITY_CHECKER`. No forwarding rule is typed by hand, and none takes a key.
 - **Counting visits is off unless three things hold** (`visitCounting` in `app/utils/visits.ts`):
   the build names the site (`OMSETT_VISITS_SITE`), the visitor has not turned it off in Settings,
   and the browser has not asked not to be tracked. The self-host image and the tests name none.
@@ -247,7 +255,9 @@ build by `apps/web/scripts/write-headers.ts`.
     diagrams in `app/utils/diagrams.ts` do not, and must be edited when the process they
     describe changes.
   - `security/audits.json`, when the change fixes or opens a security finding.
-  - `README.md`, the design doc, and this file, wherever they describe what changed.
+  - `README.md`, before every commit: its generated figures (`pnpm readme:facts`), its feature
+    list, and its screenshots where the screen they show has changed.
+  - The design doc and this file, wherever they describe what changed.
 - **Commits** are small and labeled (`feat(registry): …`, `fix(web): …`, `chore(ci): …`), and
   each builds and passes tests. No `Co-Authored-By` line and no other AI attribution trailer.
 - **Decide small things; ask about big ones.** Anything that changes the public shape (the

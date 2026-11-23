@@ -90,3 +90,71 @@ export function securityHeaders(): HeaderRule[] {
     },
   ]
 }
+
+// --- What the site's own server passes on -----------------------------------------------------
+//
+// Two things may leave a copy of Omsett, and both go by way of its own server, so that the page
+// itself never asks another site for anything: a count of visits, and a file a person has
+// asked to have checked for accessibility. Neither exists unless the build is told of it. The
+// rules for nginx are written here, with the headers, so that setting a copy up is a matter of
+// naming the two things and deploying, and no rule is ever typed by hand.
+
+export interface Forwarding {
+  /** The site's name as Plausible knows it ("omsett.com"); empty for a copy that counts nothing. */
+  visitsSite: string
+  /** The accessibility checker's site ("https://audit.icjia.app"); empty for a copy with none. */
+  checker: string
+}
+
+const HOST = /^[a-z0-9](?:[a-z0-9.-]{0,251}[a-z0-9])?$/i
+
+/** The lines every forwarding rule shares: the far end is checked, and nothing of the visitor's but their address goes. */
+const passOn = (host: string) => [
+  `    proxy_set_header Host ${host};`,
+  '    proxy_ssl_server_name on;',
+  `    proxy_ssl_name ${host};`,
+  '    proxy_ssl_verify on;',
+  '    proxy_ssl_trusted_certificate /etc/ssl/certs/ca-certificates.crt;',
+  '    proxy_set_header X-Forwarded-For $remote_addr;',
+  '    proxy_set_header X-Forwarded-Proto $scheme;',
+  '    proxy_set_header Cookie "";',
+  '    proxy_set_header Authorization "";',
+  '    proxy_http_version 1.1;',
+]
+
+/** nginx locations for what this copy passes on. Empty for a copy that passes on nothing. */
+export function forwardingRules({ visitsSite, checker }: Forwarding): string {
+  const out: string[] = []
+  if (HOST.test(visitsSite)) {
+    out.push(
+      '# Counting visits: one small report that a page was opened, passed on to Plausible, which',
+      "# is told the visitor's address so that it counts people and not requests. It does not keep it.",
+      'location = /api/event {',
+      '    limit_except POST { deny all; }',
+      '    client_max_body_size 2k;',
+      '    proxy_pass https://plausible.io/api/event;',
+      ...passOn('plausible.io'),
+      '}',
+    )
+  }
+  const site = /^https:\/\/([^/]+)$/.exec(checker)?.[1]
+  if (site !== undefined && HOST.test(site)) {
+    const rule = (path: string, method: string, lines: string[]) => [
+      `location = /api/accessibility/${path} {`,
+      `    limit_except ${method} { deny all; }`,
+      ...lines,
+      `    proxy_pass https://${site}/api/${path};`,
+      '    proxy_set_header Origin "";',
+      ...passOn(site),
+      '}',
+    ]
+    out.push(
+      ...(out.length > 0 ? [''] : []),
+      '# The accessibility checker. Only a file a visitor has asked to send arrives here.',
+      ...rule('health', 'GET', []),
+      ...rule('analyze', 'POST', ['    client_max_body_size 26m;', '    proxy_read_timeout 180s;', '    proxy_request_buffering off;']),
+      ...rule('reports', 'POST', ['    client_max_body_size 4m;']),
+    )
+  }
+  return out.join('\n')
+}

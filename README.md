@@ -14,32 +14,91 @@
 
 **Drop a file. Pick a format. Nothing leaves your device.**
 
-Omsett is a free, open-source, accessible file converter. Every conversion that can run in the browser runs there — images, audio, documents, data, archives, fonts, subtitles, and common video — so your files never touch a server. A desktop app adds the long tail (full ffmpeg, LibreOffice-grade office fidelity, Calibre ebook targets) on your own machine.
+Omsett is a free, open-source file converter. Every conversion runs in your browser, on your own device, so your files are never uploaded: there is no server for them to go to. Pictures, documents, spreadsheets, data, subtitles, screenplays, fonts and archives convert today; audio, video and a desktop app are ahead.
 
 *Omsett* is Norwegian: to translate; to convert.
 
-> **Status: pre-alpha, and live at [omsett.com](https://omsett.com).** One real conversion so far, PNG → WebP, running entirely in the browser, with the plumbing every later format will use. The site's own [About](https://omsett.com/about), [Technical details](https://omsett.com/technical), and [What's new](https://omsett.com/whats-new) pages are kept current with the code.
+> **Live at [omsett.com](https://omsett.com).** The site's own [About](https://omsett.com/about), [Trust](https://omsett.com/trust), [Technical details](https://omsett.com/technical) and [What's new](https://omsett.com/whats-new) pages are generated from the code and are always current.
 
-## What it will do
+<p align="center">
+  <img src="docs/screenshots/converter.png" alt="The converter: a Word document added, and the formats it can become shown as tiles, each saying what is kept and what is lost." width="820">
+</p>
+
+## What it does today
+
+<!-- facts:start -->
+<!-- Generated from the registry by `pnpm readme:facts`. Do not edit by hand. -->
+
+**56 formats, 247 conversions**, every one of them run in your browser, on your device. Tested by 1,851 tests of the code and 2,430 in real browsers (Chromium, Firefox and WebKit), and against 457 files made on purpose to be broken, hostile or dishonest.
+
+| Kind | Converts to and from | Reads only |
+| --- | --- | --- |
+| Pictures | WebP, JPEG, PNG, AVIF, GIF, TIFF, JPEG XL, BMP, TGA, QOI, Netpbm | HEIC, PSD, ICO, JPEG 2000, OpenEXR, Radiance HDR, PCX, SGI, Sun Raster |
+| Drawings | — | SVG, SVGZ |
+| Documents | DOCX | — |
+| Presentations | — | PPTX |
+| PDF | — | PDF |
+| Text and markup | Markdown, HTML | — |
+| Spreadsheets | XLSX | — |
+| Data | JSON, YAML, CSV, XML, TOML, JSON Lines, TSV, vCard, iCalendar | — |
+| Subtitles | SRT, WebVTT, ASS, SSA, TTML, LRC, SBV, SAMI, MicroDVD | — |
+| Screenplays | Fountain, Final Draft, Drafter | — |
+| Fonts | WOFF2, WOFF, TTF, OTF | — |
+| Archives | ZIP, TAR.GZ, TAR | — |
+
+A file is offered the formats of its own kind: a picture becomes another picture, a workbook becomes data, a Word document becomes a web page or Markdown.
+
+<!-- facts:end -->
+
+- **Says what a conversion will lose before you start it**: transparency, animation, layers, formatting. And what it removes on purpose: author names, locations, and other metadata.
+- **Shows what a file holds besides what it shows** (who wrote it, when, where a photo was taken, tracked changes, hidden text), and whether converting keeps or removes each.
+- **Goes by what a file contains, not what it is called.** A JPEG named `.png` is converted as a JPEG.
+- **Refuses a damaged or hostile file with a reason**, instead of returning half of one or freezing the tab. Every conversion runs against a clock.
+- **Never carries across what an author hid or deleted**: tracked deletions, hidden text and slides, comments, speaker notes.
+- **Before and after, side by side**: a slider for pictures, with the quality adjustable in view; the two texts for data and subtitles.
+- **Convert to several formats at once**, and download everything as one ZIP.
+- **Settings**: light or dark, your own words in the names of converted files, and whether your visit is counted.
+
+<p align="center">
+  <img src="docs/screenshots/compare.png" alt="A converted picture beside its original, with a divider to drag between them and the quality setting." width="400">
+  <img src="docs/screenshots/details.png" alt="A Word document's details: its author, tracked changes and hidden text, each marked as removed when converted." width="400">
+</p>
+
+### Check a document's accessibility
+
+On a copy of Omsett set up for it (omsett.com is), a PDF, Word, PowerPoint or Excel file can be scored for accessibility by [audit.icjia.app](https://audit.icjia.app), before converting and again on the converted file. This is the one thing that sends a file to a server, so it never happens by itself: pressing the button shows where the file would go and what is kept, and nothing is sent unless you then say so.
+
+<p align="center">
+  <img src="docs/screenshots/accessibility.png" alt="The accessibility check asking first: where the file would go, that the checker does not keep it, and two buttons, to send it or not." width="820">
+</p>
+
+### Can I trust this?
+
+That is a page on the site: [omsett.com/trust](https://omsett.com/trust). It says where your files go and how to check that yourself, what a hostile file can and cannot do, how Omsett is tested, who has audited it and what is still open, and what it learns about you (that a page was opened; no cookies; you can turn it off).
+
+<p align="center">
+  <img src="docs/screenshots/trust.png" alt="The Trust page, with its figures: tests of the code, tests in real browsers, trap files, audits, and findings fixed and open." width="820">
+</p>
+
+## Where it is going
 
 | Public site (omsett.com) | Desktop app | CLI |
 | --- | --- | --- |
-| Everything the browser can do: ~200 formats via WebAssembly and WebCodecs | The full suite, including video and office fidelity, with no server | `npx omsett report.docx --to pdf` — same engines in Node |
-| Purpose presets: OpenGraph image, favicon pack, responsive set, Kindle | Watch folders, file associations, bundled ffmpeg | Batch, globs, `--watch`, JSON output for scripts |
-| Fidelity warnings before you convert; metadata shown and stripped by default | Auto-update via GitHub Releases | Optional `omsett.config.ts` for build-time conversion |
+| Everything the browser can do, via WebAssembly and WebCodecs: audio and video next | The full suite, including video and office fidelity, with no server | `npx omsett report.docx --to pdf`: the same engines in Node |
+| Purpose presets: OpenGraph image, favicon pack, responsive set | Watch folders, file associations, bundled ffmpeg | Batch, globs, `--watch`, JSON output for scripts |
 
-A self-hostable `omsettd` (Docker) is planned for teams and phones that want the full suite through the browser on their own network. There is no public server; there never will be.
+A self-hostable image (Docker) serves the same site on your own network. There is no public server that takes files; there never will be.
 
 ## Principles
 
 - **Private by construction.** Browser-tier conversions make no network request with file data. Verifiable in DevTools.
-- **Accessible as a feature.** WCAG 2.2 AA in the interface; tagged, structured PDF output by default.
+- **Accessible documents.** A converted document keeps what a screen reader relies on (headings, lists, table headers, picture descriptions, language), and says what to check. The interface's own WCAG 2.2 AA audit is the last phase of the roadmap.
 - **Honest about limits.** Every target says where it runs and what it will lose before you click Convert.
 - **The registry is data.** Adding a format is a record and a fixture, never a UI change.
 
 ## Stack
 
-Nuxt 4 + Nuxt UI (a static site, served by nginx) · TypeScript · pnpm · Web Workers + WASM (`wasm-vips`, `pandoc-wasm`, `ffmpeg.wasm`, `mediabunny`) · Electron for the desktop app · Docker Compose for self-hosting.
+Nuxt 4 + Nuxt UI (a static site, served by nginx) · TypeScript · pnpm · Web Workers + WebAssembly (libvips, ImageMagick, libheif, resvg, pdf.js) and Omsett's own readers and writers for data, documents, subtitles, screenplays, fonts and archives · Docker for self-hosting. Every engine and its license is in [`THIRD-PARTY-NOTICES.md`](THIRD-PARTY-NOTICES.md).
 
 ## Run it locally
 
@@ -113,9 +172,9 @@ To report a vulnerability, use the **Security** tab of this repository (“Repor
 
 | Phase | Gate |
 | --- | --- |
-| 0 · Foundation | PNG → WebP end to end on omsett.com |
-| 1 · Images, data, archives, fonts, PWA | Squish parity |
-| 2 · Documents, audio, ebooks, subtitles | DOCX → Markdown/EPUB and WAV → MP3 in the browser |
+| 0 · Foundation (done) | PNG → WebP end to end on omsett.com |
+| 1 · Images, data, archives, fonts (mostly done) | Squish parity |
+| 2 · Documents, subtitles (done); audio, ebooks (ahead) | DOCX → Markdown/EPUB and WAV → MP3 in the browser |
 | 3 · Desktop app and CLI | DOC → tagged PDF locally; installers on 3 OSes |
 | 4 · Video | 10-minute MOV → MP4 with progress, offline |
 | 5 · Plugins | CAD, 3D, geospatial, HWP as registry plugins |

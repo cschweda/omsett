@@ -188,131 +188,69 @@ and no cost per deploy.
 | A `.wasm` file downloads but will not start | nginx is not sending `Content-Type: application/wasm`. Current nginx does by default; on an old one, add `application/wasm wasm;` to `mime.types` |
 | 404 on every page | `live` does not exist yet (no deploy has finished), or the web directory is not `/live/public` |
 
-## Counting visits (optional)
+## Counting visits, and checking accessibility (both optional)
 
-Omsett can count visits with [Plausible](https://plausible.io). It is off unless you set it up.
+A copy of Omsett does neither unless you set it up to. Both are set up the same way, and
+neither needs a rule typed into nginx: the build writes the rules itself, into the same
+`headers.nginx` your server block already includes.
 
-No script of Plausible's is loaded, from Plausible or from anywhere. Omsett's own code reports
-that a page was opened, in one small request to your own domain, and nginx passes that request
-on. So no third party's code ever runs in the page where the files are, and the page still asks
-no other site for anything. Its security policy is the same with counting on as with it off.
+**Counting visits** uses [Plausible](https://plausible.io). No script of Plausible's is
+loaded, from Plausible or from anywhere: Omsett's own code reports that a page was opened, in
+one small request to your own domain, and nginx passes it on. No third party's code ever runs
+in the page where the files are, and the page's security policy is the same with counting on.
 
-Three steps, all on the server.
+**Checking accessibility** offers a visitor a score for a PDF, Word, PowerPoint or Excel file
+from a server that does that, such as [audit.icjia.app](https://audit.icjia.app). It is the
+one feature that sends a file off a visitor's device, so pressing the button sends nothing: it
+shows where the file would go and what the checker keeps, with a button that says "Send this
+file and check it". The file goes to your own domain, and nginx passes it on.
 
-1. **nginx.** In the same `server { }` block, add this one location. It accepts a small POST
-   and nothing else, and it checks that it is really Plausible on the other end.
+### Setting them up
 
-   ```
-   # Where a page view is reported. Passed on to Plausible, which is told the visitor's
-   # address so that it can count people and not requests; it does not keep the address.
-   location = /api/event {
-       limit_except POST { deny all; }
-       client_max_body_size 2k;
-
-       proxy_pass https://plausible.io/api/event;
-       proxy_set_header Host plausible.io;
-       proxy_ssl_server_name on;
-       proxy_ssl_name plausible.io;
-       proxy_ssl_verify on;
-       proxy_ssl_trusted_certificate /etc/ssl/certs/ca-certificates.crt;
-       proxy_set_header X-Forwarded-For $remote_addr;
-       proxy_set_header X-Forwarded-Proto $scheme;
-       proxy_set_header X-Forwarded-Host $host;
-       proxy_set_header Cookie "";
-       proxy_http_version 1.1;
-   }
-   ```
-
-2. **The build's setting.** In Forge, open the site's **Environment** and add one line: your
-   site's name as Plausible lists it. This is not a secret.
+1. **Name them.** In Forge, open the site's **Environment** and add either line, or both.
+   Neither is a secret.
 
    ```
    OMSETT_VISITS_SITE=omsett.com
-   ```
-
-   The deploy script must pass it to the build. If your Forge deploy script does not load the
-   site's environment already, add `set -a; . ./.env; set +a` before the line that runs
-   `scripts/publish-static.sh`.
-
-3. **Deploy, then check.** Open the site, then Plausible's dashboard: the visit should appear
-   within a minute. In the browser's developer tools, the Network tab should show one request
-   to `/api/event` on your own domain, no script from Plausible, and nothing on `plausible.io`.
-
-What a visitor can do about it is on the site's Settings page: turn it off, or it is off already
-if their browser sends Do Not Track or Global Privacy Control.
-
-You do not need the script snippet Plausible gives you, and should not add it: it would run
-Plausible's code in the page, which is exactly what this arrangement avoids.
-
-A Plausible **API key** (for reading your statistics) is a secret and has no place here. Nothing
-in Omsett needs it. Never put it in the site's environment: anything a static site's build can
-read can end up in a file the public downloads.
-
-## Checking accessibility (optional)
-
-Omsett can offer to check a PDF, Word, PowerPoint or Excel file's accessibility with a server
-that does that, such as [audit.icjia.app](https://audit.icjia.app). It is off unless you set it
-up. It is the one feature that sends a file off a visitor's device, so it works like this:
-
-- The button appears only on those four kinds of file.
-- Pressing it sends nothing. It shows where the file would go and what the checker keeps
-  (the report, not the file), with a button that says "Send this file and check it".
-- The file goes to **your own domain**, and nginx passes it to the checker. The page still
-  asks no other site for anything, and its security policy is unchanged.
-
-Three steps, all on the server.
-
-1. **nginx.** In the same `server { }` block, add these three locations. They pass on a health
-   question, one file of at most 25 MB, and a report to be saved, and nothing else.
-
-   ```
-   # The accessibility checker. Only what a visitor has asked to send arrives here.
-   location = /api/accessibility/health {
-       limit_except GET { deny all; }
-       proxy_pass https://audit.icjia.app/api/health;
-       include /home/forge/omsett.com/checker-proxy.conf;
-   }
-   location = /api/accessibility/analyze {
-       limit_except POST { deny all; }
-       client_max_body_size 26m;
-       proxy_read_timeout 180s;
-       proxy_request_buffering off;
-       proxy_pass https://audit.icjia.app/api/analyze;
-       include /home/forge/omsett.com/checker-proxy.conf;
-   }
-   location = /api/accessibility/reports {
-       limit_except POST { deny all; }
-       client_max_body_size 4m;
-       proxy_pass https://audit.icjia.app/api/reports;
-       include /home/forge/omsett.com/checker-proxy.conf;
-   }
-   ```
-
-   and put the lines they share in `/home/forge/omsett.com/checker-proxy.conf`:
-
-   ```
-   proxy_set_header Host audit.icjia.app;
-   proxy_ssl_server_name on;
-   proxy_ssl_name audit.icjia.app;
-   proxy_ssl_verify on;
-   proxy_ssl_trusted_certificate /etc/ssl/certs/ca-certificates.crt;
-   proxy_set_header X-Forwarded-For $remote_addr;
-   proxy_set_header X-Forwarded-Proto $scheme;
-   proxy_set_header Cookie "";
-   proxy_set_header Origin "";
-   proxy_set_header Authorization "";
-   proxy_http_version 1.1;
-   ```
-
-   No token or key belongs here. The checker is used as any member of the public uses it.
-
-2. **The build's setting.** In Forge, open the site's **Environment** and add the checker's
-   site. It is shown to visitors as where their file goes, and the report link is built from it.
-
-   ```
    OMSETT_ACCESSIBILITY_CHECKER=https://audit.icjia.app
    ```
 
-3. **Deploy, then check.** Open the site's Status page: "Accessibility checker" should read
-   "Up and answering". Add a Word file and press "Check accessibility".
+   The first is your site's name as Plausible lists it. The second is the checker's site.
+   `scripts/publish-static.sh` reads lines beginning `OMSETT_` from the site's `.env`, which is
+   where Forge keeps them, and ignores everything else in it.
 
+2. **Deploy.** The build writes the forwarding rules into `headers.nginx`, and the publish
+   script reloads nginx because that file changed. If the deploy log ends with a warning that
+   nginx could not be reloaded, reload it once from Forge (the server's **Restart → Reload
+   nginx**), or as root: `nginx -t && service nginx reload`.
+
+3. **Check.**
+   - Visits: open the site, then Plausible's dashboard. The visit should appear within a
+     minute. Plausible may go on saying it "couldn't detect" its snippet, because there is
+     none to detect; the numbers are what tell you it works. In the browser's developer tools,
+     the Network tab shows one request to `/api/event` on your own domain and nothing on
+     `plausible.io`.
+   - Accessibility: the site's Status page should read "Accessibility checker: Up and
+     answering", and a Word file should show "Check accessibility".
+
+To turn either off again, remove its line and deploy.
+
+### What the rules are
+
+For the record, and for a server that is not nginx. Counting visits is one location,
+`= /api/event`, that takes a POST of at most 2 KB and passes it to
+`https://plausible.io/api/event`. The checker is three: `= /api/accessibility/health` (GET),
+`/analyze` (POST, at most 26 MB) and `/reports` (POST, at most 4 MB), each passed to the same
+path under the checker's `/api/`. Every one checks the certificate of the server it forwards
+to, sends on the visitor's address and nothing else of theirs (no cookie, no authorization),
+and refuses any other method. They are written by `forwardingRules` in
+`apps/web/security-headers.ts`, and CI has nginx itself confirm it accepts them.
+
+What a visitor can do about counting is on the site's Settings page: turn it off, or it is off
+already if their browser sends Do Not Track or Global Privacy Control.
+
+You do not need the script snippet Plausible gives you, and should not add it: it would run
+Plausible's code in the page, which is exactly what this arrangement avoids. Nor does a token
+or key belong anywhere here. A Plausible **API key** (for reading your statistics) is a secret
+and nothing in Omsett needs it: anything a static site's build can read can end up in a file
+the public downloads. The checker is used as any member of the public uses it.

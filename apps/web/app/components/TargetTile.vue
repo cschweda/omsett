@@ -115,6 +115,8 @@ const tip = computed(() => (props.target.reason ? `${props.target.reason}. ${pro
   color: var(--ink);
   text-align: left;
   cursor: pointer;
+  /* The name is sized against the tile it is in (see .name). */
+  container-type: inline-size;
 }
 .tile:hover:not(.disabled):not(.selected) {
   background: var(--surface);
@@ -134,8 +136,12 @@ const tip = computed(() => (props.target.reason ? `${props.target.reason}. ${pro
   color: var(--muted);
   cursor: not-allowed;
 }
+/* As large as the scale allows, and never wider than its tile: in a narrow tile "Markdown" at
+   full size ran past the edge and lost its last letter. */
 .name {
-  font-size: var(--text-title);
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  font-size: min(var(--text-title), 20cqi);
   font-weight: 700;
   line-height: 1;
   letter-spacing: -0.035em;
