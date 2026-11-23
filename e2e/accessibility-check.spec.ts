@@ -126,3 +126,42 @@ test('the checker at audit.icjia.app is said to be by the same author, and its r
   await expect(report).toHaveClass(/button/)
   await expect(page.getByTestId('check')).toContainText('It can be saved or printed from there.')
 })
+
+test('a converted file can be checked too, asked the same way, and a new conversion is a new file', async ({ page }) => {
+  const sent = await checker(page)
+  await open(page, SET_UP)
+  await page.locator('#file-input').setInputFiles(fixture('json/sample.json'))
+  // Data is not a kind a checker reads, so the file as added has no check; the workbook made from it has.
+  await expect(page.getByTestId('check-toggle')).toHaveCount(0)
+  await page.getByRole('radio', { name: /XLSX/ }).click()
+  await page.getByTestId('convert').click()
+  const result = page.locator('.result-card')
+  await expect(result).toHaveCount(1, { timeout: 30_000 })
+  expect(sent).toEqual([])
+
+  await result.getByTestId('result-check-toggle').click()
+  await expect(result.getByTestId('check')).toContainText('This sends the file to a server.')
+  expect(sent).toEqual([])
+  await result.getByTestId('check-send').click()
+  await expect(result.getByTestId('check-score')).toHaveText('Accessibility: 82 out of 100, grade B.')
+  await expect(result.getByTestId('check-which')).toHaveText('This is the converted file.')
+  expect(sent[0]!.path).toBe('/api/accessibility/analyze')
+  expect(sent[0]!.body).toContain('filename="sample.xlsx"')
+  // A picture made from a picture has no check.
+  await page.getByTestId('another').click()
+  await page.locator('#file-input').setInputFiles(FIXTURE)
+  await page.getByRole('radio', { name: /WebP/ }).click()
+  await page.getByTestId('convert').click()
+  await expect(page.locator('.result-card')).toHaveCount(1, { timeout: 30_000 })
+  await expect(page.getByTestId('result-check-toggle')).toHaveCount(0)
+})
+
+test('a document shows the check before converting and again on what it becomes', async ({ page }) => {
+  await checker(page)
+  await open(page, SET_UP)
+  await page.locator('#file-input').setInputFiles(fixture('md/sample.md'))
+  await page.getByRole('radio', { name: /DOCX/ }).click()
+  await page.getByTestId('convert').click()
+  await expect(page.locator('.result-card')).toHaveCount(1, { timeout: 30_000 })
+  await expect(page.getByTestId('result-check-toggle')).toHaveCount(1)
+})

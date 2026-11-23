@@ -79,7 +79,7 @@ async function office(blob: Blob, format: string): Promise<Detail[]> {
     add('Words', inTag(app, 'Words'))
     const body = part('word/document.xml')
     const tracked = (body.match(/<w:(?:del|ins)\b/g) ?? []).length
-    if (tracked) add('Tracked changes', `${count(tracked, 'change')}. Deleted text is not carried over; inserted text is`, 'removed')
+    if (tracked) add('Tracked changes', `${count(tracked, 'change')}. Deleted text is left out; inserted text is kept as ordinary text`, 'removed')
     if (names.includes('word/comments.xml')) add('Comments', 'Yes', 'removed')
     if (/<w:vanish\b/.test(body)) add('Hidden text', 'Yes', 'removed')
   }

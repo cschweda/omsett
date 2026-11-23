@@ -15,6 +15,14 @@ const slug = (name: string) => `release-${name.toLowerCase().replace(/[^a-z0-9]+
     <PageTitle title="What’s new" lead="Every change to Omsett, newest first. This page is the project’s changelog, set in type." />
 
     <main>
+      <!-- One word in these notes is the project's own, and is said here once. -->
+      <p class="word" data-testid="trap-definition">
+        <strong>A word used below: trap file.</strong> A file made on purpose to be broken, dishonest or hostile: a
+        picture cut off halfway, a small file that claims to be enormous, a document with a program hidden in it.
+        Omsett is tested against hundreds of them, to make sure each is refused or converted safely and never does
+        harm. They are test files, kept with the code; nothing of yours is ever one.
+        <NuxtLink to="/traps">See them all</NuxtLink>.
+      </p>
       <StepSection
         v-for="release in releases"
         :key="release.title"
@@ -41,6 +49,18 @@ const slug = (name: string) => `release-${name.toLowerCase().replace(/[^a-z0-9]+
 </template>
 
 <style scoped>
+.word {
+  max-width: 70ch;
+  margin: 0 0 2rem;
+  font-size: var(--text-small);
+  color: var(--muted);
+}
+.word strong {
+  color: var(--ink);
+}
+.word a {
+  text-decoration: underline;
+}
 .release {
   display: flex;
   flex-direction: column;

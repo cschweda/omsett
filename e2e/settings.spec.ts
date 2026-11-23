@@ -1,3 +1,4 @@
+import { fileURLToPath } from 'node:url'
 // Settings: counting visits, appearance, and starting again.
 import { expect, test } from '@playwright/test'
 
@@ -86,4 +87,40 @@ test('Settings is reached from the top of every page and from the foot, marked w
   await page.goto('/about')
   await page.getByTestId('nav-settings').click()
   await expect(page).toHaveURL(/\/settings$/)
+})
+
+test('Settings says what counting visits means, whether or not this copy counts them', async ({ page }) => {
+  await page.goto('/settings')
+  const facts = page.getByTestId('visits-facts')
+  await expect(facts).toContainText('That a page was opened, which page, and what page linked to it.')
+  await expect(facts).toContainText('A file, a file\u2019s name, what you converted')
+  await expect(facts).toContainText('Cookies')
+  await expect(facts).toContainText('None. Nothing is stored on your device for counting')
+  await expect(facts).toContainText('None runs here.')
+})
+
+test('words asked for in Settings are put before and after the names of converted files, and remembered', async ({ page }) => {
+  await page.goto('/settings')
+  await expect(page.getByTestId('name-example')).toContainText('report.html')
+  await page.getByTestId('name-prefix').fill('omsett-')
+  await page.getByTestId('name-suffix').fill('-v2/..')
+  // What a file name cannot hold is left out, and the example shows the name as it will be.
+  await expect(page.getByTestId('name-example')).toContainText('omsett-report-v2.html')
+
+  await page.goto('/')
+  await expect(page.getByRole('radiogroup')).toBeVisible()
+  await page.locator('#file-input').setInputFiles(fileURLToPath(new URL('../fixtures/json/sample.json', import.meta.url)))
+  await page.getByRole('radio', { name: /YAML/ }).click()
+  await page.getByTestId('convert').click()
+  const download = page.getByTestId('download')
+  await expect(download).toHaveAttribute('download', 'omsett-sample-v2.yaml', { timeout: 20_000 })
+
+  // Kept on the device, and gone when the person says to forget.
+  await page.goto('/settings')
+  await expect(page.getByTestId('name-prefix')).toHaveValue('omsett-')
+  await page.getByTestId('start-again').click()
+  // Forgetting returns to the converter; then back to look.
+  await expect(page.getByRole('radiogroup')).toBeVisible()
+  await page.goto('/settings')
+  await expect(page.getByTestId('name-prefix')).toHaveValue('')
 })

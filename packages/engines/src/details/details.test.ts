@@ -29,7 +29,7 @@ describe('what a file carries', () => {
     expect(await details('docx/sample.docx', 'docx')).toEqual({
       Title: 'About Omsett [kept]',
       Author: 'SECRET-AUTHOR Ada Lovelace [removed]',
-      'Tracked changes': '2 changes. Deleted text is not carried over; inserted text is [removed]',
+      'Tracked changes': '2 changes. Deleted text is left out; inserted text is kept as ordinary text [removed]',
       Comments: 'Yes [removed]',
       'Hidden text': 'Yes [removed]',
     })

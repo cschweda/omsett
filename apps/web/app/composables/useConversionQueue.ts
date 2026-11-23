@@ -3,6 +3,7 @@ import type { Edge, Route } from '@omsett/registry'
 import { dimensionProblem, formatById } from '@omsett/registry'
 import { conversionBudgetMs, MAX_FILES, PREVIEW_MAX_PIXELS, testHook, TimedOut } from '~/utils/limits'
 import { closestLanguage } from '~/utils/languages'
+import { namedAs } from '~/utils/naming'
 import { registry, router } from '~/utils/registry'
 
 export interface QueueFile {
@@ -148,6 +149,8 @@ export function useConversionQueue() {
     if (targetId.value && !list.some((t) => t.format.id === targetId.value && t.route)) targetId.value = null
   })
 
+  const { naming } = useNaming()
+
   async function add(incoming: Iterable<File>) {
     notice.value = ''
     for (const file of incoming) {
@@ -285,7 +288,8 @@ export function useConversionQueue() {
                 // Stable across re-conversions, so a result card keeps its place and its state.
                 id: `${entry.id}:${to.id}:${index}`,
                 sourceId: entry.id,
-                name: output.name,
+                // With whatever the person has asked to have put before and after it, in Settings.
+                name: namedAs(output.name, naming.value),
                 formatId: output.format,
                 blob: markRaw(output.blob),
                 engine: candidate.engine,

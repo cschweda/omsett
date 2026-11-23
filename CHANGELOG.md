@@ -7,6 +7,47 @@ The paragraph that opens a version is its teaser: the home page shows its first 
 in the "What's new" banner, so keep it to two or three sentences on what a visitor will notice.
 A line beginning "Released" gives the date.
 
+## 0.30.0
+
+Released 23 November 2026.
+
+Three things left open by this morning's audit are dealt with. A HEIC photo converted to JPEG
+now carries the warning that it is being compressed a second time, and a drawing made of
+patterns inside patterns is refused instead of being left to run.
+
+### Added
+
+- **Your own words in the names of converted files.** In Settings, under File names: words
+  to put before the name, after it, or both, so that "report.docx" can be saved as
+  "omsett-report-converted.html". Kept on your device only.
+- **Settings now says exactly what counting visits means**: what is sent, what is never sent,
+  that there are no cookies, what happens to your address, and that none of Plausible's code
+  runs here.
+- **Check accessibility on a converted file too.** A Word document or a workbook that Omsett
+  has just made has the same "Check accessibility" control as a file you added, asked the
+  same way: nothing is sent until you say so.
+- **What's new explains what a "trap file" is**, for anyone meeting the term for the first time.
+
+### Changed
+
+- The README describes Omsett as it is, with pictures; its list of formats is written from
+  the code and checked on every change.
+- Setting a copy of Omsett up to count visits or to check accessibility is now two lines in
+  its settings and a deploy. The server rules are written by the build.
+- **In a file's details, "removed when converted" and "kept" line up in a column of their own**,
+  so the list can be read at a glance.
+- New releases of the software Omsett is built from are left three days before they can be
+  used, and a release of Omsett is published only from a commit whose checks all passed.
+
+### Fixed
+
+- **"Markdown" no longer loses its last letter** on a narrow format tile. A format's name is
+  now sized to the tile it is in.
+- **A HEIC photo converted to JPEG now carries the warning** that it is being compressed a
+  second time. The warning was lost because the conversion goes by way of PNG.
+- A drawing made of patterns filled with patterns, many levels deep, is refused instead of
+  being left to run.
+
 ## 0.29.0
 
 Released 23 November 2026.
@@ -39,7 +80,8 @@ with your files, what stops it doing anything else, and how to check each of tho
 - **Trust.** Where your files go and how to see that for yourself; what a hostile file can
   and cannot do; how Omsett is tested; who has audited it and what is still open; what it
   learns about you; and what you are still relying on when you use it.
-- **Every figure on it is counted when the site is built**: the tests, the trap files, the
+- **Every figure on it is counted when the site is built**: the tests, the trap files (files
+  made on purpose to be broken or hostile, to test against), the
   audits and their findings. The number of tests comes from a real run, and a change cannot
   be merged if the figure on the page is not the true one.
 - **About now explains visit counting** and how to turn it off.
@@ -82,7 +124,9 @@ fixed, along with twenty-three other things.
 
 - **Previews** are drawn one at a time, and only for pictures up to 40 megapixels that state
   their size. Larger ones convert as before, without a preview.
-- 31 new trap files, 457 in all, and the record of the audit is on the Security page.
+- 31 new trap files, 457 in all. (A trap file is a file made on purpose to be broken,
+  dishonest or hostile, which Omsett is tested against.) The record of the audit is on the
+  Security page.
 
 ### Known
 
@@ -94,8 +138,9 @@ fixed, along with twenty-three other things.
 
 Released 23 November 2026.
 
-Every trap file Omsett is tested against is now listed on the site: the files made to be
-broken, hostile, or lying. For each one the page says what it is and what must happen to it.
+Omsett is tested against "trap files": files made on purpose to be broken, hostile or
+dishonest, to make sure each is refused or converted safely. Every one of them is now listed
+on the site, and for each the page says what it is and what must happen to it.
 
 ### Added
 

@@ -35,6 +35,8 @@ const MAX_OCTAVES = 16
 /** The furthest, in pixels, a filter may spread each pixel; and the widest grid it may weigh. */
 const MAX_RADIUS = 64
 const MAX_KERNEL = 9
+/** How deep a pattern may be filled with a pattern filled with a pattern. Each level multiplies the work. */
+const MAX_PATTERNS_DEEP = 4
 
 const tooCostly = () => new Refusal('This drawing asks for more work than Omsett will do to draw it')
 const tooLargeInside = () => new Refusal('This drawing holds a picture too large to convert in a browser')
@@ -68,6 +70,33 @@ async function embeddedPixels(svg: string, depth: number, count: { pictures: num
     const order = /\border\s*=\s*["']([^"']*)["']/i.exec(tag)?.[1] ?? '3'
     if (order.trim().split(/[\s,]+/).some((part) => !(Number(part) <= MAX_KERNEL))) throw tooCostly()
   }
+
+  // Patterns filled with patterns: each tile of one draws every tile of the next.
+  const inside = new Map<string, string[]>()
+  for (let at = svg.search(/<(?:[a-z]+:)?pattern\b/i); at >= 0; ) {
+    const open = svg.indexOf('>', at)
+    const close = open < 0 ? -1 : svg.indexOf('</', open)
+    const end = close < 0 ? svg.length : svg.indexOf('pattern>', close)
+    const id = open < 0 ? undefined : /\bid\s*=\s*["']([^"']*)["']/i.exec(svg.slice(at, open))?.[1]
+    const body = svg.slice(open < 0 ? at : open, end < 0 ? svg.length : end)
+    if (id !== undefined) inside.set(id, [...body.matchAll(/url\(\s*["']?#([^"')\s]+)/gi)].map((found) => found[1]!))
+    const next = svg.slice(at + 1).search(/<(?:[a-z]+:)?pattern\b/i)
+    at = next < 0 ? -1 : at + 1 + next
+    if (inside.size > 10_000) throw tooCostly()
+  }
+  const levels = new Map<string, number>()
+  const level = (id: string, seen: Set<string>): number => {
+    if (levels.has(id)) return levels.get(id)!
+    // A pattern that leads back to itself is drawn by no renderer; counted as too deep.
+    if (seen.has(id) || seen.size > MAX_PATTERNS_DEEP) return MAX_PATTERNS_DEEP + 1
+    seen.add(id)
+    let most = 1
+    for (const used of inside.get(id) ?? []) if (inside.has(used)) most = Math.max(most, 1 + level(used, seen))
+    seen.delete(id)
+    levels.set(id, most)
+    return most
+  }
+  for (const id of inside.keys()) if (level(id, new Set()) > MAX_PATTERNS_DEEP) throw tooCostly()
 
   // Text: what is inside <text>, however it is divided into spans.
   let text = 0

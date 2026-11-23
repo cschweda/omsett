@@ -230,3 +230,10 @@ test('the Trust page states figures that are counted, and leads to the traps, th
   await page.goto('/about')
   await expect(page.getByTestId('about-visits')).toContainText('Do not count my visits')
 })
+
+test('What\u2019s new says what a trap file is, for a reader who has never met the term', async ({ page }) => {
+  await page.goto('/whats-new')
+  await expect(page.getByTestId('trap-definition')).toContainText('A file made on purpose to be broken, dishonest or hostile')
+  await page.getByTestId('trap-definition').getByRole('link', { name: 'See them all' }).click()
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('Trap files')
+})

@@ -25,6 +25,83 @@ A finding is **Fixed** when a test shows it, **Open** when it is not yet dealt w
 Newest first. The latest is expanded; earlier ones open when clicked.
 
 <details open>
+<summary><strong>23 November 2026: Follow-up: three findings left open that morning</strong> (3 findings: 1 medium, 2 low; 1 fixed, 1 open, 1 accepted)</summary>
+
+The audit of 23 November left four findings open and one fixed with a gap. This pass dealt with what was the project's to deal with: the gap in the drawing limits, two of the three supply-chain settings, and one of the two missing warnings. Two findings remain the owner's to close on the server and the repository.
+
+**Scope**
+
+- OMS-121: patterns nested in patterns, which no stated limit stopped.
+- OMS-132: the waiting period for new dependency releases, and releases published without their checks.
+- OMS-133: the warning lost when a conversion takes two steps.
+
+**Method**
+
+- Each change was made with a test where a test can show it, and the whole suite run again.
+
+**What held**
+
+- OMS-130 (the live site's missing header) and OMS-131 (the main branch not protected by its checks) are unchanged and still open: one needs nginx reloading on the server, the other a setting on the repository.
+
+**Findings**
+
+| ID | Severity | Finding | Status |
+| --- | --- | --- | --- |
+| OMS-121 | Medium | A drawing of 275 bytes could ask for work that never finishes | Fixed |
+| OMS-132 | Low | Supply-chain settings looser than the rest of the project | Accepted |
+| OMS-133 | Low | Two warnings the picker does not give | Open |
+
+#### OMS-121: A drawing of 275 bytes could ask for work that never finishes
+
+**Severity:** Medium · **Status:** Fixed · **Area:** Availability
+
+**Identification**
+
+Left over from the audit earlier the same day: patterns filled with patterns were stopped in a browser only by the conversion clock, and by nothing outside one. Each level multiplies the work of the level above it; twelve levels of eight shapes each did not finish in 200 seconds.
+
+**Mitigation**
+
+Patterns are followed from one to the next before a drawing is drawn. More than four deep, or one that leads back to itself, is refused.
+
+**Verification:** fixtures/audit-2026-11-23.test.ts (OMS-121): twelve deep and a pattern filled with itself are refused in under two seconds; three deep is drawn.
+
+#### OMS-132: Supply-chain settings looser than the rest of the project
+
+**Severity:** Low · **Status:** Accepted · **Area:** Supply chain
+
+**Identification**
+
+Three settings were left open: no waiting period on new releases of dependencies, a release that could be published from a tag whose checks had not run, and the self-host example pulling its image by tag.
+
+**Mitigation**
+
+A dependency release is now left three days before it can be chosen when dependencies are resolved, and a week before an update is proposed. The release job first asks whether "All checks" passed on the tagged commit, and publishes nothing if it did not.
+
+The self-host example still names the image by its tag. That is accepted: the example is for a person who wants the current release, the image is built only from a commit whose checks passed, and anyone who wants an exact image can name its digest.
+
+**Verification:** The settings are in pnpm-workspace.yaml, .github/dependabot.yml and .github/workflows/release.yml. The install was run with the waiting period in force. The release check will first run on the next tagged release.
+
+#### OMS-133: Two warnings the picker does not give
+
+**Severity:** Low · **Status:** Open · **Area:** Honest description
+
+**Identification**
+
+Of the two missing warnings, one is closed here: a HEIC photo converted to JPEG goes by way of PNG, and the warning about converting one lossy format to another was lost on the way, because it was worked out for each step and neither step is such a conversion by itself.
+
+The other stays open: an animated PNG becomes its first frame with no warning that the rest are dropped. Saying so properly means registering animated PNG as a format of its own, which changes the registry's shape.
+
+**Mitigation**
+
+The warning is now given for a route as a whole: from a format that always loses detail to a last step that loses detail, by whatever road.
+
+Animated PNG is not changed here.
+
+**Verification:** packages/registry/src/router.test.ts: HEIC to JPEG carries the warning once, and HEIC to PNG does not. The animated PNG warning keeps this finding open.
+
+</details>
+
+<details>
 <summary><strong>23 November 2026: Red and blue: every reader, every engine, the page and its deployment</strong> (29 findings: 4 high, 14 medium, 11 low; 24 fixed, 4 open, 1 accepted)</summary>
 
 Three independent reviewers were each given one part of Omsett and told to break it, without being shown the project's own reasoning: the file readers and writers; identification, routing and the picture engines; and the page, its security policy, the build and the deployment. They were required to prove what they claimed by running it. They found no way to run code and no way for a file to leave the device. They did find hidden text carried out of Word and PowerPoint files, small files that cost gigabytes or never finished, pictures that came out wrong, and one design of the project's own, made the same day, that would have put another party's code in the page.

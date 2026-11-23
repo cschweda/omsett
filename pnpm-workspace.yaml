@@ -7,3 +7,7 @@ onlyBuiltDependencies:
   - '@parcel/watcher'
   - '@tailwindcss/oxide'
   - vue-demi
+
+# A version published less than three days ago is not chosen when dependencies are resolved.
+# Most bad releases are found and pulled within that time. In minutes.
+minimumReleaseAge: 4320

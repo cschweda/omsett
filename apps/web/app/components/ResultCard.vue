@@ -34,6 +34,15 @@ onMounted(() => {
 })
 onBeforeUnmount(release)
 
+// The converted file can be checked for accessibility too, where it is a kind a checker reads.
+// Asked the same way as for the file that was added: nothing is sent until the person says so.
+const check = useFileCheck(
+  () => new File([props.result.blob], props.result.name, { type: props.result.blob.type }),
+  () => formatById(registry, props.result.formatId)?.category,
+)
+// Converted again, it is a new file, and the score of the old one is not its score.
+watch(() => props.result.blob, check.forget)
+
 const from = computed(() => (props.sourceFormatId ? formatById(registry, props.sourceFormatId) : undefined))
 const to = computed(() => formatById(registry, props.result.formatId))
 // Picture to picture: there is something to look at side by side.
@@ -61,6 +70,17 @@ const delta = computed(() => formatDelta(props.result.inputBytes, props.result.b
     <a class="button solid" :href="url || undefined" :download="result.name" data-testid="download">
       Download<span class="sr-only"> {{ result.name }}</span>
     </a>
+    <button
+      v-if="check.offered"
+      type="button"
+      class="text-button check-toggle"
+      :aria-expanded="check.stage !== 'closed'"
+      data-testid="result-check-toggle"
+      @click="check.toggle"
+    >
+      Check accessibility<span class="sr-only"> of {{ result.name }}</span>
+    </button>
+    <CheckPanel :check="check" which="This is the converted file." />
     <!-- What converting found out about the file, which the person could not have known before. -->
     <p v-for="note in result.notes" :key="note" class="found" data-testid="result-note">{{ note }}</p>
     <CompareSlider
@@ -93,6 +113,13 @@ const delta = computed(() => formatDelta(props.result.inputBytes, props.result.b
   padding: 0.875rem 0 1.5rem;
   border-top: 1px solid var(--rule);
   list-style: none;
+}
+/* Under the name, at the left, where the eye is after reading what was made. */
+.check-toggle {
+  grid-column: 1 / -1;
+  justify-self: start;
+  margin-top: 0.5rem;
+  font-size: var(--text-small);
 }
 .name {
   margin: 0;

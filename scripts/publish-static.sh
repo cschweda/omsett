@@ -34,6 +34,21 @@ if [ -s "$NVM_DIR/nvm.sh" ]; then
   export COREPACK_ENABLE_DOWNLOAD_PROMPT=0
   corepack enable >/dev/null 2>&1 || true
 fi
+# What this copy of Omsett is set up to do is in the site's environment file, where Forge
+# keeps it. Only Omsett's own settings are read from it, and only lines that are plainly one.
+if [ -f .env ]; then
+  while IFS= read -r line; do
+    case "$line" in
+      OMSETT_[A-Z_]*=*)
+        name="${line%%=*}"
+        value="${line#*=}"
+        value="${value%\"}"; value="${value#\"}"
+        case "$value" in *[!A-Za-z0-9.:/_-]*) echo "Ignoring $name: its value is not a plain name or address"; continue ;; esac
+        export "$name=$value"
+        ;;
+    esac
+  done < .env
+fi
 if [ -z "${SKIP_BUILD:-}" ]; then
   echo "Building with node $(node --version), pnpm $(pnpm --version)"
   pnpm install --frozen-lockfile
@@ -77,13 +92,14 @@ echo "Published $stamp → $site/live"
 
 if [ -n "$headers_changed" ]; then
   # Forge lets its user reload nginx without a password. Where that is not so, say it loudly.
-  if command -v sudo >/dev/null 2>&1 && sudo -n nginx -t >/dev/null 2>&1 && sudo -n service nginx reload >/dev/null 2>&1; then
+  if command -v sudo >/dev/null 2>&1 && sudo -n service nginx reload >/dev/null 2>&1; then
     echo "headers.nginx changed: nginx reloaded."
   else
     echo "=================================================================="
     echo "WARNING: headers.nginx changed and nginx could NOT be reloaded here."
     echo "The site is still sending the OLD security headers. Run, as root:"
     echo "    nginx -t && service nginx reload"
+    echo "(In Forge: the site's nginx 'Restart' or 'Reload' button does the same.)"
     echo "then check with:  scripts/check-live-headers.sh https://your.site"
     echo "=================================================================="
   fi
