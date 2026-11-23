@@ -15,6 +15,17 @@ const slug = (name: string) => `release-${name.toLowerCase().replace(/[^a-z0-9]+
     <PageTitle title="What’s new" lead="Every change to Omsett, newest first. This page is the project’s changelog, set in type." />
 
     <main>
+      <StepSection title="A word used here" heading-id="whats-new-words">
+        <div class="prose" data-testid="trap-definition">
+          <p>
+            <strong>Trap file.</strong> A file made on purpose to be broken, dishonest or hostile: a picture cut
+            off halfway, a small file that claims to be enormous, a document with a program hidden in it. Omsett
+            is tested against hundreds of them, to make sure each is refused or converted safely and never does
+            harm. They are test files, kept with the code; nothing of yours is ever one.
+            <NuxtLink to="/traps">See them all</NuxtLink>.
+          </p>
+        </div>
+      </StepSection>
       <StepSection
         v-for="release in releases"
         :key="release.title"

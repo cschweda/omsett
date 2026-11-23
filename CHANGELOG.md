@@ -59,7 +59,8 @@ with your files, what stops it doing anything else, and how to check each of tho
 - **Trust.** Where your files go and how to see that for yourself; what a hostile file can
   and cannot do; how Omsett is tested; who has audited it and what is still open; what it
   learns about you; and what you are still relying on when you use it.
-- **Every figure on it is counted when the site is built**: the tests, the trap files, the
+- **Every figure on it is counted when the site is built**: the tests, the trap files (files
+  made on purpose to be broken or hostile, to test against), the
   audits and their findings. The number of tests comes from a real run, and a change cannot
   be merged if the figure on the page is not the true one.
 - **About now explains visit counting** and how to turn it off.
@@ -102,7 +103,9 @@ fixed, along with twenty-three other things.
 
 - **Previews** are drawn one at a time, and only for pictures up to 40 megapixels that state
   their size. Larger ones convert as before, without a preview.
-- 31 new trap files, 457 in all, and the record of the audit is on the Security page.
+- 31 new trap files, 457 in all. (A trap file is a file made on purpose to be broken,
+  dishonest or hostile, which Omsett is tested against.) The record of the audit is on the
+  Security page.
 
 ### Known
 
@@ -114,8 +117,9 @@ fixed, along with twenty-three other things.
 
 Released 23 November 2026.
 
-Every trap file Omsett is tested against is now listed on the site: the files made to be
-broken, hostile, or lying. For each one the page says what it is and what must happen to it.
+Omsett is tested against "trap files": files made on purpose to be broken, hostile or
+dishonest, to make sure each is refused or converted safely. Every one of them is now listed
+on the site, and for each the page says what it is and what must happen to it.
 
 ### Added
 
