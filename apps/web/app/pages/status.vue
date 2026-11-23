@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { formatById } from '@omsett/registry'
 import facts from '~/generated/facts.json'
-import { CHECKED } from '~/utils/accessibility'
+import { CHECKED, checkerMaker } from '~/utils/accessibility'
 import { formatBytes } from '~/utils/format-bytes'
 import { registry } from '~/utils/registry'
 
@@ -131,6 +131,7 @@ const conversions = computed(() =>
             {{ checkedKinds.join(', ') }} file to be checked for accessibility, and only after you have agreed to
             send that file<template v-if="checkerHost"> to {{ checkerHost }}</template>. Converting works the same
             whether it is up or not.
+            <template v-if="checkerHost && checkerMaker(checkerHost)">{{ checkerMaker(checkerHost) }}</template>
           </p>
         </div>
       </StepSection>

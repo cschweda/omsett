@@ -54,6 +54,8 @@ test('nothing is sent until the person has read where the file goes and pressed 
   const panel = page.getByTestId('check')
   await expect(panel).toContainText('This sends the file to a server.')
   await expect(panel).toContainText('checker.example')
+  // Who wrote the checker is said only of the one whose author is known.
+  await expect(page.getByTestId('check-maker')).toHaveCount(0)
   await expect(panel).toContainText('The checker does not keep the file.')
   await expect(panel).toContainText('It asks another server for part of the audit.')
   await expect(panel).toContainText('It keeps the report')
@@ -110,4 +112,17 @@ test('the Status page says whether the checker is up, and that converting does n
   await page.route('**/api/accessibility/**', (route) => route.fulfill({ status: 502, body: '' }))
   await page.reload()
   await expect(page.getByTestId('checker-state')).toHaveText('Not answering.')
+})
+
+test('the checker at audit.icjia.app is said to be by the same author, and its report opens from a button', async ({ page }) => {
+  await checker(page)
+  await open(page, `/?accessibility=${encodeURIComponent('https://audit.icjia.app')}`)
+  await page.locator('#file-input').setInputFiles(fixture('xlsx/sample.xlsx'))
+  await page.getByTestId('check-toggle').click()
+  await expect(page.getByTestId('check-maker')).toHaveText('It is written by the same author as Omsett, Christopher Schweda.')
+  await page.getByTestId('check-send').click()
+  const report = page.getByTestId('check-report')
+  await expect(report).toHaveAttribute('href', `https://audit.icjia.app/report/${ID}`)
+  await expect(report).toHaveClass(/button/)
+  await expect(page.getByTestId('check')).toContainText('It can be saved or printed from there.')
 })

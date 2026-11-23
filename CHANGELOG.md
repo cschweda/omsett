@@ -22,7 +22,8 @@ you are shown where the file would go, and nothing is sent unless you say so.
 - **You are asked first, every time.** Pressing the button sends nothing. It says that the
   file would go to audit.icjia.app, that the checker does not keep the file, that it asks
   another server for part of the audit, and that it keeps the report at a private link for a
-  year. Then there are two buttons: send it, or do not.
+  year. Then there are two buttons: send it, or do not. The checker is the work of the same
+  author as Omsett, Christopher Schweda, and the panel says so.
 - **The Status page says whether the checker is up.** Converting does not depend on it.
 - A copy of Omsett you host yourself has no checker unless you set one up.
 

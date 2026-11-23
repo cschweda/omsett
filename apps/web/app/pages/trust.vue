@@ -62,7 +62,8 @@ const browserList = `${browsers.slice(0, -1).join(', ')} and ${browsers.at(-1)}`
           </p>
           <p data-testid="trust-exception">
             There is one exception, and it never happens by itself. For a PDF, Word, PowerPoint or Excel file,
-            omsett.com can ask an accessibility checker to score it. That sends the file to a server. Omsett
+            omsett.com can ask an accessibility checker to score it: audit.icjia.app, written by the same author
+            as Omsett, Christopher Schweda. That sends the file to a server. Omsett
             first shows you where the file would go and what is kept, and sends nothing unless you then press
             “Send this file and check it”. Converting never needs it.
           </p>

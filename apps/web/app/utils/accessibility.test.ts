@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { checkerSite, failureReason, readVerdict, reportAddress } from './accessibility'
+import { checkerMaker, checkerSite, failureReason, readVerdict, reportAddress } from './accessibility'
 
 describe('the accessibility checker', () => {
   it('is set up only by a plain https site', () => {
@@ -21,6 +21,12 @@ describe('the accessibility checker', () => {
     const id = 'a'.repeat(32)
     expect(reportAddress('https://audit.icjia.app', id)).toBe(`https://audit.icjia.app/report/${id}`)
     for (const not of ['', 'abc', `${'a'.repeat(31)}/`, `../${'a'.repeat(29)}`, 12, null, `${'A'.repeat(32)}`]) expect(reportAddress('https://audit.icjia.app', not)).toBeNull()
+  })
+
+  it('says who is behind a checker only where that is known', () => {
+    expect(checkerMaker('audit.icjia.app')).toBe('It is written by the same author as Omsett, Christopher Schweda.')
+    expect(checkerMaker('checker.example')).toBeNull()
+    expect(checkerMaker('constructor')).toBeNull()
   })
 
   it('says why a check did not happen', () => {

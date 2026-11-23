@@ -2,7 +2,7 @@
 import type { Detail } from '@omsett/engines'
 import type { QueueFile } from '~/composables/useConversionQueue'
 import { switchedOffReason } from '@omsett/registry'
-import { CHECKED, MAX_CHECK_BYTES } from '~/utils/accessibility'
+import { CHECKED, checkerMaker, MAX_CHECK_BYTES } from '~/utils/accessibility'
 import { CheckFailed, type CheckResult } from '~/composables/useAccessibilityCheck'
 import { formatBytes } from '~/utils/format-bytes'
 
@@ -78,6 +78,7 @@ onMounted(() => {
   checkerSite.value = checker.site()
 })
 const checkable = computed(() => checkerSite.value !== null && known.value !== null && CHECKED.includes(known.value.format.category))
+const maker = computed(() => (checkerSite.value ? checkerMaker(checkerSite.value.host) : null))
 const tooLargeToCheck = computed(() => props.entry.file.size > MAX_CHECK_BYTES)
 const checking = ref<'closed' | 'asking' | 'sending' | 'done' | 'failed'>('closed')
 const checked = ref<CheckResult | null>(null)
@@ -173,6 +174,7 @@ watch(
         <p>
           It is the one thing in Omsett that sends a file off your device, and it happens only if you press the
           button below. The file goes to <strong>{{ checkerSite?.host }}</strong>, an accessibility checker.
+          <span v-if="maker" data-testid="check-maker">{{ maker }}</span>
         </p>
         <ul>
           <li>The checker does not keep the file.</li>
@@ -196,9 +198,9 @@ watch(
         <p class="check-lead" data-testid="check-score">
           Accessibility: {{ checked.verdict.score }} out of 100, grade {{ checked.verdict.grade }}.
         </p>
-        <p v-if="checked.report">
-          <a :href="checked.report" target="_blank" rel="noopener" data-testid="check-report">Open the full report</a>
-          (on {{ checkerSite?.host }}, in a new window)
+        <p v-if="checked.report" class="check-actions">
+          <a :href="checked.report" target="_blank" rel="noopener" class="button report" data-testid="check-report">Open the full report</a>
+          <span class="details-note">Opens on {{ checkerSite?.host }}, in a new window. It can be saved or printed from there.</span>
         </p>
         <p v-else data-testid="check-no-report">The checker gave a score but could not save its full report.</p>
         <p class="details-note">This is the file as you added it, before any conversion.</p>
@@ -343,9 +345,18 @@ watch(
 .check-lead {
   font-weight: 700;
 }
-.check a {
-  text-decoration: underline;
-  text-underline-offset: 0.15em;
+/* The one coloured button on the card: the way to the report. */
+.check .report {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
+  text-decoration: none;
+}
+.check .report:hover {
+  filter: brightness(1.1);
+}
+.check-actions .details-note {
+  margin: 0;
 }
 .check-actions {
   display: flex;

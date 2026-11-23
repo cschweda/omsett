@@ -63,3 +63,12 @@ export function failureReason(status: number): string {
   if (status === 400 || status === 415 || status === 422) return 'The checker could not read this file. It was not checked.'
   return 'The checker did not answer. The file was not checked.'
 }
+
+/**
+ * Who is behind a checker, where that is known. People are rightly wary of sending a file to
+ * a site they have not heard of; this one is the work of the person who wrote Omsett.
+ */
+const MAKERS: Record<string, string> = {
+  'audit.icjia.app': 'It is written by the same author as Omsett, Christopher Schweda.',
+}
+export const checkerMaker = (host: string): string | null => (Object.hasOwn(MAKERS, host) ? MAKERS[host]! : null)
