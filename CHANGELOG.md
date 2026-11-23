@@ -7,6 +7,43 @@ The paragraph that opens a version is its teaser: the home page shows its first 
 in the "What's new" banner, so keep it to two or three sentences on what a visitor will notice.
 A line beginning "Released" gives the date.
 
+## 0.29.0
+
+Released 23 November 2026.
+
+You can now check a PDF, Word, PowerPoint or Excel file's accessibility before you convert it.
+This is the one thing in Omsett that sends a file to a server, so it never happens by itself:
+you are shown where the file would go, and nothing is sent unless you say so.
+
+### Added
+
+- **Check accessibility**, beside Details on a PDF, Word, PowerPoint or Excel file. It gives a
+  score out of 100 and a grade, with a link to the full report, which opens in a new window.
+- **You are asked first, every time.** Pressing the button sends nothing. It says that the
+  file would go to audit.icjia.app, that the checker does not keep the file, that it asks
+  another server for part of the audit, and that it keeps the report at a private link for a
+  year. Then there are two buttons: send it, or do not. The checker is the work of the same
+  author as Omsett, Christopher Schweda, and the panel says so.
+- **The Status page says whether the checker is up.** Converting does not depend on it.
+- A copy of Omsett you host yourself has no checker unless you set one up.
+
+## 0.28.0
+
+Released 23 November 2026.
+
+There is a new page, "Can I trust this?", in the navigation as Trust. It says what Omsett does
+with your files, what stops it doing anything else, and how to check each of those yourself.
+
+### Added
+
+- **Trust.** Where your files go and how to see that for yourself; what a hostile file can
+  and cannot do; how Omsett is tested; who has audited it and what is still open; what it
+  learns about you; and what you are still relying on when you use it.
+- **Every figure on it is counted when the site is built**: the tests, the trap files, the
+  audits and their findings. The number of tests comes from a real run, and a change cannot
+  be merged if the figure on the page is not the true one.
+- **About now explains visit counting** and how to turn it off.
+
 ## 0.27.0
 
 Released 23 November 2026.

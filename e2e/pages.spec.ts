@@ -7,6 +7,7 @@ const traps = JSON.parse(readFileSync(new URL('../fixtures/_traps/manifest.json'
 
 const pages = [
   { path: '/about', heading: 'About' },
+  { path: '/trust', heading: 'Can I trust this?' },
   { path: '/technical', heading: 'Technical details' },
   { path: '/whats-new', heading: 'What’s new' },
   { path: '/security', heading: 'Security' },
@@ -34,7 +35,7 @@ test('both navigations reach every page, the repository, and the changelog', asy
   await page.goto('/')
   const top = page.getByRole('navigation', { name: 'Site' })
   const bottom = page.getByRole('navigation', { name: 'Footer' })
-  for (const { path, heading } of pages.filter((p) => p.path !== '/status' && p.path !== '/traps')) {
+  for (const { path, heading } of pages.filter((p) => p.path !== '/status' && p.path !== '/traps' && p.path !== '/trust')) {
     await expect(top.getByRole('link', { name: heading })).toHaveAttribute('href', path)
     await expect(bottom.getByRole('link', { name: heading })).toHaveAttribute('href', path)
   }
@@ -200,4 +201,32 @@ test('every trap file is listed, with what it is and what must happen to it', as
     await expect(page.locator(`a[href="#traps-${group}"]`)).toHaveCount(1)
   }
   await expect(page.getByRole('navigation', { name: 'Footer' }).getByRole('link', { name: 'Trap files' })).toHaveAttribute('href', '/traps')
+})
+
+test('the Trust page states figures that are counted, and leads to the traps, the audits and the way to turn counting off', async ({ page }) => {
+  const counted = JSON.parse(readFileSync(new URL('../test-count.json', import.meta.url), 'utf8')) as { unit: number; browser: number }
+  const audits = JSON.parse(readFileSync(new URL('../security/audits.json', import.meta.url), 'utf8')) as Array<{ findings: Array<{ id: string; status: string }> }>
+  const latest = new Map<string, string>()
+  for (const audit of [...audits].reverse()) for (const finding of audit.findings) latest.set(finding.id, finding.status)
+  const count = (status: string) => [...latest.values()].filter((s) => s === status).length
+
+  await page.goto('/')
+  await page.getByRole('navigation', { name: 'Site' }).getByRole('link', { name: 'Trust' }).click()
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('Can I trust this?')
+  const figure = async (id: string) => Number(((await page.getByTestId(id).textContent()) ?? '').replaceAll(',', ''))
+  expect(await figure('trust-unit')).toBe(counted.unit)
+  expect(await figure('trust-browser')).toBe(counted.browser)
+  expect(await figure('trust-traps')).toBe(traps.length)
+  expect(await figure('trust-audits')).toBe(audits.length)
+  expect(await figure('trust-fixed')).toBe(count('fixed'))
+  expect(await figure('trust-open')).toBe(count('open'))
+  // What is open is said, not only counted.
+  await expect(page.getByTestId('trust-open-list').locator('li')).toHaveCount(count('open'))
+  await expect(page.locator('main a[href="/settings"]')).toHaveCount(1)
+  await expect(page.locator('main a[href="/security"]')).toHaveCount(1)
+  await page.getByTestId('trust-to-traps').click()
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('Trap files')
+  // About says the same about counting visits, and how to turn it off.
+  await page.goto('/about')
+  await expect(page.getByTestId('about-visits')).toContainText('Do not count my visits')
 })

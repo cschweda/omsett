@@ -9,5 +9,7 @@ export default defineConfig({
       : ['packages/**/*.test.ts', 'fixtures/**/*.test.ts', 'apps/web/**/*.test.ts', 'scripts/**/*.test.ts'],
     exclude: ['**/node_modules/**', '**/.nuxt/**', '**/.output/**', 'e2e/**'],
     testTimeout: 60_000,
+    // A full run leaves a report behind, which scripts/count-tests.ts counts the tests from.
+    reporters: process.env.OMSETT_FUZZ_FORMAT ? ['default'] : ['default', ['json', { outputFile: '.vitest-report/unit.json' }]],
   },
 })

@@ -213,6 +213,12 @@ body {
 }
 
 /* A fact as a figure: the number large, what it counts beneath. */
+/* A heading inside running text: the body's size, in bold. */
+.prose h3 {
+  margin: 1.5rem 0 0.375rem;
+  font-size: var(--text-body);
+  font-weight: 700;
+}
 .figure-row {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(128px, 1fr));

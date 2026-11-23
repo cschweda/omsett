@@ -7,7 +7,7 @@ FROM --platform=$BUILDPLATFORM node:24-alpine@sha256:116b800c3754b440ee0aa3ed2f2
 WORKDIR /repo
 RUN corepack enable
 # CHANGELOG.md is read by the build: the site's What's new page is generated from it.
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.base.json .nvmrc CHANGELOG.md ./
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.base.json .nvmrc CHANGELOG.md test-count.json ./
 COPY packages ./packages
 COPY fixtures ./fixtures
 COPY security ./security

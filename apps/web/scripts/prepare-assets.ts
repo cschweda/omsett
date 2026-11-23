@@ -163,6 +163,8 @@ const fixtureDirs = (await readdir(join(repo, 'fixtures'), { withFileTypes: true
 )
 const facts = {
   traps: { total: traps.length, groups: trapGroups },
+  // Counted from a real run by scripts/count-tests.ts, and checked on every change.
+  tests: JSON.parse(await readFile(join(repo, 'test-count.json'), 'utf8')) as { unit: number; unitFiles: number; browser: number; browsers: string[] },
   sampleFormats: fixtureDirs.length,
   cases: (await readdir(join(repo, 'fixtures', '_cases'))).length,
   version: (JSON.parse(await readFile(join(repo, 'package.json'), 'utf8')) as { version: string }).version,
