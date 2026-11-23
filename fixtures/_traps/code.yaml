@@ -1,0 +1,5 @@
+note: "\"><script>globalThis.__omsett_canary=1;alert(\"omsett-canary\");fetch(\"http://canary.invalid/x\")</script><img src=x onerror=\"globalThis.__omsett_canary=1\"><svg onload=\"globalThis.__omsett_canary=1\"></svg><iframe src=\"javascript:globalThis.__omsett_canary=1\"></iframe> ${globalThis.__omsett_canary=1} {{constructor.constructor('globalThis.__omsett_canary=1')()}} <%= globalThis.__omsett_canary=1 %> #{globalThis.__omsett_canary=1} $(touch /tmp/omsett-canary) `touch /tmp/omsett-canary` ;touch /tmp/omsett-canary; | touch /tmp/omsett-canary && touch /tmp/omsett-canary javascript:globalThis.__omsett_canary=1 //"
+run: !!js/function 'function(){globalThis.__omsett_canary=1}'
+shell: !!python/object/apply:os.system ['touch /tmp/omsett-canary']
+__proto__:
+  polluted: true

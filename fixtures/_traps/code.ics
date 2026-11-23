@@ -1,0 +1,10 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+BEGIN:VEVENT
+UID:1
+DTSTART:20261123T090000Z
+SUMMARY:"><script>globalThis.__omsett_canary=1\;alert("omsett-canary")\;fetch("http://canary.invalid/x")</script><img src=x onerror="globalThis.__omsett_canary=1"><svg onload="globalThis.__omsett_canary=1"></svg><iframe src="javascript:globalThis.__omsett_canary=1"></iframe> ${globalThis.__omsett_canary=1} {{constructor.constructor('globalThis.__omsett_canary=1')()}} <%= globalThis.__omsett_canary=1 %> #{globalThis.__omsett_canary=1} $(touch /tmp/omsett-canary) `touch /tmp/omsett-canary` \;touch /tmp/omsett-canary\; | touch /tmp/omsett-canary && touch /tmp/omsett-canary javascript:globalThis.__omsett_canary=1 //
+LOCATION:"><script>globalThis.__omsett_canary=1\;alert("omsett-canary")\;fetch("http://canary.invalid/x")</script><img src=x onerror="globalThis.__omsett_canary=1"><svg onload="globalThis.__omsett_canary=1"></svg><iframe src="javascript:globalThis.__omsett_canary=1"></iframe> ${globalThis.__omsett_canary=1} {{constructor.constructor('globalThis.__omsett_canary=1')()}} <%= globalThis.__omsett_canary=1 %> #{globalThis.__omsett_canary=1} $(touch /tmp/omsett-canary) `touch /tmp/omsett-canary` \;touch /tmp/omsett-canary\; | touch /tmp/omsett-canary && touch /tmp/omsett-canary javascript:globalThis.__omsett_canary=1 //
+DESCRIPTION:"><script>globalThis.__omsett_canary=1\;alert("omsett-canary")\;fetch("http://canary.invalid/x")</script><img src=x onerror="globalThis.__omsett_canary=1"><svg onload="globalThis.__omsett_canary=1"></svg><iframe src="javascript:globalThis.__omsett_canary=1"></iframe> ${globalThis.__omsett_canary=1} {{constructor.constructor('globalThis.__omsett_canary=1')()}} <%= globalThis.__omsett_canary=1 %> #{globalThis.__omsett_canary=1} $(touch /tmp/omsett-canary) `touch /tmp/omsett-canary` \;touch /tmp/omsett-canary\; | touch /tmp/omsett-canary && touch /tmp/omsett-canary javascript:globalThis.__omsett_canary=1 //
+END:VEVENT
+END:VCALENDAR

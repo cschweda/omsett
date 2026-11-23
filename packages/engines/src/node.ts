@@ -6,6 +6,7 @@ import { createMarkupEngine } from './markup'
 import { createFontEngine, createFontWoff2Engine } from './font'
 import { createArchiveEngine } from './archive'
 import { createScriptEngine } from './script'
+import { createPdfEngine } from './pdf'
 import { createHeifEngine, type HeifModule } from './heif'
 import { engineInfo, resvgFonts, vipsModules } from './info'
 import { createResvgEngine, type ResvgHost } from './resvg'
@@ -61,6 +62,7 @@ export function createNodeEngines(): Record<string, Engine> {
   engines.markup = createMarkupEngine()
   engines.archive = createArchiveEngine()
   engines.script = createScriptEngine()
+  engines.pdf = createPdfEngine()
   engines.font = createFontEngine()
   engines['font-woff2'] = createFontWoff2Engine()
   return engines

@@ -37,6 +37,8 @@ export interface QueueResult {
   /** The engine that produced the final output. */
   engine: string
   inputBytes: number
+  /** What an engine found out about the file by reading it, for the person to know. */
+  notes: string[]
 }
 
 /** A failure whose message is written for the user and can be shown as it is. */
@@ -238,6 +240,7 @@ export function useConversionQueue() {
     let pixels = pixelCount(entry.detection.dimensions)
 
     const produced: QueueResult[] = []
+    const notes: string[] = []
     let timedOut = false
     let refusal: string | null = null
     for (const [hop, edge] of route.edges.entries()) {
@@ -271,6 +274,8 @@ export function useConversionQueue() {
             },
             forcedBudgetMs ?? conversionBudgetMs(pixels),
           )
+          // What a step learned by reading the file is kept, whichever step it was.
+          for (const output of outputs) if (output.note && !notes.includes(output.note)) notes.push(output.note)
           if (last) {
             for (const [index, output] of outputs.entries()) {
               produced.push({
@@ -282,6 +287,7 @@ export function useConversionQueue() {
                 blob: markRaw(output.blob),
                 engine: candidate.engine,
                 inputBytes: entry.file.size,
+                notes,
               })
             }
           }

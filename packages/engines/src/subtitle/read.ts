@@ -111,7 +111,11 @@ class Collector {
   readonly cues: Cue[] = []
   private characters = 0
 
-  add(start: number, end: number, text: string): void {
+  add(start: number, end: number, raw: string): void {
+    // Whatever format the words came from, anything shaped like a tag is taken out of them
+    // here, after every escape has been undone. Some players put a subtitle's text into a web
+    // page as it stands, and a tag that reached one would be markup there.
+    const text = tidy(withoutTags(raw))
     if (text === '') return
     if (end < start) throw new Refusal('A subtitle in this file ends before it starts')
     this.characters += text.length

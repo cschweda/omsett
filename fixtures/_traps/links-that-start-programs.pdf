@@ -1,0 +1,42 @@
+%PDF-1.7
+%‚„œ”
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> >> >> /Contents 4 0 R /Annots [5 0 R 6 0 R 7 0 R] >>
+endobj
+4 0 obj
+<< /Length 89 >>
+stream
+BT /F1 12 Tf 72 720 Td (An ordinary page of words, long enough to be a paragraph.) Tj ET
+
+endstream
+endobj
+5 0 obj
+<< /Type /Annot /Subtype /Link /Rect [72 716 300 732] /A << /S /Launch /F (C:\\Windows\\System32\\cmd.exe) >> >>
+endobj
+6 0 obj
+<< /Type /Annot /Subtype /Link /Rect [72 700 300 716] /A << /S /URI /URI (javascript:alert\(1\)) >> >>
+endobj
+7 0 obj
+<< /Type /Annot /Subtype /Link /Rect [72 684 300 700] /A << /S /GoToR /F (\\\\elsewhere.example\\share\\x.pdf) >> >>
+endobj
+xref
+0 8
+0000000000 65535 f 
+0000000015 00000 n 
+0000000064 00000 n 
+0000000121 00000 n 
+0000000324 00000 n 
+0000000463 00000 n 
+0000000591 00000 n 
+0000000709 00000 n 
+trailer
+<< /Size 8 /Root 1 0 R >>
+startxref
+841
+%%EOF

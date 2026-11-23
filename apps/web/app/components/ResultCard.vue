@@ -61,6 +61,8 @@ const delta = computed(() => formatDelta(props.result.inputBytes, props.result.b
     <a class="button solid" :href="url || undefined" :download="result.name" data-testid="download">
       Download<span class="sr-only"> {{ result.name }}</span>
     </a>
+    <!-- What converting found out about the file, which the person could not have known before. -->
+    <p v-for="note in result.notes" :key="note" class="found" data-testid="result-note">{{ note }}</p>
     <CompareSlider
       v-if="comparable && source"
       :before="source"
@@ -110,6 +112,13 @@ const delta = computed(() => formatDelta(props.result.inputBytes, props.result.b
 .facts > :first-child {
   color: var(--ink);
   font-weight: 700;
+}
+.found {
+  grid-column: 1 / -1;
+  margin: 0.75rem 0 0;
+  padding: 0.5rem 0.75rem;
+  border-left: 3px solid var(--accent);
+  font-size: var(--text-small);
 }
 /* How much smaller: the figure people came for. */
 .delta {

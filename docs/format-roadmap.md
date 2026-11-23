@@ -74,8 +74,9 @@ When a format ships, update its row here, in the same change.
 | Conversion | Home | Engine | Status |
 | --- | --- | --- | --- |
 | PDF to PNG, JPEG, TIFF, CBZ; to text | Browser | pdf.js | Planned |
-| PDF to Markdown, tagged PDFs | Browser | pdf.js, reading the PDF's own structure tags | Planned. Headings, lists and tables are read, not guessed. See "PDF to Markdown" |
-| PDF to Markdown, untagged PDFs | Browser | pdf.js, with structure rebuilt from layout | Planned. Estimated, and the picker says so |
+| PDF to HTML, Markdown and DOCX, tagged PDFs | Browser | `pdf` (pdf.js), reading the PDF's own structure tags | **Shipped** (0.23.0). Headings, lists and tables are read, not guessed |
+| The same, untagged PDFs, or tagged in name only | Browser | `pdf`, with structure estimated from layout | **Shipped** (0.23.0). Estimated, and the result says so. Tables and bold headings are not found yet |
+| Scanned PDFs (OCR); pictures carried out of a PDF; characters for Chinese, Japanese and Korean | Browser | Tesseract (WASM); pdf.js | Planned |
 | PDF to Markdown, hard layouts and scans | Desktop | Docling or Marker, to be compared on real files | Planned |
 | Merge, split, page ranges | Browser | pdf-lib | Planned |
 | Images, Markdown, HTML, text to PDF | Browser | pdf-lib; Typst (to be proven) | Planned |
@@ -295,7 +296,7 @@ with [audit.icjia.app](https://audit.icjia.app).
 ## Suggested order
 
 1. Images are largely done: 22 formats. Left: CUR, DDS, ICNS, FITS, APNG, PSB, camera RAW, DICOM, and writing ICO and JPEG 2000.
-2. Data and subtitles are done: seven data formats, nine subtitle formats. The side-by-side view for text formats is done too, and Markdown ↔ HTML. Fonts are done as well, vCard and iCalendar, and the first archives. XLSX, DOCX, PPTX and the screenwriting formats are done. Next: the remaining image formats, then audio, then PDF. All three are ZIPs of XML, and Omsett reads both itself. Then the screenwriting formats, Fountain, Final Draft (FDX) and Drafter. Small JavaScript libraries, no large downloads.
+2. Data and subtitles are done: seven data formats, nine subtitle formats. The side-by-side view for text formats is done too, and Markdown ↔ HTML. Fonts are done as well, vCard and iCalendar, and the first archives. XLSX, DOCX, PPTX, the screenwriting formats and reading PDF are done. Next: details of a file before converting (dates, camera, author, pages); then the remaining image formats; then audio. All three are ZIPs of XML, and Omsett reads both itself. Then the screenwriting formats, Fountain, Final Draft (FDX) and Drafter. Small JavaScript libraries, no large downloads.
 3. Archives, then audio.
 4. Documents and e-books through Pandoc; then the PDF tools. A converted document must not score lower for accessibility than its original (see "Accessibility of converted documents").
 5. Video in the browser.

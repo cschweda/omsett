@@ -1,0 +1,45 @@
+%PDF-1.7
+%‚„œ”
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >> /F2 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >> >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 729 >>
+stream
+BT /F2 24 Tf 72 720 Td (About Omsett) Tj ET
+BT /F1 11 Tf 72 690 Td (Drop a file. Pick a format. Nothing leaves your device,) Tj ET
+BT /F1 11 Tf 72 676 Td (and nothing is uploaded. CafÈ tables & <angle> brackets.) Tj ET
+BT /F2 16 Tf 72 640 Td (What it converts) Tj ET
+BT /F1 11 Tf 72 616 Td (ï) Tj ET
+BT /F1 11 Tf 90 616 Td (Pictures) Tj ET
+BT /F1 11 Tf 72 602 Td (ï) Tj ET
+BT /F1 11 Tf 90 602 Td (Documents and workbooks) Tj ET
+BT /F2 11 Tf 72 570 Td (Format) Tj ET
+BT /F2 11 Tf 200 570 Td (Kind) Tj ET
+BT /F1 11 Tf 72 556 Td (PNG) Tj ET
+BT /F1 11 Tf 200 556 Td (Picture) Tj ET
+BT /F1 11 Tf 72 542 Td (XLSX) Tj ET
+BT /F1 11 Tf 200 542 Td (Workbook) Tj ET
+BT /F1 11 Tf 72 510 Td (omsett.com) Tj ET
+BT /F1 9 Tf 290 40 Td (1) Tj ET
+
+endstream
+endobj
+xref
+0 5
+0000000000 65535 f 
+0000000015 00000 n 
+0000000064 00000 n 
+0000000121 00000 n 
+0000000414 00000 n 
+trailer
+<< /Size 5 /Root 1 0 R >>
+startxref
+1194
+%%EOF

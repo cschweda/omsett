@@ -36,6 +36,7 @@ import { tar } from './tar'
 import { fountain } from './fountain'
 import { fdx } from './fdx'
 import { drafter } from './drafter'
+import { pdf } from './pdf'
 import { docx } from './docx'
 import { pptx } from './pptx'
 import { md } from './md'
@@ -67,7 +68,7 @@ export const formats: Format[] = [
   // Subtitles and lyrics: text with times.
   srt, vtt, ass, ssa, ttml, lrc, sbv, smi, microdvd,
   // Writing: text with structure.
-  md, html, docx, pptx,
+  md, html, docx, pptx, pdf,
   // Screenplays.
   fountain, fdx, drafter,
   // Fonts: the same tables in four wrappings.

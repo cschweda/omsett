@@ -122,6 +122,14 @@ part of the app's scripts; nothing separate is downloaded.
 | rehype-raw (HTML inside Markdown) | 7.0.0 | MIT | <https://github.com/rehypejs/rehype-raw> |
 | rehype-sanitize (removes what could run) | 6.0.0 | MIT | <https://github.com/rehypejs/rehype-sanitize> |
 
+### pdf
+
+PDFs are read with pdf.js, the reader built into Firefox.
+
+| Library | Version | License | Source |
+| --- | --- | --- | --- |
+| pdfjs-dist (pdf.js) | 6.5.438 | Apache-2.0 | <https://github.com/mozilla/pdf.js> |
+
 ### script
 
 Omsett's own readers and writers for Fountain, Final Draft (FDX) and the Drafter package. FDX

