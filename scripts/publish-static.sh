@@ -34,21 +34,24 @@ if [ -s "$NVM_DIR/nvm.sh" ]; then
   export COREPACK_ENABLE_DOWNLOAD_PROMPT=0
   corepack enable >/dev/null 2>&1 || true
 fi
-# What this copy of Omsett is set up to do is in the site's environment file, where Forge
-# keeps it. Only Omsett's own settings are read from it, and only lines that are plainly one.
-if [ -f .env ]; then
+# What this copy of Omsett is set up to do beyond converting: count visits, offer an
+# accessibility check. Read from site.env, which is in the repository, and then from the
+# server's own .env, where Forge keeps a site's settings, so that a line there wins. Only
+# Omsett's own settings are read from either, and only lines that are plainly one.
+for settings in site.env .env; do
+  [ -f "$settings" ] || continue
   while IFS= read -r line; do
     case "$line" in
       OMSETT_[A-Z_]*=*)
         name="${line%%=*}"
         value="${line#*=}"
         value="${value%\"}"; value="${value#\"}"
-        case "$value" in *[!A-Za-z0-9.:/_-]*) echo "Ignoring $name: its value is not a plain name or address"; continue ;; esac
+        case "$value" in *[!A-Za-z0-9.:/_-]*) echo "Ignoring $name in $settings: its value is not a plain name or address"; continue ;; esac
         export "$name=$value"
         ;;
     esac
-  done < .env
-fi
+  done < "$settings"
+done
 if [ -z "${SKIP_BUILD:-}" ]; then
   echo "Building with node $(node --version), pnpm $(pnpm --version)"
   pnpm install --frozen-lockfile

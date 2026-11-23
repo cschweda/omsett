@@ -23,6 +23,8 @@ const MAX_COLUMNS = 16_384
 const MAX_CELL_CHARACTERS = 32_767
 /** More cells than this is not read in a browser tab. */
 const MAX_CELLS = 5_000_000
+/** The most sheets one workbook is read for. */
+const MAX_SHEETS = 256
 
 const invalid = () => new Refusal('This file is not a valid XLSX workbook')
 const tooLarge = () => new Refusal('This workbook is too large to convert in a browser')
@@ -93,12 +95,19 @@ function dateOf(serial: number, from1904: boolean): string | null {
   return Number.isInteger(serial) ? iso.slice(0, 10) : iso.slice(0, 19)
 }
 
+/** A workbook opened: the sheets a person would see, in order, each read when it is asked for. */
+interface Opened {
+  /** Sheets that are not hidden, by the name on their tab. */
+  shown: Array<{ name: string; path: string }>
+  rows(path: string): Row[]
+}
+
 /**
  * @param bytes the workbook
  * @param named whether the first row holds the names of the columns. Where it does not, every
  *              row is data and the columns are called column_A, column_B and so on.
  */
-export async function readWorkbook(bytes: Uint8Array, named = true): Promise<Row[]> {
+async function openWorkbook(bytes: Uint8Array, named: boolean): Promise<Opened> {
   let entries: Entry[]
   try {
     entries = await readZip(bytes)
@@ -150,10 +159,10 @@ export async function readWorkbook(bytes: Uint8Array, named = true): Promise<Row
       return custom.has(id) ? isDateFormat(custom.get(id)!) : BUILT_IN_DATES.has(id)
     })
 
-  // The first sheet that is not hidden and has something in it.
-  // A sheet is looked at once. A list that names one empty sheet ten thousand times is asking
-  // for it to be read ten thousand times.
+  // The sheets that are not hidden. A sheet is listed once: a list that names one sheet ten
+  // thousand times is asking for it to be read ten thousand times.
   const looked = new Set<string>()
+  const shown: Opened['shown'] = []
   for (const sheet of sheets) {
     if (['hidden', 'veryHidden'].includes(String(sheet['@state'] ?? ''))) continue
     const target = links.get(String(sheet['@id'] ?? ''))
@@ -163,10 +172,54 @@ export async function readWorkbook(bytes: Uint8Array, named = true): Promise<Row
     if (path.includes('..')) throw invalid()
     if (looked.has(path.toLowerCase())) continue
     looked.add(path.toLowerCase())
-    const rows = tableOf(record(open(path)?.worksheet), shared, dated, from1904, named)
+    shown.push({ name: String(sheet['@name'] ?? `Sheet ${shown.length + 1}`).slice(0, 64), path })
+    if (shown.length > MAX_SHEETS) throw tooLarge()
+  }
+  return { shown, rows: (path) => tableOf(record(open(path)?.worksheet), shared, dated, from1904, named) }
+}
+
+const noRows = () => new Refusal('This workbook has no rows in it')
+
+/** The first sheet that is not hidden and has something in it, as rows. */
+export async function readWorkbook(bytes: Uint8Array, named = true): Promise<Row[]> {
+  const book = await openWorkbook(bytes, named)
+  for (const sheet of book.shown) {
+    const rows = book.rows(sheet.path)
     if (rows.length > 0) return rows
   }
-  throw new Refusal('This workbook has no rows in it')
+  throw noRows()
+}
+
+export interface NamedSheet {
+  name: string
+  rows: Row[]
+}
+
+/**
+ * Sheets by choice: every sheet that is shown and has something in it, or the one at a
+ * position among the sheets shown, counted from 1 as the tabs are.
+ */
+export async function readSheets(bytes: Uint8Array, named: boolean, which: 'all' | number): Promise<NamedSheet[]> {
+  const book = await openWorkbook(bytes, named)
+  if (which !== 'all') {
+    const sheet = Number.isInteger(which) ? book.shown[which - 1] : undefined
+    if (!sheet) throw new Refusal('This workbook has no such sheet')
+    const rows = book.rows(sheet.path)
+    if (rows.length === 0) throw new Refusal(`The sheet “${sheet.name}” has no rows in it`)
+    return [{ name: sheet.name, rows }]
+  }
+  const read = book.shown.map((sheet) => ({ name: sheet.name, rows: book.rows(sheet.path) })).filter((sheet) => sheet.rows.length > 0)
+  if (read.length === 0) throw noRows()
+  return read
+}
+
+/** The names of the sheets a person would see, in order. Never throws: a file that is not a workbook has none. */
+export async function listSheets(bytes: Uint8Array): Promise<string[]> {
+  try {
+    return (await openWorkbook(bytes, true)).shown.map((sheet) => sheet.name)
+  } catch {
+    return []
+  }
 }
 
 function tableOf(worksheet: Xml, shared: string[], dated: boolean[], from1904: boolean, named: boolean): Row[] {

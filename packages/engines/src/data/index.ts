@@ -1,8 +1,8 @@
 import { dataInfo } from '../info'
 import type { ConvertInput, ConvertOutput, Engine } from '../types'
-import { cellOf, MAX_TABLE_CELLS, outputName, Refusal, tableTooLarge, throwIfAborted } from '../util'
+import { cellOf, MAX_TABLE_CELLS, outputName, Refusal, safeBaseName, tableTooLarge, throwIfAborted } from '../util'
 import { readContacts, readEvents, writeContacts, writeEvents } from './cards'
-import { readWorkbook, writeWorkbook } from './sheet'
+import { readSheets, readWorkbook, writeWorkbook } from './sheet'
 import { readTable, rowsOf, writeTable } from './table'
 import { writeXml } from './xml'
 
@@ -189,13 +189,25 @@ export function createDataEngine(): Engine {
       const bytes = new Uint8Array(await input.blob.arrayBuffer())
       input.onProgress(0.2)
 
-      let value: unknown
+      // What is to be written, and under what name: one thing, or one for each sheet of a workbook.
+      let found: Array<{ value: unknown; sheet: string | null }>
       try {
-        // A workbook is not text: it is a ZIP of XML, read for its rows.
         // Where the file is a table, whether its first row is the names of its columns.
         const named = input.options.headerRow !== false
-        value = plain(BINARY.has(input.from.id) ? await readWorkbook(bytes, named) : await read(input.from.id, decode(bytes), named))
-        value = reshape(value, input.options.shape, named)
+        const shaped = (rows: unknown) => reshape(plain(rows), input.options.shape, named)
+        // A workbook is not text: it is a ZIP of XML, read for its rows. Which of its sheets is
+        // the person's choice: the first with anything in it, one by its position, or all.
+        const choice = input.options.sheet
+        if (!BINARY.has(input.from.id)) found = [{ value: shaped(await read(input.from.id, decode(bytes), named)), sheet: null }]
+        else if (choice === undefined || choice === 'first') found = [{ value: shaped(await readWorkbook(bytes, named)), sheet: null }]
+        else {
+          const sheets = await readSheets(bytes, named, choice === 'all' ? 'all' : Number(choice))
+          if (choice !== 'all') found = [{ value: shaped(sheets[0]!.rows), sheet: null }]
+          // A format that takes a shape can hold several tables in one file, each under its
+          // sheet's name. Any other holds one table, and gets a file for each sheet.
+          else if ('shape' in input.options) found = [{ value: Object.fromEntries(sheets.map((sheet) => [sheet.name, shaped(sheet.rows)])), sheet: null }]
+          else found = sheets.map((sheet) => ({ value: shaped(sheet.rows), sheet: sheet.name }))
+        }
       } catch (error) {
         // A parser's own complaint is written for programmers. The file's format is what to say.
         throw error instanceof Refusal ? error : invalid(input.from.name)
@@ -203,15 +215,24 @@ export function createDataEngine(): Engine {
       throwIfAborted(input.signal)
       input.onProgress(0.6)
 
-      const written = BINARY.has(input.to.id) ? await writeWorkbook(rowsOf(value)) : await write(input.to.id, value)
+      const whole = outputName(input.name, input.to)
+      const ending = whole.slice(whole.length - input.to.extensions[0]!.length - 1)
+      const taken = new Set<string>()
+      const outputs: ConvertOutput[] = []
+      for (const { value, sheet } of found) {
+        const written = BINARY.has(input.to.id) ? await writeWorkbook(rowsOf(value)) : await write(input.to.id, value)
+        // "budget.xlsx", sheet "2026" → "budget - 2026.csv". Two sheets whose names come to the same file name are told apart.
+        let name = whole
+        if (sheet !== null) {
+          const base = `${whole.slice(0, -ending.length)} - ${safeBaseName(`${sheet}.x`)}`
+          name = `${base}${ending}`
+          for (let n = 2; taken.has(name.toLowerCase()); n++) name = `${base} (${n})${ending}`
+          taken.add(name.toLowerCase())
+        }
+        outputs.push({ name, format: input.to.id, blob: new Blob([written as BlobPart], { type: input.to.mime[0] }) })
+      }
       input.onProgress(1)
-      return [
-        {
-          name: outputName(input.name, input.to),
-          format: input.to.id,
-          blob: new Blob([written as BlobPart], { type: input.to.mime[0] }),
-        },
-      ]
+      return outputs
     },
   }
 }

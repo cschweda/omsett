@@ -11,6 +11,8 @@ const web = join(dirname(fileURLToPath(import.meta.url)), '..')
 const repo = join(web, '..', '..')
 const enginesDir = join(web, 'public', 'engines')
 const fontsDir = join(web, 'public', 'fonts')
+/** The sample files the drop zone offers, from the fixtures: the first is the one a test or a demo loads. */
+const SAMPLES = ['png/sample.png', 'pdf/sample.pdf', 'docx/sample.docx']
 const generatedDir = join(web, 'app', 'generated')
 
 // Resolve engine binaries from packages/engines, so there is one pinned version.
@@ -61,6 +63,8 @@ const manifest = {
     ),
   },
   sample: { url: '/sample.png', name: 'sample.png' },
+  // Files to try the converter with, offered in the drop zone: a picture, a PDF, a document.
+  samples: SAMPLES.map((path) => ({ url: `/sample.${path.split('.').pop()}`, name: path.split('/').pop()! })),
 }
 await writeFile(join(generatedDir, 'engine-assets.json'), JSON.stringify(manifest, null, 2) + '\n')
 
@@ -74,7 +78,7 @@ await copyFile(
   join(enginesDir, 'magick.NOTICE.txt'),
 )
 
-await copyFile(join(repo, 'fixtures', 'png', 'sample.png'), join(web, 'public', 'sample.png'))
+for (const path of SAMPLES) await copyFile(join(repo, 'fixtures', path), join(web, 'public', `sample.${path.split('.').pop()}`))
 
 // The "What's new" page is the changelog itself, parsed here so the two cannot drift.
 type Inline = { kind: 'text' | 'strong' | 'code'; text: string }
@@ -194,4 +198,4 @@ for (const [pkg, file] of fonts) {
   await copyFile(source, join(fontsDir, file))
 }
 
-console.log(`prepare-assets: ${Object.keys(manifest).length - 1} engine, ${fonts.length} fonts, 1 sample`)
+console.log(`prepare-assets: ${Object.keys(manifest).length - 1} engine, ${fonts.length} fonts, ${SAMPLES.length} samples`)

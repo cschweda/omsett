@@ -15,15 +15,18 @@ const themes = [
 // Whether this visit is counted, and why. Worked out in the browser, where the signals are.
 const config = useRuntimeConfig().public
 const counting = ref<VisitCounting | null>(null)
-const site = () => testHook('visits', location) ?? config.visitsSite
-onMounted(() => (counting.value = visitCounting(visitSignals(site()))))
+const signals = () => {
+  const named = testHook('visits', location)
+  return visitSignals(named ?? config.visitsSite, named === null ? location.hostname : undefined)
+}
+onMounted(() => (counting.value = visitCounting(signals())))
 function setCounting(on: boolean) {
   try {
     localStorage.setItem(VISITS_SETTING, on ? 'on' : 'off')
   } catch {
     // Without storage the choice cannot be kept, and the page says what is true now.
   }
-  counting.value = visitCounting(visitSignals(site()))
+  counting.value = visitCounting(signals())
 }
 
 // Words to put before and after the names of converted files.

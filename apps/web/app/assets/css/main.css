@@ -229,7 +229,10 @@ body {
   padding-top: 0.5rem;
   border-top: 3px solid var(--accent);
 }
+/* Set a little below its figure: a comma in "1,839" hangs under the line the digits stand on,
+   and ran into the words. */
 .figure-row dt {
+  margin-top: 0.5rem;
   font-size: var(--text-small);
   color: var(--muted);
 }

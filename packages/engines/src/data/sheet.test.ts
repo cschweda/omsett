@@ -161,3 +161,81 @@ describe('workbooks', () => {
     })
   })
 })
+
+describe('the sheets of a workbook, by choice', () => {
+  const convert = async (to: string, options: Record<string, unknown>) => {
+    const { createDataEngine } = await import('./index')
+    const { formatById, registry } = await import('@omsett/registry')
+    const outputs = await createDataEngine().convert({
+      blob: new Blob([(await fixture('xlsx/sample.xlsx')) as BlobPart]),
+      name: 'budget.xlsx',
+      from: formatById(registry, 'xlsx')!,
+      to: formatById(registry, to)!,
+      options: { headerRow: true, ...options },
+      signal: new AbortController().signal,
+      onProgress: () => {},
+    } as never)
+    return Promise.all(outputs.map(async (output) => ({ name: output.name, text: await output.blob.text() })))
+  }
+
+  it('are listed as their tabs show them, hidden ones left out', async () => {
+    const { listSheets } = await import('./sheet')
+    expect(await listSheets(await fixture('xlsx/sample.xlsx'))).toEqual(['People', 'Totals'])
+    expect(await listSheets(new TextEncoder().encode('not a workbook'))).toEqual([])
+  })
+
+  it('the first with anything in it, where no other is asked for', async () => {
+    const [first] = await convert('json', { shape: 'records', sheet: 'first' })
+    const [unsaid] = await convert('json', { shape: 'records' })
+    expect(first!.text).toBe(unsaid!.text)
+    expect(first!.name).toBe('budget.json')
+    expect(JSON.parse(first!.text)).toHaveLength(3)
+  })
+
+  it('one by its position among the sheets shown', async () => {
+    const [second] = await convert('json', { shape: 'records', sheet: '2' })
+    expect(JSON.parse(second!.text)).toEqual([{ total: 3 }])
+    expect(second!.name).toBe('budget.json')
+    // The hidden sheet has no position: it cannot be asked for.
+    expect(await refusal(convert('json', { shape: 'records', sheet: '3' }))).toBe('This workbook has no such sheet')
+    expect(await refusal(convert('json', { shape: 'records', sheet: '0' }))).toBe('This workbook has no such sheet')
+    expect(await refusal(convert('json', { shape: 'records', sheet: 'constructor' }))).toBe('This workbook has no such sheet')
+  })
+
+  it('all of them in one file, each under its name, where the format can hold that', async () => {
+    const outputs = await convert('json', { shape: 'records', sheet: 'all' })
+    expect(outputs).toHaveLength(1)
+    const all = JSON.parse(outputs[0]!.text) as Record<string, unknown[]>
+    expect(Object.keys(all)).toEqual(['People', 'Totals'])
+    expect(all.Totals).toEqual([{ total: 3 }])
+    expect(outputs[0]!.text).not.toContain('Secret')
+    const yaml = await convert('yaml', { shape: 'records', sheet: 'all' })
+    expect(yaml[0]!.text).toMatch(/^People:\n/)
+  })
+
+  it('all of them as a file each, named for the sheet, where the format holds one table', async () => {
+    const outputs = await convert('csv', { sheet: 'all' })
+    expect(outputs.map((output) => output.name)).toEqual(['budget - People.csv', 'budget - Totals.csv'])
+    expect(outputs[1]!.text).toBe('total\r\n3\r\n')
+  })
+
+  it('a sheet named to climb out of its folder gives a file with a safe name', async () => {
+    const book = await altered({})
+    const entries = await readZip(book)
+    const workbook = entries.find((entry) => entry.name === 'xl/workbook.xml')!
+    workbook.data = new TextEncoder().encode(new TextDecoder().decode(workbook.data).replace('name="Totals"', 'name="../../Totals:x"'))
+    const { createDataEngine } = await import('./index')
+    const { formatById, registry } = await import('@omsett/registry')
+    const outputs = await createDataEngine().convert({
+      blob: new Blob([(await writeZip(entries)) as BlobPart]),
+      name: 'budget.xlsx',
+      from: formatById(registry, 'xlsx')!,
+      to: formatById(registry, 'csv')!,
+      options: { headerRow: true, sheet: 'all' },
+      signal: new AbortController().signal,
+      onProgress: () => {},
+    } as never)
+    for (const output of outputs) expect(output.name).not.toMatch(/[\\/:]|\.\./)
+    expect(outputs).toHaveLength(2)
+  })
+})

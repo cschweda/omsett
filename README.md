@@ -29,7 +29,7 @@ Omsett is a free, open-source file converter. Every conversion runs in your brow
 <!-- facts:start -->
 <!-- Generated from the registry by `pnpm readme:facts`. Do not edit by hand. -->
 
-**56 formats, 247 conversions**, every one of them run in your browser, on your device. Tested by 1,851 tests of the code and 2,430 in real browsers (Chromium, Firefox and WebKit), and against 457 files made on purpose to be broken, hostile or dishonest.
+**56 formats, 247 conversions**, every one of them run in your browser, on your device. Tested by 1,858 tests of the code and 2,460 in real browsers (Chromium, Firefox and WebKit), and against 457 files made on purpose to be broken, hostile or dishonest.
 
 | Kind | Converts to and from | Reads only |
 | --- | --- | --- |
@@ -55,7 +55,9 @@ A file is offered the formats of its own kind: a picture becomes another picture
 - **Goes by what a file contains, not what it is called.** A JPEG named `.png` is converted as a JPEG.
 - **Refuses a damaged or hostile file with a reason**, instead of returning half of one or freezing the tab. Every conversion runs against a clock.
 - **Never carries across what an author hid or deleted**: tracked deletions, hidden text and slides, comments, speaker notes.
+- **Try it without a file of your own**: a sample picture, PDF and Word document are in the drop zone.
 - **Before and after, side by side**: a slider for pictures, with the quality adjustable in view; the two texts for data and subtitles.
+- **Choose which sheet of a workbook to convert**, by name, or all of them at once.
 - **Convert to several formats at once**, and download everything as one ZIP.
 - **Settings**: light or dark, your own words in the names of converted files, and whether your visit is counted.
 

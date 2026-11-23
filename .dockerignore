@@ -13,5 +13,5 @@ apps/web/public/engines/*.js
 apps/web/public/engines/*.wasm
 apps/web/public/engines/vips.*
 apps/web/public/fonts
-apps/web/public/sample.png
+apps/web/public/sample.*
 apps/web/app/generated

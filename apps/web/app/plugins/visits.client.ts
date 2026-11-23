@@ -7,8 +7,10 @@ import { visitCounting, visitReport, visitSignals } from '~/utils/visits'
 export default defineNuxtPlugin(() => {
   const config = useRuntimeConfig().public
   // On localhost the tests may name a site, to show what a set-up copy does.
-  const site = testHook('visits', location) ?? config.visitsSite
-  if (visitCounting(visitSignals(site)) !== 'on') return
+  const named = testHook('visits', location)
+  const site = named ?? config.visitsSite
+  // The build's site is counted only where the page is really served from it.
+  if (visitCounting(visitSignals(site, named === null ? location.hostname : undefined)) !== 'on') return
 
   const report = (path: string) => {
     void fetch(config.visitsEndpoint, {

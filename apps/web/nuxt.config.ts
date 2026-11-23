@@ -1,8 +1,22 @@
+import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 const isolation = {
   'Cross-Origin-Opener-Policy': 'same-origin',
   'Cross-Origin-Embedder-Policy': 'require-corp',
 }
+
+// The checker omsett.com uses, read from site.env for the development server only. A build
+// (`pnpm build`, the tests, the self-host image) is told nothing unless its environment says so.
+function checkerFromSiteSettings(): string {
+  try {
+    const line = readFileSync(new URL('../../site.env', import.meta.url), 'utf8').split('\n').find((text) => text.startsWith('OMSETT_ACCESSIBILITY_CHECKER='))
+    const value = line?.slice(line.indexOf('=') + 1).trim() ?? ''
+    return /^https:\/\/[a-z0-9][a-z0-9.-]*[a-z0-9]$/i.test(value) ? value : ''
+  } catch {
+    return ''
+  }
+}
+const devChecker = process.env.OMSETT_ACCESSIBILITY_CHECKER ?? checkerFromSiteSettings()
 
 export default defineNuxtConfig({
   compatibilityDate: '2026-11-01',
@@ -27,6 +41,22 @@ export default defineNuxtConfig({
     // `.local` lets another device on the network reach the dev server by this machine's name
     // (pnpm dev:lan); by IP address it is allowed anyway.
     vite: { server: { headers: isolation, allowedHosts: ['.local'] } },
+    // While developing, the accessibility checker named in site.env is offered as it is on the
+    // site, and reached the same way: through this server, which passes it on. (Visits are
+    // never counted here: they are counted only on the site that is named.)
+    ...(devChecker
+      ? {
+          runtimeConfig: { public: { accessibilityChecker: devChecker } },
+          nitro: {
+            devProxy: Object.fromEntries(
+              ['health', 'analyze', 'reports'].map((path) => [
+                `/api/accessibility/${path}`,
+                { target: `${devChecker}/api/${path}`, changeOrigin: true, headers: { origin: '', cookie: '' } },
+              ]),
+            ),
+          },
+        }
+      : {}),
   },
 
   runtimeConfig: {

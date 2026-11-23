@@ -9,6 +9,7 @@ import {
   createScriptEngine,
   createPdfEngine,
   describeFile,
+  listSheets,
   zipFiles,
   createFontEngine,
   createFontWoff2Engine,
@@ -181,6 +182,12 @@ const api = {
   async describe(blob: Blob, formatId: string): Promise<Detail[]> {
     const format = formatById(registry, formatId)
     return format ? describeFile(blob, format) : []
+  },
+
+  /** The names of a workbook's sheets, as its tabs show them. None for a file that has no sheets. */
+  async sheets(blob: Blob): Promise<string[]> {
+    if (blob.size > 64 * 1024 * 1024) return []
+    return listSheets(new Uint8Array(await blob.arrayBuffer()))
   },
 
   /** Several finished files → one ZIP, so a batch can be downloaded in one go. */
