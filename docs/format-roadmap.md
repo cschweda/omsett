@@ -100,7 +100,10 @@ When a format ships, update its row here, in the same change.
 
 | Format | Home | Engine | Status |
 | --- | --- | --- | --- |
-| XLSX, XLSM, XLS, XLT, ODS, CSV, TSV, JSON, HTML to each other | Browser | SheetJS | Planned |
+| XLSX ↔ CSV, TSV, JSON, JSON Lines, YAML, TOML, XML; and on to vCard and iCalendar | Browser | `data` (Omsett's own reader and writer) | **Shipped** (0.18.0) |
+| Choosing which sheet; every sheet at once; a look at the rows before converting | Browser | the same | Planned |
+| XLSM (read, macros ignored), ODS | Browser | the same approach: a ZIP of XML | Planned |
+| XLS, XLT (the older binary form) | Browser | SheetJS, or the desktop app | Planned |
 | Numbers (read) | Browser | SheetJS | Planned |
 | OTS, FODS, ET | Desktop | LibreOffice | Planned |
 | Any spreadsheet to PDF | Desktop | LibreOffice | Planned |
@@ -287,7 +290,7 @@ with [audit.icjia.app](https://audit.icjia.app).
 ## Suggested order
 
 1. Images are largely done: 22 formats. Left: CUR, DDS, ICNS, FITS, APNG, PSB, camera RAW, DICOM, and writing ICO and JPEG 2000.
-2. Data and subtitles are done: seven data formats, nine subtitle formats. The side-by-side view for text formats is done too, and Markdown ↔ HTML. Fonts are done as well, vCard and iCalendar, and the first archives. Next, in this order, because these are the files everybody has: XLSX to and from CSV and JSON; DOCX to and from Markdown and HTML; PPTX to Markdown. All three are ZIPs of XML, and Omsett reads both itself. Then the screenwriting formats, Fountain, Final Draft (FDX) and Drafter. Small JavaScript libraries, no large downloads.
+2. Data and subtitles are done: seven data formats, nine subtitle formats. The side-by-side view for text formats is done too, and Markdown ↔ HTML. Fonts are done as well, vCard and iCalendar, and the first archives. XLSX is done. Next, in this order, because these are the files everybody has: DOCX to and from Markdown and HTML; PPTX to Markdown. All three are ZIPs of XML, and Omsett reads both itself. Then the screenwriting formats, Fountain, Final Draft (FDX) and Drafter. Small JavaScript libraries, no large downloads.
 3. Archives, then audio.
 4. Documents and e-books through Pandoc; then the PDF tools. A converted document must not score lower for accessibility than its original (see "Accessibility of converted documents").
 5. Video in the browser.

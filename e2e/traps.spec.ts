@@ -92,7 +92,7 @@ for (const trap of traps) {
       const category = formatById(registry, trap.detect)?.category
       // for Markdown and HTML, the other of the two; for fonts, WOFF, or TTF; for archives, ZIP, or TAR.
       const [usual, otherwise] =
-        category === 'data'
+        category === 'data' || category === 'spreadsheet'
           ? ['json', 'yaml']
           : category === 'subtitle'
             ? ['srt', 'vtt']

@@ -113,7 +113,7 @@ build by `apps/web/scripts/write-headers.ts`.
   (scripts, drawings that name other files) is not a picture. Do not add an unhinted read.
 - **A file is offered only formats of its own kind** (`packages/registry/src/kinds.ts`):
   pictures and drawings are one kind, data another, subtitles a third, Markdown and HTML a
-  fourth, fonts a fifth, archives a sixth. A new category that should convert into an
+  fourth, fonts a fifth, archives a sixth. Spreadsheets are of data's kind. A new category that should convert into an
   existing one must be added there, or its formats will never be listed for it.
 - **An engine's reason for refusing a file reaches the user only as a `Refusal`**
   (`packages/engines/src/util.ts`). Any other error is shown as "This file couldn't be
@@ -133,6 +133,10 @@ build by `apps/web/scripts/write-headers.ts`.
   unpacking stops at the stated size, and every name goes through `safeName`. A name that
   points outside the archive is not cleaned up; the archive is refused. Any new archive format
   reads into the same `Contents`, so it gets the same limits.
+- **An office file is a ZIP of XML, and is read as both** (`packages/engines/src/data/sheet.ts`):
+  through `readZip`, so the archive limits hold, and with any part that declares a DOCTYPE
+  refused. Formulas are never worked out and never written; macros and linked files are never
+  opened. DOCX and PPTX should be read the same way.
 - **A value written into a line-based format is escaped, always** (`escaped` in
   `packages/engines/src/data/cards.ts`). Anything written as a parameter or an unescaped value
   (a time zone, a repeat rule, a status) is held to a pattern first, and left out if it fails.

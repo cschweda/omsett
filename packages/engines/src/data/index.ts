@@ -2,6 +2,7 @@ import { dataInfo } from '../info'
 import type { ConvertInput, ConvertOutput, Engine } from '../types'
 import { outputName, Refusal, throwIfAborted } from '../util'
 import { readContacts, readEvents, writeContacts, writeEvents } from './cards'
+import { readWorkbook, writeWorkbook } from './sheet'
 import { readTable, rowsOf, writeTable } from './table'
 import { writeXml } from './xml'
 
@@ -140,6 +141,17 @@ async function write(format: string, value: unknown): Promise<string> {
   throw new Error(`The data engine does not write ${format}`)
 }
 
+/** The formats here that are not text. */
+const BINARY = new Set(['xlsx'])
+
+function decode(bytes: Uint8Array): string {
+  try {
+    return new TextDecoder('utf-8', { fatal: true }).decode(bytes)
+  } catch {
+    throw new Refusal('This file is not text in UTF-8, the encoding these formats use')
+  }
+}
+
 export function createDataEngine(): Engine {
   return {
     ...dataInfo,
@@ -149,17 +161,13 @@ export function createDataEngine(): Engine {
     async convert(input: ConvertInput): Promise<ConvertOutput[]> {
       throwIfAborted(input.signal)
       if (input.blob.size > MAX_DATA_BYTES) throw new Refusal('This file is too large to convert as data')
-      let text: string
-      try {
-        text = new TextDecoder('utf-8', { fatal: true }).decode(await input.blob.arrayBuffer())
-      } catch {
-        throw new Refusal('This file is not text in UTF-8, the encoding these formats use')
-      }
+      const bytes = new Uint8Array(await input.blob.arrayBuffer())
       input.onProgress(0.2)
 
       let value: unknown
       try {
-        value = plain(await read(input.from.id, text))
+        // A workbook is not text: it is a ZIP of XML, read for its rows.
+        value = plain(BINARY.has(input.from.id) ? await readWorkbook(bytes) : await read(input.from.id, decode(bytes)))
       } catch (error) {
         // A parser's own complaint is written for programmers. The file's format is what to say.
         throw error instanceof Refusal ? error : invalid(input.from.name)
@@ -167,13 +175,13 @@ export function createDataEngine(): Engine {
       throwIfAborted(input.signal)
       input.onProgress(0.6)
 
-      const written = await write(input.to.id, value)
+      const written = BINARY.has(input.to.id) ? await writeWorkbook(rowsOf(value)) : await write(input.to.id, value)
       input.onProgress(1)
       return [
         {
           name: outputName(input.name, input.to),
           format: input.to.id,
-          blob: new Blob([written], { type: input.to.mime[0] }),
+          blob: new Blob([written as BlobPart], { type: input.to.mime[0] }),
         },
       ]
     },

@@ -95,7 +95,7 @@ describe('trap files', () => {
       const from = found.format
       //    for Markdown and HTML, the other of the two; for fonts, WOFF, or TTF; for archives, ZIP, or TAR.
       const [usual, otherwise] =
-        from.category === 'data'
+        from.category === 'data' || from.category === 'spreadsheet'
           ? [json, yaml]
           : from.category === 'subtitle'
             ? [srt, vtt]
@@ -134,7 +134,7 @@ describe('trap files', () => {
         expect(error, 'a failure is an ordinary error').toBeInstanceOf(Error)
         outcome = 'fails'
         // Where the app must give a particular reason, the engine is where it comes from.
-        if (trap.note && ['data', 'subtitle', 'text', 'font', 'archive'].includes(from.category)) expect((error as Error).message).toBe(trap.note)
+        if (trap.note && ['data', 'spreadsheet', 'subtitle', 'text', 'font', 'archive'].includes(from.category)) expect((error as Error).message).toBe(trap.note)
       }
       expect(outcome, 'the engine').toBe(trap.node)
 

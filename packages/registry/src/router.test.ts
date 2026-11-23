@@ -40,7 +40,7 @@ describe('router, real registry', () => {
       if (edge.from !== 'png') expect(engines, `${edge.from} → ${edge.to}`).not.toContain('canvas')
       for (const engine of engines) expect(engine === 'canvas' || ['heif', 'resvg', 'magick', 'data', 'subtitle', 'markup', 'font', 'font-woff2', 'archive'].includes(engine) || engine.startsWith('vips')).toBe(true)
       // The data engine reads and writes data and nothing else; no picture engine touches data.
-      const data = [edge.from, edge.to].map((id) => formatById(registry, id)!.category === 'data')
+      const data = [edge.from, edge.to].map((id) => ['data', 'spreadsheet'].includes(formatById(registry, id)!.category))
       expect(data[0], `${edge.from} → ${edge.to}`).toBe(data[1])
       expect(engines.includes('data'), `${edge.from} → ${edge.to}`).toBe(data[0])
       // The same holds for subtitles and the engine that reads them.
@@ -56,7 +56,7 @@ describe('router, real registry', () => {
     expect(ids).toEqual([
       'webp', 'jpeg', 'png', 'avif', 'gif', 'tiff', 'jxl', 'bmp', 'tga', 'qoi', 'pnm',
       'heic', 'svg', 'svgz', 'psd', 'ico', 'jp2', 'exr', 'hdr', 'pcx', 'sgi', 'ras',
-      'json', 'yaml', 'csv', 'xml', 'toml', 'jsonl', 'tsv', 'vcf', 'ics',
+      'json', 'yaml', 'csv', 'xlsx', 'xml', 'toml', 'jsonl', 'tsv', 'vcf', 'ics',
       'srt', 'vtt', 'ass', 'ssa', 'ttml', 'lrc', 'sbv', 'smi', 'microdvd',
       'md', 'html',
       'woff2', 'woff', 'ttf', 'otf',
@@ -78,7 +78,7 @@ describe('router, real registry', () => {
     }
     // Data formats convert to each other in one step, and a file is offered only its own kind.
     expect(all.route('csv', 'yaml')!.edges.map((e) => e.candidates[0]!.engine)).toEqual(['data'])
-    expect(all.targetsFor(['json']).map((t) => t.format.id)).toEqual(['json', 'yaml', 'csv', 'xml', 'toml', 'jsonl', 'tsv', 'vcf', 'ics'])
+    expect(all.targetsFor(['json']).map((t) => t.format.id)).toEqual(['json', 'yaml', 'csv', 'xlsx', 'xml', 'toml', 'jsonl', 'tsv', 'vcf', 'ics'])
     expect(all.targetsFor(['png']).some((t) => t.format.category === 'data')).toBe(false)
     expect(all.targetsFor(['png', 'json']).find((t) => t.format.id === 'webp')!.reason).toBe('JSON files cannot become WebP')
     expect(all.route('yaml', 'json')!.warnings.map((w) => w.id)).toEqual(['comments-lost'])
@@ -86,7 +86,7 @@ describe('router, real registry', () => {
     // Whatever is written into a table carries the warning about formulas, with no exception:
     // a contact's name can be one as easily as a cell can.
     for (const to of ['csv', 'tsv']) {
-      for (const format of everything.formats.filter((f) => f.category === 'data' && f.id !== to)) {
+      for (const format of everything.formats.filter((f) => ['data', 'spreadsheet'].includes(f.category) && f.id !== to)) {
         expect(all.route(format.id, to)!.warnings.map((w) => w.id), `${format.id} → ${to}`).toContain('cells-exact')
       }
     }
