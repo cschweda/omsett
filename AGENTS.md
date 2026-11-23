@@ -164,6 +164,12 @@ build by `apps/web/scripts/write-headers.ts`.
 - **Never rely on a reader running out of stack to refuse a file.** How deep that is differs by
   browser and by operating system; WebKit on Linux read what every other browser refused. State
   the limit and check it (`limitDepth` in the markup engine).
+- **Results are kept per file and per format** (`${file}:${format}:${n}`). Converting to
+  another format adds; converting to the same one replaces its own results and nothing else.
+- **A choice offered to the user is a key in a capability's `defaultOptions`**, and one of the
+  names `useConversionQueue` knows (`OFFERED`). The page shows a control for each key the
+  selected conversion has; nothing in the page names a format. To offer a choice for some
+  sources only, give those sources their own capability entry, as tables have.
 - **Word from the worker can arrive late.** A progress event may land after its file is
   finished. Nothing it does may bring a finished file back to "converting".
 - **`?slow=800` holds each file before it converts** (localhost only), so tests can see the

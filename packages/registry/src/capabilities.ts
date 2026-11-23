@@ -49,6 +49,14 @@ const DATA_WRITES: WriteSpec[] = DATA.map((format) => ({ format, lossy: false, d
 const SUBTITLES = ['srt', 'vtt', 'ass', 'ssa', 'ttml', 'lrc', 'sbv', 'smi', 'microdvd']
 const SUBTITLE_WRITES: WriteSpec[] = SUBTITLES.map((format) => ({ format, lossy: false, drops: ['styling'] }))
 
+const TABLES = ['csv', 'tsv', 'xlsx']
+const SHAPED = ['json', 'yaml']
+const TABLE_WRITES: WriteSpec[] = DATA.map((format) => ({
+  format,
+  lossy: false,
+  drops: ['comments'],
+  defaultOptions: { headerRow: true, ...(SHAPED.includes(format) ? { shape: 'records' } : {}) },
+}))
 const ARCHIVES = ['zip', 'tgz', 'tar']
 const SFNT = ['ttf', 'otf', 'woff']
 
@@ -91,7 +99,10 @@ export const capabilities: Capability[] = [
   { engine: 'vips-jxl', tier: 'browser', reads: ['jxl'], writes: CORE_WRITES, priority: 30 },
 
   // Small parsers written in JavaScript: nothing to download beyond the app itself.
-  { engine: 'data', tier: 'browser', reads: DATA, writes: DATA_WRITES, priority: 20 },
+  // A table going in has two things to say about itself that nothing else does: whether its
+  // first row is the names of its columns, and, for a format that can nest, what shape to take.
+  { engine: 'data', tier: 'browser', reads: TABLES, writes: TABLE_WRITES, priority: 20 },
+  { engine: 'data', tier: 'browser', reads: DATA.filter((format) => !TABLES.includes(format)), writes: DATA_WRITES, priority: 20 },
   // Archives are unpacked into files and folders and packed again, in Omsett's own code.
   { engine: 'archive', tier: 'browser', reads: ARCHIVES, writes: ARCHIVES.map((format) => ({ format, lossy: false })), priority: 20 },
 

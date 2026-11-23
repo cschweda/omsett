@@ -10,6 +10,16 @@ const isMac = ref(false)
 
 const percent = computed(() => Math.round(queue.overall.value * 100))
 
+const choices = queue.choices
+// What the button will do, said on the button and beside it.
+const convertLabel = computed(() => (queue.selected.value ? `Convert to ${queue.selected.value.format.name}` : 'Convert'))
+const convertSummary = computed(() => {
+  const target = queue.selected.value
+  const ready = queue.files.value.filter((file) => file.detection.kind === 'known' && !file.problem)
+  if (!target || ready.length === 0) return ''
+  return ready.length === 1 ? `${ready[0]!.file.name} → ${target.format.name}` : `${ready.length} files → ${target.format.name}`
+})
+
 const batchLine = computed(() => {
   const batch = queue.batch.value
   if (!batch) return ''
@@ -141,7 +151,9 @@ onBeforeUnmount(() => {
           :via-server="server.state.value === 'reachable'"
           labelledby="pick-heading"
           :waiting="queue.waiting.value"
+          :busy="queue.converting.value"
           @select="queue.select"
+          @convert="queue.convertTo"
         />
 
         <QualityControl
@@ -150,18 +162,26 @@ onBeforeUnmount(() => {
           :suggested="queue.defaultQuality.value"
         />
 
-        <LanguageControl v-if="queue.language.value !== null" v-model="queue.language.value" />
+        <LanguageControl v-if="typeof choices.language === 'string'" v-model="choices.language" />
+        <TableOptions
+          v-if="typeof choices.headerRow === 'boolean'"
+          v-model:named="choices.headerRow"
+          v-model:shape="choices.shape as string | undefined"
+        />
 
-        <div class="convert">
+        <!-- Once there is something to convert this stays at the foot of the window, so that
+             it is in sight wherever in the list of formats the choice was made. -->
+        <div class="convert" :class="{ armed: queue.canConvert.value || queue.converting.value }">
           <UButton
             size="xl"
-            label="Convert"
+            :label="convertLabel"
             :disabled="!queue.canConvert.value"
             :loading="queue.converting.value"
             class="convert-button"
             data-testid="convert"
             @click="queue.convertAll()"
           />
+          <span v-if="convertSummary" class="summary figures" data-testid="convert-summary">{{ convertSummary }}</span>
           <span class="shortcut">
             <UKbd :value="isMac ? '⌘' : 'Ctrl'" />
             <UKbd value="Enter" />
@@ -273,6 +293,21 @@ onBeforeUnmount(() => {
   flex-wrap: wrap;
   align-items: center;
   gap: 1rem;
+}
+/* With a file and a format chosen, the button is pinned to the foot of the window. */
+.convert.armed {
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+  margin: 0 calc(-1 * var(--margin));
+  padding: 0.875rem var(--margin);
+  border-top: 2px solid var(--accent);
+  background: var(--bg);
+}
+.summary {
+  font-size: var(--text-small);
+  font-weight: 700;
+  overflow-wrap: anywhere;
 }
 .after {
   display: flex;

@@ -7,6 +7,45 @@ The paragraph that opens a version is its teaser: the home page shows its first 
 in the "What's new" banner, so keep it to two or three sentences on what a visitor will notice.
 A line beginning "Released" gives the date.
 
+## 0.20.0
+
+Released 23 November 2026.
+
+Every format a file can become now has its own Convert button, so one file can be converted to
+several formats, one press each. The main Convert button stays at the foot of the window once a
+format is picked. And a spreadsheet or CSV offers two choices: whether its first row holds the
+column names, and what shape the result should take.
+
+### Added
+
+- **A Convert button on every available format**: under the text of each large tile, and at
+  the right of each line in the list. One press converts to that format with its usual
+  settings; there is no need to choose it first.
+- **One file, several formats.** Converting to a second format adds its result beside the
+  first. Converting to the same format again replaces that result only. "Download all as a
+  ZIP" takes every result.
+- **Why a format is not available**, on hover with a mouse and on a press with a finger, as
+  well as in the text beside it.
+
+- **"The first row holds the column names"**, for XLSX, CSV and TSV. It is on by default.
+  Turned off, the first row is data like the rest and the columns are called column_A, column_B
+  and so on. Before, a sheet with no row of names had its first row taken as the names and
+  left out of the data.
+- **A choice of shape** when a table becomes JSON or YAML: records (each row names its columns,
+  which is what most programs expect), rows (the names once, then plain lists of values), or
+  columns (each column's values together).
+- Changing either choice after converting converts again, and the view of the result follows.
+- **A view of the result when the original is not text.** A workbook or Word document turned
+  into JSON, CSV, Markdown or HTML now shows the start of what was made. Before, the view
+  appeared only when both sides were text.
+
+### Changed
+
+- **The Convert button is pinned to the foot of the window** once there is a file and a format,
+  with a line beside it naming them: "report.xlsx → JSON", or "3 files → JSON". Before, it sat
+  below the whole list of formats and had to be looked for.
+- The button says where it is going: "Convert to JSON".
+
 ## 0.19.0
 
 Released 23 November 2026.

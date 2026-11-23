@@ -41,9 +41,10 @@ const comparable = computed(
   () => props.source !== undefined && from.value?.category === 'image' && to.value?.category === 'image',
 )
 // Text to text (data, subtitles): there is something to read side by side.
-const readable = computed(
-  () => props.source !== undefined && !!from.value && !!to.value && isReadable(from.value.category) && isReadable(to.value.category),
-)
+// A result that is text can be read before it is downloaded, beside the original where that is
+// text too, and alone where it is not (a workbook, a Word document).
+const readable = computed(() => !!to.value && isReadable(to.value.category))
+const bothReadable = computed(() => readable.value && !!from.value && isReadable(from.value.category))
 const delta = computed(() => formatDelta(props.result.inputBytes, props.result.blob.size))
 </script>
 
@@ -72,8 +73,8 @@ const delta = computed(() => formatDelta(props.result.inputBytes, props.result.b
       @update:quality="$emit('update:quality', $event)"
     />
     <TextCompare
-      v-else-if="readable && source"
-      :before="source"
+      v-else-if="readable"
+      :before="bothReadable ? source : undefined"
       :after="result.blob"
       :before-label="`${from?.name} ${formatBytes(result.inputBytes)}`"
       :after-label="`${to?.name} ${formatBytes(result.blob.size)}`"

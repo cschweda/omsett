@@ -4,7 +4,8 @@ import { previewBlob, type TextPreview } from '~/utils/text-preview'
 // The start of the original and of the converted file, next to each other. File contents are
 // put on the page as text and never as markup: a file of HTML is shown, not run.
 const props = defineProps<{
-  before: Blob
+  /** Left out where the original is not text (a workbook, a Word document): the result is shown alone. */
+  before?: Blob
   after: Blob
   beforeLabel: string
   afterLabel: string
@@ -18,12 +19,12 @@ onMounted(() => {
     () => [props.before, props.after] as const,
     async ([before, after]) => {
       ready.value = false
-      const [first, second] = await Promise.all([previewBlob(before), previewBlob(after)])
+      const [first, second] = await Promise.all([before ? previewBlob(before) : null, previewBlob(after)])
       // A newer conversion may have replaced these while they were being read.
       if (before !== props.before || after !== props.after) return
       sides.value = [
-        { side: 'before', label: props.beforeLabel, preview: first },
-        { side: 'after', label: props.afterLabel, preview: second },
+        ...(first ? [{ side: 'before' as const, label: props.beforeLabel, preview: first }] : []),
+        { side: 'after' as const, label: props.afterLabel, preview: second },
       ]
       ready.value = true
     },
@@ -35,7 +36,7 @@ const numbers = (count: number) => Array.from({ length: count }, (_, i) => i + 1
 </script>
 
 <template>
-  <div class="text-compare" data-testid="text-compare" :data-ready="ready">
+  <div class="text-compare" :class="{ alone: !before }" data-testid="text-compare" :data-ready="ready">
     <section v-for="pane in sides" :key="pane.side" class="pane" :data-side="pane.side">
       <h3 class="label figures">{{ pane.label }}</h3>
       <div class="scroll" tabindex="0">
@@ -60,6 +61,10 @@ const numbers = (count: number) => Array.from({ length: count }, (_, i) => i + 1
 @media (min-width: 760px) {
   .text-compare {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+  /* One side only: it has the width to itself. */
+  .text-compare.alone {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 .pane {

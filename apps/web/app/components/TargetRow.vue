@@ -8,14 +8,20 @@ const props = defineProps<{
   tabbable: boolean
   download: string
   viaServer: boolean
+  /** True while a conversion is running: nothing else can be started. */
+  busy: boolean
 }>()
-defineEmits<{ select: [id: string] }>()
+defineEmits<{ select: [id: string]; convert: [id: string]; why: [id: string] }>()
 
 const id = computed(() => `tile-${props.target.format.id}`)
 const disabled = computed(() => props.target.route === null)
+// What shows on hover: for a format that cannot be chosen, why not, ahead of what it is.
+const tip = computed(() => (props.target.reason ? `${props.target.reason}. ${props.target.format.explain}` : props.target.format.explain))
 </script>
 
 <template>
+  <div class="row-wrap">
+  <UTooltip :text="tip" :delay-duration="disabled ? 100 : 700" :ui="{ content: 'tile-tip' }">
   <button
     :id="id"
     type="button"
@@ -27,8 +33,7 @@ const disabled = computed(() => props.target.route === null)
     :aria-describedby="`${id}-desc`"
     :tabindex="tabbable ? 0 : -1"
     :data-format="target.format.id"
-    :title="target.format.explain"
-    @click="!disabled && $emit('select', target.format.id)"
+    @click="disabled ? $emit('why', target.format.id) : $emit('select', target.format.id)"
   >
     <span class="name">{{ target.format.name }}</span>
     <span class="ext">.{{ target.format.extensions[0] }}</span>
@@ -39,9 +44,57 @@ const disabled = computed(() => props.target.route === null)
       <span v-if="download && !disabled" class="figures">{{ download }}</span>
     </span>
   </button>
+  </UTooltip>
+  <button
+    v-if="!disabled"
+    type="button"
+    class="go"
+    data-testid="convert-to"
+    :data-target="target.format.id"
+    :disabled="busy"
+    @click="$emit('convert', target.format.id)"
+  >
+    Convert<span class="sr-only"> to {{ target.format.name }}</span>
+  </button>
+  </div>
 </template>
 
 <style scoped>
+/* The choice, and to its right the button that converts to it at once. */
+.row-wrap {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: 0.75rem;
+  border-top: 1px solid var(--rule);
+}
+.row-wrap .row {
+  border-top: 0;
+}
+.go {
+  padding: 0.3rem 0.875rem;
+  border: 1px solid var(--accent);
+  border-radius: 0;
+  background: transparent;
+  color: var(--accent-text);
+  font: inherit;
+  font-size: var(--text-small);
+  font-weight: 700;
+  cursor: pointer;
+}
+.go:hover:not(:disabled) {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+.go:disabled {
+  border-color: var(--rule-strong);
+  color: var(--muted);
+  cursor: default;
+}
+.go:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
 .row {
   display: grid;
   grid-template-columns: 6rem 4rem minmax(0, 1fr);
