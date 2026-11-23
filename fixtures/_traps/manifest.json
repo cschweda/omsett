@@ -3708,6 +3708,18 @@
     "absent": null
   },
   {
+    "file": "small-in-the-file-vast-when-laid-out.xlsx",
+    "group": "workbooks",
+    "why": "Two thousand cells, one to a row, each in the last column of the sheet. Laid out as a table that is thirty-two million cells. Counted by the room it takes, not by the cells in the file.",
+    "detect": "xlsx",
+    "mismatch": false,
+    "guard": "ok",
+    "node": "fails",
+    "browser": "fails",
+    "note": "This workbook is too large to convert in a browser",
+    "absent": null
+  },
+  {
     "file": "cell-beyond-the-sheet.xlsx",
     "group": "workbooks",
     "why": "A cell in a column past the last one a sheet has.",

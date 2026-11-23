@@ -159,6 +159,8 @@ export async function readWorkbook(bytes: Uint8Array): Promise<Row[]> {
 
 function tableOf(worksheet: Xml, shared: string[], dated: boolean[], from1904: boolean): Row[] {
   const grid: Cell[][] = []
+  // Counted as the room the cells take, not as how many there are: one cell in the last
+  // column of a row makes that row sixteen thousand cells wide.
   let cells = 0
   for (const row of list(record(worksheet.sheetData).row).map(record)) {
     const line: Cell[] = []
@@ -168,17 +170,20 @@ function tableOf(worksheet: Xml, shared: string[], dated: boolean[], from1904: b
       const column = typeof cell['@r'] === 'string' ? columnOf(cell['@r']) : next
       if (column === null || column >= MAX_COLUMNS) throw invalid()
       next = column + 1
-      if (++cells > MAX_CELLS) throw tooLarge()
       const value = valueOf(cell, shared, dated, from1904)
       if (value !== null) line[column] = value
     }
-    if (line.length > 0) grid.push(Array.from(line, (value) => value ?? null))
-    if (grid.length > MAX_ROWS) throw tooLarge()
+    if (line.length === 0) continue
+    cells += line.length
+    if (cells > MAX_CELLS || grid.length >= MAX_ROWS) throw tooLarge()
+    grid.push(Array.from(line, (value) => value ?? null))
   }
   if (grid.length === 0) return []
 
   // The first row names the columns. A name used twice, or missing, is given one of its own.
   const width = grid.reduce((most, line) => Math.max(most, line.length), 0)
+  // Every row is given every column, so the table is as wide as its widest row all the way down.
+  if (width * grid.length > MAX_CELLS) throw tooLarge()
   const taken = new Set<string>()
   const names = Array.from({ length: width }, (_, i) => {
     const stated = grid[0]![i]

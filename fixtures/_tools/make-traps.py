@@ -2783,6 +2783,14 @@ work(
     "xlsx", node="succeeds",
 )
 work(
+    "small-in-the-file-vast-when-laid-out.xlsx",
+    book({"xl/worksheets/sheet2.xml": sheet("".join('<row r="%d"><c r="XFD%d"><v>1</v></c></row>' % (i, i) for i in range(1, 2001)))}),
+    "Two thousand cells, one to a row, each in the last column of the sheet. Laid out as a "
+    "table that is thirty-two million cells. Counted by the room it takes, not by the cells "
+    "in the file.",
+    "xlsx", node="fails", note=BOOK_TOO_BIG,
+)
+work(
     "cell-beyond-the-sheet.xlsx",
     book({"xl/worksheets/sheet2.xml": sheet('<row r="1">' + text_cell("ZZZ1", "beyond") + '</row><row r="2"><c r="ZZZ2"><v>1</v></c></row>')}),
     "A cell in a column past the last one a sheet has.",

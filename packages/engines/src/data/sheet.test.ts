@@ -123,6 +123,15 @@ describe('workbooks', () => {
       }
     })
 
+    it('a sheet that is small in the file and vast when laid out', async () => {
+      // One cell a row, each in the last column: 400 cells that take the room of six million.
+      const rows = Array.from({ length: 400 }, (_, i) => `<row r="${i + 1}"><c r="XFD${i + 1}"><v>1</v></c></row>`).join('')
+      expect(await refusal(readWorkbook(await altered({ 'xl/worksheets/sheet2.xml': SHEET(rows) })))).toBe('This workbook is too large to convert in a browser')
+      // One wide row above many narrow ones is as wide all the way down.
+      const tall = `<row r="1"><c r="XFD1"><v>1</v></c></row>${Array.from({ length: 400 }, (_, i) => `<row r="${i + 2}"><c r="A${i + 2}"><v>1</v></c></row>`).join('')}`
+      expect(await refusal(readWorkbook(await altered({ 'xl/worksheets/sheet2.xml': SHEET(tall) })))).toBe('This workbook is too large to convert in a browser')
+    })
+
     it('a sheet that points outside the workbook', async () => {
       const links =
         '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +

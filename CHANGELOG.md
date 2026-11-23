@@ -29,7 +29,8 @@ comes out as the value it last showed.
   converted.
 - **Writing never makes a formula.** Text is written as text, so a cell that reads `=1+1` is
   those four characters in Excel too.
-- 18 trap files: the "billion laughs" inside a sheet, a sheet that is 300 MB of spaces, a
+- 19 trap files: the "billion laughs" inside a sheet, a sheet of two thousand cells that
+  lays out as thirty-two million, a sheet that is 300 MB of spaces, a
   workbook that asks for a file from the computer, formulas that start programs and send cells
   elsewhere, a sheet said to be a file outside the workbook, a row of two million cells, and
   dates that are no day there has been.
