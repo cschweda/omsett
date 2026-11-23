@@ -22,7 +22,9 @@ const note = computed(() => {
   if (props.entry.error) return props.entry.error
   if (props.entry.problem) return props.entry.problem
   if (props.entry.detection.kind === 'unregistered') {
-    return switchedOffReason(props.entry.detection.ext) ?? 'Unsupported format'
+    // Recognised, and not something Omsett converts so far: said by name, so it is clear the
+    // file was understood.
+    return switchedOffReason(props.entry.detection.ext) ?? `${label.value} is not supported yet`
   }
   if (!known.value) return 'Unsupported format'
   if (props.entry.mismatch) return `Named like another format, but the contents are ${known.value.format.name}.`
@@ -41,7 +43,7 @@ const stage = computed(() => {
 })
 
 // Only a picture has a preview. Anything else gets no empty square where one would be.
-const pictured = computed(() => !known.value || ['image', 'vector'].includes(known.value.format.category))
+const pictured = computed(() => known.value !== null && ['image', 'vector'].includes(known.value.format.category))
 
 // A note is either information (a mislabeled file) or a failure. Only a failure is red.
 const failed = computed(() => Boolean(props.entry.error || props.entry.problem || !known.value))

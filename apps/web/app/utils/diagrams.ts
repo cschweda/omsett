@@ -3,7 +3,7 @@
 
 export const pipeline = `flowchart TD
   drop["File dropped, chosen, or pasted"] --> identify["Identify by contents<br/>(the name only tells one kind<br/>of plain text from another)"]
-  identify -->|not recognized| unsupported["Shown as: Unsupported format"]
+  identify -->|not recognized| unsupported["Shown as: Unsupported format, or not supported yet"]
   identify -->|recognized| guard["Read the size from the header<br/>(nothing is decoded yet)"]
   guard -->|too large| refused["Refused, with the reason"]
   guard -->|fine| route["Look up a route in the registry"]

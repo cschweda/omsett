@@ -7,6 +7,58 @@ The paragraph that opens a version is its teaser: the home page shows its first 
 in the "What's new" banner, so keep it to two or three sentences on what a visitor will notice.
 A line beginning "Released" gives the date.
 
+## 0.17.0
+
+Released 23 November 2026.
+
+Omsett now converts archives: ZIP, TAR and TAR.GZ, each to the others. When you convert several
+files at once, one button downloads them all as a single ZIP. And a file dropped anywhere on the
+page is now picked up, not only one dropped on the box.
+
+### Added
+
+- **Three archive formats: ZIP, TAR, TAR.GZ.** An archive is unpacked into its files and
+  folders in the tab's memory and packed again as the other kind. Names, contents, dates and
+  which files are programs are kept. Nothing is written to your disk and no file inside is
+  opened or run.
+- **"Download all as a ZIP"** when a batch gives more than one result. Two results with the
+  same name are told apart: `sample.json` and `sample (2).json`.
+- **Archives are treated as hostile.** An archive that unpacks to more than 256 MB, or holds
+  more than 10,000 files, is refused from the sizes it states, before anything is unpacked. A
+  file that unpacks to more than it said is stopped at the size it gave. A file named to land
+  outside the folder (`../../etc/…`, an absolute path, a Windows drive letter) means the whole
+  archive is refused. Links, devices and pipes are left out. Files that overlap, the same name
+  twice, and a list of contents that disagrees with the contents are all refused.
+- **Who owned the files is not carried over.** A TAR records the user name of whoever made it;
+  the one Omsett writes does not.
+- 44 trap files for archives: three kinds of bomb, six ways of climbing out of the folder, a
+  thousand files that are all the same hundred bytes, a file with two names, a name written
+  backwards with an invisible mark, links to the rest of the computer, and a ZIP inside a ZIP
+  six deep.
+- No new dependency: the reader and writer are Omsett's own, on the compression every browser
+  has built in.
+
+### Changed
+
+- **A file dropped anywhere on the page is taken.** Before, a drop that missed the box made the
+  browser leave the page and open the file.
+- **Step 2 no longer says "Drop a file"**, which read as if step 2 were where to drop it. It
+  says "Add a file above to see what it can become."
+- **A file Omsett recognises but does not convert says so by name**: "XLSX is not supported
+  yet", in place of "Unsupported format". "Unsupported format" is kept for files Omsett cannot
+  identify at all.
+- No empty picture square beside a file that is not a picture.
+- `notes.tar.gz` converted to ZIP is named `notes.zip`, not `notes.tar.zip`.
+
+### Known
+
+- 7Z, RAR, TAR.BZ2, TAR.XZ and plain GZ are not read yet.
+- Archives over 256 MB, password-protected ZIPs, and ZIPs in the ZIP64 form are refused.
+- There is no way yet to take single files out of an archive, or to see a list of what is in
+  one.
+- XLSX, DOCX and other office files are ZIPs inside, but are recognised as what they are and
+  not offered as archives.
+
 ## 0.16.0
 
 Released 23 November 2026.

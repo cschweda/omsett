@@ -103,6 +103,12 @@ export function useEngines() {
     }
   }
 
+  /** Pack finished files into one ZIP, in the worker like everything else. */
+  async function zip(files: Array<{ name: string; blob: Blob }>): Promise<Blob> {
+    const current = engineWorker()
+    return Promise.race([current.api.zip(files), current.crashed])
+  }
+
   /** Stop whatever the engine worker is doing. This is how a conversion is cancelled. */
   function terminate() {
     engineHost?.worker.terminate()
@@ -110,5 +116,5 @@ export function useEngines() {
     loaded.value = []
   }
 
-  return { info: engineInfo, availability, loaded, probe, convert, thumbnail, terminate }
+  return { info: engineInfo, availability, loaded, probe, convert, thumbnail, zip, terminate }
 }

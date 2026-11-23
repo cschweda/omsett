@@ -96,7 +96,8 @@ describe('fixtures through every Node-capable engine', () => {
           converted++
           expect(outputs).toHaveLength(1)
           const output = outputs[0]!
-          expect(output.name).toBe(fixture.name.replace(/\.[^.]+$/, `.${to.extensions[0]}`))
+          // The ending is replaced whole: "sample.tar.gz" becomes "sample.zip", not "sample.tar.zip".
+          expect(output.name).toBe(fixture.name.replace(/(?:\.tar)?\.[^.]+$/, `.${to.extensions[0]}`))
           expect(output.format).toBe(to.id)
 
           // Decodable as the target format, same dimensions, judged from the bytes.

@@ -54,6 +54,9 @@ const samples: Record<string, string> = {
   otf: 'otf/sample.otf',
   woff: 'woff/sample.woff',
   woff2: 'woff2/sample.woff2',
+  zip: 'zip/sample.zip',
+  tar: 'tar/sample.tar',
+  tgz: 'tgz/sample.tar.gz',
 }
 // A web font unwraps to TTF or to OTF, whichever its letters are drawn as. The usual samples
 // hold TrueType outlines; unwrapping to OTF needs one that holds PostScript outlines.

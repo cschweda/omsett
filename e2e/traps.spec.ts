@@ -67,8 +67,14 @@ for (const trap of traps) {
       // Its format is switched off: named for what it is, given the reason, and not converted.
       await expect(note).toHaveText(switches[trap.detect]!.whenOff)
       await expect(convert).toBeDisabled()
-    } else if (trap.detect === 'unknown' || trap.detect === 'unregistered') {
+    } else if (trap.detect === 'unregistered') {
+      // Recognised for what it is, which is something Omsett does not convert: named, and refused.
+      await expect(note).toHaveText(/^[A-Z0-9.]+ is not supported yet$/)
+      await expect(card.locator('.thumb')).toHaveCount(0)
+      await expect(convert).toBeDisabled()
+    } else if (trap.detect === 'unknown') {
       await expect(note).toHaveText('Unsupported format')
+      await expect(card.locator('.thumb')).toHaveCount(0)
       await expect(convert).toBeDisabled()
     } else if (trap.guard === 'refused') {
       await expect(note).toHaveText('This image is too large to convert in a browser')
@@ -84,7 +90,7 @@ for (const trap of traps) {
       // Convert it to something it is not: WebP, or PNG if it is a WebP already; for data,
       // JSON, or YAML if it is JSON already; for subtitles, SRT, or WebVTT.
       const category = formatById(registry, trap.detect)?.category
-      // for Markdown and HTML, the other of the two; for fonts, WOFF, or TTF.
+      // for Markdown and HTML, the other of the two; for fonts, WOFF, or TTF; for archives, ZIP, or TAR.
       const [usual, otherwise] =
         category === 'data'
           ? ['json', 'yaml']
@@ -94,7 +100,9 @@ for (const trap of traps) {
               ? ['md', 'html']
               : category === 'font'
                 ? ['woff', 'ttf']
-                : ['webp', 'png']
+                : category === 'archive'
+                  ? ['zip', 'tar']
+                  : ['webp', 'png']
       const target = trap.detect === usual ? otherwise : usual
       if (trap.mismatch) await expect(note).toContainText('the contents are')
       await page.locator(`[role="radio"][data-format="${target}"]`).click()

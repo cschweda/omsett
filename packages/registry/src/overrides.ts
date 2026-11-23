@@ -34,6 +34,13 @@ const CONTACT_EXTRAS = [{ id: 'contact-extras', text: 'Photos, and details beyon
 const EVENT_EXTRAS = [{ id: 'event-extras', text: 'Reminders and time-zone rules are left out. A repeating event is one row, with its rule as text.' }]
 const TABLES = ['json', 'jsonl', 'yaml', 'toml', 'xml', 'csv', 'tsv']
 
+// Archives.
+const ARCHIVES = ['zip', 'tgz', 'tar']
+const ARCHIVE_NOTES = [
+  { id: 'archive-links', text: 'Links and other special files are left out. Only files and folders are kept.' },
+  { id: 'archive-owners', text: 'Who owned each file is not carried over. Names, contents and dates are.' },
+]
+
 // Fonts.
 const REDRAW = 'TTF and OTF draw letters in different ways. Changing one into the other means redrawing every letter, which Omsett does not do yet'
 const WEB_LICENCE = [{ id: 'font-licence', text: "Check that the font's licence allows it to be used on a website." }]
@@ -42,6 +49,7 @@ const OUTLINES = [{ id: 'font-outlines', text: 'A web font unwraps to TTF or to 
 const TYPED = ['json', 'jsonl', 'yaml', 'toml']
 
 export const overrides: EdgeOverride[] = [
+  ...ARCHIVES.flatMap((from) => ARCHIVES.filter((to) => to !== from).map((to) => ({ from, to, warnings: ARCHIVE_NOTES }))),
   { from: 'vcf', to: 'ics', block: NOT_THE_SAME },
   { from: 'ics', to: 'vcf', block: NOT_THE_SAME },
   ...TABLES.flatMap((other) => [

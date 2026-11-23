@@ -31,12 +31,47 @@ function onKeydown(event: KeyboardEvent) {
   }
 }
 
+// Every result in one ZIP, packed in the worker. Two results with one name are told apart.
+const zipping = ref(false)
+async function downloadAll() {
+  const results = queue.results.value
+  if (zipping.value || results.length < 2) return
+  zipping.value = true
+  try {
+    const names = uniqueNames(results.map((result) => result.name))
+    const blob = await useEngines().zip(results.map((result, i) => ({ name: names[i]!, blob: result.blob })))
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = 'omsett.zip'
+    link.click()
+    // The browser has the file by the time the click returns; the address is no longer needed.
+    setTimeout(() => URL.revokeObjectURL(url), 60_000)
+  } finally {
+    zipping.value = false
+  }
+}
+
 function sourceOf(sourceId: string) {
   const entry = queue.files.value.find((f) => f.id === sourceId)
   return {
     blob: entry?.file,
     formatId: entry?.detection.kind === 'known' ? entry.detection.format.id : undefined,
   }
+}
+
+// A file dropped anywhere on the page is taken as dropped in step 1. Without this, a drop that
+// misses the box makes the browser leave the page and open the file.
+function onDragOver(event: DragEvent) {
+  if (event.dataTransfer?.types.includes('Files')) event.preventDefault()
+}
+function onDropAnywhere(event: DragEvent) {
+  // The box in step 1 has dealt with its own.
+  if (event.defaultPrevented) return
+  const dropped = [...(event.dataTransfer?.files ?? [])]
+  if (dropped.length === 0) return
+  event.preventDefault()
+  void queue.add(dropped)
 }
 
 function convertAnother() {
@@ -49,6 +84,8 @@ onMounted(async () => {
   secure.value = window.isSecureContext
   isMac.value = /Mac|iPhone|iPad/.test(navigator.platform)
   window.addEventListener('keydown', onKeydown)
+  window.addEventListener('dragover', onDragOver)
+  window.addEventListener('drop', onDropAnywhere)
   await engines.probe()
 
   // Development only: `?demo` loads the sample and converts it, so the finished state can be
@@ -63,7 +100,11 @@ onMounted(async () => {
     }
   }
 })
-onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', onKeydown)
+  window.removeEventListener('dragover', onDragOver)
+  window.removeEventListener('drop', onDropAnywhere)
+})
 </script>
 
 <template>
@@ -156,8 +197,17 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
             @update:quality="queue.quality.value = $event"
           />
         </ul>
-        <!-- TODO(phase-1): "Download all as ZIP" when there is more than one result. -->
-        <div>
+        <div class="after">
+          <button
+            v-if="queue.results.value.length > 1"
+            type="button"
+            class="button solid"
+            data-testid="download-all"
+            :disabled="zipping"
+            @click="downloadAll"
+          >
+            {{ zipping ? 'Packing' : `Download all ${queue.results.value.length} as a ZIP` }}
+          </button>
           <button type="button" class="button" data-testid="another" @click="convertAnother">Convert another</button>
         </div>
       </StepSection>
@@ -223,6 +273,11 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
   flex-wrap: wrap;
   align-items: center;
   gap: 1rem;
+}
+.after {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
 }
 .batch {
   flex: 1 1 14rem;

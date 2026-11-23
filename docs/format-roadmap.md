@@ -130,6 +130,15 @@ When a format ships, update its row here, in the same change.
 | Source files and logs, read as text (never run) | Browser | — | Planned |
 | MHTML (read) | Browser | JavaScript | Planned |
 
+## Screenwriting
+
+| Format | Home | Engine | Status |
+| --- | --- | --- | --- |
+| Fountain ↔ Final Draft (FDX) | Browser | Omsett's own | Next, after XLSX |
+| Drafter (the owner's own format; specified in the `drafter` repository, `docs/spec/drafter-package.md`) ↔ Fountain, FDX | Browser | Omsett's own | Next, after XLSX |
+| Screenplay to PDF, laid out to industry rules | Browser | with the PDF step | Planned |
+| Celtx, Highland, Fade In, WriterDuet | Browser | to be looked at | Planned, low priority |
+
 ## E-books
 
 | Format | Home | Engine | Status |
@@ -169,9 +178,11 @@ When a format ships, update its row here, in the same change.
 
 | Format | Home | Engine | Status |
 | --- | --- | --- | --- |
-| ZIP, 7Z, TAR, TAR.GZ, TAR.BZ2, TAR.XZ, TAR.ZST, GZ, ZST: extract and create | Browser | fflate, libarchive, 7z (WASM) | Planned |
+| ZIP, TAR, TAR.GZ to each other | Browser | `archive` (Omsett's own) | **Shipped** (0.17.0) |
+| Taking single files out of an archive; a list of what is in one | Browser | the same | Planned |
+| 7Z, TAR.BZ2, TAR.XZ, TAR.ZST, GZ, ZST | Browser | libarchive or 7z (WASM) | Planned |
 | RAR, ISO, CAB, DMG, JAR, NuGet (read) | Browser | libarchive | Planned. RAR's licence allows reading only |
-| Any files to one ZIP | Browser | fflate | Planned (the "download all" path) |
+| Any files to one ZIP | Browser | `archive` | **Shipped** (0.17.0): "Download all as a ZIP" |
 | Folders to ISO | Declined | — | Low value in a browser |
 | ALZ, EGG, GMA, VPK, BSP, WBPZ, Android bundles, Adobe ZXP | Declined | — | Niche |
 
@@ -276,7 +287,7 @@ with [audit.icjia.app](https://audit.icjia.app).
 ## Suggested order
 
 1. Images are largely done: 22 formats. Left: CUR, DDS, ICNS, FITS, APNG, PSB, camera RAW, DICOM, and writing ICO and JPEG 2000.
-2. Data and subtitles are done: seven data formats, nine subtitle formats. The side-by-side view for text formats is done too, and Markdown ↔ HTML. Fonts are done as well, and vCard and iCalendar. Next: archives. Small JavaScript libraries, no large downloads.
+2. Data and subtitles are done: seven data formats, nine subtitle formats. The side-by-side view for text formats is done too, and Markdown ↔ HTML. Fonts are done as well, vCard and iCalendar, and the first archives. Next, in this order, because these are the files everybody has: XLSX to and from CSV and JSON; DOCX to and from Markdown and HTML; PPTX to Markdown. All three are ZIPs of XML, and Omsett reads both itself. Then the screenwriting formats, Fountain, Final Draft (FDX) and Drafter. Small JavaScript libraries, no large downloads.
 3. Archives, then audio.
 4. Documents and e-books through Pandoc; then the PDF tools. A converted document must not score lower for accessibility than its original (see "Accessibility of converted documents").
 5. Video in the browser.
