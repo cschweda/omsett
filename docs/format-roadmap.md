@@ -124,7 +124,8 @@ When a format ships, update its row here, in the same change.
 | Format | Home | Engine | Status |
 | --- | --- | --- | --- |
 | Markdown ↔ HTML | Browser | `markup` (unified: remark and rehype), cleaned with rehype-sanitize | **Shipped** (0.12.0) |
-| An option for the page's language, and for "the article only" from a web page | Browser | the same | Planned |
+| The page's language, chosen when converting Markdown to HTML | Browser | the same | **Shipped** (0.14.0) |
+| "The article only" from a web page, without its navigation and footer | Browser | the same | Planned |
 | TXT, reStructuredText, LaTeX, Org, AsciiDoc, Typst, MediaWiki, DocBook, Jupyter, Textile, man, OPML to each other and to Markdown and HTML, and to DOCX, EPUB, PPTX | Browser | Pandoc (WASM) | Planned |
 | Source files and logs, read as text (never run) | Browser | — | Planned |
 | MHTML (read) | Browser | JavaScript | Planned |

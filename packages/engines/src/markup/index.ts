@@ -90,7 +90,19 @@ function firstHeading(tree: Tree): string | null {
 
 const escapeText = (value: string) => value.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;')
 
-async function markdownToHtml(text: string, name: string): Promise<string> {
+/** Languages written from right to left, which a page must also be told. */
+const RIGHT_TO_LEFT = new Set(['ar', 'he', 'fa', 'ur', 'ps', 'sd', 'yi', 'dv', 'ug', 'ckb'])
+
+/**
+ * The language option → a tag fit to write into a page: "en", "pt-BR", "zh-Hant". Anything that
+ * is not shaped like one is replaced by English, so nothing typed here can break out of the
+ * attribute it is written in.
+ */
+function languageTag(value: unknown): string {
+  return typeof value === 'string' && /^[a-z]{2,3}(?:-[a-z0-9]{2,8}){0,3}$/i.test(value) ? value : 'en'
+}
+
+async function markdownToHtml(text: string, name: string, language: string): Promise<string> {
   const [{ unified }, parse, gfm, toHtml, raw, sanitize, stringify] = await Promise.all([
     import('unified'),
     import('remark-parse'),
@@ -119,8 +131,9 @@ async function markdownToHtml(text: string, name: string): Promise<string> {
     .process(text)
   return [
     '<!doctype html>',
-    // Markdown does not say what language it is written in. A page has to; see the picker.
-    '<html lang="en">',
+    // Markdown does not say what language it is written in. A page has to, so that it is read
+    // aloud and hyphenated properly; the person converting chooses it.
+    `<html lang="${language}"${RIGHT_TO_LEFT.has(language.split('-')[0]!.toLowerCase()) ? ' dir="rtl"' : ''}>`,
     '<head>',
     '<meta charset="utf-8">',
     '<meta name="viewport" content="width=device-width, initial-scale=1">',
@@ -176,7 +189,7 @@ export function createMarkupEngine(): Engine {
       let written: string
       try {
         if (pair === 'md>html') refuseDeepMarkdown(text)
-        if (pair === 'md>html') written = await markdownToHtml(text, input.name)
+        if (pair === 'md>html') written = await markdownToHtml(text, input.name, languageTag(input.options.language))
         else if (pair === 'html>md') written = await htmlToMarkdown(text)
         else throw new Error(`The markup engine does not convert ${pair}`)
       } catch (error) {

@@ -3,13 +3,13 @@ import { describe, expect, it } from 'vitest'
 import { Refusal } from '../util'
 import { createMarkupEngine } from './index'
 
-async function convert(text: string, from: string, to: string, name = `page.${from}`) {
+async function convert(text: string, from: string, to: string, name = `page.${from}`, options: Record<string, unknown> = {}) {
   const [output] = await createMarkupEngine().convert({
     blob: new Blob([text]),
     name,
     from: formatById(registry, from)!,
     to: formatById(registry, to)!,
-    options: {},
+    options,
     signal: new AbortController().signal,
     onProgress: () => {},
   })
@@ -54,6 +54,30 @@ describe('Markdown to HTML', () => {
     expect(html).toContain('<b>bold</b>')
     for (const gone of ['script', 'alert', 'onclick', 'javascript:', 'iframe', 'style', 'display']) {
       expect(html.includes(gone), gone).toBe(false)
+    }
+  })
+})
+
+describe('the language of a page', () => {
+  it('is English unless told otherwise', async () => {
+    expect(await convert('Words.\n', 'md', 'html')).toContain('<html lang="en">')
+  })
+
+  it('is what the person converting chose', async () => {
+    expect(await convert('Mots.\n', 'md', 'html', 'page.md', { language: 'fr' })).toContain('<html lang="fr">')
+    expect(await convert('x\n', 'md', 'html', 'page.md', { language: 'zh-Hant' })).toContain('<html lang="zh-Hant">')
+  })
+
+  it('says so when the language is written from right to left', async () => {
+    expect(await convert('x\n', 'md', 'html', 'page.md', { language: 'ar' })).toContain('<html lang="ar" dir="rtl">')
+    expect(await convert('x\n', 'md', 'html', 'page.md', { language: 'he-IL' })).toContain('<html lang="he-IL" dir="rtl">')
+  })
+
+  it('falls back to English for anything that is not a language tag', async () => {
+    for (const language of ['"><script>alert(1)</script>', 'en" onload="x', '', 'english please', 42, null]) {
+      const html = await convert('x\n', 'md', 'html', 'page.md', { language })
+      expect(html).toContain('<html lang="en">')
+      expect(html.includes('alert')).toBe(false)
     }
   })
 })

@@ -2,6 +2,7 @@ import { detect, MAX_PIXELS, nameDisagrees, pixelCount, sizeProblem, type Detect
 import type { Edge, Route } from '@omsett/registry'
 import { dimensionProblem, formatById } from '@omsett/registry'
 import { conversionBudgetMs, MAX_FILES, testHook, TimedOut } from '~/utils/limits'
+import { closestLanguage } from '~/utils/languages'
 import { registry, router } from '~/utils/registry'
 
 export interface QueueFile {
@@ -104,6 +105,25 @@ export function useConversionQueue() {
     return typeof options?.quality === 'number' ? options.quality : null
   })
   watch(defaultQuality, (value) => (quality.value = value), { immediate: true })
+
+  /**
+   * The language a written page will be marked with, where the selected conversion writes one;
+   * null where it does not. Offered first: the browser's own language, which is the best guess
+   * at what its user writes in.
+   */
+  const language = ref<string | null>(null)
+  const defaultLanguage = computed(() => {
+    const options = selected.value?.route?.edges.at(-1)?.candidates[0]?.defaultOptions
+    return typeof options?.language === 'string' ? options.language : null
+  })
+  watch(
+    defaultLanguage,
+    (value) => {
+      const preferred = import.meta.client ? navigator.language : undefined
+      language.value = value === null ? null : closestLanguage(preferred, value)
+    },
+    { immediate: true },
+  )
 
   const canConvert = computed(() => !converting.value && convertible.value.length > 0 && selected.value !== null)
   const overall = computed(() => {
@@ -210,10 +230,10 @@ export function useConversionQueue() {
       let next: Blob | null = null
       for (const candidate of attempts) {
         // The user's quality applies to the final encode, and only if that encoder has one.
-        const options =
-          last && quality.value !== null && 'quality' in candidate.defaultOptions
-            ? { ...candidate.defaultOptions, quality: quality.value }
-            : candidate.defaultOptions
+        const chosen: Record<string, unknown> = {}
+        if (last && quality.value !== null && 'quality' in candidate.defaultOptions) chosen.quality = quality.value
+        if (last && language.value !== null && 'language' in candidate.defaultOptions) chosen.language = language.value
+        const options = { ...candidate.defaultOptions, ...chosen }
         // A converter that has not been fetched yet is fetched first, and that can be the
         // longest part. The first word back from the engine means it has arrived.
         const info = engines.info[candidate.engine]
@@ -335,8 +355,10 @@ export function useConversionQueue() {
   // Once there is a result, moving the quality setting converts again, so the comparison and
   // the size follow the slider.
   let requeue: ReturnType<typeof setTimeout> | undefined
-  watch(quality, (value, previous) => {
-    if (value === null || previous === null || results.value.length === 0) return
+  watch([quality, language], ([value, tongue], [previous, before]) => {
+    const moved = value !== null && previous !== null && value !== previous
+    const changed = tongue !== null && before !== null && tongue !== before
+    if ((!moved && !changed) || results.value.length === 0) return
     clearTimeout(requeue)
     // Short enough that the picture keeps up with a hand on the slider, long enough that a
     // drag across fifty values does not start fifty conversions. While one is running, the
@@ -367,6 +389,7 @@ export function useConversionQueue() {
     selected,
     converting,
     quality,
+    language,
     defaultQuality,
     canConvert,
     overall,

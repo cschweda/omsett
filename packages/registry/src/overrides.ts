@@ -33,7 +33,7 @@ export const overrides: EdgeOverride[] = [
     to: 'html',
     warnings: [
       { id: 'markup-cleaned', text: 'Scripts, and anything else in the file that could run, are left out.' },
-      { id: 'language-assumed', text: 'Markdown does not say what language it is in. The page is marked as English (lang="en"); change that if it is not.' },
+      { id: 'language-assumed', text: 'Markdown does not say what language it is in, and a web page should. Choose the language before converting.' },
     ],
   },
   {
