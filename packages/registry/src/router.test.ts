@@ -38,7 +38,7 @@ describe('router, real registry', () => {
     for (const edge of deriveEdges(registry).edges) {
       const engines = edge.candidates.map((c) => c.engine)
       if (edge.from !== 'png') expect(engines, `${edge.from} → ${edge.to}`).not.toContain('canvas')
-      for (const engine of engines) expect(engine === 'canvas' || ['heif', 'resvg', 'magick', 'data', 'subtitle', 'markup'].includes(engine) || engine.startsWith('vips')).toBe(true)
+      for (const engine of engines) expect(engine === 'canvas' || ['heif', 'resvg', 'magick', 'data', 'subtitle', 'markup', 'font', 'font-woff2'].includes(engine) || engine.startsWith('vips')).toBe(true)
       // The data engine reads and writes data and nothing else; no picture engine touches data.
       const data = [edge.from, edge.to].map((id) => formatById(registry, id)!.category === 'data')
       expect(data[0], `${edge.from} → ${edge.to}`).toBe(data[1])
@@ -59,6 +59,7 @@ describe('router, real registry', () => {
       'json', 'yaml', 'csv', 'xml', 'toml', 'jsonl', 'tsv',
       'srt', 'vtt', 'ass', 'ssa', 'ttml', 'lrc', 'sbv', 'smi', 'microdvd',
       'md', 'html',
+      'woff2', 'woff', 'ttf', 'otf',
     ])
     const readOnly = new Set(everything.formats.filter((f) => f.readOnly).map((f) => f.id))
     expect([...readOnly].sort()).toEqual(['exr', 'hdr', 'heic', 'ico', 'jp2', 'pcx', 'psd', 'ras', 'sgi', 'svg', 'svgz'])
@@ -67,7 +68,9 @@ describe('router, real registry', () => {
     const kind = (id: string) => formatById(everything, id)!.category
     for (const from of ids) {
       for (const to of ids) {
-        const impossible = from === to || readOnly.has(to) || !sameKind(kind(from), kind(to))
+        // TTF and OTF hold different kinds of outline, and neither becomes the other.
+        const redrawn = [from, to].sort().join('>') === 'otf>ttf'
+        const impossible = from === to || readOnly.has(to) || !sameKind(kind(from), kind(to)) || redrawn
         expect(all.route(from, to) === null, `${from} → ${to}`).toBe(impossible)
       }
     }
@@ -78,6 +81,12 @@ describe('router, real registry', () => {
     expect(all.targetsFor(['png', 'json']).find((t) => t.format.id === 'webp')!.reason).toBe('JSON files cannot become WebP')
     expect(all.route('yaml', 'json')!.warnings.map((w) => w.id)).toEqual(['comments-lost'])
     expect(all.route('json', 'csv')!.warnings.map((w) => w.id)).toEqual(['nesting-flattened', 'cells-exact'])
+    // Fonts: only WOFF2 work uses the engine that has to be fetched, and TTF to OTF says why not.
+    expect(all.route('ttf', 'woff')!.edges.map((e) => e.candidates[0]!.engine)).toEqual(['font'])
+    expect(all.route('ttf', 'woff2')!.edges.map((e) => e.candidates[0]!.engine)).toEqual(['font-woff2'])
+    expect(all.route('woff2', 'woff')!.edges.map((e) => e.candidates[0]!.engine)).toEqual(['font-woff2'])
+    expect(all.targetsFor(['ttf']).find((t) => t.format.id === 'otf')!.reason).toMatch(/redrawing every letter/)
+    expect(all.route('otf', 'woff2')!.warnings.map((w) => w.id)).toEqual(['font-licence'])
     // Markdown and HTML become each other and nothing else.
     expect(all.route('md', 'html')!.edges.map((e) => e.candidates[0]!.engine)).toEqual(['markup'])
     expect(all.targetsFor(['html']).map((t) => t.format.id)).toEqual(['md', 'html'])

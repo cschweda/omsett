@@ -106,6 +106,27 @@ export const markupInfo: EngineInfo = {
   sourceUrl: 'https://github.com/cschweda/omsett/tree/main/packages/engines/src/markup',
 }
 
+// Fonts. TTF, OTF and WOFF are read and written by Omsett's own code, with the compression
+// every browser has built in.
+export const fontInfo: EngineInfo = {
+  id: 'font',
+  sizeBytes: 0,
+  runtimes: ['browser', 'node'],
+  license: 'MIT',
+  sourceUrl: 'https://github.com/cschweda/omsett/tree/main/packages/engines/src/font',
+}
+
+// WOFF2 is packed with Brotli and a rearrangement of the outlines. Google's own reader and
+// writer do that here, built to WebAssembly by woff2-encoder and carried inside its script.
+export const fontWoff2Info: EngineInfo = {
+  id: 'font-woff2',
+  sizeBytes: 1_022_465,
+  runtimes: ['browser', 'node'],
+  // woff2-encoder, and the woff2 and Brotli libraries it carries, are all MIT.
+  license: 'MIT',
+  sourceUrl: 'https://github.com/itskyedo/woff2-encoder',
+}
+
 /** The font files resvg is given, from @fontsource/inter. */
 export const resvgFonts = ['inter-latin-400-normal.woff2', 'inter-latin-700-normal.woff2']
 
@@ -127,4 +148,6 @@ export const engineInfo: Record<string, EngineInfo> = {
   [dataInfo.id]: dataInfo,
   [subtitleInfo.id]: subtitleInfo,
   [markupInfo.id]: markupInfo,
+  [fontInfo.id]: fontInfo,
+  [fontWoff2Info.id]: fontWoff2Info,
 }

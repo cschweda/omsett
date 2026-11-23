@@ -84,7 +84,7 @@ for (const trap of traps) {
       // Convert it to something it is not: WebP, or PNG if it is a WebP already; for data,
       // JSON, or YAML if it is JSON already; for subtitles, SRT, or WebVTT.
       const category = formatById(registry, trap.detect)?.category
-      // for Markdown and HTML, the other of the two.
+      // for Markdown and HTML, the other of the two; for fonts, WOFF, or TTF.
       const [usual, otherwise] =
         category === 'data'
           ? ['json', 'yaml']
@@ -92,7 +92,9 @@ for (const trap of traps) {
             ? ['srt', 'vtt']
             : category === 'text'
               ? ['md', 'html']
-              : ['webp', 'png']
+              : category === 'font'
+                ? ['woff', 'ttf']
+                : ['webp', 'png']
       const target = trap.detect === usual ? otherwise : usual
       if (trap.mismatch) await expect(note).toContainText('the contents are')
       await page.locator(`[role="radio"][data-format="${target}"]`).click()

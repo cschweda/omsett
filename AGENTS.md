@@ -109,7 +109,7 @@ build by `apps/web/scripts/write-headers.ts`.
   (scripts, drawings that name other files) is not a picture. Do not add an unhinted read.
 - **A file is offered only formats of its own kind** (`packages/registry/src/kinds.ts`):
   pictures and drawings are one kind, data another, subtitles a third, Markdown and HTML a
-  fourth. A new category that should convert into an
+  fourth, fonts a fifth. A new category that should convert into an
   existing one must be added there, or its formats will never be listed for it.
 - **An engine's reason for refusing a file reaches the user only as a `Refusal`**
   (`packages/engines/src/util.ts`). Any other error is shown as "This file couldn't be
@@ -118,6 +118,12 @@ build by `apps/web/scripts/write-headers.ts`.
   (`packages/engines/src/subtitle/read.ts`) pass over the text once, cap how many subtitles and
   how much text a file may turn into, and refuse a time that does not read as a time. Keep a
   new reader to the same rules, and give it a trap for each.
+- **A blocked pair has no route at all.** An override with `block` and no engine removes the
+  pair even where two other steps would get there (TTF to WOFF to OTF). Give the reason in a
+  sentence; the picker shows it.
+- **A web font unwraps to TTF or OTF, not both.** Which one depends on the outlines inside, so
+  each web-font sample converts to one and is refused for the other, in exact words the fixture
+  test allows. Every conversion must still succeed for at least one sample.
 - **File contents go on the page as text, never as markup**, and never more than
   `app/utils/text-preview.ts` allows. No `v-html` for anything that came out of a file.
 - **Tailwind owns some class names.** A scoped class called `contents` or `hidden` picks up the

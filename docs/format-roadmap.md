@@ -179,7 +179,9 @@ When a format ships, update its row here, in the same change.
 
 | Format | Home | Engine | Status |
 | --- | --- | --- | --- |
-| TTF, OTF, WOFF, WOFF2, EOT to each other | Browser | fontkit, wawoff2 | Planned |
+| TTF, OTF, WOFF, WOFF2: wrapped and unwrapped | Browser | `font` (Omsett's own) and `font-woff2` (woff2-encoder) | **Shipped** (0.15.0) |
+| TTF ↔ OTF (redrawing the outlines) | Browser | to be found | Planned |
+| A preview of the letters; font collections (TTC); EOT (read) | Browser | to be found | Planned |
 | Subset to Latin, with a CSS snippet | Browser | harfbuzz (WASM) | Planned (preset) |
 | FON | Declined | — | Niche |
 
@@ -273,7 +275,7 @@ with [audit.icjia.app](https://audit.icjia.app).
 ## Suggested order
 
 1. Images are largely done: 22 formats. Left: CUR, DDS, ICNS, FITS, APNG, PSB, camera RAW, DICOM, and writing ICO and JPEG 2000.
-2. Data and subtitles are done: seven data formats, nine subtitle formats. The side-by-side view for text formats is done too, and Markdown ↔ HTML. Next: fonts, then vCard and iCalendar. Small JavaScript libraries, no large downloads.
+2. Data and subtitles are done: seven data formats, nine subtitle formats. The side-by-side view for text formats is done too, and Markdown ↔ HTML. Fonts are done as well: four formats. Next: vCard and iCalendar, then archives. Small JavaScript libraries, no large downloads.
 3. Archives, then audio.
 4. Documents and e-books through Pandoc; then the PDF tools. A converted document must not score lower for accessibility than its original (see "Accessibility of converted documents").
 5. Video in the browser.
