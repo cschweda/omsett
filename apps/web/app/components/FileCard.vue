@@ -2,6 +2,8 @@
 import type { Detail } from '@omsett/engines'
 import type { QueueFile } from '~/composables/useConversionQueue'
 import { switchedOffReason } from '@omsett/registry'
+import { CHECKED, MAX_CHECK_BYTES } from '~/utils/accessibility'
+import { CheckFailed, type CheckResult } from '~/composables/useAccessibilityCheck'
 import { formatBytes } from '~/utils/format-bytes'
 
 const props = defineProps<{
@@ -68,6 +70,32 @@ async function toggle() {
 }
 const FATE = { removed: 'removed when converted', kept: 'kept' }
 
+// Checking the file's accessibility, where this copy of Omsett is set up for it. It sends the
+// file to a server, so nothing happens until the person has read where it goes and said to.
+const checker = useAccessibilityCheck()
+const checkerSite = ref<{ origin: string; host: string } | null>(null)
+onMounted(() => {
+  checkerSite.value = checker.site()
+})
+const checkable = computed(() => checkerSite.value !== null && known.value !== null && CHECKED.includes(known.value.format.category))
+const tooLargeToCheck = computed(() => props.entry.file.size > MAX_CHECK_BYTES)
+const checking = ref<'closed' | 'asking' | 'sending' | 'done' | 'failed'>('closed')
+const checked = ref<CheckResult | null>(null)
+const checkError = ref('')
+function askToCheck() {
+  checking.value = checking.value === 'closed' ? (checked.value ? 'done' : 'asking') : 'closed'
+}
+async function sendForChecking() {
+  checking.value = 'sending'
+  try {
+    checked.value = await checker.check(props.entry.file)
+    checking.value = 'done'
+  } catch (error) {
+    checkError.value = error instanceof CheckFailed ? error.message : 'The checker did not answer. The file was not checked.'
+    checking.value = 'failed'
+  }
+}
+
 // Only a picture has a preview. Anything else gets no empty square where one would be.
 const pictured = computed(() => known.value !== null && ['image', 'vector'].includes(known.value.format.category))
 
@@ -106,6 +134,16 @@ watch(
         {{ open ? 'Hide details' : 'Details' }}<span class="sr-only"> of {{ entry.file.name }}</span>
       </button>
       <button
+        v-if="checkable"
+        type="button"
+        class="text-button"
+        :aria-expanded="checking !== 'closed'"
+        data-testid="check-toggle"
+        @click="askToCheck"
+      >
+        Check accessibility<span class="sr-only"> of {{ entry.file.name }}</span>
+      </button>
+      <button
         type="button"
         class="text-button remove"
         :aria-label="`Remove ${entry.file.name}`"
@@ -128,6 +166,44 @@ watch(
       <p v-else-if="found !== null && found.length === 0" class="details-note" data-testid="details-none">
         Nothing more is recorded in this file, or nothing Omsett reads.
       </p>
+    </div>
+    <div v-if="checkable && checking !== 'closed'" class="details check" data-testid="check">
+      <template v-if="checking === 'asking'">
+        <p class="check-lead">This sends the file to a server.</p>
+        <p>
+          It is the one thing in Omsett that sends a file off your device, and it happens only if you press the
+          button below. The file goes to <strong>{{ checkerSite?.host }}</strong>, an accessibility checker.
+        </p>
+        <ul>
+          <li>The checker does not keep the file.</li>
+          <li>It asks another server for part of the audit.</li>
+          <li>It keeps the report, with the file’s name, at a private link for a year, so that you can open it.</li>
+        </ul>
+        <p v-if="tooLargeToCheck" class="wrong" data-testid="check-too-large">
+          This file is larger than the checker takes (25 MB), so it cannot be checked.
+        </p>
+        <p class="check-actions">
+          <button v-if="!tooLargeToCheck" type="button" class="button solid" data-testid="check-send" @click="sendForChecking">
+            Send this file and check it
+          </button>
+          <button type="button" class="text-button" data-testid="check-cancel" @click="checking = 'closed'">Do not send it</button>
+        </p>
+      </template>
+      <p v-else-if="checking === 'sending'" data-testid="check-sending">
+        Sent to {{ checkerSite?.host }}. Checking.
+      </p>
+      <template v-else-if="checking === 'done' && checked">
+        <p class="check-lead" data-testid="check-score">
+          Accessibility: {{ checked.verdict.score }} out of 100, grade {{ checked.verdict.grade }}.
+        </p>
+        <p v-if="checked.report">
+          <a :href="checked.report" target="_blank" rel="noopener" data-testid="check-report">Open the full report</a>
+          (on {{ checkerSite?.host }}, in a new window)
+        </p>
+        <p v-else data-testid="check-no-report">The checker gave a score but could not save its full report.</p>
+        <p class="details-note">This is the file as you added it, before any conversion.</p>
+      </template>
+      <p v-else class="wrong" data-testid="check-failed">{{ checkError }}</p>
     </div>
     <div v-if="entry.status !== 'ready'" class="progress">
       <div
@@ -254,6 +330,36 @@ watch(
 .details-note {
   margin: 0.5rem 0 0;
   color: var(--muted);
+}
+.check p,
+.check ul {
+  margin: 0 0 0.5rem;
+  max-width: 60ch;
+}
+.check ul {
+  padding-left: 1.1rem;
+  list-style: square;
+}
+.check-lead {
+  font-weight: 700;
+}
+.check a {
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+.check-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 0.75rem;
+}
+.check .wrong {
+  color: var(--signal);
+}
+.actions {
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 @media (max-width: 520px) {
   .details dl > div {

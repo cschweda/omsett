@@ -7,6 +7,25 @@ The paragraph that opens a version is its teaser: the home page shows its first 
 in the "What's new" banner, so keep it to two or three sentences on what a visitor will notice.
 A line beginning "Released" gives the date.
 
+## 0.29.0
+
+Released 23 November 2026.
+
+You can now check a PDF, Word, PowerPoint or Excel file's accessibility before you convert it.
+This is the one thing in Omsett that sends a file to a server, so it never happens by itself:
+you are shown where the file would go, and nothing is sent unless you say so.
+
+### Added
+
+- **Check accessibility**, beside Details on a PDF, Word, PowerPoint or Excel file. It gives a
+  score out of 100 and a grade, with a link to the full report, which opens in a new window.
+- **You are asked first, every time.** Pressing the button sends nothing. It says that the
+  file would go to audit.icjia.app, that the checker does not keep the file, that it asks
+  another server for part of the audit, and that it keeps the report at a private link for a
+  year. Then there are two buttons: send it, or do not.
+- **The Status page says whether the checker is up.** Converting does not depend on it.
+- A copy of Omsett you host yourself has no checker unless you set one up.
+
 ## 0.28.0
 
 Released 23 November 2026.

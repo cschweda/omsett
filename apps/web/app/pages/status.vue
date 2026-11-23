@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { formatById } from '@omsett/registry'
 import facts from '~/generated/facts.json'
+import { CHECKED } from '~/utils/accessibility'
 import { formatBytes } from '~/utils/format-bytes'
 import { registry } from '~/utils/registry'
 
@@ -10,6 +11,15 @@ const engines = useEngines()
 const server = useServerHealth()
 const readiness = useReadiness()
 const { public: config } = useRuntimeConfig()
+
+// The accessibility checker, where this copy has one. Asked once, when the page opens.
+const checker = useAccessibilityCheck()
+const checkerHost = ref<string | null>(null)
+const checkedKinds = registry.formats.filter((format) => CHECKED.includes(format.category)).map((format) => format.name)
+onMounted(() => {
+  checkerHost.value = checker.site()?.host ?? null
+  void checker.refresh()
+})
 
 const secure = ref<boolean | null>(null)
 const isolated = ref<boolean | null>(null)
@@ -105,6 +115,23 @@ const conversions = computed(() =>
             This copy of Omsett has its own server for conversions a browser cannot do, and it is answering.
           </p>
           <p v-else>This copy of Omsett is set up with its own server, and it is not answering.</p>
+        </div>
+      </StepSection>
+
+      <StepSection title="Accessibility checker" heading-id="status-checker">
+        <div class="prose">
+          <p class="lead-text" data-testid="checker-state">
+            <template v-if="checker.health.value === 'not-set-up'">Not set up on this copy of Omsett.</template>
+            <template v-else-if="checker.health.value === 'checking'">Checking.</template>
+            <template v-else-if="checker.health.value === 'up'">Up and answering.</template>
+            <template v-else>Not answering.</template>
+          </p>
+          <p>
+            Optional, and never needed to convert a file. It is used only when you ask for a
+            {{ checkedKinds.join(', ') }} file to be checked for accessibility, and only after you have agreed to
+            send that file<template v-if="checkerHost"> to {{ checkerHost }}</template>. Converting works the same
+            whether it is up or not.
+          </p>
         </div>
       </StepSection>
 

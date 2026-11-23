@@ -247,3 +247,72 @@ Plausible's code in the page, which is exactly what this arrangement avoids.
 A Plausible **API key** (for reading your statistics) is a secret and has no place here. Nothing
 in Omsett needs it. Never put it in the site's environment: anything a static site's build can
 read can end up in a file the public downloads.
+
+## Checking accessibility (optional)
+
+Omsett can offer to check a PDF, Word, PowerPoint or Excel file's accessibility with a server
+that does that, such as [audit.icjia.app](https://audit.icjia.app). It is off unless you set it
+up. It is the one feature that sends a file off a visitor's device, so it works like this:
+
+- The button appears only on those four kinds of file.
+- Pressing it sends nothing. It shows where the file would go and what the checker keeps
+  (the report, not the file), with a button that says "Send this file and check it".
+- The file goes to **your own domain**, and nginx passes it to the checker. The page still
+  asks no other site for anything, and its security policy is unchanged.
+
+Three steps, all on the server.
+
+1. **nginx.** In the same `server { }` block, add these three locations. They pass on a health
+   question, one file of at most 25 MB, and a report to be saved, and nothing else.
+
+   ```
+   # The accessibility checker. Only what a visitor has asked to send arrives here.
+   location = /api/accessibility/health {
+       limit_except GET { deny all; }
+       proxy_pass https://audit.icjia.app/api/health;
+       include /home/forge/omsett.com/checker-proxy.conf;
+   }
+   location = /api/accessibility/analyze {
+       limit_except POST { deny all; }
+       client_max_body_size 26m;
+       proxy_read_timeout 180s;
+       proxy_request_buffering off;
+       proxy_pass https://audit.icjia.app/api/analyze;
+       include /home/forge/omsett.com/checker-proxy.conf;
+   }
+   location = /api/accessibility/reports {
+       limit_except POST { deny all; }
+       client_max_body_size 4m;
+       proxy_pass https://audit.icjia.app/api/reports;
+       include /home/forge/omsett.com/checker-proxy.conf;
+   }
+   ```
+
+   and put the lines they share in `/home/forge/omsett.com/checker-proxy.conf`:
+
+   ```
+   proxy_set_header Host audit.icjia.app;
+   proxy_ssl_server_name on;
+   proxy_ssl_name audit.icjia.app;
+   proxy_ssl_verify on;
+   proxy_ssl_trusted_certificate /etc/ssl/certs/ca-certificates.crt;
+   proxy_set_header X-Forwarded-For $remote_addr;
+   proxy_set_header X-Forwarded-Proto $scheme;
+   proxy_set_header Cookie "";
+   proxy_set_header Origin "";
+   proxy_set_header Authorization "";
+   proxy_http_version 1.1;
+   ```
+
+   No token or key belongs here. The checker is used as any member of the public uses it.
+
+2. **The build's setting.** In Forge, open the site's **Environment** and add the checker's
+   site. It is shown to visitors as where their file goes, and the report link is built from it.
+
+   ```
+   OMSETT_ACCESSIBILITY_CHECKER=https://audit.icjia.app
+   ```
+
+3. **Deploy, then check.** Open the site's Status page: "Accessibility checker" should read
+   "Up and answering". Add a Word file and press "Check accessibility".
+

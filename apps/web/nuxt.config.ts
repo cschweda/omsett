@@ -36,6 +36,9 @@ export default defineNuxtConfig({
       // Counting visits is off unless the build is told the site's name as Plausible knows it
       // (OMSETT_VISITS_SITE=omsett.com). See docs/deploy-digitalocean.md.
       visitsSite: process.env.OMSETT_VISITS_SITE ?? '',
+      // Checking a document's accessibility is off unless the build names the checker's site
+      // (OMSETT_ACCESSIBILITY_CHECKER=https://audit.icjia.app). See docs/deploy-digitalocean.md.
+      accessibilityChecker: process.env.OMSETT_ACCESSIBILITY_CHECKER ?? '',
       visitsEndpoint: '/api/event',
     },
   },

@@ -45,7 +45,11 @@ These are invariants. A change that breaks one is wrong even if it works.
    settles it; and Markdown and Fountain are any text at all, so only a name can say that a
    file is one of them. A name never makes text of something that is not.
 6. **Nothing leaves the origin.** No request to another origin, ever; no request carrying file
-   bytes to its own. Enforced by policy, not intention (see below), and asserted in
+   bytes to its own, with one exception that the person must ask for each time: checking a
+   document's accessibility (`app/utils/accessibility.ts`, `useAccessibilityCheck`). That is
+   off unless a copy is set up for it, sends nothing until the person has read where the file
+   goes and pressed "Send", and sends to the copy's own origin, whose server forwards it. Do
+   not add a second exception, and do not make this one quieter. Enforced by policy, not intention (see below), and asserted in
    `e2e/gate.spec.ts`. Counting visits does not change this: where a copy of Omsett is set up
    to count them, the app's own code reports a page view to the copy's own origin, whose server
    forwards it (`app/utils/visits.ts`, `docs/deploy-digitalocean.md`). No analytics script is
