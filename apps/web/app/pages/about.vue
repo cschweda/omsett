@@ -55,6 +55,10 @@ const conversions = deriveEdges(registry).edges.length
             <li>It refuses a file too large to handle safely, and says so, instead of freezing the tab.</li>
             <li>It stops a conversion that runs too long, instead of leaving you waiting.</li>
             <li>It removes author, location and other metadata from what it produces, and tells you so.</li>
+            <li>
+              It counts visits, and nothing else, and you can turn that off in
+              <NuxtLink to="/settings">Settings</NuxtLink>. Your files are no part of it.
+            </li>
           </ul>
         </div>
       </StepSection>

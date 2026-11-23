@@ -14,7 +14,7 @@ const home = computed(() => route.path === '/')
 
     <ul class="links">
       <li v-for="page in pages" :key="page.to">
-        <NuxtLink :to="page.to" class="link">{{ page.label }}</NuxtLink>
+        <NuxtLink :to="page.to" class="link" :data-testid="page.to === '/settings' ? 'nav-settings' : undefined"><GearIcon v-if="page.to === '/settings'" />{{ page.label }}</NuxtLink>
       </li>
       <li>
         <NuxtLink to="/status" class="link status" :data-state="state" data-testid="nav-status">

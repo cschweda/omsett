@@ -10,4 +10,5 @@ export const pages = [
   { to: '/technical', label: 'Technical details' },
   { to: '/whats-new', label: 'What’s new' },
   { to: '/security', label: 'Security' },
+  { to: '/settings', label: 'Settings' },
 ] as const

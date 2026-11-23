@@ -10,6 +10,7 @@ const pages = [
   { path: '/technical', heading: 'Technical details' },
   { path: '/whats-new', heading: 'What’s new' },
   { path: '/security', heading: 'Security' },
+  { path: '/settings', heading: 'Settings' },
   { path: '/status', heading: 'Status' },
 ]
 
