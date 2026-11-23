@@ -7,7 +7,7 @@ import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { expect, test, type Page } from '@playwright/test'
 import { detect } from '@omsett/detect'
-import { registry, switches } from '@omsett/registry'
+import { formatById, registry, switches } from '@omsett/registry'
 import { describeDownload, FIXTURE, open } from './helpers'
 
 interface Trap {
@@ -26,7 +26,7 @@ const traps = JSON.parse(readFileSync(new URL('manifest.json', dir), 'utf8')) as
 
 /** The size the trap file itself declares, read from its header as the app reads it. */
 async function declaredSize(file: string) {
-  const found = await detect(new Blob([readFileSync(new URL(file, dir))]), registry.formats)
+  const found = await detect(new Blob([readFileSync(new URL(file, dir))]), registry.formats, file)
   return found.kind === 'known' ? found.dimensions : null
 }
 
@@ -81,8 +81,11 @@ for (const trap of traps) {
       }
       await expect(convert).toBeDisabled()
     } else {
-      // Convert it to something it is not: WebP, or PNG if it is a WebP already.
-      const target = trap.detect === 'webp' ? 'png' : 'webp'
+      // Convert it to something it is not: WebP, or PNG if it is a WebP already; for data,
+      // JSON, or YAML if it is JSON already.
+      const data = formatById(registry, trap.detect)?.category === 'data'
+      const [usual, otherwise] = data ? ['json', 'yaml'] : ['webp', 'png']
+      const target = trap.detect === usual ? otherwise : usual
       if (trap.mismatch) await expect(note).toContainText('the contents are')
       await page.locator(`[role="radio"][data-format="${target}"]`).click()
       await convert.click()

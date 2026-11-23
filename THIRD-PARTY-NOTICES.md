@@ -85,6 +85,18 @@ encoder, so it does not read or write HEIC.
 - **Source:** <https://github.com/dlemstra/magick-wasm>, which builds
   <https://github.com/ImageMagick/ImageMagick>.
 
+### data
+
+Omsett's own readers and writers for JSON, JSON Lines, CSV and TSV, and its XML writer, with
+three small libraries for the formats too intricate to parse well by hand. They are part of the
+app's scripts; nothing separate is downloaded.
+
+| Library | Version | License | Source |
+| --- | --- | --- | --- |
+| yaml (reads and writes YAML) | 2.9.1 | ISC | <https://github.com/eemeli/yaml> |
+| smol-toml (reads and writes TOML) | 1.9.1 | BSD-3-Clause | <https://github.com/squirrelchat/smol-toml> |
+| fast-xml-parser (reads XML) | 5.12.1 | MIT | <https://github.com/NaturalIntelligence/fast-xml-parser> |
+
 ### canvas
 
 The browser's own `OffscreenCanvas` encoder. Nothing is downloaded; the wrapper around it is

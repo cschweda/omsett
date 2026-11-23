@@ -96,7 +96,7 @@ export function useConversionQueue() {
         announce(notice.value)
         break
       }
-      const detection = await detect(file, registry.formats)
+      const detection = await detect(file, registry.formats, file.name)
       const known = detection.kind === 'known'
       const entry: QueueFile = {
         id: uid(),
@@ -168,6 +168,7 @@ export function useConversionQueue() {
 
     const produced: QueueResult[] = []
     let timedOut = false
+    let refusal: string | null = null
     for (const [hop, edge] of route.edges.entries()) {
       const from = formatById(registry, edge.from)!
       const to = formatById(registry, edge.to)!
@@ -211,9 +212,12 @@ export function useConversionQueue() {
           break
         } catch (error) {
           if (error instanceof TimedOut) timedOut = true
+          // An engine's own reason for turning the file away, written to be shown.
+          if (error instanceof Error && error.name === 'Refusal') refusal = error.message
           console.warn(`[omsett] ${candidate.engine} failed on ${entry.file.name}`, error)
         }
       }
+      if (!next && refusal) throw new Refusal(refusal)
       if (!next && timedOut) throw new Refusal('Stopped: this file took too long to convert')
       if (!next) throw new Error("This file couldn't be converted")
       blob = next

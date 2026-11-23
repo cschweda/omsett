@@ -179,7 +179,8 @@ When a format ships, update its row here, in the same change.
 
 | Format | Home | Engine | Status |
 | --- | --- | --- | --- |
-| JSON, JSON Lines, YAML, TOML, XML to each other; to CSV and XLSX | Browser | JavaScript | Planned |
+| JSON, JSON Lines, YAML, TOML, XML, CSV, TSV to each other | Browser | `data` (yaml, smol-toml, fast-xml-parser, and Omsett's own CSV) | **Shipped** (0.9.0) |
+| The same to XLSX | Browser | SheetJS | Planned, with spreadsheets |
 | vCard, iCalendar ↔ CSV | Browser | JavaScript | Planned |
 
 ## 3D models
@@ -217,7 +218,7 @@ When a format ships, update its row here, in the same change.
 ## Suggested order
 
 1. Images are largely done: 22 formats. Left: CUR, DDS, ICNS, FITS, APNG, PSB, camera RAW, DICOM, and writing ICO and JPEG 2000.
-2. Data, subtitles, fonts: small JavaScript libraries, no large downloads.
+2. Data is done: JSON, JSON Lines, YAML, TOML, XML, CSV, TSV. Next: subtitles and fonts, then vCard and iCalendar. Small JavaScript libraries, no large downloads.
 3. Archives, then audio.
 4. Documents and e-books through Pandoc; then the PDF tools.
 5. Video in the browser.

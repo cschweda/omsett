@@ -7,6 +7,13 @@ import { hdr } from './hdr'
 import { exr } from './exr'
 import { svgz } from './svgz'
 import type { Format } from '../types'
+import { json } from './json'
+import { yaml } from './yaml'
+import { csv } from './csv'
+import { xml } from './xml'
+import { toml } from './toml'
+import { jsonl } from './jsonl'
+import { tsv } from './tsv'
 import { avif } from './avif'
 import { bmp } from './bmp'
 import { gif } from './gif'
@@ -29,4 +36,6 @@ import { webp } from './webp'
 export const formats: Format[] = [
   webp, jpeg, png, avif, gif, tiff, jxl, bmp, tga, qoi, pnm,
   heic, svg, svgz, psd, ico, jp2, exr, hdr, pcx, sgi, ras,
+  // Data. A picture never becomes one of these, nor the other way round.
+  json, yaml, csv, xml, toml, jsonl, tsv,
 ]

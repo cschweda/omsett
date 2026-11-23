@@ -13,6 +13,8 @@ const router = createRouter(registry)
 const derived = deriveEdges(registry)
 const png = formatById(registry, 'png')!
 const webp = formatById(registry, 'webp')!
+const json = formatById(registry, 'json')!
+const yaml = formatById(registry, 'yaml')!
 
 const load = async (file: string) => new File([await readFile(new URL(`./_traps/${file}`, import.meta.url))], file)
 
@@ -58,7 +60,7 @@ describe('trap files', () => {
       const file = await load(trap.file)
 
       // 1. Identification never throws, and goes by contents.
-      const found = await detect(file, registry.formats)
+      const found = await detect(file, registry.formats, file.name)
       const identified = found.kind === 'known' ? found.format.id : found.kind
       if (switches[trap.detect]?.on === false) {
         // Its format is switched off: the file must be turned away before any engine sees it.
@@ -80,9 +82,11 @@ describe('trap files', () => {
         return
       }
 
-      // 3. Convert it to something it is not: WebP, or PNG if it is a WebP already.
+      // 3. Convert it to something it is not: WebP, or PNG if it is a WebP already; for data,
+      //    JSON, or YAML if it is JSON already.
       const from = found.format
-      const to = from.id === webp.id ? png : webp
+      const [usual, otherwise] = from.category === 'data' ? [json, yaml] : [webp, png]
+      const to = from.id === usual.id ? otherwise : usual
       if (!router.route(from.id, to.id)) {
         expect(trap.node, 'no route, so no engine').toBe('none')
         return
@@ -108,8 +112,10 @@ describe('trap files', () => {
       } catch (error) {
         expect(error, 'a failure is an ordinary error').toBeInstanceOf(Error)
         outcome = 'fails'
+        // Where the app must give a particular reason, the engine is where it comes from.
+        if (trap.note && from.category === 'data') expect((error as Error).message).toBe(trap.note)
       }
-      expect(outcome, 'libvips').toBe(trap.node)
+      expect(outcome, 'the engine').toBe(trap.node)
 
       await expectEngineStillWorks()
     }, 30_000)

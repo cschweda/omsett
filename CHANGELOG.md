@@ -7,6 +7,53 @@ The paragraph that opens a version is its teaser: the home page shows its first 
 in the "What's new" banner, so keep it to two or three sentences on what a visitor will notice.
 A line beginning "Released" gives the date.
 
+## 0.9.0
+
+Released 22 November 2026.
+
+Omsett now converts data as well as pictures: JSON, YAML, CSV, XML, TOML, JSON Lines and TSV,
+each to any of the others. Drop a spreadsheet export and get JSON, or a settings file and get
+YAML. As with pictures, it happens in the tab and nothing is uploaded.
+
+### Added
+
+- **Seven data formats, each read and written: JSON, YAML, CSV, XML, TOML, JSON Lines, TSV.**
+  All 42 conversions between them are one step. The readers for YAML, TOML and XML are small
+  open-source libraries; CSV, TSV and the XML writer are Omsett's own. Nothing extra is
+  downloaded.
+- **The picker says what each conversion costs.** A table holds one value per cell, so lists
+  and groups inside a row become text. Comments are not carried over. TOML cannot hold an empty
+  value. XML attributes come across as values whose names begin with `@`. In a CSV, a cell that
+  is plainly a number becomes one, and everything else stays text, so a postcode like 01234
+  keeps its zero.
+- **A file is offered only formats of its own kind.** A data file is not shown a list of picture
+  formats it can never become, and a picture is not shown data formats.
+- **Specific reasons when a data file is refused**: "This file is not valid JSON", "A quoted
+  value in this table is never closed", "The values in this file are nested too deeply".
+- 21 trap files for data, among them the "billion laughs" in both YAML and XML, an XML file
+  that asks for a file from the computer, a YAML file that asks to run code, JSON with names
+  that mean something to JavaScript, a CSV full of spreadsheet formulas, and a picture named
+  as a table.
+
+### Changed
+
+- **Text formats are identified by how they read.** JSON and XML are known from their first
+  characters. YAML, TOML, CSV and TSV cannot always be told apart from each other, or from a
+  note someone typed, so for those four the file's name is allowed to settle it. A name never
+  decides whether a file is text: a picture named `.csv` is still a picture.
+- A file with no preview (anything that is not a picture) no longer shows an empty square.
+
+### Known
+
+- Data files are read as UTF-8 only. A file in another encoding (UTF-16, Latin-1) is shown as
+  unsupported, not guessed at.
+- CSV cells that a spreadsheet program would run as formulas are carried across unchanged.
+  Omsett does not run them; the program that opens the CSV might.
+- A CSV is written without a byte-order mark, so older versions of Excel may show accented
+  letters wrongly.
+- There is no side-by-side view for data yet, as there is for pictures.
+- Data files larger than 32 MB are refused.
+
 ## 0.8.0
 
 Released 22 November 2026.

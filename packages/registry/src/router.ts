@@ -1,4 +1,5 @@
 import { dedupeWarnings, deriveEdges } from './derive'
+import { sameKind } from './kinds'
 import type { Edge, Format, Registry, Route, Router, Target } from './types'
 
 export const MAX_HOPS = 3
@@ -66,13 +67,19 @@ export function createRouter(registry: Registry): Router {
 
   function reasonFor(from: Format, to: Format): string {
     if (from.id === to.id) return `Already ${to.name}`
+    if (!sameKind(from.category, to.category)) return `${from.name} files cannot become ${to.name}`
     if (to.readOnly) return to.readOnly
     return derived.blocked.get(`${from.id}>${to.id}`) ?? `No converter from ${from.name} to ${to.name} yet`
   }
 
   function targetsFor(fromIds: string[]): Target[] {
     const sources = fromIds.map((id) => formats.get(id)).filter((f): f is Format => f !== undefined)
-    return registry.formats.map((format) => {
+    // Formats of another kind altogether are not listed: nobody dropping a spreadsheet needs to
+    // be told it cannot become a photograph. Before there is a file, everything is listed.
+    const offered = registry.formats.filter(
+      (format) => sources.length === 0 || sources.some((source) => sameKind(source.category, format.category)),
+    )
+    return offered.map((format) => {
       if (sources.length === 0 || sources.length !== fromIds.length) {
         return { format, route: null, reason: 'Drop a file first' }
       }

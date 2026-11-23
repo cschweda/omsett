@@ -1,0 +1,3 @@
+run: !!python/object/apply:os.system ["echo owned"]
+call: !!js/function "function () { return 1 }"
+plain: stays

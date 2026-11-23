@@ -17,7 +17,16 @@ export type Category =
   | 'video'
 
 /** Things a format can carry. A warning is derived whenever the source has one the target lacks. */
-export type Trait = 'alpha' | 'animation' | 'metadata' | 'multi-page' | 'layers' | 'full-color'
+export type Trait =
+  | 'alpha'
+  | 'animation'
+  | 'metadata'
+  | 'multi-page'
+  | 'layers'
+  | 'full-color'
+  // Data: values held inside other values, and notes written beside them.
+  | 'nesting'
+  | 'comments'
 
 export interface Format {
   /** 'png' */
@@ -137,6 +146,7 @@ export interface Target {
 }
 
 export interface Router {
+  /** Every format the files could become or be refused as; formats of another kind are left out. */
   targetsFor(fromIds: string[]): Target[]
   route(from: string, to: string): Route | null
 }

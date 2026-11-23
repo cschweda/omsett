@@ -2,6 +2,7 @@
 // off the main thread; a hostile file can at worst kill this worker.
 import {
   createCanvasEngine,
+  createDataEngine,
   createHeifEngine,
   createMagickEngine,
   createResvgEngine,
@@ -106,6 +107,7 @@ const engines: Record<string, Engine> = Object.fromEntries(
     createHeifEngine({ init: loadHeif }),
     createResvgEngine({ init: loadResvg, fonts: resvgFonts }),
     createMagickEngine({ init: loadMagick }),
+    createDataEngine(),
   ].map((engine) => [engine.id, engine]),
 )
 

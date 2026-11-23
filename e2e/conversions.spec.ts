@@ -30,6 +30,13 @@ const samples: Record<string, string> = {
   hdr: 'hdr/sample.hdr',
   exr: 'exr/sample.exr',
   svgz: 'svgz/sample.svgz',
+  json: 'json/sample.json',
+  jsonl: 'jsonl/sample.jsonl',
+  yaml: 'yaml/sample.yaml',
+  toml: 'toml/sample.toml',
+  xml: 'xml/sample.xml',
+  csv: 'csv/sample.csv',
+  tsv: 'tsv/sample.tsv',
 }
 const path = (id: string) => fileURLToPath(new URL(`../fixtures/${samples[id]}`, import.meta.url))
 

