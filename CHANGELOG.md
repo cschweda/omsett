@@ -7,6 +7,23 @@ The paragraph that opens a version is its teaser: the home page shows its first 
 in the "What's new" banner, so keep it to two or three sentences on what a visitor will notice.
 A line beginning "Released" gives the date.
 
+## 0.28.0
+
+Released 23 November 2026.
+
+There is a new page, "Can I trust this?", in the navigation as Trust. It says what Omsett does
+with your files, what stops it doing anything else, and how to check each of those yourself.
+
+### Added
+
+- **Trust.** Where your files go and how to see that for yourself; what a hostile file can
+  and cannot do; how Omsett is tested; who has audited it and what is still open; what it
+  learns about you; and what you are still relying on when you use it.
+- **Every figure on it is counted when the site is built**: the tests, the trap files, the
+  audits and their findings. The number of tests comes from a real run, and a change cannot
+  be merged if the figure on the page is not the true one.
+- **About now explains visit counting** and how to turn it off.
+
 ## 0.27.0
 
 Released 23 November 2026.

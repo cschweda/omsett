@@ -63,6 +63,29 @@ const conversions = deriveEdges(registry).edges.length
         </div>
       </StepSection>
 
+      <StepSection title="Counting visits" heading-id="about-visits">
+        <div class="prose" data-testid="about-visits">
+          <p>
+            omsett.com counts how many people open it, with
+            <a href="https://plausible.io/privacy-focused-web-analytics">Plausible</a>, a privacy-friendly counter.
+            It sets no cookie, keeps no record of a person, and cannot follow you to another site. It learns that
+            a page was opened, which page, and what page linked to it. It never learns what you converted: a file
+            is no part of it, and neither is a file’s name.
+          </p>
+          <p>
+            No code of Plausible’s runs on this site. Omsett’s own code makes the report, to omsett.com itself,
+            which passes it on, so this page still talks to no other site.
+          </p>
+          <h3>Turning it off</h3>
+          <p>
+            Open <NuxtLink to="/settings">Settings</NuxtLink> and choose “Do not count my visits”. It is already
+            off, without your doing anything, if your browser sends Do Not Track or Global Privacy Control; Settings
+            says which of the three it is. A copy of Omsett you host yourself counts nothing unless you set it up
+            to. More on what Omsett can and cannot know is on the <NuxtLink to="/trust">Trust</NuxtLink> page.
+          </p>
+        </div>
+      </StepSection>
+
       <StepSection title="The name" heading-id="about-name">
         <div class="prose entry" data-testid="definition">
           <p class="headword">

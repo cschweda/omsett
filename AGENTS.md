@@ -58,7 +58,7 @@ These are invariants. A change that breaks one is wrong even if it works.
    do not extend it. The axe and keyboard-order tests in `e2e/gate.spec.ts` are parked behind
    `ACCESSIBILITY_DEFERRED`.
 9. **The converter is one screen.** `pages/index.vue` is the whole tool: no steps across pages,
-   no modals on the happy path. The information pages (About, Technical details, What's new,
+   no modals on the happy path. The information pages (About, Trust, Technical details, What's new, Security, Settings, Trap files,
    Status) sit beside it and never stand between a person and a conversion.
 10. **A server is optional and absent by default.** `useServerHealth` is the only code that knows
     one might exist, and it only talks to its own origin. There is no field for a server URL.
@@ -99,6 +99,9 @@ build by `apps/web/scripts/write-headers.ts`.
   minutes, add a shard.
 - **GitHub Actions are pinned to commit SHAs**, with the release in a trailing comment. Keep it
   that way when adding or updating one; look the SHA up, do not guess it.
+- **The Trust page's figures are counted, never typed.** Tests are counted from a real run:
+  after adding or removing a test, run `pnpm test && pnpm tests:count` and commit
+  `test-count.json`. CI runs `pnpm tests:count --check` and fails if it is out of date.
 - **Security audits** live in `security/audits.json`, newest first. The site's Security page,
   `SECURITY.md`, and the README's Security section are generated from it; run
   `pnpm security:docs` after editing, or a test fails. Never mark a finding fixed without a test.

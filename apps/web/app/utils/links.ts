@@ -7,6 +7,7 @@ export const REPORT = `${REPOSITORY}/security`
 /** The site's pages, in the order both navigations list them. */
 export const pages = [
   { to: '/about', label: 'About' },
+  { to: '/trust', label: 'Trust' },
   { to: '/technical', label: 'Technical details' },
   { to: '/whats-new', label: 'What’s new' },
   { to: '/security', label: 'Security' },
