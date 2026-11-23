@@ -11,9 +11,12 @@
 //                   libvips's bindings (embind) need to build their call wrappers, and nothing
 //                   else. It must never be sent with a document.
 //
-// Both carry `connect-src 'self' blob:`. That directive is what the privacy promise rests on:
-// neither the page nor a worker can send anything to another origin, whatever a dependency
-// tries. Do not widen it.
+// Both carry `connect-src 'self' blob:`. Do not widen it. It is what stops a worker, where
+// the engines and every file reader run, from sending anything anywhere: a worker has no other
+// way out. For the page it stops every request a script can make and read, but not all ways
+// out: a page can still be sent to another address, and a policy cannot forbid that. So the
+// page is kept to the project's own code and its pinned build dependencies. No third party's
+// script is ever loaded into it, analytics included (see app/utils/visits.ts).
 
 export interface HeaderRule {
   /** Netlify-style path pattern: '/*' or '/engines/*' */

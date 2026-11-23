@@ -104,8 +104,10 @@ build by `apps/web/scripts/write-headers.ts`.
   `pnpm security:docs` after editing, or a test fails. Never mark a finding fixed without a test.
 - **Every conversion has a time limit** (`apps/web/app/utils/limits.ts`); past it the worker is
   terminated. A new engine needs no code for this, but must be safe to kill at any moment.
-- **A browser's decoder is never trusted with a file the app has not verified.** The canvas
-  engine reads PNG only, after `structureProblem` has passed it. To let the canvas read another
+- **A browser's decoder never converts a file the app has not verified.** The canvas
+  engine reads PNG only, after `structureProblem` has passed it. Previews are the one
+  exception, and only to be looked at (`app/workers/thumbnail.worker.ts`): a dropped picture is
+  drawn only if it states its size and that is under `PREVIEW_MAX_PIXELS`, one at a time. To let the canvas read another
   format, first write a structure check for it in `packages/detect`; until then libvips reads it.
   A registry test fails if any other format is given to the canvas.
 - **A format can be switched off in one line**, in `packages/registry/src/switches.ts`. Off, it
@@ -196,6 +198,11 @@ build by `apps/web/scripts/write-headers.ts`.
   and the browser has not asked not to be tracked. The self-host image and the tests name none.
   Never proxy or vendor an analytics script to "satisfy" the policy: a red-team review found
   that doing so keeps the policy intact while handing a third party the page.
+- **Details and the ZIP of results have a worker of their own** (`sideWorker` in
+  `useEngines`). One worker does one thing at a time; asked of the converting worker, they
+  would wait behind a long conversion, time out, and stop it.
+- **"Convert another" ends a session** (`sessions` in `useConversionQueue`). A batch checks
+  after every wait whether its session is over, and writes nothing if it is.
 - **Word from the worker can arrive late.** A progress event may land after its file is
   finished. Nothing it does may bring a finished file back to "converting".
 - **`?slow=800` holds each file before it converts** (localhost only), so tests can see the

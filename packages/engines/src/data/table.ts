@@ -1,4 +1,4 @@
-import { Refusal } from '../util'
+import { cellOf, MAX_TABLE_CELLS, Refusal, tableTooLarge } from '../util'
 
 // Tables as text: CSV and TSV. Written here, not taken from a library, because the format is
 // small and the choices in it (what a number is, what happens to a ragged row) are Omsett's.
@@ -131,9 +131,10 @@ export function writeTable(value: unknown, tab: boolean): string {
     }
   }
   if (columns.length === 0) throw new Refusal('There is nothing here to put in a table')
+  if (columns.length * rows.length > MAX_TABLE_CELLS) throw tableTooLarge()
   const needsQuotes = new RegExp(`["\\r\\n${tab ? '\\t' : ','}]|^\\s|\\s$`)
   const quote = (text: string) => (needsQuotes.test(text) ? `"${text.replaceAll('"', '""')}"` : text)
   const lines = [columns.map(quote).join(delimiter)]
-  for (const row of rows) lines.push(columns.map((column) => quote(cellText(row[column]))).join(delimiter))
+  for (const row of rows) lines.push(columns.map((column) => quote(cellText(cellOf(row, column)))).join(delimiter))
   return `${lines.join('\r\n')}\r\n`
 }

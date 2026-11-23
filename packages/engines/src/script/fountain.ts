@@ -1,3 +1,4 @@
+import { withoutBrackets } from '../util'
 // Fountain: a screenplay written as plain text, where what a line is (a scene heading, a
 // character's name, a line of dialogue) is told from how it is written. Reading it gives the
 // script as a list of elements; writing it starts from that list.
@@ -100,12 +101,15 @@ export function readFountain(source: string): Script {
 
   // A title page is "Key: value" lines at the very top, up to the first blank line.
   if (/^[A-Z][A-Z ]{0,30}:/i.test(lines[0] ?? '') && !SCENE.test(lines[0]!)) {
+    // Each key's lines are gathered and joined once, however many there are.
+    const found: Array<{ key: string; parts: string[] }> = []
     for (; at < lines.length && lines[at]!.trim() !== ''; at++) {
       const pair = /^([A-Z][A-Z ]{0,30}):(.*)$/i.exec(lines[at]!)
-      if (pair) title.push({ key: pair[1]!.trim(), value: pair[2]!.trim() })
+      if (pair) found.push({ key: pair[1]!.trim(), parts: [pair[2]!.trim()] })
       // An indented line under a key is more of that key's value.
-      else if (title.length > 0) title.at(-1)!.value = [title.at(-1)!.value, lines[at]!.trim()].filter(Boolean).join('\n')
+      else if (found.length > 0) found.at(-1)!.parts.push(lines[at]!.trim())
     }
+    for (const { key, parts } of found) title.push({ key, value: parts.filter(Boolean).join('\n') })
   }
 
   const elements: Element[] = []
@@ -163,7 +167,7 @@ export function readFountain(source: string): Script {
         const part = lines[at]!
         // A line that starts something of its own ends the action above it.
         if (block.length > 0 && /^(?:>|~|={3,}$|#{1,6}\s|\.[^.])/.test(part.trim())) break
-        block.push(part.replace(/^!/, '').replace(/\s+$/, ''))
+        block.push(part.replace(/^!/, '').trimEnd())
       }
       elements.push({ kind: 'action', runs: runsOf(block.join('\n')) })
       continue
@@ -178,7 +182,7 @@ export function readFountain(source: string): Script {
     if (line.startsWith('@')) return line.length > 1
     if (line.startsWith('!')) return false
     // "(V.O.)" and "(cont'd)" after the name may be in any case.
-    const name = line.replace(/\^$/, '').replace(/\([^)]*\)/g, '').trim()
+    const name = withoutBrackets(line.replace(/\^$/, '')).trim()
     return /[A-Z]/.test(name) && name === name.toUpperCase() && !/^\d+$/.test(name)
   }
 }
@@ -225,7 +229,8 @@ export function writeFountain(script: Script): string {
         break
       }
       case 'character': {
-        const natural = /[A-Z]/.test(text) && text.replace(/\([^)]*\)/g, '') === text.replace(/\([^)]*\)/g, '').toUpperCase() && !text.startsWith('!')
+        const bare = withoutBrackets(text)
+        const natural = /[A-Z]/.test(text) && bare === bare.toUpperCase() && !text.startsWith('!')
         out.push(`${natural ? '' : '@'}${text}${element.dual ? ' ^' : ''}`)
         break
       }

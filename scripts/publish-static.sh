@@ -44,9 +44,12 @@ mkdir -p "$release"
 cp -R apps/web/.output/public "$release/public"
 cp apps/web/.output/headers.nginx "$release/headers.nginx"
 
-# Tell the operator if the headers changed: that, and only that, needs an nginx reload.
+# The headers are read by nginx when it starts, not on each request. If they changed, nginx
+# has to be reloaded or it goes on sending the old ones: an audit found the live site without
+# a header that had been in this file for a day. Remembered here, acted on after the switch.
+headers_changed=""
 if [ -e "$site/live/headers.nginx" ] && ! cmp -s "$site/live/headers.nginx" "$release/headers.nginx"; then
-  echo "NOTE: headers.nginx changed. Reload nginx for the new headers to take effect."
+  headers_changed=1
 fi
 
 # Switch to the new release. `live` is a link to a directory, and a plain `mv` onto such a link
@@ -71,3 +74,17 @@ for old in $(ls -1d "$site"/releases/*/ 2>/dev/null | sort -r | tail -n +4); do
 done
 
 echo "Published $stamp → $site/live"
+
+if [ -n "$headers_changed" ]; then
+  # Forge lets its user reload nginx without a password. Where that is not so, say it loudly.
+  if command -v sudo >/dev/null 2>&1 && sudo -n nginx -t >/dev/null 2>&1 && sudo -n service nginx reload >/dev/null 2>&1; then
+    echo "headers.nginx changed: nginx reloaded."
+  else
+    echo "=================================================================="
+    echo "WARNING: headers.nginx changed and nginx could NOT be reloaded here."
+    echo "The site is still sending the OLD security headers. Run, as root:"
+    echo "    nginx -t && service nginx reload"
+    echo "then check with:  scripts/check-live-headers.sh https://your.site"
+    echo "=================================================================="
+  fi
+fi

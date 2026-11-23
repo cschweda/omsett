@@ -85,7 +85,10 @@ function writeLrc(cues: Cue[]): string {
   }
   const lines: string[] = []
   cues.forEach((cue, i) => {
-    lines.push(`${time(cue.start)}${cue.text.replaceAll('\n', ' ')}`)
+    // Words that begin with a bracket would read as another time, or as a title. A space
+    // before them keeps them words.
+    const words = cue.text.replaceAll('\n', ' ')
+    lines.push(`${time(cue.start)}${words.startsWith('[') ? ' ' : ''}${words}`)
     // An empty line is how LRC says the words have gone, where the next line does not follow on.
     const next = cues[i + 1]
     if (!next || time(next.start) !== time(cue.end)) lines.push(time(cue.end))

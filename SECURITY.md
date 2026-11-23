@@ -25,6 +25,487 @@ A finding is **Fixed** when a test shows it, **Open** when it is not yet dealt w
 Newest first. The latest is expanded; earlier ones open when clicked.
 
 <details open>
+<summary><strong>23 November 2026: Red and blue: every reader, every engine, the page and its deployment</strong> (29 findings: 4 high, 14 medium, 11 low; 24 fixed, 4 open, 1 accepted)</summary>
+
+Three independent reviewers were each given one part of Omsett and told to break it, without being shown the project's own reasoning: the file readers and writers; identification, routing and the picture engines; and the page, its security policy, the build and the deployment. They were required to prove what they claimed by running it. They found no way to run code and no way for a file to leave the device. They did find hidden text carried out of Word and PowerPoint files, small files that cost gigabytes or never finished, pictures that came out wrong, and one design of the project's own, made the same day, that would have put another party's code in the page.
+
+**Scope**
+
+- Every reader and writer that is Omsett's own code: archives, data and spreadsheets, subtitles, Markdown and HTML, Word and PowerPoint, PDF, screenplays, fonts, and file details.
+- Identification by content, the size guard, routing, and how the five picture engines are driven.
+- The page: its security policy, everything that puts file-derived text on screen, the worker boundary and time limits, the test-only settings, visit counting and Settings.
+- The build, the server configuration, the publish script, the self-host image, CI and dependencies.
+
+**Method**
+
+- Each reviewer read the code and the existing 426 traps, then wrote and ran a proof for every claim: a file built in memory and the time, memory, or output it produced. Claims that could not be run are marked as such.
+- Every finding was reproduced again before it was believed, then fixed, then given a test that fails without the fix and a trap file where a file can show it. Two of the fixes were themselves wrong on the first attempt and were caught by the new traps.
+- The live site was asked, with plain requests, which security headers it sends.
+
+**What held**
+
+- No file made code run, in any format, in any engine. No hidden data in a picture survived a conversion to any of the image formats.
+- Nothing a file contains is put on the page as markup; names, details, notes and errors are all text.
+- Workers cannot reach another origin, and a missing worker script is a 404, not the app.
+- Paths that climb out of an archive, in every spelling tried, are refused; ZIP and TAR size and count limits hold.
+- HTML is cleaned on the way in and the way out: every script, handler and dangerous address tried was removed.
+- No blocked conversion can be reached by another route, and no file can be converted to a format of another kind.
+- The test-only settings in the address bar cannot be reached from any address that is not this machine.
+- CI actions are pinned, run with read-only permissions, and take no untrusted text into a command; the lockfile has an integrity hash for every package.
+
+**Findings**
+
+| ID | Severity | Finding | Status |
+| --- | --- | --- | --- |
+| OMS-102 | High | Text hidden in a Word document was carried across unless it was hidden the plainest way | Fixed |
+| OMS-103 | High | A slide hidden with the word "false", and shapes hidden in the editor, were published from a presentation | Fixed |
+| OMS-101 | High | A workbook of 88 KB made the reader hold three gigabytes | Fixed |
+| OMS-116 | High | Counting visits as first built would have run another party's code in the page | Fixed |
+| OMS-104 | Medium | Tags could be smuggled through the subtitle cleaner by nesting them | Fixed |
+| OMS-120 | Medium | A drawing was held to the size it stated, not to the pictures inside it | Fixed |
+| OMS-121 | Medium | A drawing of 275 bytes could ask for work that never finishes | Fixed |
+| OMS-122 | Medium | One drawing left the SVG engine unfit for every file after it | Fixed |
+| OMS-123 | Medium | ImageMagick checked a picture's size after decoding it, and read any number of pictures | Fixed |
+| OMS-124 | Medium | The size guard and the engine read a file's size from different places | Fixed |
+| OMS-125 | Medium | A Photoshop file was converted to its largest layer, hidden or not | Fixed |
+| OMS-126 | Medium | Photographs taken upright came out on their side | Fixed |
+| OMS-106 | Medium | A table could be written thousands of times larger than what it was made from | Fixed |
+| OMS-105 | Medium | A font whose tables share bytes was written out hundreds of times larger | Fixed |
+| OMS-107 | Medium | Archive names that mean something else on Windows and Macs were carried into the new archive | Fixed |
+| OMS-119 | Low | Previews handed any picture to the browser to draw, with no limit on how many or how large | Fixed |
+| OMS-117 | Low | A batch left behind by "Convert another" converted discarded files into the new session | Fixed |
+| OMS-118 | Low | Asking for a file's details could stop another file's conversion | Fixed |
+| OMS-108 | Low | Seven readers and writers went round once for everything already read | Fixed |
+| OMS-113 | Low | A long page was refused as "nested too deeply"; deep HTML inside Markdown was not refused | Fixed |
+| OMS-114 | Low | Names every JavaScript object answers to were read as values | Fixed |
+| OMS-115 | Low | Text that reads as structure was written unescaped into lyrics, contacts and calendars | Fixed |
+| OMS-127 | Low | A HEIC file was converted to its first picture, not the one it names as the one to show | Fixed |
+| OMS-128 | Low | Ordinary text that begins with a signature's letters was taken for a picture | Fixed |
+| OMS-130 | Medium | The live site was not sending a security header added a day earlier | Open |
+| OMS-131 | Medium | Nothing stands between a push and the live site, and the site is built on its own server | Open |
+| OMS-129 | Medium | The security policy cannot stop a script in the page from sending a file elsewhere by navigating | Accepted |
+| OMS-132 | Low | Supply-chain settings looser than the rest of the project | Open |
+| OMS-133 | Low | Two warnings the picker does not give | Open |
+
+#### OMS-102: Text hidden in a Word document was carried across unless it was hidden the plainest way
+
+**Severity:** High · **Status:** Fixed · **Area:** Privacy of what was converted
+
+**Identification**
+
+The reader left out text marked hidden on the run itself, and nothing else. Text hidden by the character style it was given, by a style based on such a style, or by its paragraph's style came out in the page. So did the stored result of a field that shows nothing (SET, ASK), and table rows that were deleted with changes tracked or marked hidden.
+
+The project's own rule is that what a document's author deleted or hid is never carried across. The existing trap covered only the two spellings the reader already knew.
+
+**Mitigation**
+
+Hiding is now worked out the way Word does: the run's own setting, then its style and the styles that one is based on, then the paragraph's style, then the document's default. A run can also turn hiding off, and that is honoured too.
+
+Fields are followed from start to end. The instruction is never text, and the result of a field that displays nothing is left out. Rows and cells deleted with changes tracked, and rows marked hidden, are left out of tables.
+
+**Verification:** Seven ways of hiding and three of showing are tested in packages/engines/src/audit-2026-11-23.test.ts (OMS-102). The trap hidden-every-other-way.docx carries all of them at once and runs in both suites, in three browsers.
+
+#### OMS-103: A slide hidden with the word "false", and shapes hidden in the editor, were published from a presentation
+
+**Severity:** High · **Status:** Fixed · **Area:** Privacy of what was converted
+
+**Identification**
+
+A slide was treated as hidden only when its file said show="0". The format allows "false" as well, and that spelling was read as shown. A text box or picture hidden in PowerPoint's selection pane was read like any other.
+
+**Mitigation**
+
+Anything that is not a yes is a no. A shape, picture, table or group marked hidden is skipped.
+
+**Verification:** Tested for five spellings of no and two of yes, and for hidden shapes (packages/engines/src/audit-2026-11-23.test.ts, OMS-103). Trap: hidden-spelled-another-way.pptx.
+
+#### OMS-101: A workbook of 88 KB made the reader hold three gigabytes
+
+**Severity:** High · **Status:** Fixed · **Area:** Availability
+
+**Identification**
+
+An office file is a ZIP of XML, and the XML was parsed whole before anything in it was counted. Ten million empty rows are 60 MB of text and 88 KB once zipped; the parser built an object for each. Rows and cells with no value were never counted toward the cell limit at all. The same was true of Word documents and presentations.
+
+A header row of sixteen thousand identical names took 3.6 seconds, because each new name was counted up from the start.
+
+**Mitigation**
+
+The tags in each part are counted in the text, in one pass, before any is parsed, and a part with more than 1.5 million is refused as too large. Repeated column names are numbered from where the last one stopped.
+
+**Verification:** packages/engines/src/audit-2026-11-23.test.ts (OMS-101). Traps: ten-million-empty-rows.xlsx, two-million-empty-paragraphs.docx, and the older a-row-of-two-million-cells.xlsx, which is now turned away earlier.
+
+#### OMS-116: Counting visits as first built would have run another party's code in the page
+
+**Severity:** High · **Status:** Fixed · **Area:** Privacy boundary
+
+**Identification**
+
+Visit counting was built, and merged for a few hours, so that Plausible's script was served through the site's own address. That satisfied the security policy to the letter and defeated its purpose: the script would have run on the page where the files are, with a route out through the site's own server, and whoever controls that script, or the connection it is fetched over, could have read a file. The check that the script's address was on the site's own origin could also be passed with a tab character.
+
+It had not been switched on. No visit was ever counted that way.
+
+**Mitigation**
+
+No script is loaded for counting, from anywhere. Omsett's own code makes one small report to its own origin (that a page was opened, which, and what linked to it) and the server passes it on. The setting is now the site's name, held to letters, digits, dots and hyphens. The documented server rule accepts only a small POST and checks the certificate of the server it forwards to.
+
+Written into the project's rules: an analytics script is never proxied or vendored to satisfy the policy.
+
+**Verification:** apps/web/app/utils/visits.test.ts and e2e/settings.spec.ts: the report's exact contents, that every script the page ran is the app's own, that nothing is asked of another origin, and that a setting which is not a plain site name counts nothing.
+
+#### OMS-104: Tags could be smuggled through the subtitle cleaner by nesting them
+
+**Severity:** Medium · **Status:** Fixed · **Area:** Integrity of output
+
+**Identification**
+
+Tags were removed from subtitle text in one pass. "<<b>img …>" loses its inner tag and becomes a whole one. Escapes undone afterwards, and position codes removed between passes, rebuilt tags the same way; text continued after a blank line in SRT skipped the second pass altogether. The result was written as it stood into SRT, SBV and ASS. A player that puts subtitle text into a page would run it.
+
+**Mitigation**
+
+Tags are removed until none is left. Text still producing tags after four passes loses its angle brackets. Continued text goes through the same cleaning and the same limits.
+
+**Verification:** Nine constructions, across six formats, in packages/engines/src/audit-2026-11-23.test.ts (OMS-104). Traps: tag-left-behind.srt, tag-spelled-in-entities.vtt.
+
+#### OMS-120: A drawing was held to the size it stated, not to the pictures inside it
+
+**Severity:** Medium · **Status:** Fixed · **Area:** Availability
+
+**Identification**
+
+An SVG of 100 by 100 pixels carrying a picture of 20,000 by 20,000 passed the size guard and was decoded in full: 65 KB of file, 2.4 GB of memory. The time allowed was worked out from the stated size, so it was the minimum.
+
+**Mitigation**
+
+Before a drawing is drawn, every picture carried inside it is found and its real size read from its first bytes. Their sum is held to the same limit as any picture, and one that does not state its size is refused.
+
+**Verification:** fixtures/audit-2026-11-23.test.ts (OMS-120). Trap: picture-inside-is-huge.svg.
+
+#### OMS-121: A drawing of 275 bytes could ask for work that never finishes
+
+**Severity:** Medium · **Status:** Fixed · **Area:** Availability
+
+**Identification**
+
+A filter asking for a hundred million layers of noise, one spreading every pixel hundreds of pixels, one weighing each pixel against tens of thousands, and a line of millions of letters each cost far more than any limit. In a browser the clock stopped them; outside one, nothing did.
+
+**Mitigation**
+
+A drawing is read before it is drawn, and refused if it asks for more than 16 layers of noise, a spread of more than 64 pixels, a grid wider than 9, or more than 50,000 characters of text.
+
+**Verification:** fixtures/audit-2026-11-23.test.ts (OMS-121). Traps: noise-a-hundred-million-deep.svg, three-million-letters.svg. Not yet covered: patterns nested inside patterns, which the browser's clock stops but no stated limit does.
+
+#### OMS-122: One drawing left the SVG engine unfit for every file after it
+
+**Severity:** Medium · **Status:** Fixed · **Area:** Availability
+
+**Identification**
+
+A drawing holding a drawing holding a drawing, twenty-five deep, ran the renderer out of room. Outside a browser the same copy of the renderer was kept, and refused every sound drawing afterwards.
+
+**Mitigation**
+
+Drawings nested more than three deep are refused by a stated limit. A failure inside the renderer itself now discards that copy, and the next conversion starts a new one.
+
+**Verification:** fixtures/audit-2026-11-23.test.ts (OMS-122): the nested drawing is refused, and a sound drawing converts straight after. Trap: drawing-in-a-drawing-25-deep.svg.
+
+#### OMS-123: ImageMagick checked a picture's size after decoding it, and read any number of pictures
+
+**Severity:** Medium · **Status:** Fixed · **Area:** Availability
+
+**Identification**
+
+An icon's list can say at most 256 by 256, but the picture behind an entry can be any size; a 48 KB icon cost eight seconds and a 437 KB one six gigabytes. A file of two hundred thousand one-pixel pictures, 1.6 MB, took 4.4 GB. In each case the engine's own size check ran after everything had been read.
+
+**Mitigation**
+
+ImageMagick is given its limits before every read: the longest side, the most pixels in one picture, at most 256 pictures in a file, a ceiling on memory, and no disk. It refuses at the first picture too large or the list too long, before making room.
+
+**Verification:** fixtures/audit-2026-11-23.test.ts (OMS-123): each is refused in under three seconds, and sound files of all nine kinds the engine reads still convert. Traps: picture-inside-is-huge.ico, twenty-thousand-pictures.pbm. An icon of three hundred entries that all point at one large picture is now refused by the memory ceiling, which still means gigabytes are asked for first.
+
+#### OMS-124: The size guard and the engine read a file's size from different places
+
+**Severity:** Medium · **Status:** Fixed · **Area:** Availability
+
+**Identification**
+
+For four formats a file could show the guard a size of 1 by 1 and the engine a size of its choosing: a Netpbm comment ended with an old Macintosh line break; a PAM giving its width twice; an EXR with the size's name inside an earlier text field; a JPEG 2000 with it inside the list of compatible kinds. A bitmap with the oldest kind of header was the reverse: always refused as too large, because its size was read from the wrong place.
+
+**Mitigation**
+
+Netpbm comments end at either line break, and the last size a PAM gives is the one read. The old bitmap header is read as what it is. For all four, the engine's own limits (OMS-123) now refuse an oversized picture before it is decoded, whatever the guard was shown.
+
+**Verification:** fixtures/audit-2026-11-23.test.ts (OMS-124). Traps: comment-ends-the-old-way.pbm, two-widths.pam, old-header.bmp. The guard's readers for EXR and JPEG 2000 still search for a name where they should walk the file's structure; the engine's limit is what stops those two.
+
+#### OMS-125: A Photoshop file was converted to its largest layer, hidden or not
+
+**Severity:** Medium · **Status:** Fixed · **Area:** Integrity of output
+
+**Identification**
+
+ImageMagick returns the finished picture and then each layer, and the engine kept whichever was largest. A layer may be larger than the picture and may be hidden. The output was then that layer, not the picture, at a size the guard never saw.
+
+**Mitigation**
+
+For a format that has layers, the finished picture is the one converted.
+
+**Verification:** fixtures/audit-2026-11-23.test.ts (OMS-125): a white picture of 8 by 8 with a hidden red layer of 64 by 64 comes out white, 8 by 8.
+
+#### OMS-126: Photographs taken upright came out on their side
+
+**Severity:** Medium · **Status:** Fixed · **Area:** Integrity of output
+
+**Identification**
+
+A camera held upright stores the picture sideways with a note saying which way is up. The note is metadata and was removed with the rest; the picture was never turned.
+
+**Mitigation**
+
+The picture is turned first, then the note is removed with everything else.
+
+**Verification:** fixtures/audit-2026-11-23.test.ts (OMS-126), to four formats: the output is 168 by 320 and carries no EXIF.
+
+#### OMS-106: A table could be written thousands of times larger than what it was made from
+
+**Severity:** Medium · **Status:** Fixed · **Area:** Availability
+
+**Identification**
+
+A table is as wide as every column any of its rows has. Eight thousand rows that each name a column of their own are sixty-four million cells, from 95 KB; a 12 KB CSV became 16 MB.
+
+**Mitigation**
+
+A table of more than five million cells is refused before any of it is built, in CSV, TSV, XLSX and when reshaping.
+
+**Verification:** packages/engines/src/audit-2026-11-23.test.ts (OMS-106).
+
+#### OMS-105: A font whose tables share bytes was written out hundreds of times larger
+
+**Severity:** Medium · **Status:** Fixed · **Area:** Availability
+
+**Identification**
+
+A font file may point every table at the same bytes. Read, it is small; written, each table gets its own copy. 1 MB became 268 MB.
+
+**Mitigation**
+
+Tables may not overlap. A font where they do is refused.
+
+**Verification:** packages/engines/src/audit-2026-11-23.test.ts (OMS-105). Trap: tables-that-share-their-bytes.ttf.
+
+#### OMS-107: Archive names that mean something else on Windows and Macs were carried into the new archive
+
+**Severity:** Medium · **Status:** Fixed · **Area:** Integrity of output
+
+**Identification**
+
+Two names differing only in capitals, or in how an accent is written, are one file on most Windows and Mac disks, where the second replaces the first. Also carried: device names (NUL.txt), names ending in a dot or a space, names with a colon (a hidden second stream of another file), and a name that was both a file and a folder.
+
+**Mitigation**
+
+Each of these is refused, with the reason. A download is never named for a device. A separate automated review of the fix found that "NUL .txt" and CONIN$ were still let through; both are now caught.
+
+**Verification:** packages/engines/src/audit-2026-11-23.test.ts (OMS-107). Traps: names-differ-only-in-capitals.zip, names-differ-only-in-accents.zip, named-for-a-device.zip, a-second-stream.tar, a-file-that-is-also-a-folder.zip.
+
+#### OMS-119: Previews handed any picture to the browser to draw, with no limit on how many or how large
+
+**Severity:** Low · **Status:** Fixed · **Area:** Availability
+
+**Identification**
+
+Every dropped picture was sent to the browser's decoder for its preview at once: a hundred at a time, each up to the full size limit, and files that did not state a size at all.
+
+**Mitigation**
+
+A preview is drawn only for a picture that states its size, and only up to 40 megapixels; previews are drawn one at a time. The rule that a browser's decoder never converts an unverified file is unchanged and is now worded to say that previews, which are only looked at, are the one exception.
+
+**Verification:** e2e/audit-2026-11-23.spec.ts (OMS-119): a JPEG whose size is out of sight gets no preview and still converts.
+
+#### OMS-117: A batch left behind by "Convert another" converted discarded files into the new session
+
+**Severity:** Low · **Status:** Fixed · **Area:** Integrity of output
+
+**Identification**
+
+Starting again stopped the worker but not the loop that was feeding it. The loop carried on with a new worker, put results for files the person had discarded into the new session, and could run alongside a new batch.
+
+**Mitigation**
+
+Each session is numbered. A batch checks after every wait whether its session is over, and writes nothing if it is.
+
+**Verification:** e2e/audit-2026-11-23.spec.ts (OMS-117).
+
+#### OMS-118: Asking for a file's details could stop another file's conversion
+
+**Severity:** Low · **Status:** Fixed · **Area:** Availability
+
+**Identification**
+
+Details were read by the same worker that converts. Asked for during a long conversion, the request waited, ran out of time after twenty seconds, and stopped the worker with the conversion in it. Packing results into a ZIP had no time limit at all.
+
+**Mitigation**
+
+Details and the ZIP have a worker of their own. Stopping any worker now settles everything that was waiting on it, and the ZIP has a limit.
+
+**Verification:** e2e/audit-2026-11-23.spec.ts (OMS-118): the details are read in a second worker while a conversion is under way, and the conversion finishes.
+
+#### OMS-108: Seven readers and writers went round once for everything already read
+
+**Severity:** Low · **Status:** Fixed · **Area:** Availability
+
+**Identification**
+
+A TAR header length written as eighty thousand zeros; SRT text continued after blank lines; a Fountain title of many lines, brackets never closed, and long runs of spaces; writing Final Draft from many lines of action; a vCard note continued the old way; and Markdown with no top heading. Each took time growing with the square of its size: seconds from tens of kilobytes. The conversion clock stops all of them in a browser.
+
+**Mitigation**
+
+Each now takes one pass over its input: pieces are gathered and joined once, a search is not started again from every character, and a length must read as a length.
+
+**Verification:** packages/engines/src/audit-2026-11-23.test.ts (OMS-108 to OMS-112, OMS-113), on inputs sized to take half a minute or more before the fix. Traps: length-of-eighty-thousand-zeros.tar, words-after-eighty-thousand-blank-lines.srt, brackets-never-closed.fountain, soft-breaks-eighty-thousand-times.vcf.
+
+#### OMS-113: A long page was refused as "nested too deeply"; deep HTML inside Markdown was not refused
+
+**Severity:** Low · **Status:** Fixed · **Area:** Integrity of output
+
+**Identification**
+
+A page of 150,000 paragraphs, none inside another, was refused with the wrong reason: handing that many children to one call overflowed it, here and inside the HTML cleaner. And HTML written inside Markdown was nested a thousand deep in the output, because depth was checked before that HTML was read.
+
+**Mitigation**
+
+Children are handled one at a time, and tags the cleaner does not keep are opened before it sees them. Depth is checked again once the HTML inside Markdown has been read, and counted in the source before reading starts, so the refusal never depends on running out of room.
+
+**Verification:** packages/engines/src/audit-2026-11-23.test.ts (OMS-113). Traps: long-and-flat.html, html-a-thousand-deep.md.
+
+#### OMS-114: Names every JavaScript object answers to were read as values
+
+**Severity:** Low · **Status:** Fixed · **Area:** Integrity of output
+
+**Identification**
+
+A row without a column called "constructor" answered with a function, which was written into a CSV as a cell that was never in the data and broke XLSX and YAML. A Final Draft paragraph of kind "constructor" was silently dropped, so a script could hold lines Omsett did not show. Nothing was polluted.
+
+**Mitigation**
+
+A row answers only for its own columns. Lookup tables hold only what was put in them.
+
+**Verification:** packages/engines/src/audit-2026-11-23.test.ts (OMS-114). Trap: type-is-constructor.fdx.
+
+#### OMS-115: Text that reads as structure was written unescaped into lyrics, contacts and calendars
+
+**Severity:** Low · **Status:** Fixed · **Area:** Integrity of output
+
+**Identification**
+
+Lyrics beginning with a time in brackets became two lines when read back. Three Unicode line separators were kept in vCard and iCalendar values, where some readers end a line at them.
+
+**Mitigation**
+
+Lyrics that begin with a bracket are set off by a space. The three separators become spaces.
+
+**Verification:** packages/engines/src/audit-2026-11-23.test.ts (OMS-115).
+
+#### OMS-127: A HEIC file was converted to its first picture, not the one it names as the one to show
+
+**Severity:** Low · **Status:** Fixed · **Area:** Integrity of output
+
+**Identification**
+
+A HEIC file can hold several pictures and names one as primary. The engine took the first.
+
+**Mitigation**
+
+The primary picture is taken, wherever it is.
+
+**Verification:** fixtures/audit-2026-11-23.test.ts (OMS-127).
+
+#### OMS-128: Ordinary text that begins with a signature's letters was taken for a picture
+
+**Severity:** Low · **Status:** Fixed · **Area:** Correct identification
+
+**Identification**
+
+A table whose first column is "BMI" was a bitmap, and refused as too large. Notes beginning "P1" were a Netpbm picture. Nothing unsafe followed; real files were turned away with a baffling reason.
+
+**Mitigation**
+
+A file that is text from its first byte to its last is not believed to be a binary format, whatever its first letters spell. The picture formats that are written as text are held to more of their header.
+
+**Verification:** fixtures/audit-2026-11-23.test.ts (OMS-128): ten such files are identified as the text they are, and the text-written pictures still as pictures. Traps: bmi.csv, p1-incidents.md, gif89a.csv.
+
+#### OMS-130: The live site was not sending a security header added a day earlier
+
+**Severity:** Medium · **Status:** Open · **Area:** Deployment
+
+**Identification**
+
+nginx reads its header file when it starts. A deploy that changed the file printed a note in a log and changed nothing; the site went on without Strict-Transport-Security, which the previous audit recorded as fixed. A tightened worker policy would have been missed the same way.
+
+**Mitigation**
+
+The publish script now reloads nginx when the header file changes and, where it cannot, prints a warning that is hard to miss. scripts/check-live-headers.sh asks a live site for each header its build calls for.
+
+**Verification:** Run on 23 November 2026, the check reported Strict-Transport-Security missing from omsett.com on all three requests. This stays open until nginx has been reloaded on the server and the check passes.
+
+#### OMS-131: Nothing stands between a push and the live site, and the site is built on its own server
+
+**Severity:** Medium · **Status:** Open · **Area:** Deployment
+
+**Identification**
+
+The "All checks" job is not required by anything: the server rebuilds from the main branch on every push, whether the checks passed, failed or have not finished. The build, including every dependency's install step, runs on the production server.
+
+**Mitigation**
+
+Not changed in this audit. Requiring "All checks" on the main branch is a setting on the repository; building in CI and shipping the result is a larger change to how the site is deployed. Both are the owner's decisions.
+
+**Verification:** Not applicable while open.
+
+#### OMS-129: The security policy cannot stop a script in the page from sending a file elsewhere by navigating
+
+**Severity:** Medium · **Status:** Accepted · **Area:** Privacy boundary
+
+**Identification**
+
+The policy stops every request a script can make and read. It does not stop a page being sent to another address with data in it, nor WebRTC; a policy has no directive for the first. A reviewer showed both in Chrome. Workers, where every file reader and engine runs, have no such way out.
+
+**Mitigation**
+
+Accepted as a limit of the platform, and the claim that the policy alone covers the page has been corrected where it was made. What it rests on instead is that only the project's own code and its pinned build dependencies run in the page: no third party's script is loaded, counting visits included (OMS-116).
+
+**Verification:** e2e/settings.spec.ts asserts that every script the page runs is one of the app's own; e2e/gate.spec.ts asserts that no request goes to another origin.
+
+#### OMS-132: Supply-chain settings looser than the rest of the project
+
+**Severity:** Low · **Status:** Open · **Area:** Supply chain
+
+**Identification**
+
+pnpm was fetched by version with no hash; the libvips loader script was said to be checked against its recorded hash and was not; there is no waiting period on new releases of dependencies; a release can be published from a tag whose checks did not run; the self-host example pulls its image by tag.
+
+**Mitigation**
+
+pnpm is now pinned by hash, and the loader script is checked before it is imported. The other three are not changed in this audit.
+
+**Verification:** The pinned pnpm was run through corepack. The remaining three items keep this open.
+
+#### OMS-133: Two warnings the picker does not give
+
+**Severity:** Low · **Status:** Open · **Area:** Honest description
+
+**Identification**
+
+An animated PNG becomes its first frame with no warning that the rest are dropped. A HEIC photo converted to JPEG goes by way of PNG, so the warning about converting one lossy format to another is lost on the way.
+
+**Mitigation**
+
+Not changed in this audit. Both are warnings to add in the registry: one for animated PNG, one that follows a route from its first format to its last.
+
+**Verification:** Not applicable while open.
+
+</details>
+
+<details>
 <summary><strong>22 November 2026: Follow-up: closing two open findings</strong> (3 findings: 1 medium, 1 low, 1 info; 2 fixed, 1 open, 0 accepted)</summary>
 
 The red/blue audit left three findings open. This pass closed the two that were the project's to close: damaged files that some browsers converted into partial pictures, and build inputs referenced by a movable tag. The third is a line in the server's own configuration.

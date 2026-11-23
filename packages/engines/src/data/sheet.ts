@@ -1,6 +1,6 @@
 import { readZip, writeZip } from '../archive/zip'
 import type { Entry } from '../archive/entries'
-import { Refusal } from '../util'
+import { cellOf, MAX_TABLE_CELLS, Refusal, tableTooLarge, withinTags } from '../util'
 import { text as escapeXml } from './xml'
 
 // Excel workbooks (XLSX). A workbook is a ZIP of XML files: one lists the sheets, one holds the
@@ -118,6 +118,8 @@ export async function readWorkbook(bytes: Uint8Array, named = true): Promise<Row
     // A workbook's XML never declares a document type. One that does is defining shorthand of
     // its own, which is how a small file is made to expand into a vast one.
     if (/<!DOCTYPE/i.test(source.slice(0, 4096))) throw invalid()
+    // Counted before it is read: empty rows and cells cost as much to read as full ones.
+    if (!withinTags(source)) throw tooLarge()
     return record(xml.parse(source))
   }
 
@@ -195,11 +197,16 @@ function tableOf(worksheet: Xml, shared: string[], dated: boolean[], from1904: b
   // Every row is given every column, so the table is as wide as its widest row all the way down.
   if (width * grid.length > MAX_CELLS) throw tooLarge()
   const taken = new Set<string>()
+  // Where the count for each repeated name has got to, so that a row of one name sixteen
+  // thousand times is not counted through from the start for every column.
+  const reached = new Map<string, number>()
   const names = Array.from({ length: width }, (_, i) => {
     const stated = named ? grid[0]![i] : null
     const base = stated === null || stated === undefined || String(stated).trim() === '' ? `column_${columnName(i)}` : String(stated).trim()
     let name = base
-    for (let n = 2; taken.has(name); n++) name = `${base}_${n}`
+    let n = reached.get(base) ?? 1
+    while (taken.has(name)) name = `${base}_${++n}`
+    reached.set(base, n)
     taken.add(name)
     return name
   })
@@ -280,6 +287,7 @@ export async function writeWorkbook(values: unknown[]): Promise<Uint8Array> {
   if (columns.length > MAX_COLUMNS || rows.length + 1 > MAX_ROWS) {
     throw new Refusal('This is more than one sheet can hold: 1,048,576 rows and 16,384 columns')
   }
+  if (columns.length * rows.length > MAX_TABLE_CELLS) throw tableTooLarge()
 
   // Text is always written as text. A cell that reads "=1+1" is those four characters, and no
   // spreadsheet will work it out.
@@ -296,7 +304,7 @@ export async function writeWorkbook(values: unknown[]): Promise<Uint8Array> {
   }
   const lines = [`<row r="1">${columns.map((name, i) => words(`${columnName(i)}1`, name, ' s="1"')).join('')}</row>`]
   rows.forEach((row, r) => {
-    lines.push(`<row r="${r + 2}">${columns.map((name, i) => cell(`${columnName(i)}${r + 2}`, row[name])).join('')}</row>`)
+    lines.push(`<row r="${r + 2}">${columns.map((name, i) => cell(`${columnName(i)}${r + 2}`, cellOf(row, name))).join('')}</row>`)
   })
   const sheet = `<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData>${lines.join('')}</sheetData></worksheet>`
 

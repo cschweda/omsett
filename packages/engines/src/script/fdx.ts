@@ -1,5 +1,5 @@
 import { text as escapeXml } from '../data/xml'
-import { Refusal } from '../util'
+import { lookup, Refusal } from '../util'
 import type { Element, Kind, Run, Script } from './fountain'
 
 // Final Draft (FDX): a screenplay as XML, one <Paragraph> to an element, each saying what kind
@@ -13,7 +13,7 @@ const attrs = (node: Node) => (node[':@'] ?? {}) as Record<string, string>
 const kids = (node: Node): Node[] => (Array.isArray(node[tagOf(node)]) ? (node[tagOf(node)] as Node[]) : [])
 const all = (node: Node, tag: string) => kids(node).filter((kid) => tagOf(kid) === tag)
 
-const KINDS: Record<string, Kind> = {
+const KINDS: Record<string, Kind> = lookup<Kind>({
   'scene heading': 'scene',
   action: 'action',
   character: 'character',
@@ -25,7 +25,7 @@ const KINDS: Record<string, Kind> = {
   general: 'action',
   lyrics: 'lyric',
   'cast list': 'action',
-}
+})
 const NAMES: Record<Kind, string> = {
   scene: 'Scene Heading',
   action: 'Action',
@@ -162,6 +162,9 @@ export function writeFdx(script: Script): string {
       })
       .join('\n')
   const elements = script.elements
+  // Where the next character after each element is, found once from the end.
+  const nextCharacter = new Int32Array(elements.length).fill(-1)
+  for (let i = elements.length - 2; i >= 0; i--) nextCharacter[i] = elements[i + 1]!.kind === 'character' ? i + 1 : nextCharacter[i + 1]!
   let newPage = false
   for (let i = 0; i < elements.length; i++) {
     const element = elements[i]!
@@ -170,7 +173,7 @@ export function writeFdx(script: Script): string {
       continue
     }
     // A character marked as speaking at the same time is paired with the speech before theirs.
-    const next = elements.slice(i + 1).findIndex((later) => later.kind === 'character')
+    const next = nextCharacter[i]! < 0 ? -1 : nextCharacter[i]! - i - 1
     const partner = next >= 0 ? elements[i + 1 + next]! : null
     const speech = (from: number) => {
       let end = from + 1

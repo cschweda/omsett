@@ -1,7 +1,7 @@
 import { detect, MAX_PIXELS, nameDisagrees, pixelCount, sizeProblem, type Detection } from '@omsett/detect'
 import type { Edge, Route } from '@omsett/registry'
 import { dimensionProblem, formatById } from '@omsett/registry'
-import { conversionBudgetMs, MAX_FILES, testHook, TimedOut } from '~/utils/limits'
+import { conversionBudgetMs, MAX_FILES, PREVIEW_MAX_PIXELS, testHook, TimedOut } from '~/utils/limits'
 import { closestLanguage } from '~/utils/languages'
 import { registry, router } from '~/utils/registry'
 
@@ -179,7 +179,10 @@ export function useConversionQueue() {
           : `${file.name} added. Unsupported format.`,
       )
       // Decode for the preview only after the guard has passed, and never on this thread.
-      if (known && !entry.problem && detection.format.category === 'image') {
+      // Only a picture whose size is known and modest: a browser asked to draw one of unknown
+      // size, or a hundred of fourteen thousand pixels a side, may run out of memory first.
+      const pixels = known ? pixelCount(detection.dimensions) : 0
+      if (known && !entry.problem && detection.format.category === 'image' && pixels > 0 && pixels <= PREVIEW_MAX_PIXELS) {
         engines
           .thumbnail(file, 128)
           .then((bitmap) => {
@@ -313,10 +316,17 @@ export function useConversionQueue() {
   }
 
   /** @param quiet a re-conversion while a setting is moved: no announcements for each one. */
+  /** Counts sessions: each "Convert another" starts a new one. */
+  let sessions = 0
+
   async function convertAll({ quiet = false }: { quiet?: boolean } = {}) {
     const target = selected.value
     if (!canConvert.value || !target?.route) return
     converting.value = true
+    // "Convert another" ends a session while this may still be waiting on a file. Whatever
+    // comes back after that belongs to a session that is over, and is dropped.
+    const session = sessions
+    const over = () => session !== sessions
     // Earlier results stay on screen until their replacements are ready.
     const fresh: QueueResult[] = []
     const queue = convertible.value
@@ -341,6 +351,7 @@ export function useConversionQueue() {
 
     let done = 0
     for (const entry of queue) {
+      if (over()) break
       const source = entry.detection.kind === 'known' ? entry.detection.format.id : ''
       const route = router.route(source, target.format.id)
       batch.value = { ...batch.value!, position: batch.value!.position + 1 }
@@ -353,21 +364,26 @@ export function useConversionQueue() {
         const size = entry.detection.kind === 'known' ? entry.detection.dimensions : null
         const tooLarge = size && dimensionProblem(target.format, size.width, size.height)
         if (tooLarge) throw new Refusal(tooLarge)
-        fresh.push(...((await runFile(entry, route)) ?? []))
+        const made = (await runFile(entry, route)) ?? []
+        if (over()) break
+        fresh.push(...made)
         entry.progress = 1
         entry.status = 'done'
         done++
       } catch (error) {
+        if (over()) break
         entry.status = 'error'
         entry.progress = 1
         entry.error = error instanceof Refusal ? error.message : "This file couldn't be converted"
       }
       entry.stage = null
     }
+    stop()
+    // The session this batch belonged to is gone: its files, its results and its clock with it.
+    if (over()) return
     stopClock()
     batch.value = null
 
-    stop()
     // Results for other formats stay where they are, so a file can be converted to several.
     // For this format, each new result takes the place of the one it replaces.
     const sources = new Set(queue.map((entry) => entry.id))
@@ -405,6 +421,9 @@ export function useConversionQueue() {
   function reset() {
     clearTimeout(requeue)
     notice.value = ''
+    sessions++
+    stopClock()
+    batch.value = null
     engines.terminate()
     for (const entry of files.value) entry.thumbnail?.close()
     files.value = []

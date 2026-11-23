@@ -33,10 +33,31 @@ export type Detection =
  * one thing only: to tell apart the plain-text data formats (YAML, TOML, CSV, TSV) whose
  * contents cannot say which they are. Never throws: anything unreadable is `unknown`.
  */
+/** Kinds of file that are, or may be, text from their first byte to their last. */
+const WRITTEN_AS_TEXT = new Set(['xml', 'svg', 'pdf', 'rtf', 'ps', 'eps', 'vcf', 'ics', 'vtt', 'pnm', 'hdr'])
+
+/** Whether these bytes read as text and nothing else: UTF-8, with no control codes but tabs and line breaks. */
+function isPlainText(head: Uint8Array): boolean {
+  if (head.length === 0) return false
+  for (const byte of head) if (byte < 0x20 && byte !== 0x09 && byte !== 0x0A && byte !== 0x0D && byte !== 0x0C) return false
+  try {
+    // The last few bytes may be half a character, where the sample stops short of the file.
+    new TextDecoder('utf-8', { fatal: true }).decode(head.subarray(0, head.length >= HEADER_BYTES ? head.length - 3 : head.length))
+    return true
+  } catch {
+    return false
+  }
+}
+
 export async function detect(blob: Blob, formats: Format[], name?: string): Promise<Detection> {
   try {
     const head = new Uint8Array(await blob.slice(0, HEADER_BYTES).arrayBuffer())
     let found: { ext: string; mime: string } | undefined = await fileTypeFromBuffer(head)
+    // A signature is a few bytes, and some are letters: a table whose first column is "BMI"
+    // opens with the two that mean a bitmap. A file that is text all the way through is not
+    // a picture, a program or a film, whatever its first letters spell.
+    const plain = isPlainText(head)
+    if (found && plain && !WRITTEN_AS_TEXT.has(found.ext)) found = undefined
     // SVG is text and has no magic bytes: the most the library can say is "XML", or nothing.
     const root = !found || found.ext === 'xml' ? svgRoot(head) : null
     if (root) found = { ext: 'svg', mime: 'image/svg+xml' }
@@ -47,7 +68,7 @@ export async function detect(blob: Blob, formats: Format[], name?: string): Prom
     const emptyIcon = (found?.ext === 'ico' || found?.ext === 'cur') && head[4] === 0 && head[5] === 0
     if (emptyIcon) found = undefined
     const sniffed = found ? null : sniff(head)
-    if (sniffed) {
+    if (sniffed && !(plain && !WRITTEN_AS_TEXT.has(sniffed.ext))) {
       found = sniffed
       dimensions = sniffed.dimensions
     }

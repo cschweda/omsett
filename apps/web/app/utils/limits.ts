@@ -45,6 +45,12 @@ export function conversionBudgetMs(pixels: number): number {
 /** How long decoding a picture for its preview may take. */
 export const PREVIEW_BUDGET_MS = 20 * SECOND
 
+/** The largest picture a preview is drawn for: 40 megapixels, which is 160 MB while it is drawn. */
+export const PREVIEW_MAX_PIXELS = 40_000_000
+
+/** How long packing every result into one ZIP may take. */
+export const ZIP_BUDGET_MS = 2 * 60 * SECOND
+
 /** The most files taken in one session. More than this is a mistake or an attack. */
 export const MAX_FILES = 100
 

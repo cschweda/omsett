@@ -46,7 +46,11 @@ async function verified(asset: { url: string; sha256: string }): Promise<ArrayBu
 
 /**
  * Start libvips, with any of its optional modules. Every file is fetched from this origin and
- * checked against the hash recorded at build time before a byte of it runs.
+ * checked against the hash recorded at build time. The WebAssembly is run from the very bytes
+ * that were checked. The script that loads it has to be imported by its address (a worker's
+ * policy lets it run scripts from this origin and from nowhere else, a blob included), so it
+ * is checked and then imported: the check catches a file that is wrong, not a server that
+ * answers the second request differently from the first.
  */
 async function loadVips(moduleNames: string[]): Promise<VipsModule> {
   const { script, wasm, modules } = assets.vips
@@ -60,6 +64,7 @@ async function loadVips(moduleNames: string[]): Promise<VipsModule> {
     local[name] = URL.createObjectURL(new Blob([await verified(asset)], { type: 'application/wasm' }))
   }
 
+  await verified(script)
   const scriptUrl = new URL(script.url, self.location.origin).href
   const { default: Vips } = (await import(/* @vite-ignore */ scriptUrl)) as {
     default: (options: Record<string, unknown>) => Promise<VipsModule>
