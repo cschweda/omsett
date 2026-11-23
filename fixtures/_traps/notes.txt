@@ -1,0 +1,3 @@
+Shopping, Thursday
+milk, eggs
+bread: two loaves

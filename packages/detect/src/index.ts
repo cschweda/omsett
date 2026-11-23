@@ -4,6 +4,7 @@ import { HEADER_BYTES, readDimensions, type Dimensions } from './dimensions'
 import { gunzip } from './gzip'
 import { sniff } from './signatures'
 import { svgDimensions, svgRoot } from './svg'
+import { sniffText } from './text'
 
 export { readDimensions, type Dimensions } from './dimensions'
 export { MAX_BYTES, MAX_PIXELS, MAX_WORKING_BYTES, TOO_LARGE, pixelCount, sizeProblem, workingBytes } from './guard'
@@ -17,10 +18,11 @@ export type Detection =
   | { kind: 'unknown' }
 
 /**
- * Identify a file by its magic bytes, never by its name, and read its dimensions from the header.
- * Never throws: anything unreadable is `unknown`.
+ * Identify a file by its contents and read its dimensions from the header. The name is used for
+ * one thing only: to tell apart the plain-text data formats (YAML, TOML, CSV, TSV) whose
+ * contents cannot say which they are. Never throws: anything unreadable is `unknown`.
  */
-export async function detect(blob: Blob, formats: Format[]): Promise<Detection> {
+export async function detect(blob: Blob, formats: Format[], name?: string): Promise<Detection> {
   try {
     const head = new Uint8Array(await blob.slice(0, HEADER_BYTES).arrayBuffer())
     let found: { ext: string; mime: string } | undefined = await fileTypeFromBuffer(head)
@@ -44,6 +46,14 @@ export async function detect(blob: Blob, formats: Format[]): Promise<Detection> 
       if (inner) {
         found = { ext: 'svgz', mime: 'image/svg+xml' }
         dimensions = svgDimensions(inner)
+      }
+    }
+    // Plain text has no signature at all. What it holds is worked out from how it reads.
+    if (!found) {
+      const text = sniffText(head, blob.size <= HEADER_BYTES, name)
+      if (text) {
+        found = text
+        dimensions = null
       }
     }
     if (!found) return { kind: 'unknown' }

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- People who changed computing. Comments like this one are not carried into other formats. -->
+<people>
+  <person id="1">
+    <name>Ada Lovelace</name>
+    <born>1815</born>
+    <died>1852</died>
+    <field>mathematics</field>
+    <field>computing</field>
+    <note>Wrote the first published program, for a machine that was never built</note>
+    <postcode>01234</postcode>
+  </person>
+  <person id="2">
+    <name>Grace Hopper</name>
+    <born>1906</born>
+    <died>1992</died>
+    <field>computing</field>
+    <note>Said "it's easier to ask forgiveness than permission" &amp; meant it</note>
+    <postcode>10001</postcode>
+  </person>
+  <person id="3">
+    <name>Katherine Johnson</name>
+    <born>1918</born>
+    <died>2020</died>
+    <field>mathematics</field>
+    <field>orbital mechanics</field>
+    <note/>
+    <postcode>24986</postcode>
+  </person>
+</people>

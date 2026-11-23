@@ -1,0 +1,25 @@
+# People who changed computing. Comments like this one are not carried into other formats.
+- id: 1
+  name: Ada Lovelace
+  born: 1815
+  died: 1852
+  fields: [mathematics, computing]
+  note: >-
+    Wrote the first published program,
+    for a machine that was never built
+  postcode: "01234"
+- id: 2
+  name: Grace Hopper
+  born: 1906
+  died: 1992
+  fields:
+    - computing
+  note: 'Said "it''s easier to ask forgiveness than permission"'
+  postcode: "10001"
+- id: 3
+  name: Katherine Johnson
+  born: 1918
+  died: 2020
+  fields: [mathematics, orbital mechanics]
+  note: ~
+  postcode: "24986"

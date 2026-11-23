@@ -74,6 +74,17 @@ export const magickInfo: EngineInfo = {
   sourceUrl: 'https://github.com/dlemstra/magick-wasm',
 }
 
+// The data formats: Omsett's own readers and writers, with three small parsers for the formats
+// too intricate to write well by hand. They are part of the app's scripts, not a separate binary.
+export const dataInfo: EngineInfo = {
+  id: 'data',
+  sizeBytes: 0,
+  runtimes: ['browser', 'node'],
+  // yaml is ISC, smol-toml BSD-3-Clause, fast-xml-parser MIT.
+  license: 'MIT AND ISC AND BSD-3-Clause',
+  sourceUrl: 'https://github.com/cschweda/omsett/tree/main/packages/engines/src/data',
+}
+
 /** The font files resvg is given, from @fontsource/inter. */
 export const resvgFonts = ['inter-latin-400-normal.woff2', 'inter-latin-700-normal.woff2']
 
@@ -92,4 +103,5 @@ export const engineInfo: Record<string, EngineInfo> = {
   [heifInfo.id]: heifInfo,
   [resvgInfo.id]: resvgInfo,
   [magickInfo.id]: magickInfo,
+  [dataInfo.id]: dataInfo,
 }

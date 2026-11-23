@@ -36,6 +36,7 @@ const trapGroups: Record<string, string> = {
   size: 'Lying about their size',
   damage: 'Damaged',
   unusual: 'Sound, but unusual',
+  data: 'Data: broken, hostile, or misnamed',
 }
 </script>
 
@@ -161,7 +162,7 @@ const trapGroups: Record<string, string> = {
             it is published, and the engines that can run outside a browser are tested there as well.
           </p>
           <p>
-            Part of that is a set of <strong>{{ facts.traps.total }} trap files</strong>: images that are broken,
+            Part of that is a set of <strong>{{ facts.traps.total }} trap files</strong>: pictures and data files that are broken,
             hostile, or lying, each in one deliberate way. For every one, the tests state in advance what must
             happen, and check it. Whatever a trap is, the page must survive, the file must end in a state a person
             can read, and an ordinary file must still convert afterwards.

@@ -37,6 +37,11 @@ const MAGICK_READS = ['bmp', 'tga', 'qoi', 'pnm', 'psd', 'ico', 'jp2', 'exr', 'h
 const CORE = ['png', 'jpeg', 'webp', 'gif', 'tiff']
 const CORE_WRITES = [webp, jpeg, png, gif, tiff]
 
+// Data formats are all read into the same plain values and written back out, so every one
+// converts to every other in a single step. Comments have nowhere to live in between.
+const DATA = ['json', 'yaml', 'csv', 'xml', 'toml', 'jsonl', 'tsv']
+const DATA_WRITES: WriteSpec[] = DATA.map((format) => ({ format, lossy: false, drops: ['comments'] }))
+
 export const capabilities: Capability[] = [
   {
     engine: 'canvas',
@@ -74,4 +79,7 @@ export const capabilities: Capability[] = [
   // libvips with its JPEG XL module, on the same terms.
   { engine: 'vips-jxl', tier: 'browser', reads: CORE, writes: [jxl], priority: 30 },
   { engine: 'vips-jxl', tier: 'browser', reads: ['jxl'], writes: CORE_WRITES, priority: 30 },
+
+  // Small parsers written in JavaScript: nothing to download beyond the app itself.
+  { engine: 'data', tier: 'browser', reads: DATA, writes: DATA_WRITES, priority: 20 },
 ]

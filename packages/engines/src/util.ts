@@ -38,3 +38,11 @@ export function qualityOption(options: Record<string, unknown>, fallback = 80): 
 export function throwIfAborted(signal: AbortSignal): void {
   if (signal.aborted) throw new DOMException('Conversion cancelled', 'AbortError')
 }
+
+/**
+ * A failure whose message is written for the person who dropped the file and may be shown to
+ * them as it is. It keeps its name across the worker boundary, which is how the page knows.
+ */
+export class Refusal extends Error {
+  override name = 'Refusal'
+}

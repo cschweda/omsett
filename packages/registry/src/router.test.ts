@@ -1,5 +1,16 @@
 import { describe, expect, it } from 'vitest'
-import { acceptAttribute, applySwitches, createRouter, deriveEdges, engineIds, everything, registry, traitWarnings } from './index'
+import {
+  acceptAttribute,
+  applySwitches,
+  createRouter,
+  deriveEdges,
+  engineIds,
+  everything,
+  formatById,
+  registry,
+  sameKind,
+  traitWarnings,
+} from './index'
 import type { Capability, EdgeOverride, Format, Registry } from './types'
 
 describe('router, real registry', () => {
@@ -27,7 +38,11 @@ describe('router, real registry', () => {
     for (const edge of deriveEdges(registry).edges) {
       const engines = edge.candidates.map((c) => c.engine)
       if (edge.from !== 'png') expect(engines, `${edge.from} → ${edge.to}`).not.toContain('canvas')
-      for (const engine of engines) expect(engine === 'canvas' || ['heif', 'resvg', 'magick'].includes(engine) || engine.startsWith('vips')).toBe(true)
+      for (const engine of engines) expect(engine === 'canvas' || ['heif', 'resvg', 'magick', 'data'].includes(engine) || engine.startsWith('vips')).toBe(true)
+      // The data engine reads and writes data and nothing else; no picture engine touches data.
+      const data = [edge.from, edge.to].map((id) => formatById(registry, id)!.category === 'data')
+      expect(data[0], `${edge.from} → ${edge.to}`).toBe(data[1])
+      expect(engines.includes('data'), `${edge.from} → ${edge.to}`).toBe(data[0])
     }
   })
 
@@ -37,13 +52,26 @@ describe('router, real registry', () => {
     expect(ids).toEqual([
       'webp', 'jpeg', 'png', 'avif', 'gif', 'tiff', 'jxl', 'bmp', 'tga', 'qoi', 'pnm',
       'heic', 'svg', 'svgz', 'psd', 'ico', 'jp2', 'exr', 'hdr', 'pcx', 'sgi', 'ras',
+      'json', 'yaml', 'csv', 'xml', 'toml', 'jsonl', 'tsv',
     ])
     const readOnly = new Set(everything.formats.filter((f) => f.readOnly).map((f) => f.id))
     expect([...readOnly].sort()).toEqual(['exr', 'hdr', 'heic', 'ico', 'jp2', 'pcx', 'psd', 'ras', 'sgi', 'svg', 'svgz'])
-    // Every pair converts, directly or through a step in between; nothing is written as HEIC.
+    // Every pair of the same kind converts, directly or through a step in between; nothing is
+    // written as HEIC. A picture never becomes data, nor data a picture.
+    const kind = (id: string) => formatById(everything, id)!.category
     for (const from of ids) {
-      for (const to of ids) expect(all.route(from, to) === null, `${from} → ${to}`).toBe(from === to || readOnly.has(to))
+      for (const to of ids) {
+        const impossible = from === to || readOnly.has(to) || !sameKind(kind(from), kind(to))
+        expect(all.route(from, to) === null, `${from} → ${to}`).toBe(impossible)
+      }
     }
+    // Data formats convert to each other in one step, and a file is offered only its own kind.
+    expect(all.route('csv', 'yaml')!.edges.map((e) => e.candidates[0]!.engine)).toEqual(['data'])
+    expect(all.targetsFor(['json']).map((t) => t.format.id)).toEqual(['json', 'yaml', 'csv', 'xml', 'toml', 'jsonl', 'tsv'])
+    expect(all.targetsFor(['png']).some((t) => t.format.category === 'data')).toBe(false)
+    expect(all.targetsFor(['png', 'json']).find((t) => t.format.id === 'webp')!.reason).toBe('JSON files cannot become WebP')
+    expect(all.route('yaml', 'json')!.warnings.map((w) => w.id)).toEqual(['comments-lost'])
+    expect(all.route('json', 'csv')!.warnings.map((w) => w.id)).toEqual(['nesting-flattened'])
     // HEIC is decoded to PNG first, without loss, and goes on from there.
     expect(all.route('heic', 'png')!.edges.map((e) => e.candidates[0]!.engine)).toEqual(['heif'])
     expect(all.route('heic', 'jpeg')!.edges.map((e) => e.to)).toEqual(['png', 'jpeg'])

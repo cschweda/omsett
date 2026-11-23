@@ -1,0 +1,6 @@
+{
+  "__proto__": {"polluted": true},
+  "constructor": {"prototype": {"polluted": true}},
+  "toString": "not a function",
+  "rows": [1, 2, 3]
+}

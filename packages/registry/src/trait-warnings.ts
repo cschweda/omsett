@@ -7,6 +7,8 @@ export const traitWarnings: Record<Trait, Warning> = {
   'multi-page': { id: 'pages-lost', text: 'Only the first page will be kept.' },
   layers: { id: 'layers-lost', text: 'Layers will be merged into one image.' },
   'full-color': { id: 'colors-reduced', text: 'Reduced to 256 colours.' },
+  nesting: { id: 'nesting-flattened', text: 'A table holds one value per cell. Lists and groups inside a row are written as text.' },
+  comments: { id: 'comments-lost', text: 'Comments are not carried over.' },
 }
 
 export const lossyToLossy: Warning = {

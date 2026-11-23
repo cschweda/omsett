@@ -25,6 +25,9 @@ const note = computed(() => {
   return ''
 })
 
+// Only a picture has a preview. Anything else gets no empty square where one would be.
+const pictured = computed(() => !known.value || ['image', 'vector'].includes(known.value.format.category))
+
 // A note is either information (a mislabeled file) or a failure. Only a failure is red.
 const failed = computed(() => Boolean(props.entry.error || props.entry.problem || !known.value))
 
@@ -42,8 +45,8 @@ watch(
 </script>
 
 <template>
-  <li class="file-card" :data-status="entry.status">
-    <div class="thumb" aria-hidden="true">
+  <li class="file-card" :class="{ plain: !pictured }" :data-status="entry.status">
+    <div v-if="pictured" class="thumb" aria-hidden="true">
       <canvas v-show="entry.thumbnail" ref="canvas" />
     </div>
     <div class="meta">
@@ -83,6 +86,9 @@ watch(
   padding: 0.875rem 0;
   border-top: 1px solid var(--rule);
   list-style: none;
+}
+.file-card.plain {
+  grid-template-columns: minmax(0, 1fr) auto;
 }
 .file-card:last-child {
   border-bottom: 1px solid var(--rule);
