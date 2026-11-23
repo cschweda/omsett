@@ -105,7 +105,9 @@ describe('trap files', () => {
                 ? [woff, ttf]
                 : from.category === 'archive'
                   ? [zip, tar]
-                  : [webp, png]
+                  : from.category === 'document'
+                    ? [html, md]
+                    : [webp, png]
       const to = from.id === usual.id ? otherwise : usual
       if (!router.route(from.id, to.id)) {
         expect(trap.node, 'no route, so no engine').toBe('none')
@@ -134,7 +136,7 @@ describe('trap files', () => {
         expect(error, 'a failure is an ordinary error').toBeInstanceOf(Error)
         outcome = 'fails'
         // Where the app must give a particular reason, the engine is where it comes from.
-        if (trap.note && ['data', 'spreadsheet', 'subtitle', 'text', 'font', 'archive'].includes(from.category)) expect((error as Error).message).toBe(trap.note)
+        if (trap.note && ['data', 'spreadsheet', 'subtitle', 'text', 'font', 'archive', 'document'].includes(from.category)) expect((error as Error).message).toBe(trap.note)
       }
       expect(outcome, 'the engine').toBe(trap.node)
 

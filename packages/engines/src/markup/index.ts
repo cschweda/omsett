@@ -1,6 +1,8 @@
 import { markupInfo } from '../info'
 import type { ConvertInput, ConvertOutput, Engine } from '../types'
 import { outputName, Refusal, safeBaseName, throwIfAborted } from '../util'
+import { readDocx } from './docx-read'
+import { writeDocx } from './docx-write'
 
 // Markdown and HTML, each to the other. Both are read into a tree of headings, paragraphs,
 // lists, tables and links, cleaned, and written out from the tree. Nothing a file holds is run,
@@ -160,12 +162,104 @@ async function htmlToMarkdown(text: string): Promise<string> {
     .use(parse.default)
     .use(limitDepth)
     .use(withoutChrome)
-    .use(sanitize.default)
+    // A picture carried inside the page stays inside the Markdown, as the same data: address.
+    .use(sanitize.default, { ...withPictures(sanitize.defaultSchema), clobberPrefix: 'user-content-' })
+    .use(onlyPictures)
     .use(toMarkdown.default)
     .use(gfm.default)
     .use(stringify.default, { bullet: '-', emphasis: '*', fences: true, rule: '-' })
     .process(text)
   return String(written)
+}
+
+/** A whole page around a body that has already been cleaned. */
+function page(body: string, title: string, language: string): string {
+  return [
+    '<!doctype html>',
+    `<html lang="${language}"${RIGHT_TO_LEFT.has(language.split('-')[0]!.toLowerCase()) ? ' dir="rtl"' : ''}>`,
+    '<head>',
+    '<meta charset="utf-8">',
+    '<meta name="viewport" content="width=device-width, initial-scale=1">',
+    `<title>${escapeText(title)}</title>`,
+    '</head>',
+    '<body>',
+    body.trimEnd(),
+    '</body>',
+    '</html>',
+    '',
+  ].join('\n')
+}
+
+/**
+ * The cleaner's rules, with one addition: a picture may be carried inside the page itself, as
+ * a data: address. `onlyPictures` then drops any such address that is not a plain picture.
+ */
+function withPictures<T extends object>(schema: T): T {
+  const protocols = (schema as { protocols?: Record<string, readonly string[]> | null }).protocols ?? {}
+  return { ...schema, clobberPrefix: '', protocols: { ...protocols, src: [...(protocols.src ?? []), 'data'] } }
+}
+function onlyPictures() {
+  return (tree: Tree) => {
+    const pending = [tree]
+    while (pending.length > 0) {
+      const node = pending.pop()! as Tree & { properties?: Record<string, unknown> }
+      const src = node.properties?.src
+      if (typeof src === 'string' && /^data:/i.test(src) && !/^data:image\/(?:png|jpeg|gif|webp);base64,[a-z0-9+/=]+$/i.test(src)) {
+        delete node.properties!.src
+      }
+      pending.push(...(node.children ?? []))
+    }
+  }
+}
+
+async function docxToHtml(bytes: Uint8Array, name: string): Promise<string> {
+  const document = await readDocx(bytes)
+  const [{ unified }, parse, sanitize, stringify] = await Promise.all([
+    import('unified'),
+    import('rehype-parse'),
+    import('rehype-sanitize'),
+    import('rehype-stringify'),
+  ])
+  let heading: string | null = null
+  // What was read from the document is cleaned like any other page: a link in a document can
+  // be code as easily as a link on a website can.
+  const body = await unified()
+    .use(parse.default, { fragment: true })
+    .use(limitDepth)
+    .use(sanitize.default, withPictures(sanitize.defaultSchema))
+    .use(onlyPictures)
+    .use(() => (tree: Tree) => {
+      heading = firstHeading(tree)
+    })
+    .use(stringify.default)
+    .process(document.body)
+  // One block to a line, so that the page can be read as well as opened.
+  const lines = String(body).replace(/(<\/(?:p|h[1-6]|ul|ol|li|table|thead|tbody|tr|blockquote)>|<(?:ul|ol|table|thead|tbody|tr)>)(?=<)/g, '$1\n')
+  return page(lines, document.title ?? heading ?? safeBaseName(name), document.language ?? 'en')
+}
+
+async function htmlToDocx(text: string, name: string): Promise<Uint8Array> {
+  const [{ unified }, parse, sanitize] = await Promise.all([import('unified'), import('rehype-parse'), import('rehype-sanitize')])
+  let title: string | null = null
+  const processor = unified()
+    .use(parse.default)
+    .use(limitDepth)
+    .use(() => (tree: Tree) => {
+      // The page's own title, read before its head is set aside.
+      const pending = [tree]
+      while (pending.length > 0 && title === null) {
+        const node = pending.shift()!
+        if (node.type === 'element' && node.tagName === 'title') title = (node.children ?? []).map((kid) => kid.value ?? '').join('').trim() || null
+        pending.push(...(node.children ?? []))
+      }
+    })
+    .use(withoutChrome)
+    .use(sanitize.default, withPictures(sanitize.defaultSchema))
+    .use(onlyPictures)
+  const tree = (await processor.run(processor.parse(text))) as Tree
+  // The language the page says it is in, where it says so in a form that is one.
+  const stated = /<html[^>]*\slang\s*=\s*["']?([a-z]{2,3}(?:-[a-z0-9]{2,8}){0,3})["'\s>]/i.exec(text.slice(0, 4096))?.[1]
+  return writeDocx(tree, title ?? firstHeading(tree) ?? safeBaseName(name), stated ?? 'en')
 }
 
 export function createMarkupEngine(): Engine {
@@ -177,23 +271,28 @@ export function createMarkupEngine(): Engine {
     async convert(input: ConvertInput): Promise<ConvertOutput[]> {
       throwIfAborted(input.signal)
       if (input.blob.size > MAX_MARKUP_BYTES) throw new Refusal('This file is too large to convert as text')
-      let text: string
-      try {
-        text = new TextDecoder('utf-8', { fatal: true }).decode(await input.blob.arrayBuffer())
-      } catch {
-        throw new Refusal('This file is not text in UTF-8, the encoding Omsett reads text in')
+      const bytes = new Uint8Array(await input.blob.arrayBuffer())
+      const decode = () => {
+        try {
+          return new TextDecoder('utf-8', { fatal: true }).decode(bytes)
+        } catch {
+          throw new Refusal('This file is not text in UTF-8, the encoding Omsett reads text in')
+        }
       }
       input.onProgress(0.2)
 
       const pair = `${input.from.id}>${input.to.id}`
-      let written: string
+      let written: string | Uint8Array
       try {
-        if (pair === 'md>html') refuseDeepMarkdown(text)
-        if (pair === 'md>html') written = await markdownToHtml(text, input.name, languageTag(input.options.language))
-        else if (pair === 'html>md') written = await htmlToMarkdown(text)
+        if (pair === 'md>html') {
+          const text = decode()
+          refuseDeepMarkdown(text)
+          written = await markdownToHtml(text, input.name, languageTag(input.options.language))
+        } else if (pair === 'html>md') written = await htmlToMarkdown(decode())
+        else if (pair === 'docx>html') written = await docxToHtml(bytes, input.name)
+        else if (pair === 'html>docx') written = await htmlToDocx(decode(), input.name)
         else throw new Error(`The markup engine does not convert ${pair}`)
       } catch (error) {
-        // Running out of stack is what a file nested thousands deep does to a reader.
         // A reader may run out of room before the depth limit is even checked. Browsers name
         // that differently: a RangeError in most, "too much recursion" in Firefox.
         const message = error instanceof Error ? `${error.name} ${error.message}` : ''
@@ -201,7 +300,7 @@ export function createMarkupEngine(): Engine {
         throw error
       }
       throwIfAborted(input.signal)
-      if (written.trim() === '' || (input.to.id === 'html' && !/<body>\n\S/.test(written))) {
+      if (typeof written === 'string' && (written.trim() === '' || (input.to.id === 'html' && !/<body>\n\S/.test(written)))) {
         throw new Refusal('This file has no text in it to convert')
       }
       input.onProgress(1)
@@ -209,7 +308,7 @@ export function createMarkupEngine(): Engine {
         {
           name: outputName(input.name, input.to),
           format: input.to.id,
-          blob: new Blob([written], { type: input.to.mime[0] }),
+          blob: new Blob([written as BlobPart], { type: input.to.mime[0] }),
         },
       ]
     },

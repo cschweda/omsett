@@ -26,6 +26,12 @@ const ONE_LINE = [{ id: 'lyrics-one-line', text: 'Each subtitle becomes a single
 const NO_ENDS = [{ id: 'ends-guessed', text: 'LRC says when a line starts, not when it ends. Each line is shown until the next one.' }]
 const others = (id: string) => SUBTITLES.filter((other) => other !== id)
 
+// Documents. Every conversion of one carries the same caution, because the person who gets
+// the result may rely on a screen reader, and may not be the person who converted it.
+const CHECK_ACCESS = [{ id: 'accessibility-check', text: 'The converted document may have more accessibility problems than the original. Check its headings, picture descriptions and table headers before you publish it.' }]
+const FROM_WORD = [{ id: 'word-kept', text: 'Headings, lists, tables, links and pictures with their descriptions are kept. Fonts, colours, page layout, headers, footers, footnotes and comments are not.' }]
+const TO_WORD = [{ id: 'word-written', text: 'Pictures inside the page go into the document. A picture kept on a website is not fetched: its description and address are written in its place.' }]
+
 // Workbooks.
 const WORKBOOK_READ = [
   { id: 'first-sheet', text: 'Only the first sheet is converted.' },
@@ -57,6 +63,8 @@ const OUTLINES = [{ id: 'font-outlines', text: 'A web font unwraps to TTF or to 
 const TYPED = ['json', 'jsonl', 'yaml', 'toml']
 
 export const overrides: EdgeOverride[] = [
+  { from: 'docx', to: 'html', warnings: [...FROM_WORD, ...CHECK_ACCESS] },
+  { from: 'html', to: 'docx', warnings: [...TO_WORD, ...CHECK_ACCESS] },
   ...BESIDE_WORKBOOK.flatMap((other) => [
     { from: 'xlsx', to: other, warnings: WORKBOOK_READ },
     { from: other, to: 'xlsx', warnings: WORKBOOK_WRITTEN },

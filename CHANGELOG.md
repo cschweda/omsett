@@ -7,6 +7,59 @@ The paragraph that opens a version is its teaser: the home page shows its first 
 in the "What's new" banner, so keep it to two or three sentences on what a visitor will notice.
 A line beginning "Released" gives the date.
 
+## 0.19.0
+
+Released 23 November 2026.
+
+Omsett now converts Word documents. Drop a DOCX and get Markdown or a web page; drop Markdown
+or a web page and get a Word document. Headings stay headings, lists stay lists, tables keep
+their header rows, and each picture keeps its description.
+
+### Added
+
+- **DOCX to HTML and to Markdown.** Headings (found by what the style is, in whatever language
+  Word named it), bold, italics, links, lists inside lists, tables, quotations, and pictures.
+  The page takes the document's own language and title.
+- **HTML and Markdown to DOCX.** Headings are written in Word's heading styles, so Word's
+  navigation and a screen reader can list them. Lists are real lists. The first row of a table
+  is marked as its headers. The document states its language and its title.
+- **Picture descriptions are carried both ways.** A picture in a Word document comes out with
+  the description its author gave it, and a picture with `alt` text goes into Word with that
+  as its description.
+- **What a document does not say is not carried across.** Text deleted with changes tracked,
+  text formatted as hidden, comments, and the author's name stay out. Many people believe
+  these are gone from a document they send; they are not, and a converter that copied them
+  would publish them.
+- **Nothing is fetched and nothing is run.** A picture or template that a document loads from
+  another site when opened is not loaded. Macros and embedded web pages are never read. A link
+  whose address is a script keeps its words and loses its address.
+- **A caution on every document conversion**: the result may have more accessibility problems
+  than the original, and what to check before publishing it.
+- 17 trap files: the "billion laughs" as a paragraph, a document that asks for a file from the
+  computer, one that fetches its template and a macro from elsewhere, a web page smuggled
+  inside, a link that is a script, deleted and hidden words, and tables two hundred deep.
+- No new dependency.
+
+### Changed
+
+- A picture carried inside a web page (as a `data:` address) is now kept when the page becomes
+  Markdown. Before, it became an empty link.
+
+### Known
+
+- **Fonts, colours, page layout, headers, footers, footnotes, columns and text boxes are not
+  carried.** What is carried is the structure and the words.
+- Superscript and subscript survive to HTML and to Word, not to Markdown, which has neither.
+- A picture kept on a website is not fetched into a Word document: its description is written
+  in its place, linked to where the picture is.
+- Pictures inside a document are carried inside the Markdown as long `data:` addresses. Saving
+  them as separate files is planned.
+- A Word document made from Markdown is marked as English unless it goes by way of a web page
+  with another language chosen.
+- The older DOC, and DOCX locked with a password, are recognised and not converted.
+- The accessibility of converted documents is not yet measured automatically. The caution is
+  shown in every case.
+
 ## 0.18.0
 
 Released 23 November 2026.
