@@ -108,7 +108,7 @@ describe('archives', () => {
     })
 
     it('are checked after invisible characters are removed, not before', async () => {
-      const mark = String.fromCodePoint(0x202e)
+      const mark = String.fromCodePoint(0x202E)
       const control = String.fromCodePoint(1)
       for (const name of [`.${mark}.`, `a/.${control}./x`, `.${mark}./.${mark}./etc/passwd`, `${mark}/etc/passwd`, `C${control}:\\x`, `${control}..`, '.. ', '...', 'a/.. ./x']) {
         expect(await refusal(() => safeName(name, 'ZIP')), JSON.stringify(name)).toBe(ESCAPES)
