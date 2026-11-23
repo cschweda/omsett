@@ -93,7 +93,12 @@ function dateOf(serial: number, from1904: boolean): string | null {
   return Number.isInteger(serial) ? iso.slice(0, 10) : iso.slice(0, 19)
 }
 
-export async function readWorkbook(bytes: Uint8Array): Promise<Row[]> {
+/**
+ * @param bytes the workbook
+ * @param named whether the first row holds the names of the columns. Where it does not, every
+ *              row is data and the columns are called column_A, column_B and so on.
+ */
+export async function readWorkbook(bytes: Uint8Array, named = true): Promise<Row[]> {
   let entries: Entry[]
   try {
     entries = await readZip(bytes)
@@ -151,13 +156,13 @@ export async function readWorkbook(bytes: Uint8Array): Promise<Row[]> {
     // A target is a path inside the workbook, from its xl folder or from its top.
     const path = target.startsWith('/') ? target.slice(1) : `xl/${target}`
     if (path.includes('..')) throw invalid()
-    const rows = tableOf(record(open(path)?.worksheet), shared, dated, from1904)
+    const rows = tableOf(record(open(path)?.worksheet), shared, dated, from1904, named)
     if (rows.length > 0) return rows
   }
   throw new Refusal('This workbook has no rows in it')
 }
 
-function tableOf(worksheet: Xml, shared: string[], dated: boolean[], from1904: boolean): Row[] {
+function tableOf(worksheet: Xml, shared: string[], dated: boolean[], from1904: boolean, named: boolean): Row[] {
   const grid: Cell[][] = []
   // Counted as the room the cells take, not as how many there are: one cell in the last
   // column of a row makes that row sixteen thousand cells wide.
@@ -186,7 +191,7 @@ function tableOf(worksheet: Xml, shared: string[], dated: boolean[], from1904: b
   if (width * grid.length > MAX_CELLS) throw tooLarge()
   const taken = new Set<string>()
   const names = Array.from({ length: width }, (_, i) => {
-    const stated = grid[0]![i]
+    const stated = named ? grid[0]![i] : null
     const base = stated === null || stated === undefined || String(stated).trim() === '' ? `column_${columnName(i)}` : String(stated).trim()
     let name = base
     for (let n = 2; taken.has(name); n++) name = `${base}_${n}`
@@ -194,7 +199,7 @@ function tableOf(worksheet: Xml, shared: string[], dated: boolean[], from1904: b
     return name
   })
   // Object.fromEntries, so that a column called "__proto__" is a column and nothing else.
-  return grid.slice(1).map((line) => Object.fromEntries(names.map((name, i) => [name, line[i] ?? null])))
+  return grid.slice(named ? 1 : 0).map((line) => Object.fromEntries(names.map((name, i) => [name, line[i] ?? null])))
 }
 
 function valueOf(cell: Xml, shared: string[], dated: boolean[], from1904: boolean): Cell {

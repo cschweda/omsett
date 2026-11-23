@@ -39,7 +39,7 @@ function plain(value: unknown, depth = 0): unknown {
 
 const invalid = (name: string) => new Refusal(`This file is not valid ${name}`)
 
-async function read(format: string, text: string): Promise<unknown> {
+async function read(format: string, text: string, named = true): Promise<unknown> {
   switch (format) {
     case 'json':
       return JSON.parse(text)
@@ -81,9 +81,9 @@ async function read(format: string, text: string): Promise<unknown> {
       return parsed
     }
     case 'csv':
-      return readTable(text, false)
+      return readTable(text, false, named)
     case 'tsv':
-      return readTable(text, true)
+      return readTable(text, true, named)
     case 'vcf':
       return readContacts(text)
     case 'ics':
@@ -141,6 +141,30 @@ async function write(format: string, value: unknown): Promise<string> {
   throw new Error(`The data engine does not write ${format}`)
 }
 
+/**
+ * A table can be written three ways where the format allows: as records, each row naming its
+ * columns; as rows, the names once and then plain lists of values; or as columns, each
+ * column's values together. Anything that is not a list of records is left as it is.
+ */
+function reshape(value: unknown, shape: unknown, named: boolean): unknown {
+  if (shape !== 'rows' && shape !== 'columns') return value
+  if (!Array.isArray(value) || value.length === 0 || !value.every(isRecord)) return value
+  const columns: string[] = []
+  const known = new Set<string>()
+  for (const row of value) {
+    for (const key of Object.keys(row)) {
+      if (!known.has(key)) {
+        known.add(key)
+        columns.push(key)
+      }
+    }
+  }
+  if (shape === 'columns') return Object.fromEntries(columns.map((column) => [column, value.map((row) => row[column] ?? null)]))
+  const rows = value.map((row) => columns.map((column) => row[column] ?? null))
+  // Names that were made up because the file had none are not put back in as if it had.
+  return named ? [columns, ...rows] : rows
+}
+
 /** The formats here that are not text. */
 const BINARY = new Set(['xlsx'])
 
@@ -167,7 +191,10 @@ export function createDataEngine(): Engine {
       let value: unknown
       try {
         // A workbook is not text: it is a ZIP of XML, read for its rows.
-        value = plain(BINARY.has(input.from.id) ? await readWorkbook(bytes) : await read(input.from.id, decode(bytes)))
+        // Where the file is a table, whether its first row is the names of its columns.
+        const named = input.options.headerRow !== false
+        value = plain(BINARY.has(input.from.id) ? await readWorkbook(bytes, named) : await read(input.from.id, decode(bytes), named))
+        value = reshape(value, input.options.shape, named)
       } catch (error) {
         // A parser's own complaint is written for programmers. The file's format is what to say.
         throw error instanceof Refusal ? error : invalid(input.from.name)

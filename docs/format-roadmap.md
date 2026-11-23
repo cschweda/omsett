@@ -103,7 +103,8 @@ When a format ships, update its row here, in the same change.
 | Format | Home | Engine | Status |
 | --- | --- | --- | --- |
 | XLSX ↔ CSV, TSV, JSON, JSON Lines, YAML, TOML, XML; and on to vCard and iCalendar | Browser | `data` (Omsett's own reader and writer) | **Shipped** (0.18.0) |
-| Choosing which sheet; every sheet at once; a look at the rows before converting | Browser | the same | Planned |
+| Whether the first row names the columns; the shape of the result (records, rows, columns) | Browser | the same | **Shipped** (0.20.0) |
+| Choosing which sheet; every sheet at once | Browser | the same | Planned |
 | XLSM (read, macros ignored), ODS | Browser | the same approach: a ZIP of XML | Planned |
 | XLS, XLT (the older binary form) | Browser | SheetJS, or the desktop app | Planned |
 | Numbers (read) | Browser | SheetJS | Planned |

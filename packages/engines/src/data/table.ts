@@ -69,9 +69,15 @@ function cells(text: string, delimiter: string): string[][] {
 }
 
 /** A table, first row as column names → a list of records. */
-export function readTable(text: string, tab: boolean): unknown {
+/**
+ * @param text  the whole file
+ * @param tab   whether tabs separate the columns, as in TSV
+ * @param named whether the first row holds the names of the columns. Where it does not, every
+ *              row is data and the columns are called column_1, column_2 and so on.
+ */
+export function readTable(text: string, tab: boolean, named = true): unknown {
   const rows = cells(text, tab ? '\t' : delimiterOf(text))
-  const header = rows.shift()
+  const header = named ? rows.shift() : rows[0]?.map(() => '')
   if (!header) throw new Refusal('This table is empty')
   const seen = new Set<string>()
   const names = header.map((raw, index) => {

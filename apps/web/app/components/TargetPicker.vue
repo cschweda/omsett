@@ -11,8 +11,22 @@ const props = defineProps<{
   labelledby: string
   /** True until there is a file whose format is known: what it can become depends on the file. */
   waiting: boolean
+  /** True while a conversion is running. */
+  busy?: boolean
 }>()
-const emit = defineEmits<{ select: [id: string] }>()
+const emit = defineEmits<{ select: [id: string]; convert: [id: string] }>()
+
+// A format that cannot be chosen says why when it is pressed, which is what a phone has in
+// place of hovering.
+const why = ref('')
+function explain(id: string) {
+  const target = props.targets.find((t) => t.format.id === id)
+  why.value = target?.reason ? `${target.reason}.` : ''
+}
+watch(
+  () => props.targets,
+  () => (why.value = ''),
+)
 
 /** How many targets are set large. The rest go in the list beneath. */
 const FEATURED = 4
@@ -127,7 +141,10 @@ function onKeydown(event: KeyboardEvent) {
           :tabbable="tabStop === target.format.id"
           :download="download(target)"
           :via-server="viaServer"
+          :busy="busy ?? false"
           @select="emit('select', $event)"
+          @convert="emit('convert', $event)"
+          @why="explain"
         />
       </div>
       <p v-else class="prompt">Nothing converts from this file yet.</p>
@@ -153,9 +170,13 @@ function onKeydown(event: KeyboardEvent) {
           :tabbable="tabStop === target.format.id"
           :download="download(target)"
           :via-server="viaServer"
+          :busy="busy ?? false"
           @select="emit('select', $event)"
+          @convert="emit('convert', $event)"
+          @why="explain"
         />
         <p v-if="listed.length === 0" class="none">No format matches “{{ filter }}”.</p>
+        <p v-if="why" class="why" data-testid="why" role="status">{{ why }}</p>
       </div>
     </template>
   </div>
@@ -233,5 +254,12 @@ function onKeydown(event: KeyboardEvent) {
   padding: 0.625rem 0;
   font-size: var(--text-small);
   color: var(--muted);
+}
+.why {
+  margin: 0.75rem 0 0;
+  padding: 0.5rem 0.75rem;
+  border-left: 3px solid var(--signal);
+  font-size: var(--text-small);
+  font-weight: 700;
 }
 </style>

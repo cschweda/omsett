@@ -107,20 +107,29 @@ export function useConversionQueue() {
   watch(defaultQuality, (value) => (quality.value = value), { immediate: true })
 
   /**
-   * The language a written page will be marked with, where the selected conversion writes one;
-   * null where it does not. Offered first: the browser's own language, which is the best guess
-   * at what its user writes in.
+   * The choices the selected conversion offers beyond quality: the language of a page, whether
+   * a table's first row names its columns, the shape of the result. Which are offered is read
+   * from the capability's default options, so no format is named here; a conversion that
+   * offers none leaves this empty.
    */
-  const language = ref<string | null>(null)
-  const defaultLanguage = computed(() => {
-    const options = selected.value?.route?.edges.at(-1)?.candidates[0]?.defaultOptions
-    return typeof options?.language === 'string' ? options.language : null
+  const OFFERED = ['language', 'headerRow', 'shape']
+  const choices = ref<Record<string, unknown>>({})
+  const defaults = computed(() => {
+    const options = selected.value?.route?.edges.at(-1)?.candidates[0]?.defaultOptions ?? {}
+    return Object.fromEntries(Object.entries(options).filter(([key]) => OFFERED.includes(key)))
   })
   watch(
-    defaultLanguage,
-    (value) => {
-      const preferred = import.meta.client ? navigator.language : undefined
-      language.value = value === null ? null : closestLanguage(preferred, value)
+    defaults,
+    (now) => {
+      const next: Record<string, unknown> = {}
+      for (const [key, value] of Object.entries(now)) {
+        // A choice already made is kept when the target changes to another that offers it.
+        if (key in choices.value) next[key] = choices.value[key]
+        // The language offered first is the browser's own: the best guess at what its user writes in.
+        else if (key === 'language' && typeof value === 'string') next[key] = closestLanguage(import.meta.client ? navigator.language : undefined, value)
+        else next[key] = value
+      }
+      choices.value = next
     },
     { immediate: true },
   )
@@ -192,6 +201,16 @@ export function useConversionQueue() {
     results.value = results.value.filter((r) => r.sourceId !== id)
   }
 
+  /** Choose a format and convert to it at once, with its usual settings. */
+  async function convertTo(id: string) {
+    if (converting.value) return
+    select(id)
+    if (targetId.value !== id) return
+    // The choices offered follow the selection; they are let settle before work starts.
+    await nextTick()
+    await convertAll()
+  }
+
   function select(id: string) {
     const target = targets.value.find((t) => t.format.id === id)
     if (!target?.route) return
@@ -232,7 +251,7 @@ export function useConversionQueue() {
         // The user's quality applies to the final encode, and only if that encoder has one.
         const chosen: Record<string, unknown> = {}
         if (last && quality.value !== null && 'quality' in candidate.defaultOptions) chosen.quality = quality.value
-        if (last && language.value !== null && 'language' in candidate.defaultOptions) chosen.language = language.value
+        for (const [key, value] of Object.entries(choices.value)) if (last && key in candidate.defaultOptions) chosen[key] = value
         const options = { ...candidate.defaultOptions, ...chosen }
         // A converter that has not been fetched yet is fetched first, and that can be the
         // longest part. The first word back from the engine means it has arrived.
@@ -256,7 +275,7 @@ export function useConversionQueue() {
             for (const [index, output] of outputs.entries()) {
               produced.push({
                 // Stable across re-conversions, so a result card keeps its place and its state.
-                id: `${entry.id}:${index}`,
+                id: `${entry.id}:${to.id}:${index}`,
                 sourceId: entry.id,
                 name: output.name,
                 formatId: output.format,
@@ -343,7 +362,14 @@ export function useConversionQueue() {
     batch.value = null
 
     stop()
-    results.value = fresh
+    // Results for other formats stay where they are, so a file can be converted to several.
+    // For this format, each new result takes the place of the one it replaces.
+    const sources = new Set(queue.map((entry) => entry.id))
+    const replacement = new Map(fresh.map((result) => [result.id, result]))
+    const kept = results.value
+      .filter((result) => !(result.formatId === target.format.id && sources.has(result.sourceId)) || replacement.has(result.id))
+      .map((result) => replacement.get(result.id) ?? result)
+    results.value = [...kept, ...fresh.filter((result) => !kept.some((other) => other.id === result.id))]
     converting.value = false
     const failed = queue.length - done
     const count = `${done} ${done === 1 ? 'file' : 'files'} converted.`
@@ -355,9 +381,10 @@ export function useConversionQueue() {
   // Once there is a result, moving the quality setting converts again, so the comparison and
   // the size follow the slider.
   let requeue: ReturnType<typeof setTimeout> | undefined
-  watch([quality, language], ([value, tongue], [previous, before]) => {
+  watch([quality, () => JSON.stringify(choices.value)], ([value, chosen], [previous, before]) => {
     const moved = value !== null && previous !== null && value !== previous
-    const changed = tongue !== null && before !== null && tongue !== before
+    // A choice changed, as against the set of choices changing because the target did.
+    const changed = chosen !== before && Object.keys(JSON.parse(chosen) as object).join() === Object.keys(JSON.parse(before) as object).join()
     if ((!moved && !changed) || results.value.length === 0) return
     clearTimeout(requeue)
     // Short enough that the picture keeps up with a hand on the slider, long enough that a
@@ -389,7 +416,7 @@ export function useConversionQueue() {
     selected,
     converting,
     quality,
-    language,
+    choices,
     defaultQuality,
     canConvert,
     overall,
@@ -401,6 +428,7 @@ export function useConversionQueue() {
     remove,
     select,
     convertAll,
+    convertTo,
     reset,
   }
 }
