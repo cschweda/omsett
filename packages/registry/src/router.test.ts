@@ -154,6 +154,9 @@ describe('router, real registry', () => {
     expect(lost('png', 'jpeg')).toContain('alpha-lost')
     expect(lost('png', 'gif')).toContain('colors-reduced')
     expect(lost('jpeg', 'webp')).toContain('lossy-to-lossy')
+    // By way of PNG, which loses nothing: still one lossy format to another, and said so once.
+    expect(lost('heic', 'jpeg').filter((id) => id === 'lossy-to-lossy')).toHaveLength(1)
+    expect(lost('heic', 'png')).not.toContain('lossy-to-lossy')
     expect(lost('gif', 'webp')).toContain('animation-lost')
     expect(lost('tiff', 'png')).toContain('pages-lost')
     expect(lost('psd', 'png')).toContain('layers-lost')

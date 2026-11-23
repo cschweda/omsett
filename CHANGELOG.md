@@ -7,6 +7,26 @@ The paragraph that opens a version is its teaser: the home page shows its first 
 in the "What's new" banner, so keep it to two or three sentences on what a visitor will notice.
 A line beginning "Released" gives the date.
 
+## 0.30.0
+
+Released 23 November 2026.
+
+Three things left open by this morning's audit are dealt with. A HEIC photo converted to JPEG
+now carries the warning that it is being compressed a second time, and a drawing made of
+patterns inside patterns is refused instead of being left to run.
+
+### Fixed
+
+- **A HEIC photo converted to JPEG now carries the warning** that it is being compressed a
+  second time. The warning was lost because the conversion goes by way of PNG.
+- A drawing made of patterns filled with patterns, many levels deep, is refused instead of
+  being left to run.
+
+### Changed
+
+- New releases of the software Omsett is built from are left three days before they can be
+  used, and a release of Omsett is published only from a commit whose checks all passed.
+
 ## 0.29.0
 
 Released 23 November 2026.

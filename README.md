@@ -82,6 +82,7 @@ Every audit is recorded in full, with how each problem was found and what was do
 
 | Date | Audit | Findings | Fixed | Open | Accepted |
 | --- | --- | --- | --- | --- | --- |
+| 23 November 2026 | Follow-up: three findings left open that morning | 3 (1 medium, 2 low) | 1 | 1 | 1 |
 | 23 November 2026 | Red and blue: every reader, every engine, the page and its deployment | 29 (4 high, 14 medium, 11 low) | 24 | 4 | 1 |
 | 22 November 2026 | Follow-up: closing two open findings | 3 (1 medium, 1 low, 1 info) | 2 | 1 | 0 |
 | 22 November 2026 | Red/blue audit of the converter and its hosting | 10 (3 medium, 5 low, 2 info) | 6 | 3 | 1 |
@@ -91,34 +92,8 @@ Every audit is recorded in full, with how each problem was found and what was do
 
 | ID | Severity | Finding | Status |
 | --- | --- | --- | --- |
-| OMS-102 | High | Text hidden in a Word document was carried across unless it was hidden the plainest way | Fixed |
-| OMS-103 | High | A slide hidden with the word "false", and shapes hidden in the editor, were published from a presentation | Fixed |
-| OMS-101 | High | A workbook of 88 KB made the reader hold three gigabytes | Fixed |
-| OMS-116 | High | Counting visits as first built would have run another party's code in the page | Fixed |
-| OMS-104 | Medium | Tags could be smuggled through the subtitle cleaner by nesting them | Fixed |
-| OMS-120 | Medium | A drawing was held to the size it stated, not to the pictures inside it | Fixed |
 | OMS-121 | Medium | A drawing of 275 bytes could ask for work that never finishes | Fixed |
-| OMS-122 | Medium | One drawing left the SVG engine unfit for every file after it | Fixed |
-| OMS-123 | Medium | ImageMagick checked a picture's size after decoding it, and read any number of pictures | Fixed |
-| OMS-124 | Medium | The size guard and the engine read a file's size from different places | Fixed |
-| OMS-125 | Medium | A Photoshop file was converted to its largest layer, hidden or not | Fixed |
-| OMS-126 | Medium | Photographs taken upright came out on their side | Fixed |
-| OMS-106 | Medium | A table could be written thousands of times larger than what it was made from | Fixed |
-| OMS-105 | Medium | A font whose tables share bytes was written out hundreds of times larger | Fixed |
-| OMS-107 | Medium | Archive names that mean something else on Windows and Macs were carried into the new archive | Fixed |
-| OMS-119 | Low | Previews handed any picture to the browser to draw, with no limit on how many or how large | Fixed |
-| OMS-117 | Low | A batch left behind by "Convert another" converted discarded files into the new session | Fixed |
-| OMS-118 | Low | Asking for a file's details could stop another file's conversion | Fixed |
-| OMS-108 | Low | Seven readers and writers went round once for everything already read | Fixed |
-| OMS-113 | Low | A long page was refused as "nested too deeply"; deep HTML inside Markdown was not refused | Fixed |
-| OMS-114 | Low | Names every JavaScript object answers to were read as values | Fixed |
-| OMS-115 | Low | Text that reads as structure was written unescaped into lyrics, contacts and calendars | Fixed |
-| OMS-127 | Low | A HEIC file was converted to its first picture, not the one it names as the one to show | Fixed |
-| OMS-128 | Low | Ordinary text that begins with a signature's letters was taken for a picture | Fixed |
-| OMS-130 | Medium | The live site was not sending a security header added a day earlier | Open |
-| OMS-131 | Medium | Nothing stands between a push and the live site, and the site is built on its own server | Open |
-| OMS-129 | Medium | The security policy cannot stop a script in the page from sending a file elsewhere by navigating | Accepted |
-| OMS-132 | Low | Supply-chain settings looser than the rest of the project | Open |
+| OMS-132 | Low | Supply-chain settings looser than the rest of the project | Accepted |
 | OMS-133 | Low | Two warnings the picker does not give | Open |
 
 To report a vulnerability, use the **Security** tab of this repository (“Report a vulnerability”), not a public issue.

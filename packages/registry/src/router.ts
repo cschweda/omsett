@@ -1,5 +1,6 @@
 import { dedupeWarnings, deriveEdges } from './derive'
 import { sameKind } from './kinds'
+import { lossyToLossy } from './trait-warnings'
 import type { Edge, Format, Registry, Route, Router, Target } from './types'
 
 export const MAX_HOPS = 3
@@ -18,12 +19,17 @@ function better(a: Path, b: Path | undefined): boolean {
   return a.native < b.native
 }
 
-function toRoute(path: Path): Route {
+function toRoute(path: Path, source: Format | undefined): Route {
+  const warnings = path.edges.flatMap((e) => e.warnings)
+  // A format that always loses detail, converted to another that does, loses it twice, by
+  // whatever road. A photo going from HEIC to JPEG by way of PNG is still such a conversion,
+  // though neither step is one by itself.
+  if (source?.lossy === 'always' && path.edges.at(-1)?.candidates[0]?.lossy) warnings.push(lossyToLossy)
   return {
     edges: path.edges,
     tier: path.native > 0 ? 'native' : 'browser',
     lossy: path.edges.some((e) => e.candidates[0]!.lossy),
-    warnings: dedupeWarnings(path.edges.flatMap((e) => e.warnings)),
+    warnings: dedupeWarnings(warnings),
     totalCost: path.cost,
   }
 }
@@ -64,7 +70,7 @@ export function createRouter(registry: Registry): Router {
       next.delete(to)
       frontier = next
     }
-    return best ? toRoute(best) : null
+    return best ? toRoute(best, formats.get(from)) : null
   }
 
   function reasonFor(from: Format, to: Format): string {

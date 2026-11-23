@@ -28,6 +28,10 @@ updates:
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
+    # A release is left a week before it is proposed. Most bad releases are found and pulled
+    # within days; this keeps them from ever being offered here.
+    cooldown:
+      default-days: 7
     commit-message:
       prefix: chore(deps)
     groups:

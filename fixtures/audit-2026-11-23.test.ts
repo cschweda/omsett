@@ -141,6 +141,17 @@ describe('OMS-121: a drawing that asks for unbounded work is refused, not drawn'
     expect(found.refused).toBe(COSTLY)
     expect(found.ms).toBeLessThan(2000)
   })
+  it('patterns filled with patterns, twelve deep', async () => {
+    const pattern = (n: number, fill: string) =>
+      `<pattern id="p${n}" width="10" height="10" patternUnits="userSpaceOnUse">${`<rect width="5" height="5" fill="${fill}"/>`.repeat(8)}</pattern>`
+    const chain = (depth: number) => svg(`${Array.from({ length: depth }, (_, i) => pattern(i, i === 0 ? 'red' : `url(#p${i - 1})`)).join('')}<rect width="100" height="100" fill="url(#p${depth - 1})"/>`)
+    const deep = await take(chain(12), 'x.svg')
+    expect(deep.refused).toBe(COSTLY)
+    expect(deep.ms).toBeLessThan(2000)
+    expect((await take(chain(3), 'x.svg')).refused).toBeNull()
+    // A pattern that is filled with itself.
+    expect((await take(svg('<pattern id="a" width="9" height="9"><rect width="9" height="9" fill="url(#a)"/></pattern><rect width="9" height="9" fill="url(#a)"/>'), 'x.svg')).refused).toBe(COSTLY)
+  })
   it('modest filters and a paragraph of text are drawn', async () => {
     const file = svg('<filter id="f"><feTurbulence baseFrequency="0.05" numOctaves="3"/><feMorphology radius="2"/></filter><rect width="50" height="50" filter="url(#f)"/><text x="5" y="80">Some words, and <tspan>more</tspan>.</text>')
     expect((await take(file, 'x.svg')).refused).toBeNull()
