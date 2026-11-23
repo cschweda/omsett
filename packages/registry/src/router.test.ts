@@ -82,6 +82,13 @@ describe('router, real registry', () => {
     expect(all.targetsFor(['png', 'json']).find((t) => t.format.id === 'webp')!.reason).toBe('JSON files cannot become WebP')
     expect(all.route('yaml', 'json')!.warnings.map((w) => w.id)).toEqual(['comments-lost'])
     expect(all.route('json', 'csv')!.warnings.map((w) => w.id)).toEqual(['nesting-flattened', 'cells-exact'])
+    // Whatever is written into a table carries the warning about formulas, with no exception:
+    // a contact's name can be one as easily as a cell can.
+    for (const to of ['csv', 'tsv']) {
+      for (const format of everything.formats.filter((f) => f.category === 'data' && f.id !== to)) {
+        expect(all.route(format.id, to)!.warnings.map((w) => w.id), `${format.id} → ${to}`).toContain('cells-exact')
+      }
+    }
     // Fonts: only WOFF2 work uses the engine that has to be fetched, and TTF to OTF says why not.
     expect(all.route('ttf', 'woff')!.edges.map((e) => e.candidates[0]!.engine)).toEqual(['font'])
     expect(all.route('ttf', 'woff2')!.edges.map((e) => e.candidates[0]!.engine)).toEqual(['font-woff2'])

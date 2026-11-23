@@ -16,7 +16,8 @@ const TEXT_VALUES = [{ id: 'values-typed', text: 'Values that are plainly number
 const TEXT_CELLS = [{ id: 'cells-typed', text: 'Cells that are plainly numbers become numbers. Everything else stays text.' }]
 // A spreadsheet program may run a cell as a formula. Omsett writes what the file said.
 const FORMULAS = [{ id: 'cells-exact', text: 'Cells are written exactly as they are. A spreadsheet program may treat one that starts with =, +, - or @ as a formula.' }]
-const DATA = ['json', 'jsonl', 'yaml', 'toml', 'xml', 'csv', 'tsv']
+// Every format that can be written into a table, address books and calendars included.
+const DATA = ['json', 'jsonl', 'yaml', 'toml', 'xml', 'csv', 'tsv', 'vcf', 'ics']
 
 // What the subtitle formats cannot say to each other.
 const SUBTITLES = ['srt', 'vtt', 'ass', 'ssa', 'ttml', 'lrc', 'sbv', 'smi', 'microdvd']
