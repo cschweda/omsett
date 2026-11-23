@@ -108,7 +108,7 @@ function onKeydown(event: KeyboardEvent) {
   <div ref="group" role="radiogroup" :aria-labelledby="labelledby" class="picker" @keydown="onKeydown">
     <!-- Before a file: what it can become depends on the file, so nothing is offered yet. -->
     <div v-if="waiting" class="waiting" data-testid="picker-waiting">
-      <p class="prompt">Drop a file to see what it can become.</p>
+      <p class="prompt">Add a file above to see what it can become.</p>
       <dl class="supported">
         <div v-for="kind in supported" :key="kind.label">
           <dt>{{ kind.label }}</dt>

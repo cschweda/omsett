@@ -4,6 +4,7 @@ import { HEADER_BYTES, readDimensions, type Dimensions } from './dimensions'
 import { gunzip } from './gzip'
 import { sniff } from './signatures'
 import { svgDimensions, svgRoot } from './svg'
+import { isTarHeader } from './tar'
 import { sniffText } from './text'
 
 export { readDimensions, type Dimensions } from './dimensions'
@@ -11,6 +12,7 @@ export { MAX_BYTES, MAX_PIXELS, MAX_WORKING_BYTES, TOO_LARGE, pixelCount, sizePr
 export { structureProblem } from './structure'
 export { crc32 } from './png-structure'
 export { gunzip } from './gzip'
+export { isTarHeader } from './tar'
 
 export type Detection =
   | { kind: 'known'; format: Format; ext: string; mime: string; dimensions: Dimensions | null }
@@ -41,13 +43,20 @@ export async function detect(blob: Blob, formats: Format[], name?: string): Prom
       dimensions = sniffed.dimensions
     }
     // A gzip file that opens into an SVG is an SVGZ. Only its first kilobytes are inflated.
+    // And one that opens into a TAR is a TAR.GZ.
     if (found?.ext === 'gz') {
-      const inner = svgRoot((await gunzip(blob.slice(0, HEADER_BYTES), 64 * 1024)).bytes)
+      const opened = (await gunzip(blob.slice(0, HEADER_BYTES), 64 * 1024)).bytes
+      const inner = svgRoot(opened)
       if (inner) {
         found = { ext: 'svgz', mime: 'image/svg+xml' }
         dimensions = svgDimensions(inner)
+      } else if (isTarHeader(opened)) {
+        found = { ext: 'tgz', mime: 'application/gzip' }
+        dimensions = null
       }
     }
+    // The library says "tar.gz" for some of these by itself.
+    if (found?.ext === 'tar.gz') found = { ext: 'tgz', mime: 'application/gzip' }
     // Plain text has no signature at all. What it holds is worked out from how it reads.
     // The library takes anything that opens with BEGIN:VCARD or BEGIN:VCALENDAR for one, text or
     // not, UTF-8 or not, and whatever follows on that line. Omsett's own reading of the text

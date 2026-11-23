@@ -120,6 +120,11 @@ part of the app's scripts; nothing separate is downloaded.
 | rehype-raw (HTML inside Markdown) | 7.0.0 | MIT | <https://github.com/rehypejs/rehype-raw> |
 | rehype-sanitize (removes what could run) | 6.0.0 | MIT | <https://github.com/rehypejs/rehype-sanitize> |
 
+### archive
+
+Omsett's own reader and writer for ZIP, TAR and TAR.GZ, using the compression built into every
+browser. Nothing is downloaded.
+
 ### font
 
 Omsett's own reader and writer for TTF, OTF and WOFF, using the compression built into every

@@ -2257,6 +2257,414 @@ record(
     "csv", node="succeeds",
 )
 
+# --- archives: ZIP, TAR, TAR.GZ -------------------------------------------------------------------
+# An archive is the classic way to attack whatever opens it. A few kilobytes that unpack to
+# gigabytes; a file named to land outside the folder it is unpacked into; a list of contents
+# that disagrees with the contents; links that point at the rest of the computer. Each is
+# converted to ZIP (a ZIP, to TAR). Nothing here is ever written to a disk by Omsett, but the
+# archive it writes will be unpacked by something, so none of this may be carried across.
+G = "archives"
+import gzip as _gzip
+import io as _io
+
+NOT_ZIP, NOT_TAR, NOT_TGZ = ("This file is not a valid %s archive" % n for n in ("ZIP", "TAR", "TAR.GZ"))
+ESCAPES = "This archive holds a file named so that it would land outside the folder it is unpacked into"
+UNPACKS_TOO_BIG = "This archive unpacks to more than Omsett will handle (256 MB)"
+TOO_MANY_FILES = "This archive holds more files than Omsett will handle (10,000)"
+SAME_NAME = "This archive holds two files with the same name"
+NO_FILES = "This archive has no files in it"
+BROKEN_SUM = "This archive is damaged: a file in it does not match its own checksum"
+
+
+def raw_deflate(data: bytes) -> bytes:
+    squeezer = zlib.compressobj(9, zlib.DEFLATED, -15)
+    return squeezer.compress(data) + squeezer.flush()
+
+
+def zip_of(files, comment=b"", count=None, list_at=None):
+    """A ZIP built field by field. Each file is a dict; anything not given is written truthfully.
+
+    name, data, and optionally: packed (the stored bytes), method, flags, crc, size (the size the
+    list states), mode, local_name (the name in the file's own header), at (where the list says
+    the file is)."""
+    body, listing, offset = b"", b"", 0
+    for f in files:
+        name, data = f["name"], f.get("data", b"")
+        method = f.get("method", 8)
+        packed = f.get("packed", raw_deflate(data) if method == 8 else data)
+        crc = f.get("crc", zlib.crc32(data) & 0xFFFFFFFF)
+        size = f.get("size", len(data))
+        flags = f.get("flags", 0x0800)
+        local = struct.pack("<IHHHHHIIIHH", 0x04034B50, 20, flags, method, 0x6000, 0x5B77, crc, len(packed), size, len(f.get("local_name", name)), 0)
+        local += f.get("local_name", name)
+        listing += struct.pack(
+            "<IHHHHHHIIIHHHHHII", 0x02014B50, 0x0314, 20, flags, method, 0x6000, 0x5B77, crc, len(packed), size,
+            len(name), 0, 0, 0, 0, (f.get("mode", 0o100644) << 16) & 0xFFFFFFFF, f.get("at", offset),
+        ) + name
+        body += local + packed
+        offset += len(local) + len(packed)
+    n = len(files) if count is None else count
+    end = struct.pack("<IHHHHIIH", 0x06054B50, 0, 0, n, n, len(listing), offset if list_at is None else list_at, len(comment)) + comment
+    return body + listing + end
+
+
+def tar_header(name, size=0, kind=b"0", link=b"", mode=0o644, size_field=None, fix_sum=True):
+    block = bytearray(512)
+    block[0 : len(name)] = name
+    block[100:108] = b"%07o\0" % mode
+    block[108:116] = block[116:124] = b"0000000\0"
+    block[124:136] = (b"%011o\0" % size) if size_field is None else size_field
+    block[136:148] = b"%011o\0" % 1795435200
+    block[156:157] = kind
+    block[157 : 157 + len(link)] = link
+    block[257:265] = b"ustar\x0000"
+    block[148:156] = b" " * 8
+    if fix_sum:
+        block[148:156] = b"%06o\0 " % sum(block)
+    return bytes(block)
+
+
+def tar_of(*members, end=True):
+    """Each member is (header, data). The data is padded to a whole block, as TAR requires."""
+    out = b""
+    for header, data in members:
+        out += header + data + b"\0" * (-len(data) % 512)
+    return out + (b"\0" * 1024 if end else b"")
+
+
+def gz(data: bytes) -> bytes:
+    out = _io.BytesIO()
+    with _gzip.GzipFile(fileobj=out, mode="wb", mtime=0, compresslevel=9) as f:
+        f.write(data)
+    return out.getvalue()
+
+
+def arch(name, data, why, detect, **more):
+    trap(name, data, why, detect, group=G, **more)
+
+
+README = {"name": b"readme.txt", "data": b"An ordinary file.\n"}
+FILE = (tar_header(b"readme.txt", 18), b"An ordinary file.\n")
+GOOD_ZIP = zip_of([README, {"name": b"docs/notes.md", "data": b"# Notes\n" * 50}])
+
+arch(
+    "truncated.zip",
+    GOOD_ZIP[: len(GOOD_ZIP) // 2],
+    "A ZIP cut off half-way. The list of what it holds is at the end, and the end is gone.",
+    "zip", node="fails", note=NOT_ZIP,
+)
+arch(
+    "climbs-out.zip",
+    zip_of([README, {"name": b"../../../etc/cron.d/evil", "data": b"* * * * * root sh\n"}]),
+    "The best-known attack an archive makes: a file named with ../ so that unpacking it writes "
+    "outside the folder, here into the place a computer keeps its scheduled jobs.",
+    "zip", node="fails", note=ESCAPES,
+)
+arch(
+    "absolute-path.zip",
+    zip_of([README, {"name": b"/etc/passwd", "data": b"root::0:0::/:/bin/sh\n"}]),
+    "A file named with a path from the top of the disk.",
+    "zip", node="fails", note=ESCAPES,
+)
+arch(
+    "windows-path.zip",
+    zip_of([README, {"name": b"..\\..\\Windows\\System32\\evil.dll", "data": b"MZ"}]),
+    "The same climb written with backslashes, which only Windows reads as folders. An unpacker "
+    "that looks for ../ alone lets it through.",
+    "zip", node="fails", note=ESCAPES,
+)
+arch(
+    "drive-letter.zip",
+    zip_of([README, {"name": b"C:\\Users\\Public\\evil.bat", "data": b"@echo off\r\n"}]),
+    "A file named with a Windows drive letter.",
+    "zip", node="fails", note=ESCAPES,
+)
+arch(
+    "climbs-out-invisibly.zip",
+    zip_of([README, {"name": (".\u202e./.\u202e./etc/cron.d/evil").encode(), "data": b"* * * * * root sh\n"}]),
+    "The same climb with an invisible mark between each pair of dots. A check for .. made "
+    "before invisible characters are removed sees nothing wrong; afterwards the name is "
+    "../../etc. The check is made on the name as it will be written.",
+    "zip", node="fails", note=ESCAPES,
+)
+arch(
+    "climbs-out-with-a-space.zip",
+    zip_of([README, {"name": b".. /.. /Windows/evil.dll", "data": b"MZ"}]),
+    "Two dots and a space. Windows drops a trailing space from a name, so there this is ..",
+    "zip", node="fails", note=ESCAPES,
+)
+arch(
+    "bomb.zip",
+    zip_of([{"name": b"zeros.bin", "data": b"\0" * (300 * 1024 * 1024)}]),
+    "Three hundred megabytes of nothing, packed into 290 kilobytes. The sizes it gives are "
+    "true, and are more than Omsett will unpack; it is refused from the figures alone.",
+    "zip", node="fails", note=UNPACKS_TOO_BIG,
+)
+arch(
+    "bomb-that-lies.zip",
+    zip_of([{"name": b"small.txt", "data": b"x" * 100, "packed": raw_deflate(b"\0" * (64 * 1024 * 1024)), "crc": 0}]),
+    "A file that says it unpacks to a hundred bytes and unpacks to sixty-four megabytes. "
+    "Unpacking stops at the size it gave.",
+    "zip", node="fails", note=NOT_ZIP,
+)
+overlap = zip_of([{"name": b"a", "data": b"\0" * 100_000}])
+arch(
+    "files-that-overlap.zip",
+    zip_of([{"name": b"a", "data": b"\0" * 100_000}] + [{"name": b"a", "data": b"\0" * 100_000, "at": 0}] * 999)[
+        : len(overlap) - 22 - 47
+    ]
+    + (struct.pack("<IHHHHHHIIIHHHHHII", 0x02014B50, 0x0314, 20, 0x0800, 8, 0x6000, 0x5B77, zlib.crc32(b"\0" * 100_000), len(raw_deflate(b"\0" * 100_000)), 100_000, 1, 0, 0, 0, 0, 0o100644 << 16, 0) + b"a") * 1000
+    + struct.pack("<IHHHHIIH", 0x06054B50, 0, 0, 1000, 1000, 47 * 1000, len(overlap) - 22 - 47, 0),
+    "A list of a thousand files that are all the same hundred bytes of the archive. Unpacked "
+    "one by one it is a hundred megabytes from a few kilobytes, and the same trick nested has "
+    "made petabytes. Two files may not share a byte.",
+    "zip", node="fails", note=NOT_ZIP,
+)
+arch(
+    "password.zip",
+    zip_of([dict(README, flags=0x0801)]),
+    "A ZIP whose files are marked as protected by a password.",
+    "zip", node="fails", note="This archive is protected by a password, which Omsett cannot open",
+)
+arch(
+    "packed-another-way.zip",
+    zip_of([dict(README, method=14, packed=b"\x5d\x00\x00\x80\x00" + b"\0" * 20)]),
+    "A ZIP packed with LZMA, not the usual method.",
+    "zip", node="fails", note="This archive is packed in a way Omsett does not read",
+)
+arch(
+    "wrong-checksum.zip",
+    zip_of([dict(README, crc=0xDEADBEEF)]),
+    "A sound file whose checksum is another file's.",
+    "zip", node="fails", note=BROKEN_SUM,
+)
+arch(
+    "ten-thousand-and-one-files.zip",
+    zip_of([{"name": b"f%05d" % i, "data": b"", "method": 0} for i in range(10_001)]),
+    "Ten thousand and one empty files.",
+    "zip", node="fails", note=TOO_MANY_FILES,
+)
+inner = zip_of([README])
+for _ in range(5):
+    inner = zip_of([{"name": b"inner.zip", "data": inner}])
+arch(
+    "zip-inside-zip.zip",
+    inner,
+    "A ZIP inside a ZIP inside a ZIP, six deep. What is inside an archive is a file and is "
+    "carried across as one; it is not opened.",
+    "zip", node="succeeds",
+)
+arch(
+    "same-name-twice.zip",
+    zip_of([dict(README), dict(README, data=b"A different file with the same name.\n")]),
+    "Two files with one name. Which of them a program keeps depends on the program, and that "
+    "is how a file is shown to the one that checks and another to the one that runs.",
+    "zip", node="fails", note=SAME_NAME,
+)
+arch(
+    "two-names-for-one-file.zip",
+    zip_of([{"name": b"safe.txt", "local_name": b"evil.exe", "data": b"MZ\x90\x00"}]),
+    "The list at the end calls the file safe.txt and the file's own header calls it evil.exe. "
+    "Some programs believe one and some the other.",
+    "zip", node="fails", note=NOT_ZIP,
+)
+arch(
+    "name-written-backwards.zip",
+    zip_of([README, {"name": "invoice\u202egnp.exe".encode(), "data": b"MZ"}]),
+    "A file named with the invisible mark that reverses text, so that invoice[mark]gnp.exe is "
+    "shown as invoiceexe.png. The mark is not carried across.",
+    "zip", node="succeeds", absent=chr(0xE2) + chr(0x80) + chr(0xAE),
+)
+arch(
+    "link-to-elsewhere.zip",
+    zip_of([README, {"name": b"shortcut", "data": b"/etc/passwd", "mode": 0o120777, "method": 0}]),
+    "A link, which unpacks as a name pointing at a file elsewhere on the computer. Links are "
+    "left out.",
+    "zip", node="succeeds", absent="/etc/passwd",
+)
+arch(
+    "script-in-the-comment.zip",
+    zip_of([README], comment=b"<script>alert(1)</script>"),
+    "A remark attached to the archive, which some programs show when it is opened. Not carried "
+    "across.",
+    "zip", node="succeeds", absent="<script",
+)
+arch(
+    "very-large-form.zip",
+    zip_of([README], count=0xFFFF),
+    "A ZIP that says its real list is in the extended form used for archives over four "
+    "gigabytes.",
+    "zip", node="fails",
+    note="This archive is in the ZIP64 form, for very large archives, which Omsett does not read yet",
+)
+arch(
+    "only-folders.zip",
+    zip_of([{"name": b"empty/", "data": b"", "method": 0, "mode": 0o040755}, {"name": b"empty/too/", "data": b"", "method": 0, "mode": 0o040755}]),
+    "Folders, with no file in any of them.",
+    "zip", node="fails", note=NO_FILES,
+)
+arch(
+    "list-is-somewhere-else.zip",
+    zip_of([README], list_at=0x7FFFFFF0),
+    "The end of the archive says its list of contents starts two gigabytes in.",
+    "zip", node="fails", note=NOT_ZIP,
+)
+arch(
+    "picture-named.zip",
+    GOOD,
+    "A PNG with a .zip name.",
+    "png", node="succeeds", mismatch=True,
+)
+
+GOOD_TAR = tar_of(FILE, (tar_header(b"docs/", kind=b"5", mode=0o755), b""), (tar_header(b"docs/notes.md", 400), b"# Notes\n" * 50))
+arch(
+    "truncated.tar",
+    GOOD_TAR[:700],
+    "A TAR cut off inside its first file. The file's header says how long it is, and there is "
+    "not that much left.",
+    "tar", node="fails", note=NOT_TAR,
+)
+arch(
+    "climbs-out.tar",
+    tar_of(FILE, (tar_header(b"../../../etc/cron.d/evil", 18), b"* * * * * root sh\n")),
+    "A file named with ../ so that unpacking it writes outside the folder.",
+    "tar", node="fails", note=ESCAPES,
+)
+arch(
+    "absolute-path.tar",
+    tar_of(FILE, (tar_header(b"/etc/passwd", 21), b"root::0:0::/:/bin/sh\n")),
+    "A file named with a path from the top of the disk.",
+    "tar", node="fails", note=ESCAPES,
+)
+arch(
+    "link-then-file-through-it.tar",
+    tar_of(FILE, (tar_header(b"logs", kind=b"2", link=b"/etc"), b""), (tar_header(b"notes.txt", 5), b"hello")),
+    "A link named logs that points at a system folder. An unpacker that follows it writes "
+    "wherever it points. Links are left out; the ordinary files are kept.",
+    "tar", node="succeeds", absent="/etc",
+)
+arch(
+    "devices-and-pipes.tar",
+    tar_of(FILE, (tar_header(b"disk0", kind=b"4"), b""), (tar_header(b"tty0", kind=b"3"), b""), (tar_header(b"pipe0", kind=b"6"), b""), (tar_header(b"twin", kind=b"1", link=b"readme.txt"), b"")),
+    "A disk, a terminal, a pipe and a second name for a file: things an archive can name that "
+    "are not files. Only the file is kept.",
+    "tar", node="succeeds", absent="disk0",
+)
+arch(
+    "claims-eight-gigabytes.tar",
+    tar_of((tar_header(b"big.bin", size_field=b"77777777777\0"), b"x" * 512)),
+    "A file said to be eight gigabytes long, in an archive of two kilobytes.",
+    "tar", node="fails", note=NOT_TAR,
+)
+arch(
+    "size-beyond-counting.tar",
+    tar_of((tar_header(b"big.bin", size_field=b"\x80\0\0\0\x7f\xff\xff\xff\xff\xff\xff\xff"), b"x" * 512)),
+    "A size written in the form kept for files past eight gigabytes: here, nine million "
+    "terabytes.",
+    "tar", node="fails", note=UNPACKS_TOO_BIG,
+)
+arch(
+    "size-is-a-word.tar",
+    tar_of((tar_header(b"file.txt", size_field=b"enormous\0\0\0\0"), b"x" * 512)),
+    "A header with every sum correct and a word where the size should be.",
+    "tar", node="fails", note=NOT_TAR,
+)
+arch(
+    "header-sum-wrong.tar",
+    tar_of((tar_header(b"readme.txt", 18)[:148] + b"0000000\0" + tar_header(b"readme.txt", 18)[156:], b"An ordinary file.\n")),
+    "A TAR whose first header does not add up. TAR has no signature but that sum, and a header "
+    "that fails it is not believed.",
+    "tar", node="fails", note=NOT_TAR,
+)
+pax = b"36 path=../../../etc/cron.d/evil\n"
+arch(
+    "long-name-climbs-out.tar",
+    tar_of(FILE, (tar_header(b"PaxHeader/x", len(pax), kind=b"x"), pax), (tar_header(b"innocent.txt", 5), b"hello")),
+    "A file with an innocent name, and before it a note in the newer style that gives it "
+    "another: one that climbs out of the folder. The note is what counts.",
+    "tar", node="fails", note=ESCAPES,
+)
+arch(
+    "older-long-name-climbs-out.tar",
+    tar_of(FILE, (tar_header(b"././@LongLink", 13, kind=b"L"), b"/etc/shadow\0\0"), (tar_header(b"innocent.txt", 5), b"hello")),
+    "The same with the older way of writing a long name.",
+    "tar", node="fails", note=ESCAPES,
+)
+arch(
+    "file-with-holes.tar",
+    tar_of(FILE, (tar_header(b"sparse.img", 512, kind=b"S"), b"\0" * 512)),
+    "A file stored as a map of where its contents are, a form used for disk images.",
+    "tar", node="fails", note="This archive holds a file stored in a way Omsett does not read",
+)
+arch(
+    "same-name-twice.tar",
+    tar_of(FILE, (tar_header(b"./readme.txt", 5), b"other")),
+    "Two files that are the same file by two spellings of its name.",
+    "tar", node="fails", note=SAME_NAME,
+)
+arch(
+    "no-end-marker.tar",
+    tar_of(FILE, end=False),
+    "Valid, but without the two empty blocks that close a TAR. The file ends where a file "
+    "would end, and that is enough.",
+    "tar", node="succeeds",
+)
+arch(
+    "picture-named.tar",
+    GOOD,
+    "A PNG with a .tar name.",
+    "png", node="succeeds", mismatch=True,
+)
+
+BIG_TAR = tar_of(*[(tar_header(b"file%02d.txt" % i, 4000), bytes(random.Random(i).randrange(32, 127) for _ in range(4000))) for i in range(12)])
+arch(
+    "truncated.tar.gz",
+    gz(BIG_TAR)[: len(gz(BIG_TAR)) // 2],
+    "A TAR.GZ cut off half-way.",
+    "tgz", node="fails", note=NOT_TGZ,
+)
+arch(
+    "bomb.tar.gz",
+    gz(tar_of((tar_header(b"zeros.bin", 400 * 1024 * 1024), b"\0" * (400 * 1024 * 1024)))),
+    "Four hundred megabytes of nothing in a TAR, squeezed to 390 kilobytes. Unpacking stops "
+    "at the limit.",
+    "tgz", node="fails", note=UNPACKS_TOO_BIG,
+)
+arch(
+    "ten-thousand-and-one-files.tar.gz",
+    gz(tar_of(*[(tar_header(b"f%05d" % i), b"") for i in range(10_001)])),
+    "Ten thousand and one empty files: five megabytes of headers that squeeze to a few "
+    "kilobytes.",
+    "tgz", node="fails", note=TOO_MANY_FILES,
+)
+arch(
+    "climbs-out.tar.gz",
+    gz(tar_of(FILE, (tar_header(b"../../../etc/cron.d/evil", 18), b"* * * * * root sh\n"))),
+    "A file named with ../, inside a TAR.GZ.",
+    "tgz", node="fails", note=ESCAPES,
+)
+damaged = bytearray(gz(BIG_TAR))
+for i in range(len(damaged) * 2 // 3, len(damaged) * 2 // 3 + 100):
+    damaged[i] ^= 0xFF
+arch(
+    "damaged.tar.gz",
+    bytes(damaged),
+    "A sound TAR.GZ with a hundred bytes of its packed data inverted, two thirds of the way in.",
+    "tgz", node="fails", note=NOT_TGZ,
+)
+arch(
+    "words-squeezed.tar.gz",
+    gz(b"This is a sentence, not an archive.\n" * 20),
+    "A gzip file with a .tar.gz name that holds text and no TAR.",
+    "unregistered",
+)
+arch(
+    "zip-named.tar.gz",
+    GOOD_ZIP,
+    "A sound ZIP with a .tar.gz name.",
+    "zip", node="succeeds", mismatch=True,
+)
+
 with open(os.path.join(OUT, "manifest.json"), "w") as out:
     json.dump(manifest, out, indent=2)
     out.write("\n")

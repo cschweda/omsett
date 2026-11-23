@@ -5,6 +5,8 @@ import {
   createDataEngine,
   createSubtitleEngine,
   createMarkupEngine,
+  createArchiveEngine,
+  zipFiles,
   createFontEngine,
   createFontWoff2Engine,
   createHeifEngine,
@@ -114,6 +116,7 @@ const engines: Record<string, Engine> = Object.fromEntries(
     createDataEngine(),
     createSubtitleEngine(),
     createMarkupEngine(),
+    createArchiveEngine(),
     createFontEngine(),
     createFontWoff2Engine(),
   ].map((engine) => [engine.id, engine]),
@@ -161,6 +164,14 @@ const api = {
     if (!engine) throw new Error(`Unknown engine: ${id}`)
     // Cancellation is the page terminating this worker; nothing here can outlive it.
     return engine.convert({ ...request, signal: new AbortController().signal, onProgress })
+  },
+
+  /** Several finished files → one ZIP, so a batch can be downloaded in one go. */
+  async zip(files: Array<{ name: string; blob: Blob }>): Promise<Blob> {
+    const read = await Promise.all(
+      files.map(async (file) => ({ name: file.name, data: new Uint8Array(await file.blob.arrayBuffer()) })),
+    )
+    return new Blob([(await zipFiles(read)) as BlobPart], { type: 'application/zip' })
   },
 }
 

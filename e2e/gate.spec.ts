@@ -129,7 +129,7 @@ test.describe('gate', () => {
 test('the picker waits for a file, then offers what that file can become', async ({ page }) => {
   await open(page)
   // Nothing dropped: no choices yet, only what the app handles.
-  await expect(page.getByTestId('picker-waiting')).toContainText('Drop a file to see what it can become.')
+  await expect(page.getByTestId('picker-waiting')).toContainText('Add a file above to see what it can become.')
   // Listed by kind, in the registry's order.
   for (const category of new Set(registry.formats.map((f) => f.category))) {
     const names = registry.formats.filter((f) => f.category === category).map((f) => f.name)
@@ -214,4 +214,44 @@ test('no server: the footer says so and nothing else does', async ({ page }) => 
   await expect(page.getByTestId('status')).toHaveText('Conversions run on your device.')
   expect(seen.requests.some((r) => r.url.endsWith('/config.json'))).toBe(true)
   expect(seen.requests.some((r) => r.url.includes('/api/'))).toBe(false)
+})
+
+test('a file dropped anywhere on the page is taken, and the page stays where it is', async ({ page }) => {
+  await open(page)
+  const address = page.url()
+  // Dropped on step 2, well away from the box in step 1.
+  const bytes = [...(await readFile(fileURLToPath(new URL('../fixtures/csv/sample.csv', import.meta.url))))]
+  const handled = await page.evaluate((data) => {
+    const transfer = new DataTransfer()
+    transfer.items.add(new File([new Uint8Array(data)], 'dropped.csv', { type: 'text/csv' }))
+    const target = document.querySelector('[data-testid="picker-waiting"]')!
+    const over = new DragEvent('dragover', { bubbles: true, cancelable: true, dataTransfer: transfer })
+    target.dispatchEvent(over)
+    const drop = new DragEvent('drop', { bubbles: true, cancelable: true, dataTransfer: transfer })
+    target.dispatchEvent(drop)
+    // Both must be claimed, or the browser would open the file in place of the page.
+    return [over.defaultPrevented, drop.defaultPrevented]
+  }, bytes)
+  expect(handled).toEqual([true, true])
+  await expect(page.locator('.file-card')).toHaveCount(1)
+  await expect(page.locator('.file-card .name')).toHaveText('dropped.csv')
+  expect(page.url()).toBe(address)
+
+  // Dropped on the box itself, it is added once, not twice.
+  await page.evaluate((data) => {
+    const transfer = new DataTransfer()
+    transfer.items.add(new File([new Uint8Array(data)], 'in-the-box.csv', { type: 'text/csv' }))
+    document.querySelector('#file-input')!.closest('[class*="drop"]')!.dispatchEvent(new DragEvent('drop', { bubbles: true, cancelable: true, dataTransfer: transfer }))
+  }, bytes)
+  await expect(page.locator('.file-card')).toHaveCount(2)
+})
+
+test('a file Omsett recognises and does not convert is named, with no empty picture beside it', async ({ page }) => {
+  await open(page)
+  // A gzip file that is not an archive: known for what it is, and not something converted.
+  const gz = await readFile(fileURLToPath(new URL('../fixtures/_traps/words-squeezed.tar.gz', import.meta.url)))
+  await page.locator('#file-input').setInputFiles({ name: 'words.gz', mimeType: 'application/gzip', buffer: gz })
+  await expect(page.getByTestId('file-note')).toHaveText('GZ is not supported yet')
+  await expect(page.locator('.file-card .thumb')).toHaveCount(0)
+  await expect(page.getByTestId('convert')).toBeDisabled()
 })

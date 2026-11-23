@@ -106,6 +106,16 @@ export const markupInfo: EngineInfo = {
   sourceUrl: 'https://github.com/cschweda/omsett/tree/main/packages/engines/src/markup',
 }
 
+// Archives: ZIP, TAR and TAR.GZ. Omsett's own reader and writer, with the compression every
+// browser has built in.
+export const archiveInfo: EngineInfo = {
+  id: 'archive',
+  sizeBytes: 0,
+  runtimes: ['browser', 'node'],
+  license: 'MIT',
+  sourceUrl: 'https://github.com/cschweda/omsett/tree/main/packages/engines/src/archive',
+}
+
 // Fonts. TTF, OTF and WOFF are read and written by Omsett's own code, with the compression
 // every browser has built in.
 export const fontInfo: EngineInfo = {
@@ -148,6 +158,7 @@ export const engineInfo: Record<string, EngineInfo> = {
   [dataInfo.id]: dataInfo,
   [subtitleInfo.id]: subtitleInfo,
   [markupInfo.id]: markupInfo,
+  [archiveInfo.id]: archiveInfo,
   [fontInfo.id]: fontInfo,
   [fontWoff2Info.id]: fontWoff2Info,
 }

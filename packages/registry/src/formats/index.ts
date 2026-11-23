@@ -29,6 +29,9 @@ import { woff2 } from './woff2'
 import { woff } from './woff'
 import { ttf } from './ttf'
 import { otf } from './otf'
+import { zip } from './zip'
+import { tgz } from './tgz'
+import { tar } from './tar'
 import { md } from './md'
 import { html } from './html'
 import { avif } from './avif'
@@ -61,4 +64,6 @@ export const formats: Format[] = [
   md, html,
   // Fonts: the same tables in four wrappings.
   woff2, woff, ttf, otf,
+  // Archives: files and folders, packed three ways.
+  zip, tgz, tar,
 ]

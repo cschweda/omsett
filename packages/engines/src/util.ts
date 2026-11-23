@@ -6,7 +6,7 @@ const MAX_BASE = 120
 // Characters that have no business in a file name: control codes, and the invisible marks that
 // change the direction text is displayed in (used to make "gnp.exe" read as "exe.png").
 // eslint-disable-next-line no-control-regex -- control characters are exactly what this removes
-const UNSAFE = /[\u0000-\u001F\u007F\u200E\u200F\u202A-\u202E\u2066-\u2069]/g
+export const UNSAFE = /[\u0000-\u001F\u007F\u200E\u200F\u202A-\u202E\u2066-\u2069]/g
 
 /**
  * The base of a name a stranger supplied, made safe to offer back as a download: no folders,
@@ -14,7 +14,9 @@ const UNSAFE = /[\u0000-\u001F\u007F\u200E\u200F\u202A-\u202E\u2066-\u2069]/g
  */
 export function safeBaseName(inputName: string): string {
   const leaf = inputName.split(/[\\/]/).pop() ?? ''
-  const dot = leaf.lastIndexOf('.')
+  // "notes.tar.gz" is "notes" with one ending, not "notes.tar" with another.
+  const compound = /\.tar\.(?:gz|bz2|xz|zst)$/i.exec(leaf)
+  const dot = compound ? compound.index : leaf.lastIndexOf('.')
   const base = (dot > 0 ? leaf.slice(0, dot) : leaf)
     .replace(/\s+/g, ' ') // line breaks and tabs become spaces before control codes are dropped
     .replace(UNSAFE, '')
