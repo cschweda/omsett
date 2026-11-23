@@ -15,6 +15,18 @@ Three things left open by this morning's audit are dealt with. A HEIC photo conv
 now carries the warning that it is being compressed a second time, and a drawing made of
 patterns inside patterns is refused instead of being left to run.
 
+### Added
+
+- **Check accessibility on a converted file too.** A Word document or a workbook that Omsett
+  has just made has the same "Check accessibility" control as a file you added, asked the
+  same way: nothing is sent until you say so.
+- **What's new explains what a "trap file" is**, for anyone meeting the term for the first time.
+
+### Changed
+
+- **In a file's details, "removed when converted" and "kept" line up in a column of their own**,
+  so the list can be read at a glance.
+
 ### Fixed
 
 - **A HEIC photo converted to JPEG now carries the warning** that it is being compressed a
