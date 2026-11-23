@@ -102,7 +102,9 @@ for (const trap of traps) {
                 ? ['woff', 'ttf']
                 : category === 'archive'
                   ? ['zip', 'tar']
-                  : ['webp', 'png']
+                  : category === 'document'
+                    ? ['html', 'md']
+                    : ['webp', 'png']
       const target = trap.detect === usual ? otherwise : usual
       if (trap.mismatch) await expect(note).toContainText('the contents are')
       await page.locator(`[role="radio"][data-format="${target}"]`).click()

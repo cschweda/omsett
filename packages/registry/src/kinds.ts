@@ -6,6 +6,8 @@ import type { Category } from './types'
 const KINDS: Category[][] = [
   ['image', 'vector'],
   ['data', 'spreadsheet'],
+  // A document is writing, and so are Markdown and a web page.
+  ['text', 'document'],
 ]
 
 /** Whether a file in one category could ever become a format in the other. */
@@ -14,6 +16,7 @@ export function sameKind(a: Category, b: Category): boolean {
 }
 
 /** Categories whose files are text a person can read, and so can be shown as text. */
+// A workbook and a Word document are not text, and are left out.
 const READABLE: Category[] = ['data', 'subtitle', 'text']
 
 export const isReadable = (category: Category): boolean => READABLE.includes(category)

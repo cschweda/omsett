@@ -112,5 +112,9 @@ export const capabilities: Capability[] = [
     priority: 20,
   },
   { engine: 'markup', tier: 'browser', reads: ['html'], writes: [{ format: 'md', lossy: false }], priority: 20 },
+  // A Word document is read to a page and written from one. To and from Markdown is two
+  // steps, through the page.
+  { engine: 'markup', tier: 'browser', reads: ['docx'], writes: [{ format: 'html', lossy: false }], priority: 20 },
+  { engine: 'markup', tier: 'browser', reads: ['html'], writes: [{ format: 'docx', lossy: false }], priority: 20 },
   { engine: 'subtitle', tier: 'browser', reads: SUBTITLES, writes: SUBTITLE_WRITES, priority: 20 },
 ]

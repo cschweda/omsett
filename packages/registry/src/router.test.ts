@@ -58,7 +58,7 @@ describe('router, real registry', () => {
       'heic', 'svg', 'svgz', 'psd', 'ico', 'jp2', 'exr', 'hdr', 'pcx', 'sgi', 'ras',
       'json', 'yaml', 'csv', 'xlsx', 'xml', 'toml', 'jsonl', 'tsv', 'vcf', 'ics',
       'srt', 'vtt', 'ass', 'ssa', 'ttml', 'lrc', 'sbv', 'smi', 'microdvd',
-      'md', 'html',
+      'md', 'html', 'docx',
       'woff2', 'woff', 'ttf', 'otf',
       'zip', 'tgz', 'tar',
     ])
@@ -98,7 +98,10 @@ describe('router, real registry', () => {
     expect(all.route('otf', 'woff2')!.warnings.map((w) => w.id)).toEqual(['font-licence'])
     // Markdown and HTML become each other and nothing else.
     expect(all.route('md', 'html')!.edges.map((e) => e.candidates[0]!.engine)).toEqual(['markup'])
-    expect(all.targetsFor(['html']).map((t) => t.format.id)).toEqual(['md', 'html'])
+    expect(all.targetsFor(['html']).map((t) => t.format.id)).toEqual(['md', 'html', 'docx'])
+    // A Word document reaches Markdown through a page, and says what to check on the way.
+    expect(all.route('docx', 'md')!.edges.map((e) => `${e.from}>${e.to}`)).toEqual(['docx>html', 'html>md'])
+    expect(all.route('md', 'docx')!.warnings.map((w) => w.id)).toContain('accessibility-check')
     expect(all.route('html', 'md')!.warnings.map((w) => w.id)).toEqual(['content-only'])
     // Subtitles likewise: one step, their own kind only, and a note that styling is not kept.
     expect(all.route('ass', 'srt')!.edges.map((e) => e.candidates[0]!.engine)).toEqual(['subtitle'])

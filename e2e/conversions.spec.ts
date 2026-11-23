@@ -51,6 +51,7 @@ const samples: Record<string, string> = {
   microdvd: 'microdvd/sample.sub',
   md: 'md/sample.md',
   html: 'html/sample.html',
+  docx: 'docx/sample.docx',
   ttf: 'ttf/sample.ttf',
   otf: 'otf/sample.otf',
   woff: 'woff/sample.woff',

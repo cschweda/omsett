@@ -113,7 +113,8 @@ build by `apps/web/scripts/write-headers.ts`.
   (scripts, drawings that name other files) is not a picture. Do not add an unhinted read.
 - **A file is offered only formats of its own kind** (`packages/registry/src/kinds.ts`):
   pictures and drawings are one kind, data another, subtitles a third, Markdown and HTML a
-  fourth, fonts a fifth, archives a sixth. Spreadsheets are of data's kind. A new category that should convert into an
+  fourth, fonts a fifth, archives a sixth. Spreadsheets are of data's kind, and documents of
+  Markdown's and HTML's. A new category that should convert into an
   existing one must be added there, or its formats will never be listed for it.
 - **An engine's reason for refusing a file reaches the user only as a `Refusal`**
   (`packages/engines/src/util.ts`). Any other error is shown as "This file couldn't be
@@ -137,6 +138,12 @@ build by `apps/web/scripts/write-headers.ts`.
   through `readZip`, so the archive limits hold, and with any part that declares a DOCTYPE
   refused. Formulas are never worked out and never written; macros and linked files are never
   opened. DOCX and PPTX should be read the same way.
+- **A document conversion keeps what a screen reader relies on, and says what to check.**
+  Headings as headings, lists as lists, table headers marked, language and title stated,
+  picture descriptions carried (`packages/engines/src/markup/docx-*.ts`). Every document pair
+  carries the `accessibility-check` warning. A change that drops one of these is a regression.
+- **What a document's author deleted or hid is never carried across**: tracked deletions,
+  hidden text, comments, author names. There is a trap for each.
 - **A value written into a line-based format is escaped, always** (`escaped` in
   `packages/engines/src/data/cards.ts`). Anything written as a parameter or an unescaped value
   (a time zone, a repeat rule, a status) is held to a pattern first, and left out if it fails.
