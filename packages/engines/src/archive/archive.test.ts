@@ -98,11 +98,19 @@ describe('archives', () => {
       expect(safeName('./docs//notes.md', 'ZIP')).toBe('docs/notes.md')
       expect(safeName('docs\\notes.md', 'ZIP')).toBe('docs/notes.md')
       expect(safeName('./', 'ZIP')).toBeNull()
-      expect(safeName('a..b/...', 'ZIP')).toBe('a..b/...')
+      expect(safeName('a..b/..c/d..', 'ZIP')).toBe('a..b/..c/d..')
     })
 
     it('that point outside it are refused, however they are spelled', async () => {
       for (const name of ['../x', 'a/../../x', '..', 'a/..', '/etc/passwd', '\\Windows\\x', 'C:\\Windows\\x', 'c:x', '..\\..\\x', 'a\0b']) {
+        expect(await refusal(() => safeName(name, 'ZIP')), JSON.stringify(name)).toBe(ESCAPES)
+      }
+    })
+
+    it('are checked after invisible characters are removed, not before', async () => {
+      const mark = String.fromCodePoint(0x202e)
+      const control = String.fromCodePoint(1)
+      for (const name of [`.${mark}.`, `a/.${control}./x`, `.${mark}./.${mark}./etc/passwd`, `${mark}/etc/passwd`, `C${control}:\\x`, `${control}..`, '.. ', '...', 'a/.. ./x']) {
         expect(await refusal(() => safeName(name, 'ZIP')), JSON.stringify(name)).toBe(ESCAPES)
       }
     })

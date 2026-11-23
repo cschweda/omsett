@@ -38,15 +38,20 @@ const twice = () => new Refusal('This archive holds two files with the same name
  */
 export function safeName(raw: string, format: string): string | null {
   if (raw.length > MAX_NAME) throw invalid(format)
+  // A zero byte ends a name for some programs and not for others. Never a mistake; refused.
+  if (raw.includes('\0')) throw escapes()
+  // Invisible characters come out first, and every check below is made on what is left. Done
+  // the other way round, "." + an invisible mark + "." passes as a harmless name and then
+  // becomes "..".
   // Archives made on Windows write folders with backslashes; treated as the same thing here,
   // so that "..\\..\\x" is caught as surely as "../../x".
-  const name = raw.replaceAll('\\', '/')
-  if (name.startsWith('/') || /^[a-z]:/i.test(name) || name.includes('\0')) throw escapes()
+  const name = raw.replace(UNSAFE, '').replaceAll('\\', '/')
+  if (name.startsWith('/') || /^[a-z]:/i.test(name)) throw escapes()
   const parts: string[] = []
   for (const part of name.split('/')) {
-    if (part === '..') throw escapes()
-    const cleaned = part.replace(UNSAFE, '')
-    if (cleaned !== '' && cleaned !== '.') parts.push(cleaned)
+    // Windows drops dots and spaces from the end of a name, so ".. " and "..." climb there too.
+    if (part === '..' || /^\.\.[. ]*$/.test(part)) throw escapes()
+    if (part !== '' && part !== '.') parts.push(part)
   }
   return parts.length === 0 ? null : parts.join('/')
 }

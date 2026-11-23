@@ -3108,6 +3108,30 @@
     "absent": null
   },
   {
+    "file": "climbs-out-invisibly.zip",
+    "group": "archives",
+    "why": "The same climb with an invisible mark between each pair of dots. A check for .. made before invisible characters are removed sees nothing wrong; afterwards the name is ../../etc. The check is made on the name as it will be written.",
+    "detect": "zip",
+    "mismatch": false,
+    "guard": "ok",
+    "node": "fails",
+    "browser": "fails",
+    "note": "This archive holds a file named so that it would land outside the folder it is unpacked into",
+    "absent": null
+  },
+  {
+    "file": "climbs-out-with-a-space.zip",
+    "group": "archives",
+    "why": "Two dots and a space. Windows drops a trailing space from a name, so there this is ..",
+    "detect": "zip",
+    "mismatch": false,
+    "guard": "ok",
+    "node": "fails",
+    "browser": "fails",
+    "note": "This archive holds a file named so that it would land outside the folder it is unpacked into",
+    "absent": null
+  },
+  {
     "file": "bomb.zip",
     "group": "archives",
     "why": "Three hundred megabytes of nothing, packed into 290 kilobytes. The sizes it gives are true, and are more than Omsett will unpack; it is refused from the figures alone.",

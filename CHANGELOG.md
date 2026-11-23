@@ -31,7 +31,8 @@ page is now picked up, not only one dropped on the box.
   twice, and a list of contents that disagrees with the contents are all refused.
 - **Who owned the files is not carried over.** A TAR records the user name of whoever made it;
   the one Omsett writes does not.
-- 44 trap files for archives: three kinds of bomb, six ways of climbing out of the folder, a
+- 46 trap files for archives: three kinds of bomb, eight ways of climbing out of the folder
+  (one with an invisible mark between the dots, which a first version let through), a
   thousand files that are all the same hundred bytes, a file with two names, a name written
   backwards with an invisible mark, links to the rest of the computer, and a ZIP inside a ZIP
   six deep.

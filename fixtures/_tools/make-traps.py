@@ -2380,6 +2380,20 @@ arch(
     "zip", node="fails", note=ESCAPES,
 )
 arch(
+    "climbs-out-invisibly.zip",
+    zip_of([README, {"name": (".\u202e./.\u202e./etc/cron.d/evil").encode(), "data": b"* * * * * root sh\n"}]),
+    "The same climb with an invisible mark between each pair of dots. A check for .. made "
+    "before invisible characters are removed sees nothing wrong; afterwards the name is "
+    "../../etc. The check is made on the name as it will be written.",
+    "zip", node="fails", note=ESCAPES,
+)
+arch(
+    "climbs-out-with-a-space.zip",
+    zip_of([README, {"name": b".. /.. /Windows/evil.dll", "data": b"MZ"}]),
+    "Two dots and a space. Windows drops a trailing space from a name, so there this is ..",
+    "zip", node="fails", note=ESCAPES,
+)
+arch(
     "bomb.zip",
     zip_of([{"name": b"zeros.bin", "data": b"\0" * (300 * 1024 * 1024)}]),
     "Three hundred megabytes of nothing, packed into 290 kilobytes. The sizes it gives are "
