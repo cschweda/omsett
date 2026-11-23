@@ -90,6 +90,10 @@ build by `apps/web/scripts/write-headers.ts`.
 - **Playwright's Firefox build crashes** (content process, signal 11) when an axe scan and a
   conversion happen in the same page, so the axe tests (parked for now) skip Firefox. Its test profile also needs
   a preference to treat a WebP link as a download (see `playwright.config.ts`).
+- **CI runs in parallel jobs** (`.github/workflows/ci.yml`): unit checks, the browser suite
+  split by browser and by shard, the nginx run, and the Docker image. "All checks" passes only
+  if every one did; that is the name to look at before merging. When a browser job passes ten
+  minutes, add a shard.
 - **GitHub Actions are pinned to commit SHAs**, with the release in a trailing comment. Keep it
   that way when adding or updating one; look the SHA up, do not guess it.
 - **Security audits** live in `security/audits.json`, newest first. The site's Security page,
