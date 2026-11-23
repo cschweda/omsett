@@ -8,3 +8,8 @@ const KINDS: Category[][] = [['image', 'vector']]
 export function sameKind(a: Category, b: Category): boolean {
   return a === b || KINDS.some((kind) => kind.includes(a) && kind.includes(b))
 }
+
+/** Categories whose files are text a person can read, and so can be shown as text. */
+const READABLE: Category[] = ['data', 'subtitle']
+
+export const isReadable = (category: Category): boolean => READABLE.includes(category)

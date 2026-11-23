@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { formatById } from '@omsett/registry'
+import { formatById, isReadable } from '@omsett/registry'
 import type { QueueResult } from '~/composables/useConversionQueue'
 import { formatBytes, formatDelta } from '~/utils/format-bytes'
 import { registry } from '~/utils/registry'
@@ -40,6 +40,10 @@ const to = computed(() => formatById(registry, props.result.formatId))
 const comparable = computed(
   () => props.source !== undefined && from.value?.category === 'image' && to.value?.category === 'image',
 )
+// Text to text (data, subtitles): there is something to read side by side.
+const readable = computed(
+  () => props.source !== undefined && !!from.value && !!to.value && isReadable(from.value.category) && isReadable(to.value.category),
+)
 const delta = computed(() => formatDelta(props.result.inputBytes, props.result.blob.size))
 </script>
 
@@ -66,6 +70,13 @@ const delta = computed(() => formatDelta(props.result.inputBytes, props.result.b
       :suggested-quality="suggestedQuality"
       :busy="busy"
       @update:quality="$emit('update:quality', $event)"
+    />
+    <TextCompare
+      v-else-if="readable && source"
+      :before="source"
+      :after="result.blob"
+      :before-label="`${from?.name} ${formatBytes(result.inputBytes)}`"
+      :after-label="`${to?.name} ${formatBytes(result.blob.size)}`"
     />
   </li>
 </template>

@@ -74,6 +74,9 @@ When a format ships, update its row here, in the same change.
 | Conversion | Home | Engine | Status |
 | --- | --- | --- | --- |
 | PDF to PNG, JPEG, TIFF, CBZ; to text | Browser | pdf.js | Planned |
+| PDF to Markdown, tagged PDFs | Browser | pdf.js, reading the PDF's own structure tags | Planned. Headings, lists and tables are read, not guessed. See "PDF to Markdown" |
+| PDF to Markdown, untagged PDFs | Browser | pdf.js, with structure rebuilt from layout | Planned. Estimated, and the picker says so |
+| PDF to Markdown, hard layouts and scans | Desktop | Docling or Marker, to be compared on real files | Planned |
 | Merge, split, page ranges | Browser | pdf-lib | Planned |
 | Images, Markdown, HTML, text to PDF | Browser | pdf-lib; Typst (to be proven) | Planned |
 | Compress; PDF/A | Desktop | Ghostscript, qpdf | Planned |
@@ -213,25 +216,32 @@ When a format ships, update its row here, in the same change.
 
 Work that is not a format, kept here so it is scheduled with the formats.
 
-### Side-by-side view for data and subtitles (next)
+### Side-by-side view for data and subtitles (shipped, 0.11.0)
 
-Pictures get a before-and-after comparison; text formats get nothing. The plan:
+After a data or subtitle conversion, the result card shows the start of the original and of the
+converted file next to each other: 200 lines at most, from the first 64 KB, each line cut at
+500 characters, with line numbers, in the system's fixed-width typeface. Contents are put on the
+page as text and never as markup. The bytes are decoded on the page, not in the worker: it is a
+bounded read of 64 KB and involves no engine.
 
-- **What it shows.** After a data or subtitle conversion, the result card shows the start of
-  the original and the start of the converted file next to each other, so a person can see what
-  became of their file before downloading it. On a narrow screen the two are stacked.
-- **Always as text.** File contents are put on the page as text nodes, never as markup. A file
-  of HTML or script is shown, not run. A trap file proves it in three browsers.
-- **Bounded.** The first 64 KB of each file at most, the first 200 lines, each line cut at 500
-  characters, with a line saying how much more there is. A file that is one line of 30 MB must
-  not slow the page.
-- **Read in the worker**, like everything else, and only after the conversion has succeeded.
-- **No colouring** in the first version. Line numbers, and nothing else.
-- **One decision to make first:** file contents read best in a fixed-width typeface, and the
-  design uses one typeface only. Either the system's monospace is allowed for file contents
-  alone, or the view is set in the page's typeface.
-- **Tests.** Every data and subtitle sample shows both sides; markup in a file stays text; a
-  huge single line stays bounded; nothing is shown for pictures.
+Still to do: colouring by format, and marking which lines changed.
+
+### PDF to Markdown
+
+A conversion the owner uses often, for content going into Strapi, and one that is usually a
+mess: a PDF records where letters sit, not what is a heading or a table. Three steps, in order:
+
+1. **Tagged PDFs.** Where the PDF carries structure tags, read them. Nothing is guessed, and
+   Omsett says the structure is exact.
+2. **Untagged PDFs.** Rebuild structure from layout: font size for headings, spacing for
+   paragraphs, alignment for columns and tables. Omsett says the structure is estimated.
+   Tables, multi-column pages and footnotes are where this goes wrong.
+3. **Hard layouts and scans**, in the desktop app, with a layout-analysis model. Docling and
+   Marker are the candidates; compare them on real files before choosing.
+
+The side-by-side view shows the Markdown beside the page's text, so a conversion can be checked
+before it is downloaded. Test against real documents the owner sends, not only made-up ones;
+the output has to paste cleanly into Strapi's Markdown editor.
 
 ### Accessibility of converted documents (with documents and PDF)
 
@@ -260,7 +270,7 @@ with [audit.icjia.app](https://audit.icjia.app).
 ## Suggested order
 
 1. Images are largely done: 22 formats. Left: CUR, DDS, ICNS, FITS, APNG, PSB, camera RAW, DICOM, and writing ICO and JPEG 2000.
-2. Data and subtitles are done: seven data formats, nine subtitle formats. Next, in this order: the side-by-side view for text formats (below), fonts, then vCard and iCalendar. Small JavaScript libraries, no large downloads.
+2. Data and subtitles are done: seven data formats, nine subtitle formats. The side-by-side view for text formats is done too. Next: fonts, then vCard and iCalendar. Small JavaScript libraries, no large downloads.
 3. Archives, then audio.
 4. Documents and e-books through Pandoc; then the PDF tools. A converted document must not score lower for accessibility than its original (see "Accessibility of converted documents").
 5. Video in the browser.

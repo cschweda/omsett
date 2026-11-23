@@ -128,4 +128,11 @@ describe('telling text formats apart', () => {
     expect(sniff('<SAMI>\n<BODY>\n<SYNC Start=1000><P>Hello\n')).toBe('smi')
     expect(sniff('<sami>\n')).toBe('smi')
   })
+
+  it('knows JSON written as one very long line from the start of it', () => {
+    expect(sniff('[{"id":0,"text":"' + 'x'.repeat(1000), 'big.json', false)).toBe('json')
+    expect(sniff('{"a":"' + 'x'.repeat(1000), undefined, false)).toBe('json')
+    // Other text cut mid-line says nothing about what it is.
+    expect(sniff('x'.repeat(1000), 'big.txt', false)).toBeNull()
+  })
 })

@@ -116,6 +116,10 @@ build by `apps/web/scripts/write-headers.ts`.
   (`packages/engines/src/subtitle/read.ts`) pass over the text once, cap how many subtitles and
   how much text a file may turn into, and refuse a time that does not read as a time. Keep a
   new reader to the same rules, and give it a trap for each.
+- **File contents go on the page as text, never as markup**, and never more than
+  `app/utils/text-preview.ts` allows. No `v-html` for anything that came out of a file.
+- **Tailwind owns some class names.** A scoped class called `contents` or `hidden` picks up the
+  utility of that name; `contents` made an element vanish from layout.
 - **Data outputs must be recognisable without a name.** The tests identify every output from
   its bytes alone, so what the data engine writes has to read unmistakably as its format.
 - **Kill a leftover test server after a rebuild.** `pnpm e2e` reuses a server already on its
@@ -162,6 +166,8 @@ build by `apps/web/scripts/write-headers.ts`.
 - **`explain` is real copy**, written for a non-technical reader.
 - **README:** the og:image is the first thing in the file, with any badges directly under it.
 - **Design.** Swiss: one typeface (Helvetica Neue, else Inter), the twelve-column grid in
-  `tokens.css`, rules instead of boxes, square corners, no shadows, no second typeface. Blue is
+  `tokens.css`, rules instead of boxes, square corners, no shadows, no second typeface. The one
+  exception is `--font-file`, the system's fixed-width typeface, for the contents of a file in
+  the side-by-side view and nothing else. Blue is
   the accent; red means something went wrong or cannot be done; green means ready, or new. Tokens live in `tokens.css` only.
 - **Tone:** plain, short, no cheerleading.
