@@ -29,7 +29,8 @@ and each picture keeps its description.
   words and loses its address.
 - The caution shown on every document conversion applies here too: check headings, picture
   descriptions and table headers before publishing.
-- 15 trap files: the "billion laughs" as a slide title, a slide of 300 MB of spaces, a link
+- 16 trap files: the "billion laughs" as a slide title, a list that names one slide two
+  thousand times, a slide of 300 MB of spaces, a link
   that starts a program, a picture said to be a file elsewhere on the computer, shapes grouped
   two hundred deep, and a presentation with every slide hidden.
 - No new dependency.

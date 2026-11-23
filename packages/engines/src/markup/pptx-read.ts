@@ -10,6 +10,8 @@ import { all, attrs, child, escapeHtml, kids, MAX_PICTURE_BYTES, openOffice, pic
 // audience, and a converter that published them would be telling what was not said.
 
 const MAX_SLIDES = 2000
+/** The most HTML a presentation may become, pictures included. */
+const MAX_WRITTEN = 64 * 1024 * 1024
 const MAX_DEPTH = 64
 
 export const notPresentation = () => new Refusal('This file is not a valid PPTX presentation')
@@ -51,6 +53,9 @@ export async function readPptx(bytes: Uint8Array): Promise<ReadDocument> {
     .filter((link): link is { target: string; external: boolean } => link !== undefined && !link.external)
     .map((link) => resolve('ppt/presentation.xml', link.target))
     .filter((path): path is string => path !== null)
+  // A slide is shown once. A list that names one slide a thousand times is asking for it to be
+  // read a thousand times, and is refused.
+  if (new Set(slides.map((path) => path.toLowerCase())).size !== slides.length) throw notPresentation()
   if (slides.length > MAX_SLIDES) throw new Refusal('This presentation is too large to convert in a browser')
 
   const budget = { left: MAX_PICTURE_BYTES }
@@ -190,6 +195,8 @@ export async function readPptx(bytes: Uint8Array): Promise<ReadDocument> {
     const heading = title || `Slide ${shown}`
     first ??= title ? heading.replace(/<[^>]*>/g, '') : null
     written += `<section><h2>${heading}</h2>${content}</section>`
+    // What is written is held to a size as well as what is read.
+    if (written.length > MAX_WRITTEN) throw new Refusal('This presentation is too large to convert in a browser')
   }
   if (written === '') throw new Refusal('This presentation has no text in it to convert')
 

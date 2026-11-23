@@ -102,6 +102,15 @@ describe('presentations', () => {
     expect(await refusal(convert(await altered({ 'ppt/slides/slide1.xml': bomb })))).toBe(NOT)
   })
 
+  it('refuse a list of slides that names one slide over and over', async () => {
+    const once = '<p:sldId id="256" r:id="rId1"/>'
+    const order = (await partOf('ppt/presentation.xml')).replace(once, once.repeat(500))
+    expect(await refusal(convert(await altered({ 'ppt/presentation.xml': order })))).toBe(NOT)
+    // The same slide by another spelling of its path is the same slide.
+    const rels = (await partOf('ppt/_rels/presentation.xml.rels')).replace('Target="slides/slide2.xml"', 'Target="slides/./SLIDE1.xml"')
+    expect(await refusal(convert(await altered({ 'ppt/_rels/presentation.xml.rels': rels })))).toBe(NOT)
+  })
+
   it('refuse a presentation in which every slide is hidden or empty', async () => {
     const hide = async (name: string) => (await partOf(name)).replace('<p:sld ', '<p:sld show="0" ')
     const change = Object.fromEntries(await Promise.all(['ppt/slides/slide1.xml', 'ppt/slides/slide2.xml', 'ppt/slides/slide3.xml'].map(async (name) => [name, await hide(name)])))

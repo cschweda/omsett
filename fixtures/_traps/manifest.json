@@ -4140,6 +4140,18 @@
     "absent": null
   },
   {
+    "file": "one-slide-two-thousand-times.pptx",
+    "group": "slides",
+    "why": "A list of slides that names the same slide two thousand times, so that reading the presentation reads it two thousand times.",
+    "detect": "pptx",
+    "mismatch": false,
+    "guard": "ok",
+    "node": "fails",
+    "browser": "fails",
+    "note": "This file is not a valid PPTX presentation",
+    "absent": null
+  },
+  {
     "file": "no-list-of-slides.pptx",
     "group": "slides",
     "why": "Slides, without the part that says which they are and in what order.",

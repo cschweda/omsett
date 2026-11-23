@@ -132,6 +132,19 @@ describe('workbooks', () => {
       expect(await refusal(readWorkbook(await altered({ 'xl/worksheets/sheet2.xml': SHEET(tall) })))).toBe('This workbook is too large to convert in a browser')
     })
 
+    it('an empty sheet named over and over is read once', async () => {
+      const entries = await readZip(await fixture('xlsx/sample.xlsx'))
+      const part = (name: string) => new TextDecoder().decode(entries.find((entry) => entry.name === name)!.data)
+      const many = Array.from({ length: 3000 }, (_, i) => `<sheet name="S${i}" sheetId="${i + 10}" r:id="rId2"/>`).join('')
+      const book = await altered({
+        'xl/workbook.xml': part('xl/workbook.xml').replace(/<sheets>.*<\/sheets>/, `<sheets>${many}</sheets>`),
+        'xl/worksheets/sheet2.xml': SHEET(' '.repeat(2_000_000)),
+      })
+      const started = performance.now()
+      expect(await refusal(readWorkbook(book))).toBe('This workbook has no rows in it')
+      expect(performance.now() - started).toBeLessThan(5000)
+    })
+
     it('a sheet that points outside the workbook', async () => {
       const links =
         '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +

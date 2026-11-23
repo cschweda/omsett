@@ -3107,6 +3107,13 @@ slides(
     "pptx", node="fails", note="This presentation has no text in it to convert",
 )
 slides(
+    "one-slide-two-thousand-times.pptx",
+    deck({"ppt/presentation.xml": DECK["ppt/presentation.xml"].replace(b'<p:sldId id="256" r:id="rId1"/>', b'<p:sldId id="256" r:id="rId1"/>' * 2000)}),
+    "A list of slides that names the same slide two thousand times, so that reading the "
+    "presentation reads it two thousand times.",
+    "pptx", node="fails", note=NOT_DECK,
+)
+slides(
     "no-list-of-slides.pptx",
     deck({"ppt/presentation.xml": None}),
     "Slides, without the part that says which they are and in what order.",
