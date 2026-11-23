@@ -46,6 +46,8 @@ const samples: Record<string, string> = {
   ttml: 'ttml/sample.ttml',
   smi: 'smi/sample.smi',
   microdvd: 'microdvd/sample.sub',
+  md: 'md/sample.md',
+  html: 'html/sample.html',
 }
 const path = (id: string) => fileURLToPath(new URL(`../fixtures/${samples[id]}`, import.meta.url))
 

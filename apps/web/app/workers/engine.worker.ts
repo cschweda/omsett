@@ -4,6 +4,7 @@ import {
   createCanvasEngine,
   createDataEngine,
   createSubtitleEngine,
+  createMarkupEngine,
   createHeifEngine,
   createMagickEngine,
   createResvgEngine,
@@ -110,6 +111,7 @@ const engines: Record<string, Engine> = Object.fromEntries(
     createMagickEngine({ init: loadMagick }),
     createDataEngine(),
     createSubtitleEngine(),
+    createMarkupEngine(),
   ].map((engine) => [engine.id, engine]),
 )
 

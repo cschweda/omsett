@@ -123,7 +123,9 @@ When a format ships, update its row here, in the same change.
 
 | Format | Home | Engine | Status |
 | --- | --- | --- | --- |
-| TXT, Markdown, HTML, reStructuredText, LaTeX, Org, AsciiDoc, Typst, MediaWiki, DocBook, Jupyter, Textile, man, OPML to each other, and to DOCX, EPUB, PPTX | Browser | Pandoc (WASM) | Planned |
+| Markdown ↔ HTML | Browser | `markup` (unified: remark and rehype), cleaned with rehype-sanitize | **Shipped** (0.12.0) |
+| An option for the page's language, and for "the article only" from a web page | Browser | the same | Planned |
+| TXT, reStructuredText, LaTeX, Org, AsciiDoc, Typst, MediaWiki, DocBook, Jupyter, Textile, man, OPML to each other and to Markdown and HTML, and to DOCX, EPUB, PPTX | Browser | Pandoc (WASM) | Planned |
 | Source files and logs, read as text (never run) | Browser | — | Planned |
 | MHTML (read) | Browser | JavaScript | Planned |
 
@@ -270,7 +272,7 @@ with [audit.icjia.app](https://audit.icjia.app).
 ## Suggested order
 
 1. Images are largely done: 22 formats. Left: CUR, DDS, ICNS, FITS, APNG, PSB, camera RAW, DICOM, and writing ICO and JPEG 2000.
-2. Data and subtitles are done: seven data formats, nine subtitle formats. The side-by-side view for text formats is done too. Next: fonts, then vCard and iCalendar. Small JavaScript libraries, no large downloads.
+2. Data and subtitles are done: seven data formats, nine subtitle formats. The side-by-side view for text formats is done too, and Markdown ↔ HTML. Next: fonts, then vCard and iCalendar. Small JavaScript libraries, no large downloads.
 3. Archives, then audio.
 4. Documents and e-books through Pandoc; then the PDF tools. A converted document must not score lower for accessibility than its original (see "Accessibility of converted documents").
 5. Video in the browser.

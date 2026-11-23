@@ -7,6 +7,58 @@ The paragraph that opens a version is its teaser: the home page shows its first 
 in the "What's new" banner, so keep it to two or three sentences on what a visitor will notice.
 A line beginning "Released" gives the date.
 
+## 0.12.0
+
+Released 23 November 2026.
+
+Omsett now converts Markdown to HTML and HTML to Markdown. Drop a web page and get clean
+Markdown for a content system, or drop Markdown and get a complete page a browser can open.
+Headings, lists, tables, links, pictures and their descriptions are carried across.
+
+### Added
+
+- **Markdown to HTML.** A whole page: a title taken from the first heading, tables, task
+  lists, footnotes that link both ways, and code blocks. HTML written inside the Markdown is
+  kept where it is harmless.
+- **HTML to Markdown.** The content of a page: headings, paragraphs, lists, tables, links,
+  pictures and code. The page's head, styles, scripts and templates are left out, text and all.
+- **Nothing that could run is written, in either direction.** Scripts, handlers such as
+  `onclick`, frames, forms, and links that are code (`javascript:` and its spellings) are
+  removed. The words they were attached to are kept.
+- **What a picture is described as is kept**: `alt` text goes across both ways.
+- **The side-by-side view covers both**, so the Markdown can be read beside the page it came
+  from before it is downloaded.
+- 25 trap files for the two formats: scripts and handlers in Markdown, six spellings of a link
+  that is code, a heading that tries to close the page's title and start a script, a page that
+  posts a password elsewhere, nine places a browser runs code from, nesting ten thousand deep
+  in both formats, and floods of brackets, emphasis marks, attributes and unclosed comments.
+
+### Changed
+
+- **A web page is now recognised as HTML**, whatever it is named. Before, it showed as
+  unsupported.
+- **A file named `.md` or `.markdown` is Markdown.** Any text at all is Markdown, so nothing in
+  a file can say that it is; the name is the only thing that can. A picture named `.md` is
+  still a picture.
+
+### Fixed
+
+- A Markdown list nested a thousand levels deep took about 24 seconds to read. A trap file
+  found it. Nesting that deep is now refused at once, with "This file is nested too deeply to
+  convert".
+
+### Known
+
+- **A page made from Markdown is marked as English** (`lang="en"`), because Markdown does not
+  say what language it is in and a page must. The picker says so. Change it by hand if the
+  text is in another language.
+- A page made from Markdown has no styling of its own: it looks the way a browser shows plain
+  HTML.
+- HTML to Markdown keeps everything in the page's body, navigation and footers included. It
+  does not try to find "the article".
+- Pictures are kept as links to where they were. They are not downloaded or embedded.
+- Only Markdown and HTML so far. Plain text, reStructuredText and the rest are planned.
+
 ## 0.11.0
 
 Released 23 November 2026.

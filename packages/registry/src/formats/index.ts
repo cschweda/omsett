@@ -23,6 +23,8 @@ import { lrc } from './lrc'
 import { ttml } from './ttml'
 import { smi } from './smi'
 import { microdvd } from './microdvd'
+import { md } from './md'
+import { html } from './html'
 import { avif } from './avif'
 import { bmp } from './bmp'
 import { gif } from './gif'
@@ -49,4 +51,6 @@ export const formats: Format[] = [
   json, yaml, csv, xml, toml, jsonl, tsv,
   // Subtitles and lyrics: text with times.
   srt, vtt, ass, ssa, ttml, lrc, sbv, smi, microdvd,
+  // Writing: text with structure.
+  md, html,
 ]

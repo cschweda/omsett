@@ -103,6 +103,22 @@ Omsett's own readers and writers for SRT, WebVTT, ASS, SSA, LRC, SBV, SAMI and M
 TTML writer. TTML is read with fast-xml-parser (MIT), listed under `data` above. Nothing
 separate is downloaded.
 
+### markup
+
+Markdown and HTML are read and written with the unified family of parsers, all MIT. They are
+part of the app's scripts; nothing separate is downloaded.
+
+| Library | Version | License | Source |
+| --- | --- | --- | --- |
+| unified | 11.0.5 | MIT | <https://github.com/unifiedjs/unified> |
+| remark-parse, remark-stringify (read and write Markdown) | 11.0.0 | MIT | <https://github.com/remarkjs/remark> |
+| remark-gfm (tables, task lists, footnotes) | 4.0.1 | MIT | <https://github.com/remarkjs/remark-gfm> |
+| remark-rehype (Markdown to HTML) | 11.1.2 | MIT | <https://github.com/remarkjs/remark-rehype> |
+| rehype-remark (HTML to Markdown) | 10.0.1 | MIT | <https://github.com/rehypejs/rehype-remark> |
+| rehype-parse, rehype-stringify (read and write HTML) | 9.0.1, 10.0.1 | MIT | <https://github.com/rehypejs/rehype> |
+| rehype-raw (HTML inside Markdown) | 7.0.0 | MIT | <https://github.com/rehypejs/rehype-raw> |
+| rehype-sanitize (removes what could run) | 6.0.0 | MIT | <https://github.com/rehypejs/rehype-sanitize> |
+
 ### canvas
 
 The browser's own `OffscreenCanvas` encoder. Nothing is downloaded; the wrapper around it is

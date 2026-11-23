@@ -22,10 +22,29 @@ describe('telling text formats apart', () => {
     expect(sniff('[\n{"a": 1},\n{"a": ', undefined, false)).toBe('json')
   })
 
-  it('does not take a web page for XML', () => {
-    expect(sniff('<!DOCTYPE html>\n<html></html>')).toBeNull()
-    expect(sniff('<html lang="en"><body/></html>', 'page.xml')).toBeNull()
+  it('knows a web page from XML, whatever the file is called', () => {
+    expect(sniff('<!DOCTYPE html>\n<html></html>')).toBe('html')
+    expect(sniff('<html lang="en"><body/></html>', 'page.xml')).toBe('html')
+    expect(sniff('<?xml version="1.0"?>\n<!-- x -->\n<HTML xmlns="http://www.w3.org/1999/xhtml"/>')).toBe('html')
+    expect(sniff('<!doctype html>\n<p>No html tag at all', 'x.txt')).toBe('html')
+    // A piece of a page has no <html> around it. Named as HTML it is HTML; otherwise it is XML.
+    expect(sniff('<p>Hello <b>there</b></p>', 'piece.html')).toBe('html')
+    expect(sniff('<p>Hello <b>there</b></p>', 'piece.htm')).toBe('html')
+    expect(sniff('<p>Hello <b>there</b></p>')).toBe('xml')
+    expect(sniff('<htmlx/>')).toBe('xml')
     expect(sniff('< not a tag')).toBeNull()
+    expect(sniff('< not a tag', 'x.html')).toBeNull()
+  })
+
+  it('takes Markdown on its name alone, because any text is Markdown', () => {
+    expect(sniff('# Title\n\nWords.\n', 'readme.md')).toBe('md')
+    expect(sniff('<p align="center">A logo</p>\n\n# Title\n', 'README.markdown')).toBe('md')
+    expect(sniff('[a link](x) to start with\n', 'notes.MD')).toBe('md')
+    expect(sniff('title = "x"\n', 'readme.md')).toBe('md')
+    // Without the name there is nothing to go on.
+    expect(sniff('# Title\n\nWords.\n')).toBeNull()
+    expect(sniff('# Title\n\nWords.\n', 'readme.txt')).toBeNull()
+    expect(sniff('', 'empty.md')).toBeNull()
   })
 
   it('knows JSON Lines by more than one whole value, one to a line', () => {
@@ -69,7 +88,7 @@ describe('telling text formats apart', () => {
 
   it('offers nothing when the name says the text is something else', () => {
     expect(sniff('id,name\n1,Ada\n', 'table.txt')).toBeNull()
-    expect(sniff('title = "x"\n', 'readme.md')).toBeNull()
+    expect(sniff('title = "x"\n', 'readme.rst')).toBeNull()
     expect(sniff('name: Ada\n', 'photo.png')).toBeNull()
     // No ending at all is no claim.
     expect(sniff('name: Ada\n', 'Brewfile')).toBe('yaml')
