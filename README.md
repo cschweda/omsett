@@ -29,7 +29,7 @@ Omsett is a free, open-source file converter. Every conversion runs in your brow
 <!-- facts:start -->
 <!-- Generated from the registry by `pnpm readme:facts`. Do not edit by hand. -->
 
-**56 formats, 247 conversions**, every one of them run in your browser, on your device. Tested by 1,858 tests of the code and 2,460 in real browsers (Chromium, Firefox and WebKit), and against 457 files made on purpose to be broken, hostile or dishonest.
+**56 formats, 247 conversions**, every one of them run in your browser, on your device. Tested by 1,859 tests of the code and 2,460 in real browsers (Chromium, Firefox and WebKit), and against 457 files made on purpose to be broken, hostile or dishonest.
 
 | Kind | Converts to and from | Reads only |
 | --- | --- | --- |

@@ -238,4 +238,17 @@ describe('the sheets of a workbook, by choice', () => {
     for (const output of outputs) expect(output.name).not.toMatch(/[\\/:]|\.\./)
     expect(outputs).toHaveLength(2)
   })
+
+  it('all of them are held to one limit between them, not one each', async () => {
+    const { readSheets } = await import('./sheet')
+    const book = await fixture('xlsx/sample.xlsx')
+    const sheets = await readSheets(book, true, 'all')
+    const cells = sheets.map((sheet) => sheet.rows.length * Object.keys(sheet.rows[0]!).length)
+    expect(cells.length).toBe(2)
+    // Each sheet fits a limit of the larger one's size; the two together do not.
+    const each = Math.max(...cells)
+    expect(each).toBeLessThan(cells[0]! + cells[1]!)
+    expect(await refusal(readSheets(book, true, 'all', each))).toBe('This workbook is too large to convert in a browser')
+    expect(await readSheets(book, true, 'all', cells[0]! + cells[1]!)).toHaveLength(2)
+  })
 })

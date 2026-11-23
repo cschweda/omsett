@@ -198,8 +198,9 @@ export interface NamedSheet {
 /**
  * Sheets by choice: every sheet that is shown and has something in it, or the one at a
  * position among the sheets shown, counted from 1 as the tabs are.
+ * @param most the most cells all the sheets read may hold between them
  */
-export async function readSheets(bytes: Uint8Array, named: boolean, which: 'all' | number): Promise<NamedSheet[]> {
+export async function readSheets(bytes: Uint8Array, named: boolean, which: 'all' | number, most = MAX_CELLS): Promise<NamedSheet[]> {
   const book = await openWorkbook(bytes, named)
   if (which !== 'all') {
     const sheet = Number.isInteger(which) ? book.shown[which - 1] : undefined
@@ -208,7 +209,17 @@ export async function readSheets(bytes: Uint8Array, named: boolean, which: 'all'
     if (rows.length === 0) throw new Refusal(`The sheet “${sheet.name}” has no rows in it`)
     return [{ name: sheet.name, rows }]
   }
-  const read = book.shown.map((sheet) => ({ name: sheet.name, rows: book.rows(sheet.path) })).filter((sheet) => sheet.rows.length > 0)
+  // One limit for the whole workbook, not one for each sheet: two hundred sheets that are each
+  // allowed would together be two hundred times what is.
+  const read: NamedSheet[] = []
+  let cells = 0
+  for (const sheet of book.shown) {
+    const rows = book.rows(sheet.path)
+    if (rows.length === 0) continue
+    cells += rows.length * Object.keys(rows[0]!).length
+    if (cells > most) throw tooLarge()
+    read.push({ name: sheet.name, rows })
+  }
   if (read.length === 0) throw noRows()
   return read
 }

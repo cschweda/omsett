@@ -48,6 +48,8 @@ sheet to convert, by its name, or convert all of them at once.
   that (JSON, YAML), and a file for each sheet, named for it, where it cannot (CSV and the
   rest). Several files can be downloaded together as a ZIP.
 - Hidden sheets are never listed and never converted.
+- All the sheets of a workbook are held to one size limit between them, so a workbook of many
+  large sheets is refused as too large instead of being read sheet after sheet.
 
 ## 0.30.0
 
