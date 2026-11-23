@@ -96,4 +96,36 @@ describe('telling text formats apart', () => {
     const cut = new TextEncoder().encode('id,name\n1,Zoë\n2,Renée\n').slice(0, 21)
     expect(sniffText(cut, false)?.ext).toBe('csv')
   })
+
+  it('knows subtitles by how they begin, whatever the file is called', () => {
+    const time = '00:00:01,000 --> 00:00:04,000'
+    expect(sniff(`1\n${time}\nHello\n`)).toBe('srt')
+    expect(sniff(`${time}\nHello\n`, 'notes.txt')).toBe('srt')
+    expect(sniff('WEBVTT\n\n00:01.000 --> 00:04.000\nHello\n', 'x.csv')).toBe('vtt')
+    expect(sniff('WEBVTT - a title\n')).toBe('vtt')
+    expect(sniff('WEBVTTX\n\n00:01.000 --> 00:04.000\nHello\n')).toBeNull()
+    expect(sniff('0:00:01.000,0:00:04.000\nHello\n', 'captions.csv')).toBe('sbv')
+    expect(sniff('{25}{100}Hello\n{113}{181}there\n')).toBe('microdvd')
+    expect(sniff('{1}{1}23.976\n{25}{100}Hello\n', 'x.json')).toBe('microdvd')
+    expect(sniff('[00:12.00]la la\n[00:15.50]la\n')).toBe('lrc')
+    expect(sniff('[ti:Song]\n[ar:Singer]\n[00:12.00]la la\n')).toBe('lrc')
+    expect(sniff('[ti:Song]\n[ar:Singer]\n', 'x.lrc')).toBeNull()
+  })
+
+  it('tells ASS from SSA by their headings, and neither is TOML', () => {
+    expect(sniff('[Script Info]\nScriptType: v4.00+\n\n[V4+ Styles]\n', 'x.toml')).toBe('ass')
+    expect(sniff('[Script Info]\nScriptType: v4.00\n\n[V4 Styles]\n')).toBe('ssa')
+    expect(sniff('[Script Info]\n[Events]\n')).toBe('ass')
+    expect(sniff('[package]\nname = "x"\n')).toBe('toml')
+  })
+
+  it('knows TTML and SAMI from their outermost tag', () => {
+    expect(sniff('<?xml version="1.0"?>\n<!-- x -->\n<tt xmlns="http://www.w3.org/ns/ttml"><body/></tt>', 'x.xml')).toBe('ttml')
+    expect(sniff('<tt:tt xmlns:tt="http://www.w3.org/ns/ttml"/>')).toBe('ttml')
+    expect(sniff('<!DOCTYPE tt [<!ENTITY a "b>">]>\n<tt/>')).toBe('ttml')
+    expect(sniff('<!-- <tt> -->\n<people/>', 'x.ttml')).toBe('xml')
+    expect(sniff('<ttx/>')).toBe('xml')
+    expect(sniff('<SAMI>\n<BODY>\n<SYNC Start=1000><P>Hello\n')).toBe('smi')
+    expect(sniff('<sami>\n')).toBe('smi')
+  })
 })

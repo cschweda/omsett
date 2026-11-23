@@ -154,7 +154,9 @@ When a format ships, update its row here, in the same change.
 
 | Format | Home | Engine | Status |
 | --- | --- | --- | --- |
-| SRT, ASS/SSA, WebVTT, SAMI, LRC, TTML, MicroDVD, SCC to each other as UTF-8 | Browser | JavaScript | Planned |
+| SRT, WebVTT, ASS, SSA, TTML, LRC, SBV, SAMI, MicroDVD to each other as UTF-8 | Browser | `subtitle` (Omsett's own; fast-xml-parser for TTML) | **Shipped** (0.10.0). Words and times only: styling is not carried |
+| Italics, bold and position carried between the formats that have them | Browser | the same | Planned |
+| SCC (broadcast captions) | Browser | JavaScript | Planned |
 | KRC; legacy code pages read correctly | Browser | JavaScript | Planned, low priority |
 
 ## Archives
@@ -181,6 +183,7 @@ When a format ships, update its row here, in the same change.
 | --- | --- | --- | --- |
 | JSON, JSON Lines, YAML, TOML, XML, CSV, TSV to each other | Browser | `data` (yaml, smol-toml, fast-xml-parser, and Omsett's own CSV) | **Shipped** (0.9.0) |
 | The same to XLSX | Browser | SheetJS | Planned, with spreadsheets |
+| Cells that a spreadsheet would run as formulas | — | — | Decided: written exactly as they are, with a warning in the picker. Never altered |
 | vCard, iCalendar ↔ CSV | Browser | JavaScript | Planned |
 
 ## 3D models
@@ -206,6 +209,45 @@ When a format ships, update its row here, in the same change.
 | DWG ↔ DXF | Desktop | LibreDWG | Planned (Phase 5) |
 | Gerber, G-code previews | Declined | — | Niche |
 
+## The app itself
+
+Work that is not a format, kept here so it is scheduled with the formats.
+
+### Side-by-side view for data and subtitles (next)
+
+Pictures get a before-and-after comparison; text formats get nothing. The plan:
+
+- **What it shows.** After a data or subtitle conversion, the result card shows the start of
+  the original and the start of the converted file next to each other, so a person can see what
+  became of their file before downloading it. On a narrow screen the two are stacked.
+- **Always as text.** File contents are put on the page as text nodes, never as markup. A file
+  of HTML or script is shown, not run. A trap file proves it in three browsers.
+- **Bounded.** The first 64 KB of each file at most, the first 200 lines, each line cut at 500
+  characters, with a line saying how much more there is. A file that is one line of 30 MB must
+  not slow the page.
+- **Read in the worker**, like everything else, and only after the conversion has succeeded.
+- **No colouring** in the first version. Line numbers, and nothing else.
+- **One decision to make first:** file contents read best in a fixed-width typeface, and the
+  design uses one typeface only. Either the system's monospace is allowed for file contents
+  alone, or the view is set in the page's typeface.
+- **Tests.** Every data and subtitle sample shows both sides; markup in a file stays text; a
+  huge single line stays bounded; nothing is shown for pictures.
+
+### Accessibility of converted documents (with documents and PDF)
+
+A converted document must not be less accessible than the original. Accessibility is measured
+with [audit.icjia.app](https://audit.icjia.app).
+
+- **In development:** every document fixture is scored before and after conversion. A
+  conversion that lowers the score fails its test, or is a stated limit with a warning in the
+  picker; it is never silent.
+- **In the app:** every document conversion carries a warning that the converted file may have
+  more accessibility problems than the original, and names what is at risk (tags, headings,
+  alternative text, reading order).
+- **With the audit the user opts into:** after a conversion Omsett asks whether to run an
+  accessibility audit. Only on yes is anything uploaded. Both files are scored, and the two
+  scores are shown together, with a clear statement if the converted file scores lower.
+
 ## What decides "Browser" or "Desktop"
 
 - **If a browser can do it, it does.** No upload, no install.
@@ -218,8 +260,8 @@ When a format ships, update its row here, in the same change.
 ## Suggested order
 
 1. Images are largely done: 22 formats. Left: CUR, DDS, ICNS, FITS, APNG, PSB, camera RAW, DICOM, and writing ICO and JPEG 2000.
-2. Data is done: JSON, JSON Lines, YAML, TOML, XML, CSV, TSV. Next: subtitles and fonts, then vCard and iCalendar. Small JavaScript libraries, no large downloads.
+2. Data and subtitles are done: seven data formats, nine subtitle formats. Next, in this order: the side-by-side view for text formats (below), fonts, then vCard and iCalendar. Small JavaScript libraries, no large downloads.
 3. Archives, then audio.
-4. Documents and e-books through Pandoc; then the PDF tools.
+4. Documents and e-books through Pandoc; then the PDF tools. A converted document must not score lower for accessibility than its original (see "Accessibility of converted documents").
 5. Video in the browser.
 6. The desktop app, which unlocks everything marked Desktop at once.

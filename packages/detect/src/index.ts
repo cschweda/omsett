@@ -49,7 +49,9 @@ export async function detect(blob: Blob, formats: Format[], name?: string): Prom
       }
     }
     // Plain text has no signature at all. What it holds is worked out from how it reads.
-    if (!found) {
+    // The library calls anything that opens with an XML declaration "XML", which is as far as
+    // it looks; some of those are subtitles.
+    if (!found || found.ext === 'xml') {
       const text = sniffText(head, blob.size <= HEADER_BYTES, name)
       if (text) {
         found = text

@@ -42,6 +42,11 @@ const CORE_WRITES = [webp, jpeg, png, gif, tiff]
 const DATA = ['json', 'yaml', 'csv', 'xml', 'toml', 'jsonl', 'tsv']
 const DATA_WRITES: WriteSpec[] = DATA.map((format) => ({ format, lossy: false, drops: ['comments'] }))
 
+// Subtitles are read into lines of text with a start and an end, and written from those. How
+// the text looked has nowhere to live in between.
+const SUBTITLES = ['srt', 'vtt', 'ass', 'ssa', 'ttml', 'lrc', 'sbv', 'smi', 'microdvd']
+const SUBTITLE_WRITES: WriteSpec[] = SUBTITLES.map((format) => ({ format, lossy: false, drops: ['styling'] }))
+
 export const capabilities: Capability[] = [
   {
     engine: 'canvas',
@@ -82,4 +87,5 @@ export const capabilities: Capability[] = [
 
   // Small parsers written in JavaScript: nothing to download beyond the app itself.
   { engine: 'data', tier: 'browser', reads: DATA, writes: DATA_WRITES, priority: 20 },
+  { engine: 'subtitle', tier: 'browser', reads: SUBTITLES, writes: SUBTITLE_WRITES, priority: 20 },
 ]

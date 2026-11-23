@@ -37,6 +37,15 @@ const samples: Record<string, string> = {
   xml: 'xml/sample.xml',
   csv: 'csv/sample.csv',
   tsv: 'tsv/sample.tsv',
+  srt: 'srt/sample.srt',
+  vtt: 'vtt/sample.vtt',
+  ass: 'ass/sample.ass',
+  ssa: 'ssa/sample.ssa',
+  sbv: 'sbv/sample.sbv',
+  lrc: 'lrc/sample.lrc',
+  ttml: 'ttml/sample.ttml',
+  smi: 'smi/sample.smi',
+  microdvd: 'microdvd/sample.sub',
 }
 const path = (id: string) => fileURLToPath(new URL(`../fixtures/${samples[id]}`, import.meta.url))
 

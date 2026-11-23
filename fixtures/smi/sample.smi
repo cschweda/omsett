@@ -1,0 +1,21 @@
+<SAMI>
+<HEAD>
+<TITLE>Sample</TITLE>
+<STYLE TYPE="text/css">
+<!--
+P { font-family: Arial; font-size: 14pt; text-align: center; }
+.ENCC { Name: English; lang: en-US; SAMIType: CC; }
+.FRCC { Name: French; lang: fr-FR; SAMIType: CC; }
+-->
+</STYLE>
+</HEAD>
+<BODY>
+<SYNC Start=1000><P Class=ENCC><i>Drop a file.</i>
+<P Class=FRCC>Déposez un fichier.
+<SYNC Start=4000><P Class=ENCC>&nbsp;
+<SYNC Start=4500><P Class=ENCC>Pick a format.<br>Nothing leaves your device.
+<SYNC Start=7250><P Class=ENCC>&nbsp;
+<SYNC Start=62000><P Class=ENCC>Tom &amp; Jerry, caf&#233;, 字幕.
+<SYNC Start=65500><P Class=ENCC>&nbsp;
+</BODY>
+</SAMI>

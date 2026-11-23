@@ -1,0 +1,17 @@
+WEBVTT
+
+NOTE A sample for Omsett's tests.
+
+STYLE
+::cue { color: yellow; }
+
+intro
+00:00:01.000 --> 00:00:04.000 line:10% align:start
+<v Narrator><i>Drop a file.</i>
+
+00:00:04.500 --> 00:00:07.250
+Pick a format.
+Nothing leaves your device.
+
+00:01:02.000 --> 00:01:05.500
+Tom &amp; Jerry: 2 &lt; 3, café, 字幕.

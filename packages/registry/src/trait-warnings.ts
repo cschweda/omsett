@@ -8,6 +8,7 @@ export const traitWarnings: Record<Trait, Warning> = {
   layers: { id: 'layers-lost', text: 'Layers will be merged into one image.' },
   'full-color': { id: 'colors-reduced', text: 'Reduced to 256 colours.' },
   nesting: { id: 'nesting-flattened', text: 'A table holds one value per cell. Lists and groups inside a row are written as text.' },
+  styling: { id: 'styling-lost', text: 'Only the words and their times are kept. Fonts, colours, italics and positions are not.' },
   comments: { id: 'comments-lost', text: 'Comments are not carried over.' },
 }
 

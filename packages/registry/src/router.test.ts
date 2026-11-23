@@ -38,11 +38,15 @@ describe('router, real registry', () => {
     for (const edge of deriveEdges(registry).edges) {
       const engines = edge.candidates.map((c) => c.engine)
       if (edge.from !== 'png') expect(engines, `${edge.from} → ${edge.to}`).not.toContain('canvas')
-      for (const engine of engines) expect(engine === 'canvas' || ['heif', 'resvg', 'magick', 'data'].includes(engine) || engine.startsWith('vips')).toBe(true)
+      for (const engine of engines) expect(engine === 'canvas' || ['heif', 'resvg', 'magick', 'data', 'subtitle'].includes(engine) || engine.startsWith('vips')).toBe(true)
       // The data engine reads and writes data and nothing else; no picture engine touches data.
       const data = [edge.from, edge.to].map((id) => formatById(registry, id)!.category === 'data')
       expect(data[0], `${edge.from} → ${edge.to}`).toBe(data[1])
       expect(engines.includes('data'), `${edge.from} → ${edge.to}`).toBe(data[0])
+      // The same holds for subtitles and the engine that reads them.
+      const subtitle = [edge.from, edge.to].map((id) => formatById(registry, id)!.category === 'subtitle')
+      expect(subtitle[0], `${edge.from} → ${edge.to}`).toBe(subtitle[1])
+      expect(engines.includes('subtitle'), `${edge.from} → ${edge.to}`).toBe(subtitle[0])
     }
   })
 
@@ -53,6 +57,7 @@ describe('router, real registry', () => {
       'webp', 'jpeg', 'png', 'avif', 'gif', 'tiff', 'jxl', 'bmp', 'tga', 'qoi', 'pnm',
       'heic', 'svg', 'svgz', 'psd', 'ico', 'jp2', 'exr', 'hdr', 'pcx', 'sgi', 'ras',
       'json', 'yaml', 'csv', 'xml', 'toml', 'jsonl', 'tsv',
+      'srt', 'vtt', 'ass', 'ssa', 'ttml', 'lrc', 'sbv', 'smi', 'microdvd',
     ])
     const readOnly = new Set(everything.formats.filter((f) => f.readOnly).map((f) => f.id))
     expect([...readOnly].sort()).toEqual(['exr', 'hdr', 'heic', 'ico', 'jp2', 'pcx', 'psd', 'ras', 'sgi', 'svg', 'svgz'])
@@ -71,7 +76,13 @@ describe('router, real registry', () => {
     expect(all.targetsFor(['png']).some((t) => t.format.category === 'data')).toBe(false)
     expect(all.targetsFor(['png', 'json']).find((t) => t.format.id === 'webp')!.reason).toBe('JSON files cannot become WebP')
     expect(all.route('yaml', 'json')!.warnings.map((w) => w.id)).toEqual(['comments-lost'])
-    expect(all.route('json', 'csv')!.warnings.map((w) => w.id)).toEqual(['nesting-flattened'])
+    expect(all.route('json', 'csv')!.warnings.map((w) => w.id)).toEqual(['nesting-flattened', 'cells-exact'])
+    // Subtitles likewise: one step, their own kind only, and a note that styling is not kept.
+    expect(all.route('ass', 'srt')!.edges.map((e) => e.candidates[0]!.engine)).toEqual(['subtitle'])
+    expect(all.targetsFor(['srt']).every((t) => t.format.category === 'subtitle')).toBe(true)
+    expect(all.route('ass', 'srt')!.warnings.map((w) => w.id)).toEqual(['styling-lost'])
+    expect(all.route('sbv', 'lrc')!.warnings.map((w) => w.id)).toEqual(['lyrics-one-line'])
+    expect(all.route('lrc', 'microdvd')!.warnings.map((w) => w.id).sort()).toEqual(['ends-guessed', 'frames-assumed'])
     // HEIC is decoded to PNG first, without loss, and goes on from there.
     expect(all.route('heic', 'png')!.edges.map((e) => e.candidates[0]!.engine)).toEqual(['heif'])
     expect(all.route('heic', 'jpeg')!.edges.map((e) => e.to)).toEqual(['png', 'jpeg'])
