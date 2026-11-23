@@ -10,6 +10,15 @@ const isMac = ref(false)
 
 const percent = computed(() => Math.round(queue.overall.value * 100))
 
+const batchLine = computed(() => {
+  const batch = queue.batch.value
+  if (!batch) return ''
+  const seconds = queue.secondsSince(batch.startedAt)
+  const time = seconds >= 2 ? `, ${seconds} s` : ''
+  const position = Math.min(Math.max(batch.position, 1), batch.total)
+  return batch.total > 1 ? `Converting ${position} of ${batch.total}${time}` : `Converting${time}`
+})
+
 // Overall progress in the tab title, so the user can switch tabs while it runs.
 useHead({
   title: computed(() => (queue.converting.value ? `${percent.value}% — Omsett` : 'Omsett')),
@@ -74,7 +83,13 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
         <DropZone ref="dropZone" @files="queue.add" />
         <p v-if="queue.notice.value" class="notice" data-testid="notice">{{ queue.notice.value }}</p>
         <ul v-if="queue.files.value.length" class="rows" aria-label="Files to convert">
-          <FileCard v-for="entry in queue.files.value" :key="entry.id" :entry="entry" @remove="queue.remove" />
+          <FileCard
+            v-for="entry in queue.files.value"
+            :key="entry.id"
+            :entry="entry"
+            :seconds="queue.secondsSince(entry.startedAt)"
+            @remove="queue.remove"
+          />
         </ul>
       </StepSection>
 
@@ -108,6 +123,20 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
             <UKbd :value="isMac ? '⌘' : 'Ctrl'" />
             <UKbd value="Enter" />
           </span>
+          <!-- The whole batch at a glance: which file it is on, and that it is still going. -->
+          <div v-if="queue.batch.value" class="batch" data-testid="batch">
+            <p class="batch-line figures" data-testid="batch-line">{{ batchLine }}</p>
+            <div
+              class="bar active"
+              role="progressbar"
+              aria-valuemin="0"
+              aria-valuemax="100"
+              :aria-valuenow="percent"
+              aria-label="Converting all files"
+            >
+              <div class="fill" :style="{ width: `${percent}%` }" />
+            </div>
+          </div>
         </div>
       </StepSection>
 
@@ -192,6 +221,15 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
   flex-wrap: wrap;
   align-items: center;
   gap: 1rem;
+}
+.batch {
+  flex: 1 1 14rem;
+  min-width: 0;
+}
+.batch-line {
+  margin: 0 0 0.375rem;
+  font-size: var(--text-small);
+  font-weight: 700;
 }
 /* 20px bold counts as large text, where white on Omsett blue passes (4.4:1 against a 3:1 bar). */
 .convert-button {

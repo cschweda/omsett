@@ -15,6 +15,15 @@ export interface QueueFile {
   thumbnail: ImageBitmap | null
   status: 'ready' | 'converting' | 'done' | 'error'
   progress: number
+  /**
+   * What is happening to the file right now, while a batch runs: in line behind another,
+   * fetching the converter it needs, or being converted. Null when nothing is.
+   */
+  stage: 'waiting' | 'loading' | 'working' | null
+  /** When work on this file began, by the page's clock, in milliseconds. */
+  startedAt: number | null
+  /** The size of the converter being fetched, when the stage is 'loading'. */
+  loadingBytes: number
   error: string | null
 }
 
@@ -55,6 +64,26 @@ export function useConversionQueue() {
   const forcedEngine = requestedEngine && engines.info[requestedEngine] ? requestedEngine : null
   const requestedBudget = import.meta.client ? Number(testHook('timeout', location)) : Number.NaN
   const forcedBudgetMs = Number.isFinite(requestedBudget) && requestedBudget > 0 ? requestedBudget : null
+  // `?slow=800` holds each file for that long before converting it, so the tests can see the
+  // page as it is while work is going on.
+  const requestedDelay = import.meta.client ? Number(testHook('slow', location)) : Number.NaN
+  const delayMs = Number.isFinite(requestedDelay) && requestedDelay > 0 ? requestedDelay : 0
+
+  // A clock that runs only while a batch does. Everything that counts seconds reads it.
+  const now = ref(0)
+  /** Where the batch has got to: which file is being worked on, of how many, and since when. */
+  const batch = ref<{ position: number; total: number; startedAt: number } | null>(null)
+  let ticker: ReturnType<typeof setInterval> | undefined
+  function startClock() {
+    now.value = performance.now()
+    ticker = setInterval(() => (now.value = performance.now()), 250)
+  }
+  function stopClock() {
+    clearInterval(ticker)
+    ticker = undefined
+  }
+  /** Whole seconds since `since`, by the batch's clock. */
+  const secondsSince = (since: number | null) => (since === null ? 0 : Math.max(0, Math.floor((now.value - since) / 1000)))
 
   const convertible = computed(() =>
     files.value.filter((f) => f.detection.kind === 'known' && !f.problem),
@@ -107,6 +136,9 @@ export function useConversionQueue() {
         thumbnail: null,
         status: 'ready',
         progress: 0,
+        stage: null,
+        startedAt: null,
+        loadingBytes: 0,
         error: null,
       }
       files.value.push(entry)
@@ -182,12 +214,21 @@ export function useConversionQueue() {
           last && quality.value !== null && 'quality' in candidate.defaultOptions
             ? { ...candidate.defaultOptions, quality: quality.value }
             : candidate.defaultOptions
+        // A converter that has not been fetched yet is fetched first, and that can be the
+        // longest part. The first word back from the engine means it has arrived.
+        const info = engines.info[candidate.engine]
+        const fetching = info !== undefined && info.sizeBytes > 0 && !engines.loaded.value.includes(candidate.engine)
+        entry.stage = fetching ? 'loading' : 'working'
+        entry.loadingBytes = fetching ? info.sizeBytes : 0
         try {
           const outputs = await engines.convert(
             candidate.engine,
             { blob, name, from, to, options, maxPixels: MAX_PIXELS },
             (fraction) => {
-              entry.progress = (hop + fraction) / route.edges.length
+              // Word from the worker can arrive after the file is finished, so it only ever
+              // moves a file from fetching to converting, and never brings one back to life.
+              if (entry.stage === 'loading') entry.stage = 'working'
+              if (entry.status === 'converting') entry.progress = (hop + fraction) / route.edges.length
             },
             forcedBudgetMs ?? conversionBudgetMs(pixels),
           )
@@ -237,8 +278,12 @@ export function useConversionQueue() {
     for (const entry of queue) {
       entry.status = 'converting'
       entry.progress = 0
+      entry.stage = 'waiting'
+      entry.startedAt = null
       entry.error = null
     }
+    startClock()
+    batch.value = { position: 0, total: queue.length, startedAt: now.value }
 
     let lastStep = 0
     const stop = watch(overall, (fraction) => {
@@ -253,7 +298,11 @@ export function useConversionQueue() {
     for (const entry of queue) {
       const source = entry.detection.kind === 'known' ? entry.detection.format.id : ''
       const route = router.route(source, target.format.id)
+      batch.value = { ...batch.value!, position: batch.value!.position + 1 }
+      entry.startedAt = performance.now()
+      entry.stage = 'working'
       try {
+        if (delayMs) await new Promise((resolve) => setTimeout(resolve, delayMs))
         if (!route) throw new Error("This file couldn't be converted")
         // Known from the header before any work starts: will the target hold a picture this size?
         const size = entry.detection.kind === 'known' ? entry.detection.dimensions : null
@@ -268,7 +317,10 @@ export function useConversionQueue() {
         entry.progress = 1
         entry.error = error instanceof Refusal ? error.message : "This file couldn't be converted"
       }
+      entry.stage = null
     }
+    stopClock()
+    batch.value = null
 
     stop()
     results.value = fresh
@@ -318,6 +370,8 @@ export function useConversionQueue() {
     defaultQuality,
     canConvert,
     overall,
+    batch,
+    secondsSince,
     forcedEngine,
     notice,
     add,

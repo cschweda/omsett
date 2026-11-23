@@ -130,6 +130,10 @@ build by `apps/web/scripts/write-headers.ts`.
 - **Data outputs must be recognisable without a name.** Markdown is the one format that
   cannot be; the tests give its name, and only its. The tests identify every output from
   its bytes alone, so what the data engine writes has to read unmistakably as its format.
+- **Word from the worker can arrive late.** A progress event may land after its file is
+  finished. Nothing it does may bring a finished file back to "converting".
+- **`?slow=800` holds each file before it converts** (localhost only), so tests can see the
+  page mid-conversion.
 - **Kill a leftover test server after a rebuild.** `pnpm e2e` reuses a server already on its
   port, and one started before `pnpm build` can go on serving the old build's policies.
 - **Formats are ranked by their order in `formats/index.ts`.** The first four a file can become

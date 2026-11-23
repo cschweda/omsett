@@ -7,6 +7,30 @@ The paragraph that opens a version is its teaser: the home page shows its first 
 in the "What's new" banner, so keep it to two or three sentences on what a visitor will notice.
 A line beginning "Released" gives the date.
 
+## 0.13.0
+
+Released 23 November 2026.
+
+While files convert, Omsett now shows that it is working. Each file's bar has a band of light
+moving across it and a line saying what is happening, and a batch says which file it is on:
+"Converting 2 of 5, 14 s".
+
+### Added
+
+- **A sign of life on every bar.** A band of light crosses the bar of the file being worked on,
+  whether or not the bar itself has moved. Converters can only say how far they have got at a
+  few points, and until now the bar stood still between them.
+- **Each file says where it stands**: "Waiting", "Getting the converter (15 MB, once)", or
+  "Converting", with a count of seconds once there are more than a couple.
+- **A bar for the whole batch**, beside the Convert button, with the file it is on and the time
+  so far.
+- With motion turned down in the device's settings, the band stands still and the count of
+  seconds is what moves.
+
+### Changed
+
+- The progress bar is Omsett's own, replacing the library's, so that it can show activity.
+
 ## 0.12.0
 
 Released 23 November 2026.
