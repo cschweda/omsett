@@ -14,10 +14,10 @@ import { fileURLToPath } from 'node:url'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..')
 const target = join(root, 'test-count.json')
-const report = join(root, 'test-results', 'unit.json')
+const report = join(root, '.vitest-report', 'unit.json')
 
 if (!existsSync(report)) {
-  console.error('No test-results/unit.json. Run `pnpm test` first: the unit tests are counted from a real run.')
+  console.error('No .vitest-report/unit.json. Run `pnpm test` first: the unit tests are counted from a real run.')
   process.exit(2)
 }
 const unit = JSON.parse(readFileSync(report, 'utf8')) as { numTotalTests: number; numFailedTests: number; numTotalTestSuites: number; testResults: unknown[] }
