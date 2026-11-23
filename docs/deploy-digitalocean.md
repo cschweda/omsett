@@ -179,3 +179,60 @@ and no cost per deploy.
 | nginx will not reload: "open() …/headers.nginx failed" | The include was added before the first deploy. Deploy, then save the config again |
 | A `.wasm` file downloads but will not start | nginx is not sending `Content-Type: application/wasm`. Current nginx does by default; on an old one, add `application/wasm wasm;` to `mime.types` |
 | 404 on every page | `live` does not exist yet (no deploy has finished), or the web directory is not `/live/public` |
+
+## Counting visits (optional)
+
+Omsett can count visits with [Plausible](https://plausible.io). It is off unless you set it up,
+and it is set up so that the page still asks no other site for anything: nginx forwards two
+addresses on your own domain to Plausible, and the page loads the counting script from there.
+The page's security policy is the same with counting on as with it off.
+
+Three steps, all on the server.
+
+1. **nginx.** In the same `server { }` block, add the two locations below. Replace the script's
+   name with the one in the snippet Plausible gave you (`pa-….js`).
+
+   ```
+   # The counting script, served from this domain.
+   location = /js/pa-XXXXXXXXXXXXXXXXXXXXXXXX.js {
+       proxy_pass https://plausible.io/js/pa-XXXXXXXXXXXXXXXXXXXXXXXX.js;
+       proxy_set_header Host plausible.io;
+       proxy_ssl_server_name on;
+       proxy_buffering on;
+   }
+
+   # Where a visit is reported. Plausible is told the visitor's address so that it can count
+   # people and not requests; it does not keep the address.
+   location = /api/event {
+       proxy_pass https://plausible.io/api/event;
+       proxy_set_header Host plausible.io;
+       proxy_ssl_server_name on;
+       proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+       proxy_set_header X-Forwarded-Proto $scheme;
+       proxy_set_header X-Forwarded-Host $host;
+       proxy_buffering on;
+       proxy_http_version 1.1;
+   }
+   ```
+
+2. **The build's setting.** In Forge, open the site's **Environment** and add one line, with the
+   same script name. This is not a secret: it is an address on your own site.
+
+   ```
+   OMSETT_VISITS_SCRIPT=/js/pa-XXXXXXXXXXXXXXXXXXXXXXXX.js
+   ```
+
+   The deploy script must pass it to the build. If your Forge deploy script does not load the
+   site's environment already, add `set -a; . ./.env; set +a` before the line that runs
+   `scripts/publish-static.sh`.
+
+3. **Deploy, then check.** Open the site, then Plausible's dashboard: the visit should appear
+   within a minute. In the browser's developer tools, the Network tab should show `/js/pa-….js`
+   and `/api/event` on your own domain and nothing on `plausible.io`.
+
+What a visitor can do about it is on the site's Settings page: turn it off, or it is off already
+if their browser sends Do Not Track or Global Privacy Control.
+
+A Plausible **API key** (for reading your statistics) is a secret and has no place here. Nothing
+in Omsett needs it. Never put it in the site's environment: anything a static site's build can
+read can end up in a file the public downloads.

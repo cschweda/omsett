@@ -7,6 +7,34 @@ The paragraph that opens a version is its teaser: the home page shows its first 
 in the "What's new" banner, so keep it to two or three sentences on what a visitor will notice.
 A line beginning "Released" gives the date.
 
+## 0.25.0
+
+Released 23 November 2026.
+
+There is now a Settings page. It holds the choice of light or dark, a way to make Omsett forget
+what it remembers on your device, and one new thing: whether your visit is counted.
+
+### Added
+
+- **Settings**, in the navigation at the top of every page and again at the foot, marked with
+  a small gear. Appearance (dark, light, or as your device is
+  set), and "Forget my settings".
+- **Counting visits, which you can turn off.** omsett.com counts how many people open it, with
+  Plausible, which sets no cookie and keeps no record of a person. It learns that a page was
+  opened. It never learns what was converted, and no file is any part of it.
+- **It is off without your doing anything if your browser asks not to be tracked** (Do Not
+  Track, or Global Privacy Control). Settings says which of the three it is: counted, turned
+  off by you, or turned off by your browser.
+- **The page still asks no other site for anything.** The counting script and its reports go
+  to omsett.com itself, whose server passes them on. The security policy that stops the page
+  talking to other sites is unchanged, and the test that checks it still runs on every page.
+- **A copy of Omsett you run yourself counts nothing** unless you set it up to. The Docker
+  image has no counting in it, and Settings there says so.
+
+### Known
+
+- A change to whether visits are counted takes effect when the next page is opened.
+
 ## 0.24.0
 
 Released 23 November 2026.

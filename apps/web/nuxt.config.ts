@@ -33,6 +33,10 @@ export default defineNuxtConfig({
     public: {
       siteUrl: 'https://omsett.com',
       commit: process.env.COMMIT_REF?.slice(0, 7) ?? 'dev',
+      // Counting visits is off unless the build is told where, on this origin, the counting
+      // script is served from (OMSETT_VISITS_SCRIPT=/js/….js). See docs/deploy-digitalocean.md.
+      visitsScript: process.env.OMSETT_VISITS_SCRIPT ?? '',
+      visitsEndpoint: '/api/event',
     },
   },
 
