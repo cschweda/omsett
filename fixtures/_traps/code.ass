@@ -1,0 +1,10 @@
+[Script Info]
+ScriptType: v4.00+
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize
+Style: Default,Arial,16
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+Dialogue: 0,0:00:01.00,0:00:04.00,Default,,0,0,0,,"><script>globalThis.__omsett_canary=1;alert("omsett-canary");fetch("http://canary.invalid/x")</script><img src=x onerror="globalThis.__omsett_canary=1"><svg onload="globalThis.__omsett_canary=1"></svg><iframe src="javascript:globalThis.__omsett_canary=1"></iframe> ${globalThis.__omsett_canary=1} {{constructor.constructor('globalThis.__omsett_canary=1')()}} <%= globalThis.__omsett_canary=1 %> #{globalThis.__omsett_canary=1} $(touch /tmp/omsett-canary) `touch /tmp/omsett-canary` ;touch /tmp/omsett-canary; | touch /tmp/omsett-canary && touch /tmp/omsett-canary javascript:globalThis.__omsett_canary=1 //

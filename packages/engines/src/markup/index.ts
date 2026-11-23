@@ -214,7 +214,7 @@ function onlyPictures() {
 }
 
 /** A Word document or a presentation, read to a page and cleaned like any other page. */
-async function officeToHtml(document: ReadDocument, name: string): Promise<string> {
+export async function officeToHtml(document: ReadDocument, name: string): Promise<string> {
   const [{ unified }, parse, sanitize, stringify] = await Promise.all([
     import('unified'),
     import('rehype-parse'),

@@ -114,7 +114,7 @@ build by `apps/web/scripts/write-headers.ts`.
 - **A file is offered only formats of its own kind** (`packages/registry/src/kinds.ts`):
   pictures and drawings are one kind, data another, subtitles a third, Markdown and HTML a
   fourth, fonts a fifth, archives a sixth. Spreadsheets are of data's kind, and documents of
-  Markdown's and HTML's. Screenplays are a kind of their own. A new category that should convert into an
+  Markdown's and HTML's, as are PDFs. Screenplays are a kind of their own. A new category that should convert into an
   existing one must be added there, or its formats will never be listed for it.
 - **An engine's reason for refusing a file reaches the user only as a `Refusal`**
   (`packages/engines/src/util.ts`). Any other error is shown as "This file couldn't be
@@ -145,6 +145,15 @@ build by `apps/web/scripts/write-headers.ts`.
 - **What a document's author deleted or hid is never carried across**: tracked deletions,
   hidden text, comments, author names; and from a presentation, hidden slides and speaker
   notes. There is a trap for each.
+- **Every format has a code trap, and every code trap is run to every target**
+  (`fixtures/code-traps.test.ts`). A new format gets one in the "code" section of
+  `make-traps.py`, with the payload wherever the format holds text. `expectNoCodeRan` runs after
+  every trap in both suites; a test of the test fails if a kind of file has no code trap.
+- **A PDF's tags are believed only if they describe and cover its text**
+  (`packages/engines/src/pdf/read.ts`). Do not loosen that to make a file come out "tagged":
+  the fallback exists because real PDFs are tagged for their pictures alone.
+- **An engine tells the person what it found by reading the file through `ConvertOutput.note`**,
+  which the result card shows. Use it for what could not be known before converting.
 - **A value written into a line-based format is escaped, always** (`escaped` in
   `packages/engines/src/data/cards.ts`). Anything written as a parameter or an unescaped value
   (a time zone, a repeat rule, a status) is held to a pattern first, and left out if it fails.

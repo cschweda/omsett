@@ -102,7 +102,7 @@ for (const trap of traps) {
                 ? ['woff', 'ttf']
                 : category === 'archive'
                   ? ['zip', 'tar']
-                  : category === 'document' || category === 'presentation'
+                  : category === 'document' || category === 'presentation' || category === 'pdf'
                     ? ['html', 'md']
                     : category === 'screenplay'
                       ? ['fdx', 'fountain']
@@ -129,6 +129,15 @@ for (const trap of traps) {
         }
       }
     }
+
+    // Nothing in the file ran: no mark set, no object changed, the page's title its own.
+    const marks = await page.evaluate(() => ({
+      canary: (globalThis as { __omsett_canary?: unknown }).__omsett_canary ?? null,
+      polluted: ({} as { polluted?: unknown }).polluted ?? null,
+      added: Object.keys(Object.prototype),
+      title: document.title,
+    }))
+    expect(marks).toEqual({ canary: null, polluted: null, added: [], title: 'Omsett' })
 
     // The trap is spent. A good file must still convert on the same page.
     await card.getByRole('button', { name: /Remove/ }).click()

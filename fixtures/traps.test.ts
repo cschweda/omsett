@@ -1,11 +1,12 @@
 // Trap files: images that are broken, hostile, or lying, each in one deliberate way.
 // fixtures/_traps/manifest.json says what must happen to each; this runs them through
 // detection, the size guard, and libvips in Node. e2e/traps.spec.ts does the same in browsers.
+import { existsSync } from 'node:fs'
 import { readFile } from 'node:fs/promises'
 import { detect, MAX_PIXELS, nameDisagrees, sizeProblem } from '@omsett/detect'
 import { createNodeEngines } from '@omsett/engines/node'
 import { createRouter, deriveEdges, formatById, registry, switches, type Format } from '@omsett/registry'
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it } from 'vitest'
 import manifest from './_traps/manifest.json'
 
 const engines = createNodeEngines()
@@ -56,7 +57,20 @@ async function expectEngineStillWorks() {
   expect(found.kind === 'known' && found.format.id).toBe('webp')
 }
 
+/**
+ * Whatever a trap was, nothing in it ran. The code traps carry a payload that would leave one
+ * of these marks if any part of it were ever executed; every trap is held to the same check.
+ */
+export function expectNoCodeRan() {
+  expect((globalThis as { __omsett_canary?: unknown }).__omsett_canary, 'a payload set its mark').toBeUndefined()
+  expect(({} as { polluted?: unknown }).polluted, 'every object was given a new property').toBeUndefined()
+  expect(Object.keys(Object.prototype), 'the prototype every object shares was added to').toEqual([])
+  expect(existsSync('/tmp/omsett-canary'), 'a command from a payload ran').toBe(false)
+}
+
 describe('trap files', () => {
+  afterEach(expectNoCodeRan)
+
   it('has a manifest entry for every file and a file for every entry', async () => {
     const { readdir } = await import('node:fs/promises')
     const files = (await readdir(new URL('./_traps/', import.meta.url))).filter(
@@ -107,7 +121,7 @@ describe('trap files', () => {
                 ? [woff, ttf]
                 : from.category === 'archive'
                   ? [zip, tar]
-                  : from.category === 'document' || from.category === 'presentation'
+                  : from.category === 'document' || from.category === 'presentation' || from.category === 'pdf'
                     ? [html, md]
                     : from.category === 'screenplay'
                       ? [fdx, fountain]
@@ -140,7 +154,7 @@ describe('trap files', () => {
         expect(error, 'a failure is an ordinary error').toBeInstanceOf(Error)
         outcome = 'fails'
         // Where the app must give a particular reason, the engine is where it comes from.
-        if (trap.note && ['data', 'spreadsheet', 'subtitle', 'text', 'font', 'archive', 'document', 'presentation', 'screenplay'].includes(from.category)) expect((error as Error).message).toBe(trap.note)
+        if (trap.note && ['data', 'spreadsheet', 'subtitle', 'text', 'font', 'archive', 'document', 'presentation', 'screenplay', 'pdf'].includes(from.category)) expect((error as Error).message).toBe(trap.note)
       }
       expect(outcome, 'the engine').toBe(trap.node)
 

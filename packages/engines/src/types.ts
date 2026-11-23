@@ -40,6 +40,11 @@ export interface ConvertOutput {
   /** Format.id */
   format: string
   blob: Blob
+  /**
+   * Something the person should know about how this file was made, which could only be known
+   * by reading the file: "The structure was read from the PDF's own tags". Shown with the result.
+   */
+  note?: string
 }
 
 export interface Engine extends EngineInfo {

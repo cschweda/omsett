@@ -7,6 +7,64 @@ The paragraph that opens a version is its teaser: the home page shows its first 
 in the "What's new" banner, so keep it to two or three sentences on what a visitor will notice.
 A line beginning "Released" gives the date.
 
+## 0.23.0
+
+Released 23 November 2026.
+
+Omsett now reads PDFs: drop one and get a web page, Markdown or a Word document. Where a PDF is
+tagged, its headings, lists and tables are read from the tags and not guessed; where it is not,
+they are estimated from the layout, and the result says which happened.
+
+### Added
+
+- **PDF to HTML, Markdown and DOCX.** A PDF records where letters sit on a page. A tagged PDF
+  also says what they are, and Omsett reads that: headings at their levels, paragraphs, lists,
+  tables with their header cells, links, and the description of each picture.
+- **Tags are believed only when they earn it.** Two things are checked: that the tags say what
+  the text is (tags that mark each page as one block say nothing), and that they cover the
+  text (a PDF tagged only for its pictures would otherwise come out with its pictures'
+  descriptions and none of its words). Both cases were found in real reports.
+- **An untagged PDF has its structure estimated**: larger type is a heading, a line that opens
+  with a bullet or a number is a list item, close lines are one paragraph, a word hyphenated
+  across two lines is rejoined, and a page number alone at the foot of a page is left out.
+- **The result says how it was read**: from the PDF's own tags; estimated because there are no
+  tags; or estimated although there are tags, because they do not describe the text.
+- **A scan is recognised and refused**: "This PDF has no text in it. It may be a scan."
+- **Nothing in a PDF is run.** Programs set to run on opening, links that start programs or
+  whose address is a script, and files attached inside are never called, opened or carried.
+- **A "code" trap for every format Omsett reads**, 35 in all: one adversarial payload (script
+  tags, handlers, links that are code, template and shell injections, names that change every
+  JavaScript object) planted wherever each format holds text.
+- **A check after every trap, old and new, that nothing ran**: no mark set, no object changed,
+  no file written, no dialog opened, no request to another site.
+- **Every combination for the code traps**: each is converted to every format its kind can
+  become, 654 conversions, and each result is either a clean refusal or a real file with no
+  live script in it.
+- 13 trap files for PDF: a program that runs on opening, links that start programs, a file
+  attached inside, a password, a scan, a list of pages that holds itself, tags five thousand
+  deep, and a PDF tagged only for its pictures.
+
+### Changed
+
+- **Anything shaped like a tag is removed from every subtitle's words**, whatever format they
+  came from. Before, only SRT and WebVTT were treated this way, and a script tag in an ASS or
+  SBV file was carried into the SRT made from it.
+- The PDF reader is pdf.js, the one Firefox uses for every PDF on the web. It is about 1.8 MB
+  and is fetched with the first PDF. New dependency (Apache-2.0).
+
+### Known
+
+- **Tables are found only in tagged PDFs.** From layout alone, a table comes out as lines.
+- Pictures in a PDF are not carried, only their descriptions, where the PDF gives them.
+- A scanned PDF cannot be read. Reading the words in a picture (OCR) is planned.
+- In an untagged PDF, a heading set in bold at the size of the text around it is not found,
+  and text in several columns is read in the order the PDF stores it, which is usually but not
+  always the order it is read in.
+- Some PDFs in Chinese, Japanese and Korean need tables of characters that are not shipped yet,
+  and may come out with characters missing.
+- PDF is read, not written. Writing PDF, tagged, is planned.
+- The accessibility of the result is not yet measured against the original's.
+
 ## 0.22.0
 
 Released 23 November 2026.

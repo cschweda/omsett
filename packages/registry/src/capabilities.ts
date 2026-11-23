@@ -131,6 +131,8 @@ export const capabilities: Capability[] = [
   // steps, through the page.
   { engine: 'markup', tier: 'browser', reads: ['docx'], writes: [{ format: 'html', lossy: false }], priority: 20 },
   { engine: 'markup', tier: 'browser', reads: ['html'], writes: [{ format: 'docx', lossy: false }], priority: 20 },
+  // A PDF is read to a page, from its tags where it has them and from its layout where not.
+  { engine: 'pdf', tier: 'browser', reads: ['pdf'], writes: [{ format: 'html', lossy: false }], priority: 20 },
   // A presentation is read to a page, a section to a slide.
   { engine: 'markup', tier: 'browser', reads: ['pptx'], writes: [{ format: 'html', lossy: false }], priority: 20 },
   { engine: 'subtitle', tier: 'browser', reads: SUBTITLES, writes: SUBTITLE_WRITES, priority: 20 },

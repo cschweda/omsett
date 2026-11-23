@@ -106,6 +106,17 @@ export const markupInfo: EngineInfo = {
   sourceUrl: 'https://github.com/cschweda/omsett/tree/main/packages/engines/src/markup',
 }
 
+// PDF, read with pdf.js: the reader Firefox uses, built for files nobody has reason to trust.
+// It is a script of the app's own, fetched with the first PDF.
+export const pdfInfo: EngineInfo = {
+  id: 'pdf',
+  // The reader and its parsing half, as built into the app.
+  sizeBytes: 1_756_575,
+  runtimes: ['browser', 'node'],
+  license: 'Apache-2.0',
+  sourceUrl: 'https://github.com/mozilla/pdf.js',
+}
+
 // Screenplays: Fountain, Final Draft and the Drafter package. Omsett's own readers and writers.
 export const scriptInfo: EngineInfo = {
   id: 'script',
@@ -169,6 +180,7 @@ export const engineInfo: Record<string, EngineInfo> = {
   [markupInfo.id]: markupInfo,
   [archiveInfo.id]: archiveInfo,
   [scriptInfo.id]: scriptInfo,
+  [pdfInfo.id]: pdfInfo,
   [fontInfo.id]: fontInfo,
   [fontWoff2Info.id]: fontWoff2Info,
 }

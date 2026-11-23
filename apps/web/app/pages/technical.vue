@@ -46,6 +46,8 @@ const trapGroups: Record<string, string> = {
   documents: 'Word documents: bombs, things fetched from elsewhere, and words meant to be gone',
   slides: 'Presentations: bombs, links that run programs, and what the audience was not shown',
   scripts: 'Screenplays: bombs, manifests that lie, and what the writer set aside',
+  pdf: 'PDF: programs that run on opening, pages that hold themselves, tags that tell nothing',
+  code: 'Code: one adversarial payload planted in every format, to show that nothing runs',
 }
 </script>
 

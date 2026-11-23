@@ -68,7 +68,15 @@ export default defineNuxtConfig({
       format: 'es',
       // Workers get their own directory, because that path carries the worker policy
       // (see security-headers.ts). scripts/write-headers.ts fails the build if one strays.
-      rollupOptions: { output: { entryFileNames: '_nuxt/workers/[name]-[hash].js' } },
+      rollupOptions: {
+        output: {
+          entryFileNames: '_nuxt/workers/[name]-[hash].js',
+          // The PDF reader's parsing half is a file its makers call "pdf.worker". Here it is not
+          // a worker of its own: it is loaded into the engine worker and runs there. It is named
+          // for what it is, so that the check for stray worker scripts stays exact.
+          chunkFileNames: (chunk) => (chunk.name.includes('pdf.worker') ? '_nuxt/pdf-parser-[hash].js' : '_nuxt/[name]-[hash].js'),
+        },
+      },
     },
     optimizeDeps: { exclude: ['wasm-vips'] },
     resolve: {

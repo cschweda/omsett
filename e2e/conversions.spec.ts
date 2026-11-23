@@ -53,6 +53,7 @@ const samples: Record<string, string> = {
   html: 'html/sample.html',
   docx: 'docx/sample.docx',
   pptx: 'pptx/sample.pptx',
+  pdf: 'pdf/sample.pdf',
   fountain: 'fountain/sample.fountain',
   fdx: 'fdx/sample.fdx',
   drafter: 'drafter/sample.drafter',

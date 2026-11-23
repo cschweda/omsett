@@ -39,6 +39,8 @@ const SCRIPT_KEPT = [{ id: 'script-kept', text: 'Scene headings, action, charact
 const PACKAGE_MAIN = [{ id: 'package-main', text: 'The script inside the package is converted. Its drafts, cut material, workbook and voice notes are the writer\'s own papers and are left out.' }]
 const PACKAGE_NEW = [{ id: 'package-new', text: 'The package holds the script and nothing else: no drafts or notes yet.' }]
 
+const FROM_PDF = [{ id: 'pdf-read', text: 'Where the PDF is tagged, its headings, lists, tables and picture descriptions are read from the tags. Where it is not, they are estimated from the layout, and tables are not found. The result says which. Pictures themselves, and the look of the page, are not carried.' }]
+
 // Workbooks.
 const WORKBOOK_READ = [
   { id: 'first-sheet', text: 'Only the first sheet is converted.' },
@@ -78,6 +80,7 @@ export const overrides: EdgeOverride[] = [
   { from: 'fdx', to: 'drafter', warnings: [...PACKAGE_NEW, ...SCRIPT_KEPT] },
   { from: 'docx', to: 'html', warnings: [...FROM_WORD, ...CHECK_ACCESS] },
   { from: 'pptx', to: 'html', warnings: [...FROM_SLIDES, ...CHECK_ACCESS] },
+  { from: 'pdf', to: 'html', warnings: [...FROM_PDF, ...CHECK_ACCESS] },
   { from: 'html', to: 'docx', warnings: [...TO_WORD, ...CHECK_ACCESS] },
   ...BESIDE_WORKBOOK.flatMap((other) => [
     { from: 'xlsx', to: other, warnings: WORKBOOK_READ },
