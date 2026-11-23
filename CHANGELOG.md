@@ -28,11 +28,6 @@ patterns inside patterns is refused instead of being left to run.
   same way: nothing is sent until you say so.
 - **What's new explains what a "trap file" is**, for anyone meeting the term for the first time.
 
-### Fixed
-
-- **"Markdown" no longer loses its last letter** on a narrow format tile. A format's name is
-  now sized to the tile it is in.
-
 ### Changed
 
 - The README describes Omsett as it is, with pictures; its list of formats is written from
@@ -41,18 +36,17 @@ patterns inside patterns is refused instead of being left to run.
   its settings and a deploy. The server rules are written by the build.
 - **In a file's details, "removed when converted" and "kept" line up in a column of their own**,
   so the list can be read at a glance.
+- New releases of the software Omsett is built from are left three days before they can be
+  used, and a release of Omsett is published only from a commit whose checks all passed.
 
 ### Fixed
 
+- **"Markdown" no longer loses its last letter** on a narrow format tile. A format's name is
+  now sized to the tile it is in.
 - **A HEIC photo converted to JPEG now carries the warning** that it is being compressed a
   second time. The warning was lost because the conversion goes by way of PNG.
 - A drawing made of patterns filled with patterns, many levels deep, is refused instead of
   being left to run.
-
-### Changed
-
-- New releases of the software Omsett is built from are left three days before they can be
-  used, and a release of Omsett is published only from a commit whose checks all passed.
 
 ## 0.29.0
 
