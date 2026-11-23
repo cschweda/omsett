@@ -96,6 +96,16 @@ export const subtitleInfo: EngineInfo = {
   sourceUrl: 'https://github.com/cschweda/omsett/tree/main/packages/engines/src/subtitle',
 }
 
+// Markdown and HTML, through the unified family of parsers (remark and rehype). They are part
+// of the app's scripts and arrive with the first file that needs them.
+export const markupInfo: EngineInfo = {
+  id: 'markup',
+  sizeBytes: 0,
+  runtimes: ['browser', 'node'],
+  license: 'MIT',
+  sourceUrl: 'https://github.com/cschweda/omsett/tree/main/packages/engines/src/markup',
+}
+
 /** The font files resvg is given, from @fontsource/inter. */
 export const resvgFonts = ['inter-latin-400-normal.woff2', 'inter-latin-700-normal.woff2']
 
@@ -116,4 +126,5 @@ export const engineInfo: Record<string, EngineInfo> = {
   [magickInfo.id]: magickInfo,
   [dataInfo.id]: dataInfo,
   [subtitleInfo.id]: subtitleInfo,
+  [markupInfo.id]: markupInfo,
 }

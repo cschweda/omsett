@@ -53,8 +53,10 @@ export async function describeDownload(page: Page, click: () => Promise<void>) {
   const [download] = await Promise.all([page.waitForEvent('download'), click()])
   const path = await download.path()
   const bytes = await readFile(path)
-  const found = await detect(new Blob([bytes]), registry.formats)
-  return { name: download.suggestedFilename(), bytes, found }
+  // Markdown is known by its name alone, so for that one format the name is given.
+  const name = download.suggestedFilename()
+  const found = await detect(new Blob([bytes]), registry.formats, name.endsWith('.md') ? name : undefined)
+  return { name, bytes, found }
 }
 
 export async function describeFixture() {

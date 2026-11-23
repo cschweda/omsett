@@ -1,5 +1,5 @@
-// Formats that are plain text: the data formats (JSON, JSON Lines, XML, TOML, YAML, CSV, TSV)
-// and the subtitle formats. None has a signature. Subtitles, JSON and XML can be told from how
+// Formats that are plain text: the data formats (JSON, JSON Lines, XML, TOML, YAML, CSV, TSV),
+// the subtitle formats, HTML and Markdown. None has a signature. Subtitles, JSON and XML can be told from how
 // they begin. The others cannot always be told apart from each other or from a note someone
 // typed, so for those, and only those, the file's name is allowed to settle it.
 
@@ -23,6 +23,8 @@ const LRC = found('lrc', 'application/x-lrc')
 const TTML = found('ttml', 'application/ttml+xml')
 const SMI = found('smi', 'application/x-sami')
 const MICRODVD = found('microdvd', 'text/x-microdvd')
+const HTML = found('html', 'text/html')
+const MARKDOWN = found('md', 'text/markdown')
 
 /** What a name's ending claims, for the formats whose contents cannot say. */
 const NAMED: Record<string, Found> = {
@@ -155,21 +157,29 @@ export function sniffText(head: Uint8Array, complete: boolean, name?: string): F
   const first = lines[0]?.trimStart()
   if (first === undefined) return null
 
-  // XML: a tag at the very start. A web page begins the same way and is not data.
+  const dot = name ? name.lastIndexOf('.') : -1
+  const ending = name && dot > 0 ? name.slice(dot + 1).toLowerCase() : null
+
+  // Markdown is any text at all, with or without its marks, so nothing in a file can say that
+  // it is Markdown. Its name is the only thing that can.
+  if (ending !== null && ['md', 'markdown', 'mdown'].includes(ending)) return MARKDOWN
+
+  // A tag at the very start: a web page, subtitles written as tags, or XML.
   if (first.startsWith('<')) {
     const start = decoded.trimStart().slice(0, 4096)
     // SAMI is written like a web page and is not XML. TTML is XML, and is subtitles.
     if (/^<sami[\s>]/i.test(start)) return SMI
-    if (rootTag(start) === 'tt') return TTML
-    if (/^<!doctype\s+html|^<html[\s>]/i.test(start)) return null
+    const root = rootTag(start)
+    if (root === 'tt') return TTML
+    if (/^<!doctype\s+html/i.test(start) || root?.toLowerCase() === 'html') return HTML
+    // A piece of a page, with no <html> around it, reads like XML. Its name says which it is.
+    if (ending === 'html' || ending === 'htm') return root ? HTML : null
     return /^<(?:\?xml|!--|!DOCTYPE|[A-Za-z_])/.test(start) ? XML : null
   }
 
   const subtitle = sniffSubtitle(decoded, lines)
   if (subtitle) return subtitle
 
-  const dot = name ? name.lastIndexOf('.') : -1
-  const ending = name && dot > 0 ? name.slice(dot + 1).toLowerCase() : null
   const claimed = ending ? NAMED[ending] : undefined
 
   if (first.startsWith('{') || first.startsWith('[')) {

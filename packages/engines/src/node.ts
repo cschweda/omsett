@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises'
 import { createRequire } from 'node:module'
 import { createDataEngine } from './data'
 import { createSubtitleEngine } from './subtitle'
+import { createMarkupEngine } from './markup'
 import { createHeifEngine, type HeifModule } from './heif'
 import { engineInfo, resvgFonts, vipsModules } from './info'
 import { createResvgEngine, type ResvgHost } from './resvg'
@@ -54,5 +55,6 @@ export function createNodeEngines(): Record<string, Engine> {
   })
   engines.data = createDataEngine()
   engines.subtitle = createSubtitleEngine()
+  engines.markup = createMarkupEngine()
   return engines
 }

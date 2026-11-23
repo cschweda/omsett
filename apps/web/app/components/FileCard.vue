@@ -3,7 +3,11 @@ import type { QueueFile } from '~/composables/useConversionQueue'
 import { switchedOffReason } from '@omsett/registry'
 import { formatBytes } from '~/utils/format-bytes'
 
-const props = defineProps<{ entry: QueueFile }>()
+const props = defineProps<{
+  entry: QueueFile
+  /** Whole seconds this file has been worked on, while it is. */
+  seconds?: number
+}>()
 defineEmits<{ remove: [id: string] }>()
 
 const canvas = useTemplateRef<HTMLCanvasElement>('canvas')
@@ -22,6 +26,17 @@ const note = computed(() => {
   }
   if (!known.value) return 'Unsupported format'
   if (props.entry.mismatch) return `Named like another format, but the contents are ${known.value.format.name}.`
+  return ''
+})
+
+// While a batch runs, each file says where it stands. The seconds appear once there are a few
+// of them: a count that starts at once is noise on a conversion that takes half a second.
+const active = computed(() => props.entry.stage === 'loading' || props.entry.stage === 'working')
+const stage = computed(() => {
+  const time = (props.seconds ?? 0) >= 2 ? `, ${props.seconds} s` : ''
+  if (props.entry.stage === 'waiting') return 'Waiting'
+  if (props.entry.stage === 'loading') return `Getting the converter (${formatBytes(props.entry.loadingBytes)}, once)${time}`
+  if (props.entry.stage === 'working') return `Converting${time}`
   return ''
 })
 
@@ -66,14 +81,21 @@ watch(
     >
       Remove
     </button>
-    <UProgress
-      v-if="entry.status !== 'ready'"
-      :model-value="Math.round(entry.progress * 100)"
-      :max="100"
-      size="xs"
-      class="progress"
-      :aria-label="`Converting ${entry.file.name}`"
-    />
+    <div v-if="entry.status !== 'ready'" class="progress">
+      <div
+        class="bar"
+        :class="{ active }"
+        role="progressbar"
+        aria-valuemin="0"
+        aria-valuemax="100"
+        :aria-valuenow="Math.round(entry.progress * 100)"
+        :aria-label="`Converting ${entry.file.name}`"
+        data-testid="file-progress"
+      >
+        <div class="fill" :style="{ width: `${Math.round(entry.progress * 100)}%` }" />
+      </div>
+      <p v-if="stage" class="stage figures" data-testid="file-stage">{{ stage }}</p>
+    </div>
   </li>
 </template>
 
@@ -143,5 +165,55 @@ watch(
 .progress {
   grid-column: 1 / -1;
   margin-top: 0.75rem;
+}
+.stage {
+  margin: 0.375rem 0 0;
+  font-size: var(--text-small);
+  color: var(--muted);
+}
+</style>
+
+<!-- The bar is shared with the batch's own, beside the Convert button. -->
+<style>
+.bar {
+  position: relative;
+  height: 4px;
+  overflow: hidden;
+  background: var(--rule);
+}
+.bar .fill {
+  height: 100%;
+  background: var(--accent);
+  transition: width 200ms linear;
+}
+/* A band of light crossing the whole track, filled or not: the sign that work is going on
+   between the moments an engine can say how far it has got. */
+.bar.active::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  width: 30%;
+  background: linear-gradient(90deg, transparent, var(--ink), transparent);
+  opacity: 0.35;
+  animation: bar-sweep 1.4s linear infinite;
+}
+@keyframes bar-sweep {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(334%);
+  }
+}
+/* With motion turned down the band stands still; the count of seconds is what moves. */
+@media (prefers-reduced-motion: reduce) {
+  .bar.active::after {
+    animation: none;
+    width: 100%;
+    opacity: 0.15;
+  }
+  .bar .fill {
+    transition: none;
+  }
 }
 </style>

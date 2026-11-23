@@ -1,3 +1,4 @@
+import { fileURLToPath } from 'node:url'
 const isolation = {
   'Cross-Origin-Opener-Policy': 'same-origin',
   'Cross-Origin-Embedder-Policy': 'require-corp',
@@ -70,5 +71,15 @@ export default defineNuxtConfig({
       rollupOptions: { output: { entryFileNames: '_nuxt/workers/[name]-[hash].js' } },
     },
     optimizeDeps: { exclude: ['wasm-vips'] },
+    resolve: {
+      alias: {
+        // The Markdown parser decodes "&amp;" and its kind with this package, whose build for
+        // browsers asks the page to do it (document.createElement). Engines run in a worker,
+        // where there is no page, so the plain build is used everywhere.
+        'decode-named-character-reference': fileURLToPath(
+          new URL('./node_modules/decode-named-character-reference/index.js', import.meta.url),
+        ),
+      },
+    },
   },
 })

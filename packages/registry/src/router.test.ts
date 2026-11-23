@@ -38,7 +38,7 @@ describe('router, real registry', () => {
     for (const edge of deriveEdges(registry).edges) {
       const engines = edge.candidates.map((c) => c.engine)
       if (edge.from !== 'png') expect(engines, `${edge.from} → ${edge.to}`).not.toContain('canvas')
-      for (const engine of engines) expect(engine === 'canvas' || ['heif', 'resvg', 'magick', 'data', 'subtitle'].includes(engine) || engine.startsWith('vips')).toBe(true)
+      for (const engine of engines) expect(engine === 'canvas' || ['heif', 'resvg', 'magick', 'data', 'subtitle', 'markup'].includes(engine) || engine.startsWith('vips')).toBe(true)
       // The data engine reads and writes data and nothing else; no picture engine touches data.
       const data = [edge.from, edge.to].map((id) => formatById(registry, id)!.category === 'data')
       expect(data[0], `${edge.from} → ${edge.to}`).toBe(data[1])
@@ -58,6 +58,7 @@ describe('router, real registry', () => {
       'heic', 'svg', 'svgz', 'psd', 'ico', 'jp2', 'exr', 'hdr', 'pcx', 'sgi', 'ras',
       'json', 'yaml', 'csv', 'xml', 'toml', 'jsonl', 'tsv',
       'srt', 'vtt', 'ass', 'ssa', 'ttml', 'lrc', 'sbv', 'smi', 'microdvd',
+      'md', 'html',
     ])
     const readOnly = new Set(everything.formats.filter((f) => f.readOnly).map((f) => f.id))
     expect([...readOnly].sort()).toEqual(['exr', 'hdr', 'heic', 'ico', 'jp2', 'pcx', 'psd', 'ras', 'sgi', 'svg', 'svgz'])
@@ -77,6 +78,10 @@ describe('router, real registry', () => {
     expect(all.targetsFor(['png', 'json']).find((t) => t.format.id === 'webp')!.reason).toBe('JSON files cannot become WebP')
     expect(all.route('yaml', 'json')!.warnings.map((w) => w.id)).toEqual(['comments-lost'])
     expect(all.route('json', 'csv')!.warnings.map((w) => w.id)).toEqual(['nesting-flattened', 'cells-exact'])
+    // Markdown and HTML become each other and nothing else.
+    expect(all.route('md', 'html')!.edges.map((e) => e.candidates[0]!.engine)).toEqual(['markup'])
+    expect(all.targetsFor(['html']).map((t) => t.format.id)).toEqual(['md', 'html'])
+    expect(all.route('html', 'md')!.warnings.map((w) => w.id)).toEqual(['content-only'])
     // Subtitles likewise: one step, their own kind only, and a note that styling is not kept.
     expect(all.route('ass', 'srt')!.edges.map((e) => e.candidates[0]!.engine)).toEqual(['subtitle'])
     expect(all.targetsFor(['srt']).every((t) => t.format.category === 'subtitle')).toBe(true)

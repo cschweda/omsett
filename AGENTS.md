@@ -40,9 +40,10 @@ These are invariants. A change that breaks one is wrong even if it works.
    the download size first.
 4. **Two tiers, named the same everywhere:** `browser` and `native`.
 5. **Detection by content, not name.** `packages/detect` reads magic bytes; the detected format
-   wins over the extension. One exception, and only one: YAML, TOML, CSV and TSV are plain text
-   that cannot always be told apart, so among those four the name settles it
-   (`packages/detect/src/text.ts`). A name never makes text of something that is not.
+   wins over the extension. Two exceptions, both in `packages/detect/src/text.ts`: YAML, TOML,
+   CSV and TSV are plain text that cannot always be told apart, so among those four the name
+   settles it; and Markdown is any text at all, so only its name can say that a file is
+   Markdown. A name never makes text of something that is not.
 6. **Nothing leaves the origin.** No request to another origin, ever; no request carrying file
    bytes to its own. Enforced by policy, not intention (see below), and asserted in
    `e2e/gate.spec.ts`.
@@ -107,7 +108,8 @@ build by `apps/web/scripts/write-headers.ts`.
   format as the coder and never lets ImageMagick guess: some of what it can guess its way into
   (scripts, drawings that name other files) is not a picture. Do not add an unhinted read.
 - **A file is offered only formats of its own kind** (`packages/registry/src/kinds.ts`):
-  pictures and drawings are one kind, data another, subtitles a third. A new category that should convert into an
+  pictures and drawings are one kind, data another, subtitles a third, Markdown and HTML a
+  fourth. A new category that should convert into an
   existing one must be added there, or its formats will never be listed for it.
 - **An engine's reason for refusing a file reaches the user only as a `Refusal`**
   (`packages/engines/src/util.ts`). Any other error is shown as "This file couldn't be
@@ -120,8 +122,21 @@ build by `apps/web/scripts/write-headers.ts`.
   `app/utils/text-preview.ts` allows. No `v-html` for anything that came out of a file.
 - **Tailwind owns some class names.** A scoped class called `contents` or `hidden` picks up the
   utility of that name; `contents` made an element vanish from layout.
-- **Data outputs must be recognisable without a name.** The tests identify every output from
+- **HTML is cleaned on the way in and on the way out** (`packages/engines/src/markup`), with
+  rehype-sanitize. Nothing that could run is ever written. Do not add a path that skips it.
+- **A package's "browser" build may assume a page.** Engines run in a worker, which has no
+  `document`. `decode-named-character-reference` (under the Markdown parser) did; it is aliased
+  to its plain build in `nuxt.config.ts`. Node tests cannot catch this; the browser tests do.
+- **Data outputs must be recognisable without a name.** Markdown is the one format that
+  cannot be; the tests give its name, and only its. The tests identify every output from
   its bytes alone, so what the data engine writes has to read unmistakably as its format.
+- **Never rely on a reader running out of stack to refuse a file.** How deep that is differs by
+  browser and by operating system; WebKit on Linux read what every other browser refused. State
+  the limit and check it (`limitDepth` in the markup engine).
+- **Word from the worker can arrive late.** A progress event may land after its file is
+  finished. Nothing it does may bring a finished file back to "converting".
+- **`?slow=800` holds each file before it converts** (localhost only), so tests can see the
+  page mid-conversion.
 - **Kill a leftover test server after a rebuild.** `pnpm e2e` reuses a server already on its
   port, and one started before `pnpm build` can go on serving the old build's policies.
 - **Formats are ranked by their order in `formats/index.ts`.** The first four a file can become
