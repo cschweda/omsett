@@ -3150,6 +3150,223 @@ slides(
     "unregistered",
 )
 
+# --- screenplays: Fountain, Final Draft, Drafter --------------------------------------------------
+# A script is text a writer typed, and writers type anything. Fountain has no invalid form, so
+# what matters is what a script carries that is not the script: notes to self, scenes set aside,
+# earlier drafts. Final Draft is XML, with XML's bombs. A Drafter package is a ZIP with a
+# manifest that says which file inside is the script, and a manifest can lie. Each is converted
+# to Final Draft (a Final Draft file, to Fountain).
+G = "scripts"
+import json as _json
+
+NOT_FDX = "This file is not a valid Final Draft script"
+NOT_PACKAGE = "This file is not a valid Drafter package"
+NOTHING = "This script has nothing in it to convert"
+DRAFTER_TYPE = b"application/vnd.drafter.package+zip"
+
+
+def script(name, data, why, detect, **more):
+    trap(name, data, why, detect, group=G, **more)
+
+
+FOUNTAIN_SAMPLE = sample("fountain/sample.fountain")
+FDX_SAMPLE = sample("fdx/sample.fdx")
+DRAFTER_SAMPLE = sample("drafter/sample.drafter")
+
+script(
+    "what-the-writer-set-aside.fountain",
+    FOUNTAIN_SAMPLE,
+    "A sound script with a note to self, a scene set aside between /* and */, and headings of "
+    "the writer's outline, each marked. None of them is the script, and none is carried "
+    "across.",
+    "fountain", node="succeeds", absent="SECRET-",
+)
+script(
+    "marks-that-open-nothing.fountain",
+    b"INT. ROOM - DAY\n\n" + b"*a _b " * 40_000 + b"\n\n" + b"/*" * 40_000 + b"\n\n" + b"[[" * 40_000 + b"\n",
+    "Eighty thousand marks for emphasis that are never closed, then forty thousand openings "
+    "of a set-aside block and forty thousand of a note, none closed either.",
+    "fountain", node="succeeds",
+)
+script(
+    "types-its-own-tags.fountain",
+    b'INT. ROOM - DAY\n\n</Text></Paragraph><Paragraph Type="Scene Heading"><Text>INJECTED]]>&amp;<script>alert(1)</script>\n\nADA\n<Text Style="Bold">Hello</Text>\n',
+    "A script whose action and dialogue are written as the tags of the file it will become. "
+    "They are what a character typed, and are written as text.",
+    "fountain", node="succeeds", absent='<Paragraph Type="Scene Heading"><Text>INJECTED',
+)
+script(
+    "nothing-but-notes.fountain",
+    b"[[Only a note to self.]]\n\n/* And a scene set aside.\nINT. NOWHERE - NIGHT\n*/\n\n# An outline heading\n\n= A summary.\n",
+    "A file of notes, set-aside material and outline, with no script in it.",
+    "fountain", node="fails", note=NOTHING,
+)
+script(
+    "picture-named.fountain",
+    GOOD,
+    "A PNG with a .fountain name. A name can say that text is a script; it cannot make text "
+    "of a picture.",
+    "png", node="succeeds", mismatch=True,
+)
+script(
+    "latin-1.fountain",
+    "INT. CAFÉ - DAY\n\nZOË\nDéjà vu.\n".encode("latin-1"),
+    "A script saved in an older encoding.",
+    "unknown",
+)
+
+script(
+    "truncated.fdx",
+    FDX_SAMPLE[: len(FDX_SAMPLE) // 2],
+    "A Final Draft script cut off half-way, in the middle of a tag.",
+    "fdx", node="fails", note=NOT_FDX,
+)
+script(
+    "entity-bomb.fdx",
+    b'<?xml version="1.0"?>\n<!DOCTYPE FinalDraft [' + xml_entities + b']>\n<FinalDraft DocumentType="Script"><Content><Paragraph Type="Action"><Text>&a8;</Text></Paragraph></Content></FinalDraft>\n',
+    'The "billion laughs" as a line of action.',
+    "fdx", node="fails", note=NOT_FDX,
+)
+script(
+    "reads-a-local-file.fdx",
+    b'<?xml version="1.0"?>\n<!DOCTYPE FinalDraft [<!ENTITY x SYSTEM "file:///etc/passwd">]>\n<FinalDraft><Content><Paragraph Type="Action"><Text>&x;</Text></Paragraph></Content></FinalDraft>\n',
+    "A script that asks the reader to fetch a file from the computer and print it as action.",
+    "fdx", node="fails", note=NOT_FDX,
+)
+script(
+    "notes-and-revisions.fdx",
+    FDX_SAMPLE,
+    "A sound script with a note attached to a line and a named revision, each marked. Neither "
+    "is the script.",
+    "fdx", node="succeeds", absent="SECRET-",
+)
+script(
+    "no-script-inside.fdx",
+    b'<?xml version="1.0"?>\n<FinalDraft DocumentType="Script"><TitlePage><Content><Paragraph><Text>A TITLE</Text></Paragraph></Content></TitlePage></FinalDraft>\n',
+    "A title page and no script.",
+    "fdx", node="fails", note=NOT_FDX,
+)
+script(
+    "empty-paragraphs.fdx",
+    b'<?xml version="1.0"?>\n<FinalDraft><Content>' + b'<Paragraph Type="Action"><Text></Text></Paragraph>' * 500 + b"</Content></FinalDraft>\n",
+    "Five hundred paragraphs with nothing in any of them.",
+    "fdx", node="fails", note=NOTHING,
+)
+script(
+    "speeches-nested-a-thousand-deep.fdx",
+    b'<?xml version="1.0"?>\n<FinalDraft><Content>' + b"<Paragraph><DualDialogue>" * 1000 + b'<Paragraph Type="Action"><Text>deep</Text></Paragraph>' + b"</DualDialogue></Paragraph>" * 1000 + b"</Content></FinalDraft>\n",
+    "Two characters speaking at once, inside two characters speaking at once, a thousand "
+    "times over.",
+    "fdx", node="fails", note=NOT_FDX,
+)
+script(
+    "data-named.fdx",
+    b"<people><person><name>Ada</name></person></people>\n",
+    "Ordinary XML with an .fdx name. It is data, and is converted as data.",
+    "xml", node="succeeds", mismatch=True,
+)
+script(
+    "script-named.xml",
+    FDX_SAMPLE,
+    "A sound Final Draft script with an .xml name. It is XML, and it is a script first.",
+    "fdx", node="succeeds", mismatch=True,
+)
+
+
+def package(manifest=None, files=None, first=("mimetype", DRAFTER_TYPE)):
+    """A Drafter package. The manifest is a dict changed from the sample's, or raw bytes."""
+    with _zipfile.ZipFile(_io.BytesIO(DRAFTER_SAMPLE)) as z:
+        parts = {n: z.read(n) for n in z.namelist()}
+    base = _json.loads(parts["drafter.json"])
+    if isinstance(manifest, dict):
+        base.update(manifest)
+        parts["drafter.json"] = _json.dumps(base).encode()
+    elif manifest is not None:
+        parts["drafter.json"] = manifest
+    parts.update(files or {})
+    parts.pop("mimetype")
+    out = _io.BytesIO()
+    with _zipfile.ZipFile(out, "w") as z:
+        z.writestr(_zipfile.ZipInfo(first[0], (2026, 11, 23, 12, 0, 0)), first[1])
+        for n, body in parts.items():
+            if body is None:
+                continue
+            info = _zipfile.ZipInfo(n, (2026, 11, 23, 12, 0, 0))
+            info.compress_type = _zipfile.ZIP_DEFLATED
+            z.writestr(info, body)
+    return out.getvalue()
+
+
+script(
+    "the-papers-beside-the-script.drafter",
+    DRAFTER_SAMPLE,
+    "A sound package holding, beside the script, an earlier draft, material the writer cut "
+    "and their workbook, each marked. Those are the writer's own papers. The script is "
+    "converted, and none of them goes with it.",
+    "drafter", node="succeeds", absent="SECRET-",
+)
+script(
+    "truncated.drafter",
+    DRAFTER_SAMPLE[: len(DRAFTER_SAMPLE) // 2],
+    "A package cut off half-way.",
+    "drafter", node="fails", note=NOT_PACKAGE,
+)
+script(
+    "script-is-outside-the-package.drafter",
+    package({"main": "../../../etc/passwd"}),
+    "The manifest says the script is a file outside the package.",
+    "drafter", node="fails", note=NOT_PACKAGE,
+)
+script(
+    "script-is-not-there.drafter",
+    package({"main": "Another Film.fountain"}),
+    "The manifest names a script that is not in the package.",
+    "drafter", node="fails", note=NOT_PACKAGE,
+)
+script(
+    "manifest-is-not-json.drafter",
+    package(b'{"format": "drafter-package", "main": '),
+    "A manifest that stops in the middle.",
+    "drafter", node="fails", note=NOT_PACKAGE,
+)
+script(
+    "manifest-is-two-megabytes.drafter",
+    package({"note": "x" * (2 * 1024 * 1024)}),
+    "A manifest twice the size the format allows one to be.",
+    "drafter", node="fails", note=NOT_PACKAGE,
+)
+script(
+    "manifest-of-another-format.drafter",
+    package({"format": "something-else"}),
+    "A package whose manifest says it is some other kind of file.",
+    "drafter", node="fails", note=NOT_PACKAGE,
+)
+script(
+    "holds-prose.drafter",
+    package({"main": "cuts.md", "kind": "novel"}),
+    "A sound package whose work is prose in Markdown, not a script.",
+    "drafter", node="fails", note="This Drafter package holds prose, not a script. Its text is the Markdown file inside it",
+)
+script(
+    "bomb-inside.drafter",
+    package(files={"Omsett.fountain": b"INT. ROOM - DAY\n" + b" " * (300 * 1024 * 1024)}),
+    "A package whose script is three hundred megabytes of spaces.",
+    "drafter", node="fails", note=UNPACKS_TOO_BIG,
+)
+script(
+    "says-it-is-something-else.drafter",
+    package(first=("mimetype", b"application/epub+zip")),
+    "A ZIP with a .drafter name whose first entry says it is an e-book. It is taken for what "
+    "it says it is, which is not something Omsett converts yet.",
+    "unregistered",
+)
+script(
+    "package-named.zip",
+    DRAFTER_SAMPLE,
+    "A sound package with a .zip name. It is converted as the package it is, not unpacked.",
+    "drafter", node="succeeds", mismatch=True,
+)
+
 with open(os.path.join(OUT, "manifest.json"), "w") as out:
     json.dump(manifest, out, indent=2)
     out.write("\n")

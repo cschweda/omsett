@@ -101,8 +101,9 @@ describe('fixtures through every Node-capable engine', () => {
           expect(output.format).toBe(to.id)
 
           // Decodable as the target format, same dimensions, judged from the bytes.
-          // Markdown is known by its name alone, so for that one format the name is given.
-          const after = await detect(output.blob, registry.formats, to.id === 'md' ? output.name : undefined)
+          // Markdown and Fountain are plain text with no mark of their own, known by name alone,
+          // so for those two the name is given.
+          const after = await detect(output.blob, registry.formats, ['md', 'fountain'].includes(to.id) ? output.name : undefined)
           expect(after.kind === 'known' && after.format.id).toBe(to.id)
           expect(after.kind === 'known' && after.dimensions).toEqual(
             before.kind === 'known' ? before.dimensions : null,

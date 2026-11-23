@@ -1,0 +1,3 @@
+<?xml version="1.0"?>
+<!DOCTYPE FinalDraft [<!ENTITY x SYSTEM "file:///etc/passwd">]>
+<FinalDraft><Content><Paragraph Type="Action"><Text>&x;</Text></Paragraph></Content></FinalDraft>

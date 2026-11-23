@@ -34,6 +34,11 @@ const TO_WORD = [{ id: 'word-written', text: 'Pictures inside the page go into t
 
 const FROM_SLIDES = [{ id: 'slides-kept', text: 'Each slide becomes a section, with its title as a heading. Text, lists, tables, links and pictures with their descriptions are kept. Layout, animations, speaker notes and hidden slides are not.' }]
 
+// Screenplays.
+const SCRIPT_KEPT = [{ id: 'script-kept', text: 'Scene headings, action, characters, dialogue, parentheticals, transitions and the title page are kept. Notes, outline headings, revision marks and page numbering are not.' }]
+const PACKAGE_MAIN = [{ id: 'package-main', text: 'The script inside the package is converted. Its drafts, cut material, workbook and voice notes are the writer\'s own papers and are left out.' }]
+const PACKAGE_NEW = [{ id: 'package-new', text: 'The package holds the script and nothing else: no drafts or notes yet.' }]
+
 // Workbooks.
 const WORKBOOK_READ = [
   { id: 'first-sheet', text: 'Only the first sheet is converted.' },
@@ -65,6 +70,12 @@ const OUTLINES = [{ id: 'font-outlines', text: 'A web font unwraps to TTF or to 
 const TYPED = ['json', 'jsonl', 'yaml', 'toml']
 
 export const overrides: EdgeOverride[] = [
+  { from: 'fountain', to: 'fdx', warnings: SCRIPT_KEPT },
+  { from: 'fdx', to: 'fountain', warnings: SCRIPT_KEPT },
+  { from: 'drafter', to: 'fountain', warnings: PACKAGE_MAIN },
+  { from: 'drafter', to: 'fdx', warnings: [...PACKAGE_MAIN, ...SCRIPT_KEPT] },
+  { from: 'fountain', to: 'drafter', warnings: PACKAGE_NEW },
+  { from: 'fdx', to: 'drafter', warnings: [...PACKAGE_NEW, ...SCRIPT_KEPT] },
   { from: 'docx', to: 'html', warnings: [...FROM_WORD, ...CHECK_ACCESS] },
   { from: 'pptx', to: 'html', warnings: [...FROM_SLIDES, ...CHECK_ACCESS] },
   { from: 'html', to: 'docx', warnings: [...TO_WORD, ...CHECK_ACCESS] },

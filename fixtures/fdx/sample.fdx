@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<FinalDraft DocumentType="Script" Template="No" Version="5">
+  <Content>
+    <Paragraph Number="1" Type="Scene Heading"><SceneProperties Length="2/8" Page="1" Title=""/><Text>INT. KITCHEN - NIGHT</Text></Paragraph>
+    <Paragraph Type="Action"><Text>A laptop on the table. ADA (30s) drops a file onto the screen. </Text><Text Style="Italic">Nothing happens.</Text><Text> Then </Text><Text Style="Bold">everything</Text><Text> does, and </Text><Text Style="Underline">fast</Text><Text>.</Text></Paragraph>
+    <Paragraph Type="Character"><Text>ADA</Text></Paragraph>
+    <Paragraph Type="Parenthetical"><Text>(to herself)</Text></Paragraph>
+    <Paragraph Type="Dialogue"><Text>Pick a format.</Text></Paragraph>
+    <Paragraph>
+      <DualDialogue>
+        <Paragraph Type="Character"><Text>GRACE (V.O.)</Text></Paragraph>
+        <Paragraph Type="Dialogue"><Text>Nothing leaves your device.</Text></Paragraph>
+        <Paragraph Type="Character"><Text>ADA</Text></Paragraph>
+        <Paragraph Type="Dialogue"><Text>I heard you.</Text></Paragraph>
+      </DualDialogue>
+    </Paragraph>
+    <Paragraph Type="Shot"><Text>THE SCREEN</Text></Paragraph>
+    <Paragraph Alignment="Center" Type="Action"><Text>THE WORD "DONE"</Text></Paragraph>
+    <Paragraph Type="Character"><Text>McKenna</Text></Paragraph>
+    <Paragraph Type="Dialogue"><Text>Is it converted? Tom &amp; Jerry, 2 &lt; 3.</Text></Paragraph>
+    <Paragraph Type="Transition"><Text>CUT TO:</Text></Paragraph>
+    <Paragraph StartsNewPage="Yes" Type="Scene Heading"><Text>EXT. STREET - DAY</Text></Paragraph>
+    <Paragraph Type="Action"><Text>Café tables. A sign: 字幕.</Text><ScriptNote ID="1"><Paragraph><Text>SECRET-SCRIPT-NOTE</Text></Paragraph></ScriptNote></Paragraph>
+    <Paragraph Type="Transition"><Text>Burn to white.</Text></Paragraph>
+  </Content>
+  <TitlePage>
+    <Content>
+      <Paragraph Alignment="Center" Type="General"><Text>OMSETT</Text></Paragraph>
+      <Paragraph Alignment="Center" Type="General"><Text></Text></Paragraph>
+      <Paragraph Alignment="Center" Type="General"><Text>Written by</Text></Paragraph>
+      <Paragraph Alignment="Center" Type="General"><Text>Ada Lovelace</Text></Paragraph>
+    </Content>
+  </TitlePage>
+  <Revisions><Revision Color="#0000FF" ID="1" Name="SECRET-REVISION"/></Revisions>
+</FinalDraft>

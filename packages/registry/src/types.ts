@@ -9,6 +9,7 @@ export type Category =
   | 'presentation'
   | 'text'
   | 'data'
+  | 'screenplay'
   | 'ebook'
   | 'audio'
   | 'subtitle'

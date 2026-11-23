@@ -141,8 +141,9 @@ When a format ships, update its row here, in the same change.
 
 | Format | Home | Engine | Status |
 | --- | --- | --- | --- |
-| Fountain ↔ Final Draft (FDX) | Browser | Omsett's own | Next, after XLSX |
-| Drafter (the owner's own format; specified in the `drafter` repository, `docs/spec/drafter-package.md`) ↔ Fountain, FDX | Browser | Omsett's own | Next, after XLSX |
+| Fountain ↔ Final Draft (FDX) | Browser | `script` (Omsett's own) | **Shipped** (0.22.0) |
+| Drafter package (specified in the `drafter` repository, `docs/spec/drafter-package.md`) ↔ Fountain, FDX | Browser | `script` | **Shipped** (0.22.0). The script inside; not the drafts, cuts or workbook |
+| A Drafter package of prose to Markdown, DOCX; a script to HTML and DOCX | Browser | `script` with `markup` | Planned |
 | Screenplay to PDF, laid out to industry rules | Browser | with the PDF step | Planned |
 | Celtx, Highland, Fade In, WriterDuet | Browser | to be looked at | Planned, low priority |
 
@@ -294,7 +295,7 @@ with [audit.icjia.app](https://audit.icjia.app).
 ## Suggested order
 
 1. Images are largely done: 22 formats. Left: CUR, DDS, ICNS, FITS, APNG, PSB, camera RAW, DICOM, and writing ICO and JPEG 2000.
-2. Data and subtitles are done: seven data formats, nine subtitle formats. The side-by-side view for text formats is done too, and Markdown ↔ HTML. Fonts are done as well, vCard and iCalendar, and the first archives. XLSX, DOCX and PPTX are done. Next: the screenwriting formats. All three are ZIPs of XML, and Omsett reads both itself. Then the screenwriting formats, Fountain, Final Draft (FDX) and Drafter. Small JavaScript libraries, no large downloads.
+2. Data and subtitles are done: seven data formats, nine subtitle formats. The side-by-side view for text formats is done too, and Markdown ↔ HTML. Fonts are done as well, vCard and iCalendar, and the first archives. XLSX, DOCX, PPTX and the screenwriting formats are done. Next: the remaining image formats, then audio, then PDF. All three are ZIPs of XML, and Omsett reads both itself. Then the screenwriting formats, Fountain, Final Draft (FDX) and Drafter. Small JavaScript libraries, no large downloads.
 3. Archives, then audio.
 4. Documents and e-books through Pandoc; then the PDF tools. A converted document must not score lower for accessibility than its original (see "Accessibility of converted documents").
 5. Video in the browser.
