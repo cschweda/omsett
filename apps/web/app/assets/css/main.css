@@ -30,8 +30,11 @@
   /* Helvetica Neue first. Inter comes before plain "Helvetica" on purpose: Windows quietly
      answers "Helvetica" with Arial, and Inter is the better stand-in. */
   --font-sans: 'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif;
-  /* No second typeface. Figures line up through tabular numerals instead. */
+  /* No second typeface in the interface. Figures line up through tabular numerals instead. */
   --font-mono: 'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif;
+  /* The one exception: the contents of a file, shown in the side-by-side view, where columns
+     and indentation need letters of equal width. The system's own, so nothing is downloaded. */
+  --font-file: ui-monospace, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
 
   /* Omsett blue as a Tailwind palette, so Nuxt UI can use it as `primary`. */
   --color-omsett-50: #eef2ff;

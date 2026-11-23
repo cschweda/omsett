@@ -148,8 +148,9 @@ export function sniffText(head: Uint8Array, complete: boolean, name?: string): F
   const decoded = decode(head)
   if (decoded === null) return null
   const all = decoded.split(/\r\n|\r|\n/)
-  // The last line of a sample may be cut short, so it is not evidence of anything.
-  if (!complete) all.pop()
+  // The last line of a sample may be cut short, so it is not evidence of anything; unless it
+  // is the only line, as in JSON written without line breaks, where its start is all there is.
+  if (!complete && all.length > 1) all.pop()
   const lines = all.filter((line) => line.trim() !== '')
   const first = lines[0]?.trimStart()
   if (first === undefined) return null

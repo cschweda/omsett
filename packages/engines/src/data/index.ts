@@ -118,7 +118,7 @@ async function write(format: string, value: unknown): Promise<string> {
       // The library writes one line per value and never a raw line break inside one, so a line
       // that starts with "[" is always a section heading. Each gets a blank line above it.
       const written = stringify(withoutNulls(named) as Record<string, unknown>).trimEnd()
-      return `${written.replace(/\n(?=\[)/g, '\n\n')}\n`
+      return `${written.replace(/\n+(?=\[)/g, '\n\n')}\n`
     }
     case 'xml':
       return writeXml(value)

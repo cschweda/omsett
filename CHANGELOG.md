@@ -7,6 +7,36 @@ The paragraph that opens a version is its teaser: the home page shows its first 
 in the "What's new" banner, so keep it to two or three sentences on what a visitor will notice.
 A line beginning "Released" gives the date.
 
+## 0.11.0
+
+Released 23 November 2026.
+
+After converting a data or subtitle file, you now see the start of the original and the start
+of the converted file next to each other, so you can check what became of it before you
+download. Pictures keep their before-and-after slider.
+
+### Added
+
+- **A side-by-side view for data and subtitles.** The first 200 lines of each file, with line
+  numbers, in a fixed-width typeface so columns and indentation line up. On a narrow screen the
+  two are stacked. Where a file goes on past what is shown, a line says so.
+- **File contents are always shown as text.** A file full of HTML or script is displayed, never
+  run, and characters that are invisible or that reverse the direction of a line are shown as a
+  mark. Tested in three browsers with a file made for the purpose.
+- **Bounded.** At most the first 64 KB of a file is read for the view and each line is cut at
+  500 characters, so a file that is one line of several megabytes does not slow the page.
+
+### Changed
+
+- The design allowed one typeface. It now allows the device's own fixed-width typeface as well,
+  for file contents in this view and nowhere else. Nothing is downloaded for it.
+
+### Fixed
+
+- **JSON written as a single line longer than 512 KB was not recognised** and showed as
+  unsupported. Minified JSON is often like this. It is now identified from its start.
+- TOML written by Omsett had two blank lines between sections where one was meant.
+
 ## 0.10.0
 
 Released 23 November 2026.
@@ -53,7 +83,7 @@ page needs. The words and their times are carried across; fonts, colours and pos
 - In TTML, times set on a section and added to the times inside it are not added up; each
   line's own time is used.
 - SCC (broadcast captions) is not read yet.
-- There is still no side-by-side view for data or subtitles. It is planned as the next change.
+- There is no side-by-side view for data or subtitles in this version. It arrived in 0.11.0.
 
 ## 0.9.0
 

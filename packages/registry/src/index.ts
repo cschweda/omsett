@@ -8,7 +8,7 @@ import type { Format, Registry } from './types'
 export * from './types'
 export { createRouter, MAX_HOPS } from './router'
 export { deriveEdges } from './derive'
-export { sameKind } from './kinds'
+export { isReadable, sameKind } from './kinds'
 export { lossyToLossy, traitWarnings } from './trait-warnings'
 
 export { applySwitches, switches, type Switch } from './switches'
