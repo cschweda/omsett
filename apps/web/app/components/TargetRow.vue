@@ -21,7 +21,7 @@ const tip = computed(() => (props.target.reason ? `${props.target.reason}. ${pro
 
 <template>
   <div class="row-wrap">
-  <UTooltip :text="tip" :delay-duration="disabled ? 100 : 700" :ui="{ content: 'tile-tip' }">
+  <UTooltip :text="tip" :delay-duration="disabled ? 100 : 700" :content="{ side: 'top', sideOffset: 8, collisionPadding: 12 }" arrow :ui="{ content: 'tile-tip', text: 'tile-tip-text', arrow: 'tile-tip-arrow' }">
   <button
     :id="id"
     type="button"

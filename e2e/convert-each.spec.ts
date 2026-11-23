@@ -72,3 +72,46 @@ test('a format that is not available says why, on hover and when pressed', async
   await expect(heic).toHaveAttribute('aria-checked', 'false')
   await expect(page.getByTestId('convert')).toBeDisabled()
 })
+
+test('the tooltip sits above with room, below without, stands out from the page, and wraps', async ({ page }) => {
+  await page.setViewportSize({ width: 1100, height: 700 })
+  await open(page)
+  await page.locator('#file-input').setInputFiles(FIXTURE)
+  const heic = page.locator('[role="radio"][data-format="heic"]')
+  const tip = page.getByRole('tooltip').locator('xpath=ancestor-or-self::*[contains(@class,"tile-tip")]').first()
+
+  // In the middle of the window there is room above, and that is where it goes.
+  await heic.evaluate((element) => element.scrollIntoView({ block: 'center' }))
+  await heic.hover()
+  await expect(tip).toBeVisible()
+  await expect(tip).toHaveAttribute('data-side', 'top')
+  // It is placed a moment after it appears, so its place is asked for until it has one.
+  const rowTop = (await heic.boundingBox())!.y
+  await expect.poll(async () => ((box) => box.y + box.height)((await tip.boundingBox())!)).toBeLessThanOrEqual(rowTop + 1)
+  await expect.poll(async () => (await tip.boundingBox())!.y).toBeGreaterThanOrEqual(0)
+  const middle = { tip: (await tip.boundingBox())! }
+
+  // Its ground is not the page's, and it has a line round it.
+  const look = await tip.evaluate((element) => {
+    const style = getComputedStyle(element)
+    return { ground: style.backgroundColor, page: getComputedStyle(document.body).backgroundColor, line: style.borderTopWidth, radius: style.borderTopLeftRadius }
+  })
+  expect(look.ground).not.toBe(look.page)
+  expect(look.line).toBe('1px')
+  expect(look.radius).toBe('0px')
+  // A long explanation is several short lines: narrow, and taller than one line of text.
+  expect(middle.tip.width).toBeLessThanOrEqual(17 * 16 + 2)
+  expect(middle.tip.height).toBeGreaterThan(60)
+
+  // At the very top of the window there is no room above, so it goes below.
+  await page.mouse.move(0, 0)
+  await expect(page.getByRole('tooltip')).toHaveCount(0)
+  await heic.evaluate((element) => element.scrollIntoView({ block: 'start' }))
+  await heic.hover()
+  await expect(tip).toBeVisible()
+  await expect(tip).toHaveAttribute('data-side', 'bottom')
+  const row = (await heic.boundingBox())!
+  await expect.poll(async () => (await tip.boundingBox())!.y).toBeGreaterThanOrEqual(row.y + row.height - 1)
+  // Whichever side it is on, all of it is on the screen.
+  await expect(tip).toBeInViewport({ ratio: 1 })
+})

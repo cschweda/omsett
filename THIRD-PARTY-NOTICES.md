@@ -107,7 +107,8 @@ separate is downloaded.
 ### markup
 
 Markdown and HTML are read and written with the unified family of parsers, all MIT. Word
-documents (DOCX) are read and written by Omsett's own code, through the same cleaner. They are
+documents (DOCX) are read and written, and presentations (PPTX) read, by Omsett's own code,
+through the same cleaner. They are
 part of the app's scripts; nothing separate is downloaded.
 
 | Library | Version | License | Source |

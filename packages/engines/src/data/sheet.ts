@@ -149,6 +149,9 @@ export async function readWorkbook(bytes: Uint8Array, named = true): Promise<Row
     })
 
   // The first sheet that is not hidden and has something in it.
+  // A sheet is looked at once. A list that names one empty sheet ten thousand times is asking
+  // for it to be read ten thousand times.
+  const looked = new Set<string>()
   for (const sheet of sheets) {
     if (['hidden', 'veryHidden'].includes(String(sheet['@state'] ?? ''))) continue
     const target = links.get(String(sheet['@id'] ?? ''))
@@ -156,6 +159,8 @@ export async function readWorkbook(bytes: Uint8Array, named = true): Promise<Row
     // A target is a path inside the workbook, from its xl folder or from its top.
     const path = target.startsWith('/') ? target.slice(1) : `xl/${target}`
     if (path.includes('..')) throw invalid()
+    if (looked.has(path.toLowerCase())) continue
+    looked.add(path.toLowerCase())
     const rows = tableOf(record(open(path)?.worksheet), shared, dated, from1904, named)
     if (rows.length > 0) return rows
   }

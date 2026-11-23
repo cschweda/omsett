@@ -3013,6 +3013,143 @@ docu(
     "unregistered",
 )
 
+# --- presentations: PPTX --------------------------------------------------------------------------
+# A presentation is a ZIP of XML like a document, with the same bombs and the same things
+# fetched from elsewhere. What is its own is what the presenter kept from the audience: slides
+# that are hidden, and the notes they read from. Each is converted to HTML.
+G = "slides"
+NOT_DECK = "This file is not a valid PPTX presentation"
+
+
+def deck_parts():
+    with _zipfile.ZipFile(os.path.join(FIXTURES, "pptx/sample.pptx")) as z:
+        return {name: z.read(name) for name in z.namelist()}
+
+
+def deck(change=None, extra=None) -> bytes:
+    parts = deck_parts()
+    for name, body in (change or {}).items():
+        if body is None:
+            parts.pop(name, None)
+        else:
+            parts[name] = body
+    parts.update(extra or {})
+    out = _io.BytesIO()
+    with _zipfile.ZipFile(out, "w", _zipfile.ZIP_DEFLATED) as z:
+        for name, body in parts.items():
+            info = _zipfile.ZipInfo(name, (2026, 11, 23, 12, 0, 0))
+            info.compress_type = _zipfile.ZIP_DEFLATED
+            z.writestr(info, body)
+    return out.getvalue()
+
+
+def slides(name, data, why, detect, **more):
+    trap(name, data, why, detect, group=G, **more)
+
+
+SAMPLE_DECK = deck()
+DECK = deck_parts()
+FIRST = DECK["ppt/slides/slide1.xml"]
+slides(
+    "truncated.pptx",
+    SAMPLE_DECK[: len(SAMPLE_DECK) // 2],
+    "A presentation cut off half-way.",
+    "pptx", node="fails", note=NOT_DECK,
+)
+slides(
+    "entity-bomb.pptx",
+    deck({"ppt/slides/slide1.xml": FIRST.replace(b"<p:sld ", b"<!DOCTYPE l [" + xml_entities + b"]><p:sld ", 1).replace(b"Omsett", b"&a8;", 1)}),
+    'The "billion laughs" as a slide title.',
+    "pptx", node="fails", note=NOT_DECK,
+)
+slides(
+    "bomb-inside.pptx",
+    deck({"ppt/slides/slide1.xml": FIRST + b" " * (300 * 1024 * 1024)}),
+    "A slide of three hundred megabytes of spaces, packed to 290 kilobytes.",
+    "pptx", node="fails", note="This presentation is too large to convert in a browser",
+)
+slides(
+    "what-the-audience-was-not-shown.pptx",
+    SAMPLE_DECK,
+    "A sound presentation with a hidden slide and speaker's notes, both marked. Neither was "
+    "shown to the audience and neither is carried across.",
+    "pptx", node="succeeds", absent="SECRET-",
+)
+slides(
+    "link-that-is-code.pptx",
+    deck({"ppt/slides/_rels/slide2.xml.rels": DECK["ppt/slides/_rels/slide2.xml.rels"].replace(b"https://omsett.com", b"javascript:fetch('http://elsewhere.example/')")}),
+    "A link on a slide whose address is a script. The words are kept and the address is not.",
+    "pptx", node="succeeds", absent="javascript",
+)
+slides(
+    "runs-a-program-when-clicked.pptx",
+    deck({"ppt/slides/_rels/slide2.xml.rels": DECK["ppt/slides/_rels/slide2.xml.rels"].replace(b"https://omsett.com", b"file:///C:/Windows/System32/calc.exe")}),
+    "A link on a slide that starts a program on the computer when clicked during the show.",
+    "pptx", node="succeeds", absent="calc.exe",
+)
+slides(
+    "fetches-a-picture.pptx",
+    deck({"ppt/slides/_rels/slide3.xml.rels": DECK["ppt/slides/_rels/slide3.xml.rels"].replace(b'Target="../media/image1.png"', b'Target="http://elsewhere.example/seen.png" TargetMode="External"')}),
+    "A picture kept on another site and fetched whenever the presentation is opened. It is "
+    "not fetched, and its address is not carried into the page.",
+    "pptx", node="succeeds", absent="elsewhere.example",
+)
+slides(
+    "picture-is-outside-the-presentation.pptx",
+    deck({"ppt/slides/_rels/slide3.xml.rels": DECK["ppt/slides/_rels/slide3.xml.rels"].replace(b"../media/image1.png", b"../../../../../etc/passwd")}),
+    "A slide that says its picture is a file elsewhere on the computer.",
+    "pptx", node="succeeds", absent="passwd",
+)
+slides(
+    "every-slide-hidden.pptx",
+    deck({name: body.replace(b"<p:sld ", b'<p:sld show="0" ', 1) for name, body in DECK.items() if name.startswith("ppt/slides/slide")}),
+    "A presentation in which every slide is hidden.",
+    "pptx", node="fails", note="This presentation has no text in it to convert",
+)
+slides(
+    "one-slide-two-thousand-times.pptx",
+    deck({"ppt/presentation.xml": DECK["ppt/presentation.xml"].replace(b'<p:sldId id="256" r:id="rId1"/>', b'<p:sldId id="256" r:id="rId1"/>' * 2000)}),
+    "A list of slides that names the same slide two thousand times, so that reading the "
+    "presentation reads it two thousand times.",
+    "pptx", node="fails", note=NOT_DECK,
+)
+slides(
+    "no-list-of-slides.pptx",
+    deck({"ppt/presentation.xml": None}),
+    "Slides, without the part that says which they are and in what order.",
+    "pptx", node="fails", note=NOT_DECK,
+)
+slides(
+    "groups-two-hundred-deep.pptx",
+    deck({"ppt/slides/slide1.xml": FIRST.replace(b"<p:spTree>", b"<p:spTree>" + b"<p:grpSp>" * 200, 1).replace(b"</p:spTree>", b"</p:grpSp>" * 200 + b"</p:spTree>", 1)}),
+    "A group of shapes inside a group of shapes, two hundred times over.",
+    "pptx", node="fails", note=NOT_DECK,
+)
+slides(
+    "picture-named.pptx",
+    GOOD,
+    "A PNG with a .pptx name.",
+    "png", node="succeeds", mismatch=True,
+)
+slides(
+    "document-named.pptx",
+    SAMPLE_DOC,
+    "A Word document with a .pptx name. Both are ZIPs of XML, told apart by what is inside.",
+    "docx", node="succeeds", mismatch=True,
+)
+slides(
+    "slides-named.zip",
+    SAMPLE_DECK,
+    "A sound presentation with a .zip name. It is converted as the presentation it is.",
+    "pptx", node="succeeds", mismatch=True,
+)
+slides(
+    "older-powerpoint.ppt",
+    b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1" + b"\0" * 16 + b"\x3e\x00\x03\x00\xfe\xff\x09\x00" + b"\0" * 480 + b"P\0o\0w\0e\0r\0P\0o\0i\0n\0t\0" + b"\0" * 480,
+    "The older kind of PowerPoint file, from before 2007, which is not a ZIP at all.",
+    "unregistered",
+)
+
 with open(os.path.join(OUT, "manifest.json"), "w") as out:
     json.dump(manifest, out, indent=2)
     out.write("\n")

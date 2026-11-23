@@ -102,7 +102,7 @@ for (const trap of traps) {
                 ? ['woff', 'ttf']
                 : category === 'archive'
                   ? ['zip', 'tar']
-                  : category === 'document'
+                  : category === 'document' || category === 'presentation'
                     ? ['html', 'md']
                     : ['webp', 'png']
       const target = trap.detect === usual ? otherwise : usual

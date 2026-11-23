@@ -52,6 +52,7 @@ const samples: Record<string, string> = {
   md: 'md/sample.md',
   html: 'html/sample.html',
   docx: 'docx/sample.docx',
+  pptx: 'pptx/sample.pptx',
   ttf: 'ttf/sample.ttf',
   otf: 'otf/sample.otf',
   woff: 'woff/sample.woff',
