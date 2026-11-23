@@ -122,6 +122,12 @@ part of the app's scripts; nothing separate is downloaded.
 | rehype-raw (HTML inside Markdown) | 7.0.0 | MIT | <https://github.com/rehypejs/rehype-raw> |
 | rehype-sanitize (removes what could run) | 6.0.0 | MIT | <https://github.com/rehypejs/rehype-sanitize> |
 
+### script
+
+Omsett's own readers and writers for Fountain, Final Draft (FDX) and the Drafter package. FDX
+is read with fast-xml-parser (MIT), listed under `data`. The Drafter package format is
+specified by the Drafter project and dedicated to the public domain (CC0 1.0).
+
 ### archive
 
 Omsett's own reader and writer for ZIP, TAR and TAR.GZ, using the compression built into every

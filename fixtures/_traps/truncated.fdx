@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<FinalDraft DocumentType="Script" Template="No" Version="5">
+  <Content>
+    <Paragraph Number="1" Type="Scene Heading"><SceneProperties Length="2/8" Page="1" Title=""/><Text>INT. KITCHEN - NIGHT</Text></Paragraph>
+    <Paragraph Type="Action"><Text>A laptop on the table. ADA (30s) drops a file onto the screen. </Text><Text Style="Italic">Nothing happens.</Text><Text> Then </Text><Text Style="Bold">everything</Text><Text> does, and </Text><Text Style="Underline">fast</Text><Text>.</Text></Paragraph>
+    <Paragraph Type="Character"><Text>ADA</Text></Paragraph>
+    <Paragraph Type="Parenthetical"><Text>(to herself)</Text></Paragraph>
+    <Paragraph Type="Dialogue"><Text>Pick a format.</Text></Paragraph>
+    <Paragraph>
+      <DualDialogue>
+        <Paragraph Type="Character"><Text>GRACE (V.O.)</Text></Paragraph>
+        <Paragraph Type="Dialogue"><Text>Nothing leaves your device.</Text></Paragraph>
+        <Paragraph Type="Character"><Text>ADA</Text></Paragraph>
+        <Paragraph Type="Dialogue"><Text>I heard you.</Text></Paragraph>
+      </DualDialogue>
+    </Paragraph>
+    <Paragraph Type="Shot"><Text>THE SCREEN

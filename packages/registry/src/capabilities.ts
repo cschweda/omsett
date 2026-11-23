@@ -57,6 +57,7 @@ const TABLE_WRITES: WriteSpec[] = DATA.map((format) => ({
   drops: ['comments'],
   defaultOptions: { headerRow: true, ...(SHAPED.includes(format) ? { shape: 'records' } : {}) },
 }))
+const SCRIPTS = ['fountain', 'fdx', 'drafter']
 const ARCHIVES = ['zip', 'tgz', 'tar']
 const SFNT = ['ttf', 'otf', 'woff']
 
@@ -103,6 +104,9 @@ export const capabilities: Capability[] = [
   // first row is the names of its columns, and, for a format that can nest, what shape to take.
   { engine: 'data', tier: 'browser', reads: TABLES, writes: TABLE_WRITES, priority: 20 },
   { engine: 'data', tier: 'browser', reads: DATA.filter((format) => !TABLES.includes(format)), writes: DATA_WRITES, priority: 20 },
+  // Screenplays are read into their elements and written from them, in Omsett's own code.
+  { engine: 'script', tier: 'browser', reads: SCRIPTS, writes: SCRIPTS.map((format) => ({ format, lossy: false })), priority: 20 },
+
   // Archives are unpacked into files and folders and packed again, in Omsett's own code.
   { engine: 'archive', tier: 'browser', reads: ARCHIVES, writes: ARCHIVES.map((format) => ({ format, lossy: false })), priority: 20 },
 

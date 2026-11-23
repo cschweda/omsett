@@ -14,6 +14,7 @@ export const categoryLabels: Record<Category, string> = {
   presentation: 'Presentation',
   text: 'Text & markup',
   data: 'Data',
+  screenplay: 'Screenplay',
   ebook: 'E-book',
   audio: 'Audio',
   subtitle: 'Subtitles',

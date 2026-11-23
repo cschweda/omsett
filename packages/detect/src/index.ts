@@ -14,6 +14,15 @@ export { crc32 } from './png-structure'
 export { gunzip } from './gzip'
 export { isTarHeader } from './tar'
 
+const DRAFTER = 'application/vnd.drafter.package+zip'
+/** Whether a ZIP's first entry is `mimetype`, stored, holding the Drafter media type. */
+function isDrafter(head: Uint8Array): boolean {
+  const expected = `mimetype${DRAFTER}`
+  if (head.length < 30 + expected.length || head[8] !== 0 || head[26] !== 8 || head[28] !== 0) return false
+  for (let i = 0; i < expected.length; i++) if (head[30 + i] !== expected.codePointAt(i)) return false
+  return true
+}
+
 export type Detection =
   | { kind: 'known'; format: Format; ext: string; mime: string; dimensions: Dimensions | null }
   | { kind: 'unregistered'; ext: string; mime: string }
@@ -55,6 +64,9 @@ export async function detect(blob: Blob, formats: Format[], name?: string): Prom
         dimensions = null
       }
     }
+    // A Drafter package is a ZIP that says what it is in its first entry, as an EPUB does:
+    // a file called "mimetype", stored as it is, holding the package's media type.
+    if (found?.ext === 'zip' && isDrafter(head)) found = { ext: 'drafter', mime: DRAFTER }
     // The library says "tar.gz" for some of these by itself.
     if (found?.ext === 'tar.gz') found = { ext: 'tgz', mime: 'application/gzip' }
     // Plain text has no signature at all. What it holds is worked out from how it reads.

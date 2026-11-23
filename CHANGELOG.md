@@ -7,6 +7,53 @@ The paragraph that opens a version is its teaser: the home page shows its first 
 in the "What's new" banner, so keep it to two or three sentences on what a visitor will notice.
 A line beginning "Released" gives the date.
 
+## 0.22.0
+
+Released 23 November 2026.
+
+Omsett now converts screenplays: Fountain, Final Draft (FDX) and the Drafter package, each to
+the others. Take a script written in plain text into Final Draft, bring a Final Draft script
+back to plain text, or pack either as a Drafter package.
+
+### Added
+
+- **Fountain to and from Final Draft.** Scene headings and their numbers, action, characters,
+  parentheticals, dialogue, two characters speaking at once, transitions, centred lines,
+  lyrics, page breaks, bold, italics and underline, and the title page.
+- **The Drafter package (`.drafter`), read and written**, to the published specification. From
+  a package, the script inside is taken exactly as it was written. Into a package, a Fountain
+  script goes in exactly as it was written, with a manifest that names it and records its
+  checksum.
+- **What is not the script is not carried across.** From Fountain: notes to self (`[[ ]]`),
+  scenes set aside (`/* */`), and the headings and summaries of an outline. From Final Draft:
+  notes attached to lines and revision marks. From a Drafter package: earlier drafts, cut
+  material, the workbook and voice notes, which are the writer's own papers.
+- **Nothing typed in a script can become a tag** in the Final Draft file it is written to.
+- **A side-by-side view** of the script before and after, since all three are text inside.
+- 26 trap files: a script that types the tags of the file it will become, eighty thousand
+  marks that open nothing, the "billion laughs" as a line of action, a package whose manifest
+  says the script is a file outside it, a manifest of two megabytes, a package of prose, and a
+  package whose script is 300 MB of spaces.
+- No new dependency.
+
+### Changed
+
+- **A file named `.fountain` is a screenplay.** Fountain is plain text with no mark of its own,
+  so, as with Markdown, only its name can say what it is.
+
+### Known
+
+- Line breaks inside a block of action or a speech become separate paragraphs in Final Draft,
+  which has no other way to hold them.
+- A Final Draft "Shot" becomes action in Fountain, which has no such element.
+- From a Final Draft title page, the title and the writer's name are read. Other lines on it
+  are not.
+- A Drafter package that holds prose (a novel or a Markdown document) is recognised and not
+  converted here: its text is the Markdown file inside it.
+- Page and scene numbering, revision colours, locked pages and production reports are not
+  carried.
+- A script to PDF, laid out to the industry's rules, comes with the PDF work.
+
 ## 0.21.0
 
 Released 23 November 2026.

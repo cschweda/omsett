@@ -17,6 +17,6 @@ export function sameKind(a: Category, b: Category): boolean {
 
 /** Categories whose files are text a person can read, and so can be shown as text. */
 // A workbook and a Word document are not text, and are left out.
-const READABLE: Category[] = ['data', 'subtitle', 'text']
+const READABLE: Category[] = ['data', 'subtitle', 'text', 'screenplay']
 
 export const isReadable = (category: Category): boolean => READABLE.includes(category)

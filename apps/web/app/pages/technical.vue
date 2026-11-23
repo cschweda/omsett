@@ -45,6 +45,7 @@ const trapGroups: Record<string, string> = {
   workbooks: 'Workbooks: bombs, formulas that run programs, and parts that point elsewhere',
   documents: 'Word documents: bombs, things fetched from elsewhere, and words meant to be gone',
   slides: 'Presentations: bombs, links that run programs, and what the audience was not shown',
+  scripts: 'Screenplays: bombs, manifests that lie, and what the writer set aside',
 }
 </script>
 

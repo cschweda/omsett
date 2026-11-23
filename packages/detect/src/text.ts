@@ -25,6 +25,8 @@ const SMI = found('smi', 'application/x-sami')
 const MICRODVD = found('microdvd', 'text/x-microdvd')
 const VCARD = found('vcf', 'text/vcard')
 const CALENDAR = found('ics', 'text/calendar')
+const FOUNTAIN = found('fountain', 'text/x-fountain')
+const FDX = found('fdx', 'application/xml')
 const HTML = found('html', 'text/html')
 const MARKDOWN = found('md', 'text/markdown')
 
@@ -179,6 +181,8 @@ export function sniffText(head: Uint8Array, complete: boolean, name?: string): F
   // Markdown is any text at all, with or without its marks, so nothing in a file can say that
   // it is Markdown. Its name is the only thing that can.
   if (ending !== null && ['md', 'markdown', 'mdown'].includes(ending)) return MARKDOWN
+  // The same goes for a screenplay in Fountain: it is plain text with no mark of its own.
+  if (ending !== null && ['fountain', 'spmd'].includes(ending)) return FOUNTAIN
 
   // An address book and a calendar each open with a line that says so.
   if (/^BEGIN:VCARD\s*$/i.test(first)) return VCARD
@@ -191,6 +195,8 @@ export function sniffText(head: Uint8Array, complete: boolean, name?: string): F
     if (/^<sami[\s>]/i.test(start)) return SMI
     const root = rootTag(start)
     if (root === 'tt') return TTML
+    // Final Draft's scripts are XML with a tag of their own at the top.
+    if (root === 'FinalDraft') return FDX
     if (/^<!doctype\s+html/i.test(start) || root?.toLowerCase() === 'html') return HTML
     // A piece of a page, with no <html> around it, reads like XML. Its name says which it is.
     if (ending === 'html' || ending === 'htm') return root ? HTML : null

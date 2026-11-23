@@ -106,6 +106,15 @@ export const markupInfo: EngineInfo = {
   sourceUrl: 'https://github.com/cschweda/omsett/tree/main/packages/engines/src/markup',
 }
 
+// Screenplays: Fountain, Final Draft and the Drafter package. Omsett's own readers and writers.
+export const scriptInfo: EngineInfo = {
+  id: 'script',
+  sizeBytes: 0,
+  runtimes: ['browser', 'node'],
+  license: 'MIT',
+  sourceUrl: 'https://github.com/cschweda/omsett/tree/main/packages/engines/src/script',
+}
+
 // Archives: ZIP, TAR and TAR.GZ. Omsett's own reader and writer, with the compression every
 // browser has built in.
 export const archiveInfo: EngineInfo = {
@@ -159,6 +168,7 @@ export const engineInfo: Record<string, EngineInfo> = {
   [subtitleInfo.id]: subtitleInfo,
   [markupInfo.id]: markupInfo,
   [archiveInfo.id]: archiveInfo,
+  [scriptInfo.id]: scriptInfo,
   [fontInfo.id]: fontInfo,
   [fontWoff2Info.id]: fontWoff2Info,
 }

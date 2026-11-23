@@ -104,6 +104,8 @@ for (const trap of traps) {
                   ? ['zip', 'tar']
                   : category === 'document' || category === 'presentation'
                     ? ['html', 'md']
+                    : category === 'screenplay'
+                      ? ['fdx', 'fountain']
                     : ['webp', 'png']
       const target = trap.detect === usual ? otherwise : usual
       if (trap.mismatch) await expect(note).toContainText('the contents are')

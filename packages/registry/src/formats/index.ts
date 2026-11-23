@@ -33,6 +33,9 @@ import { otf } from './otf'
 import { zip } from './zip'
 import { tgz } from './tgz'
 import { tar } from './tar'
+import { fountain } from './fountain'
+import { fdx } from './fdx'
+import { drafter } from './drafter'
 import { docx } from './docx'
 import { pptx } from './pptx'
 import { md } from './md'
@@ -65,6 +68,8 @@ export const formats: Format[] = [
   srt, vtt, ass, ssa, ttml, lrc, sbv, smi, microdvd,
   // Writing: text with structure.
   md, html, docx, pptx,
+  // Screenplays.
+  fountain, fdx, drafter,
   // Fonts: the same tables in four wrappings.
   woff2, woff, ttf, otf,
   // Archives: files and folders, packed three ways.

@@ -23,6 +23,8 @@ const woff = formatById(registry, 'woff')!
 const ttf = formatById(registry, 'ttf')!
 const zip = formatById(registry, 'zip')!
 const tar = formatById(registry, 'tar')!
+const fdx = formatById(registry, 'fdx')!
+const fountain = formatById(registry, 'fountain')!
 
 const load = async (file: string) => new File([await readFile(new URL(`./_traps/${file}`, import.meta.url))], file)
 
@@ -107,6 +109,8 @@ describe('trap files', () => {
                   ? [zip, tar]
                   : from.category === 'document' || from.category === 'presentation'
                     ? [html, md]
+                    : from.category === 'screenplay'
+                      ? [fdx, fountain]
                     : [webp, png]
       const to = from.id === usual.id ? otherwise : usual
       if (!router.route(from.id, to.id)) {
@@ -120,8 +124,8 @@ describe('trap files', () => {
       try {
         const outputs = await convert(file, file.name, from, to)
         expect(outputs).toHaveLength(1)
-        // Markdown is known by its name alone, so for that one format the name is given.
-        const after = await detect(outputs[0]!.blob, registry.formats, to.id === 'md' ? outputs[0]!.name : undefined)
+        // Markdown and Fountain are known by name alone, so for those two the name is given.
+        const after = await detect(outputs[0]!.blob, registry.formats, ['md', 'fountain'].includes(to.id) ? outputs[0]!.name : undefined)
         expect(after.kind === 'known' && after.format.id, `output is really ${to.name}`).toBe(to.id)
         expect(after.kind === 'known' && after.dimensions, 'output keeps the declared size').toEqual(
           found.dimensions,
@@ -136,7 +140,7 @@ describe('trap files', () => {
         expect(error, 'a failure is an ordinary error').toBeInstanceOf(Error)
         outcome = 'fails'
         // Where the app must give a particular reason, the engine is where it comes from.
-        if (trap.note && ['data', 'spreadsheet', 'subtitle', 'text', 'font', 'archive', 'document', 'presentation'].includes(from.category)) expect((error as Error).message).toBe(trap.note)
+        if (trap.note && ['data', 'spreadsheet', 'subtitle', 'text', 'font', 'archive', 'document', 'presentation', 'screenplay'].includes(from.category)) expect((error as Error).message).toBe(trap.note)
       }
       expect(outcome, 'the engine').toBe(trap.node)
 
