@@ -27,9 +27,14 @@ function extendedPath(data: Uint8Array): string | null {
   let at = 0
   let path: string | null = null
   while (at < records.length) {
+    // A record's length is a few digits and no more. Read without that limit, a million
+    // zeros and a "3" is a length of three, found again from the start a third of a million times.
     const space = records.indexOf(' ', at)
-    const length = Number(records.slice(at, space))
-    if (space < 0 || !Number.isInteger(length) || length <= 0) return path
+    if (space < 0 || space - at > 8) return path
+    const digits = records.slice(at, space)
+    if (!/^[1-9]\d{0,7}$/.test(digits)) return path
+    const length = Number(digits)
+    // A length that runs past the end is read as far as there is: what it names still counts.
     const record = records.slice(space + 1, at + length - 1)
     if (record.startsWith('path=')) path = record.slice(5)
     at += length

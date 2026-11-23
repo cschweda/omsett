@@ -1,6 +1,6 @@
 import { dataInfo } from '../info'
 import type { ConvertInput, ConvertOutput, Engine } from '../types'
-import { outputName, Refusal, throwIfAborted } from '../util'
+import { cellOf, MAX_TABLE_CELLS, outputName, Refusal, tableTooLarge, throwIfAborted } from '../util'
 import { readContacts, readEvents, writeContacts, writeEvents } from './cards'
 import { readWorkbook, writeWorkbook } from './sheet'
 import { readTable, rowsOf, writeTable } from './table'
@@ -159,8 +159,9 @@ function reshape(value: unknown, shape: unknown, named: boolean): unknown {
       }
     }
   }
-  if (shape === 'columns') return Object.fromEntries(columns.map((column) => [column, value.map((row) => row[column] ?? null)]))
-  const rows = value.map((row) => columns.map((column) => row[column] ?? null))
+  if (columns.length * value.length > MAX_TABLE_CELLS) throw tableTooLarge()
+  if (shape === 'columns') return Object.fromEntries(columns.map((column) => [column, value.map((row) => cellOf(row, column) ?? null)]))
+  const rows = value.map((row) => columns.map((column) => cellOf(row, column) ?? null))
   // Names that were made up because the file had none are not put back in as if it had.
   return named ? [columns, ...rows] : rows
 }

@@ -1,6 +1,6 @@
 import { readZip } from '../archive/zip'
 import type { Entry } from '../archive/entries'
-import { Refusal } from '../util'
+import { lookup, Refusal, withinTags } from '../util'
 
 // Word documents (DOCX) → HTML. A document is a ZIP of XML: one part is the text, others say
 // what its styles and lists are, where its links go, and hold its pictures. What is read is
@@ -41,7 +41,7 @@ interface Piece {
   marks: string[]
 }
 
-const PICTURES: Record<string, string> = { png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', webp: 'image/webp' }
+const PICTURES = lookup<string>({ png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', webp: 'image/webp' })
 
 export interface ReadDocument {
   /** The inside of <body>. Not yet cleaned: the caller passes it through the sanitizer. */
@@ -93,6 +93,8 @@ export async function openOffice(bytes: Uint8Array, invalid: () => Refusal, what
     // An office file's XML never declares a document type. One that does is defining shorthand
     // of its own, which is how a small file is made to expand into a vast one.
     if (/<!DOCTYPE/i.test(source.slice(0, 4096))) throw invalid()
+    // Counted before it is read: an empty tag costs as much to read as a full one.
+    if (!withinTags(source)) throw tooLarge()
     try {
       return parser.parse(source) as Node[]
     } catch {
@@ -133,9 +135,29 @@ export async function readDocx(bytes: Uint8Array): Promise<ReadDocument> {
   const headings = new Map<string, number>()
   const quotes = new Set<string>()
   const stylesRoot = root('word/styles.xml', 'styles')
+  // Text can be hidden by the style it is given as well as on the spot, and a style can take
+  // it from the style it is based on. What each style says, and what it is based on.
+  const hiding = new Map<string, { hidden: boolean | undefined; basedOn: string | undefined }>()
+  /** Whether a style hides its text: true, false, or undefined where it and its line say nothing. */
+  const hiddenBy = (id: string | undefined): boolean | undefined => {
+    for (let hops = 0; id !== undefined && hops < 32; hops++) {
+      const style = hiding.get(id)
+      if (!style) return undefined
+      if (style.hidden !== undefined) return style.hidden
+      id = style.basedOn
+    }
+    return undefined
+  }
+  const vanishOf = (props: Node | undefined) => {
+    const setting = props && child(props, 'vanish')
+    return setting ? on(setting) : undefined
+  }
+  // What the document says of all its text, where nothing nearer says otherwise.
+  const hiddenByDefault = vanishOf(child(child(child(stylesRoot ?? {}, 'docDefaults') ?? {}, 'rPrDefault') ?? {}, 'rPr')) ?? false
   for (const style of all(stylesRoot ?? {}, 'style')) {
     const id = attrs(style)['@styleId']
     if (!id) continue
+    hiding.set(id, { hidden: vanishOf(child(style, 'rPr')), basedOn: value(child(style, 'basedOn')) })
     const name = (value(child(style, 'name')) ?? '').toLowerCase()
     const outline = value(child(child(style, 'pPr') ?? {}, 'outlineLvl'))
     const named = /^heading ([1-9])$/.exec(name)
@@ -186,15 +208,40 @@ export async function readDocx(bytes: Uint8Array): Promise<ReadDocument> {
     return `<img src="${address}" alt="${escapeHtml(alt)}">`
   }
 
-  /** The text of a paragraph, as pieces that each know what is around them. */
-  function pieces(nodes: Node[], marks: string[], depth: number, out: Array<Piece | string>): void {
+  // Fields. A field is an instruction and, after it, the result Word last worked out. Some
+  // fields show nothing at all: SET and ASK keep a value for later, and others are notes to
+  // Word itself. Their "result" is in the file all the same, and is no part of what the
+  // document says. The fields that are open, innermost last.
+  const SILENT = /^\s*(?:SET|ASK|PRIVATE|ADDIN|RD|TC|XE|TA|NEXT|NEXTIF|SKIPIF|DATA)\b/i
+  const fields: Array<{ instruction: string; result: boolean }> = []
+  const insideSilentField = () => fields.some((field) => !field.result || SILENT.test(field.instruction))
+
+  /**
+   * The text of a paragraph, as pieces that each know what is around them.
+   * @param hidden whether the paragraph's style hides its text, where a run does not say
+   */
+  function pieces(nodes: Node[], marks: string[], depth: number, out: Array<Piece | string>, hidden: boolean): void {
     if (depth > MAX_DEPTH) throw notDocument()
     for (const node of nodes) {
       const tag = tagOf(node)
       if (tag === 'r') {
         const props = child(node, 'rPr') ?? {}
-        // Text marked as hidden is not shown in Word and is not shown here.
-        if (on(child(props, 'vanish'))) continue
+        for (const part of kids(node)) {
+          const kind = tagOf(part)
+          if (kind === 'fldChar') {
+            const type = attrs(part)['@fldCharType']
+            if (type === 'begin' && fields.length < MAX_DEPTH) fields.push({ instruction: '', result: false })
+            else if (type === 'separate' && fields.length > 0) fields.at(-1)!.result = true
+            else if (type === 'end') fields.pop()
+          } else if (kind === 'instrText' && fields.length > 0 && !fields.at(-1)!.result && fields.at(-1)!.instruction.length < 64) {
+            fields.at(-1)!.instruction += kids(part).map((t) => String(t['#text'] ?? '')).join('')
+          }
+        }
+        // The instruction of a field, and the result of one that shows nothing, are not text.
+        if (insideSilentField()) continue
+        // Text marked as hidden is not shown in Word and is not shown here: marked on the run
+        // itself, or by the run's style, or by the paragraph's, or for the whole document.
+        if (vanishOf(props) ?? hiddenBy(value(child(props, 'rStyle'))) ?? hidden) continue
         const own = [...marks]
         if (on(child(props, 'b'))) own.push('strong')
         if (on(child(props, 'i'))) own.push('em')
@@ -216,20 +263,23 @@ export async function readDocx(bytes: Uint8Array): Promise<ReadDocument> {
         const a = attrs(node)
         const target = a['@id'] ? links.get(a['@id']) : undefined
         const href = target?.external ? target.target : a['@anchor'] ? `#${a['@anchor']}` : null
-        pieces(kids(node), href ? [...marks, `a:${href}`] : marks, depth + 1, out)
-      } else if (tag === 'ins' || tag === 'smartTag' || tag === 'sdt' || tag === 'sdtContent' || tag === 'fldSimple') {
+        pieces(kids(node), href ? [...marks, `a:${href}`] : marks, depth + 1, out, hidden)
+      } else if (tag === 'fldSimple') {
+        // A field written in one piece. One that shows nothing has nothing to carry.
+        if (!SILENT.test(attrs(node)['@instr'] ?? '')) pieces(kids(node), marks, depth + 1, out, hidden)
+      } else if (tag === 'ins' || tag === 'smartTag' || tag === 'sdt' || tag === 'sdtContent') {
         // Text that was added with changes tracked is part of the document; so is what is
-        // inside a content control or a field.
-        pieces(kids(node), marks, depth + 1, out)
+        // inside a content control.
+        pieces(kids(node), marks, depth + 1, out, hidden)
       }
       // <w:del> and everything else is passed over.
     }
   }
 
   /** Pieces → HTML, with neighbours that share a mark sharing its tag. */
-  function inline(nodes: Node[]): string {
+  function inline(nodes: Node[], hidden: boolean): string {
     const found: Array<Piece | string> = []
-    pieces(nodes, [], 0, found)
+    pieces(nodes, [], 0, found, hidden)
     let html = ''
     let open: string[] = []
     const close = (keep: number) => {
@@ -251,10 +301,13 @@ export async function readDocx(bytes: Uint8Array): Promise<ReadDocument> {
   }
 
   function table(node: Node, depth: number): string {
-    const rows = all(node, 'tr').map((row) => {
+    // A row deleted with changes tracked, or marked hidden, is not in the table as it is read.
+    const gone = (props: Node | undefined) => props !== undefined && (child(props, 'del') !== undefined || on(child(props, 'hidden')))
+    const rows = all(node, 'tr').filter((row) => !gone(child(row, 'trPr'))).map((row) => {
       // Word marks a row that repeats at the top of each page: that is a row of headers.
       const header = on(child(child(row, 'trPr') ?? {}, 'tblHeader'))
-      const cells = all(row, 'tc').map((cell) => {
+      // A cell deleted with changes tracked goes the same way.
+      const cells = all(row, 'tc').filter((cell) => child(child(cell, 'tcPr') ?? {}, 'cellDel') === undefined).map((cell) => {
         const span = value(child(child(cell, 'tcPr') ?? {}, 'gridSpan'))
         const wide = span && /^[1-9]\d?$/.test(span) && span !== '1' ? ` colspan="${span}"` : ''
         return `<${header ? 'th' : 'td'}${wide}>${blocks(kids(cell), depth + 1, true)}</${header ? 'th' : 'td'}>`
@@ -291,7 +344,7 @@ export async function readDocx(bytes: Uint8Array): Promise<ReadDocument> {
       const props = child(node, 'pPr') ?? {}
       const style = value(child(props, 'pStyle'))
       const numbered = child(props, 'numPr')
-      const content = inline(kids(node))
+      const content = inline(kids(node), hiddenBy(style) ?? hiddenByDefault)
       const listId = numbered ? value(child(numbered, 'numId')) : undefined
       if (listId && listId !== '0' && !headingOf(style)) {
         const level = Math.min(8, Number(value(child(numbered!, 'ilvl')) ?? 0) || 0)

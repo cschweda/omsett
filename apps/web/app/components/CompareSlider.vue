@@ -44,7 +44,8 @@ const transform = computed(() => ({
 
 async function draw(blob: Blob, canvas: HTMLCanvasElement | null, sets: boolean) {
   if (!canvas) return
-  const bitmap = await engines.thumbnail(blob, PREVIEW)
+  // The picture that sets the shape is the one that was dropped; the other is Omsett's own.
+  const bitmap = await engines.thumbnail(blob, PREVIEW, !sets)
   canvas.width = bitmap.width
   canvas.height = bitmap.height
   canvas.getContext('2d')?.drawImage(bitmap, 0, 0)

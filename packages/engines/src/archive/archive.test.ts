@@ -98,7 +98,8 @@ describe('archives', () => {
       expect(safeName('./docs//notes.md', 'ZIP')).toBe('docs/notes.md')
       expect(safeName('docs\\notes.md', 'ZIP')).toBe('docs/notes.md')
       expect(safeName('./', 'ZIP')).toBeNull()
-      expect(safeName('a..b/..c/d..', 'ZIP')).toBe('a..b/..c/d..')
+      // Dots inside a name are only dots. (At the end of one they are refused: see the audit tests.)
+      expect(safeName('a..b/..c/d..e', 'ZIP')).toBe('a..b/..c/d..e')
     })
 
     it('that point outside it are refused, however they are spelled', async () => {

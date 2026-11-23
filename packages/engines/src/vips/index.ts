@@ -9,6 +9,8 @@ export interface VipsImage {
   height: number
   hasAlpha(): boolean
   flatten(options?: Record<string, unknown>): VipsImage
+  /** The picture turned the way its EXIF orientation says it should be seen. */
+  autorot(): VipsImage
   writeToBuffer(suffix: string, options?: Record<string, unknown>): Uint8Array
   delete(): void
 }
@@ -56,12 +58,17 @@ export function createVipsEngine(host: VipsHost, info: EngineInfo = vipsInfo): E
       onProgress(0.2)
       const bytes = new Uint8Array(await blob.arrayBuffer())
       throwIfAborted(signal)
+      let stored: VipsImage | undefined
       let image: VipsImage | undefined
       let flat: VipsImage | undefined
       try {
         // libvips forgives damaged files by default and returns whatever it managed to read.
         // A converter must not hand back half a picture as if it were whole, so damage is fatal.
-        image = vips.Image.newFromBuffer(bytes, '', { fail_on: 'error' })
+        stored = vips.Image.newFromBuffer(bytes, '', { fail_on: 'error' })
+        // A camera held upright stores its picture sideways, with a note saying which way is up.
+        // The note is metadata and is left out below, so the picture is turned first: without
+        // this, every portrait photograph came out on its side.
+        image = stored.autorot()
         // The real size is known now, whatever the header claimed or the format left unsaid.
         if (input.maxPixels !== undefined && image.width * image.height > input.maxPixels) {
           throw new Error('The picture is too large')
@@ -96,6 +103,7 @@ export function createVipsEngine(host: VipsHost, info: EngineInfo = vipsInfo): E
       } finally {
         flat?.delete()
         image?.delete()
+        stored?.delete()
       }
     },
   }

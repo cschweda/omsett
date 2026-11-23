@@ -108,6 +108,12 @@ export function readSfnt(bytes: Uint8Array, name: string): Font {
     if (tableChecksum(table) !== stated) throw damaged()
     tables.push(table)
   }
+  // No two tables may share bytes. A font whose every table points at the same megabyte is
+  // small to read and, written out with each table given its own copy, hundreds of times larger.
+  const inOrder = [...tables].sort((a, b) => a.position! - b.position!)
+  for (let i = 1; i < inOrder.length; i++) {
+    if (inOrder[i]!.position! < inOrder[i - 1]!.position! + inOrder[i - 1]!.data.length) throw invalid(name)
+  }
   return requireShape({ flavor, tables }, name)
 }
 

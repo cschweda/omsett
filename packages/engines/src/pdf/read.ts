@@ -1,4 +1,4 @@
-import { Refusal } from '../util'
+import { lookup, Refusal } from '../util'
 
 // PDF → HTML. A PDF says where each letter sits on a page. Some also say what the letters are:
 // a "tagged" PDF carries a tree that marks this run of words as a heading, that as a list, that
@@ -54,7 +54,7 @@ interface TreeNode {
 
 /** Structure tags that only group what is inside them. */
 const GROUPS = new Set(['Root', 'Document', 'Part', 'Art', 'Sect', 'Div', 'NonStruct', 'Reference', 'TOC', 'Index', 'LBody', 'TBody', 'THead', 'TFoot', 'Private', 'DocumentFragment', 'Aside'])
-const INLINE: Record<string, string> = { Span: '', Quote: 'q', Code: 'code', Em: 'em', Strong: 'strong', Sub: 'sub', Sup: 'sup' }
+const INLINE = lookup<string>({ Span: '', Quote: 'q', Code: 'code', Em: 'em', Strong: 'strong', Sub: 'sub', Sup: 'sup' })
 const BULLET = /^[•‣◦⁃∙·▪●○–—*-]\s*/
 const NUMBERED = /^(?:\d{1,3}|[a-z])[.)]\s+/i
 

@@ -17,16 +17,23 @@ interface Sniffed {
 function pnm(bytes: Uint8Array): Sniffed | null {
   if (bytes[0] !== 0x50 || bytes[1]! < 0x31 || bytes[1]! > 0x37) return null
   if (![0x0A, 0x0D, 0x20, 0x09].includes(bytes[2]!)) return null
-  const text = ascii(bytes, 0, Math.min(bytes.length, 1024))
+  // After the two characters comes a number or a comment, and nothing else: "P1 incidents this
+  // week" is somebody's notes.
+  const text = ascii(bytes, 0, Math.min(bytes.length, 4096))
+  if (bytes[1] !== 0x37 && !/^P[1-6]\s+(?:#|\d)/.test(text)) return null
+  if (bytes[1] === 0x37 && !/^P7\s*[\r\n]/.test(text)) return null
   let dimensions: Dimensions | null = null
   if (bytes[1] === 0x37) {
-    const width = /\nWIDTH (\d{1,9})\s/.exec(text)
-    const height = /\nHEIGHT (\d{1,9})\s/.exec(text)
+    // A size given twice is the last one given: that is the one a reader ends up with.
+    const header = text.split(/\nENDHDR/)[0]!
+    const width = [...header.matchAll(/[\r\n]WIDTH\s+(\d{1,9})(?=\s)/g)].at(-1)
+    const height = [...header.matchAll(/[\r\n]HEIGHT\s+(\d{1,9})(?=\s)/g)].at(-1)
     if (width && height) dimensions = { width: Number(width[1]), height: Number(height[1]) }
   } else {
     const tokens = text
       .slice(2)
-      .split('\n')
+      // A comment ends at the end of its line, and a line ends at either kind of line break.
+      .split(/\r\n|\r|\n/)
       .map((line) => line.split('#')[0]!)
       .join(' ')
       .trim()
@@ -66,7 +73,7 @@ function ras(bytes: Uint8Array): Sniffed | null {
 /** Radiance HDR: a text header, a blank line, then the size as "-Y 200 +X 320". */
 function hdr(bytes: Uint8Array): Sniffed | null {
   const text = ascii(bytes, 0, Math.min(bytes.length, 4096))
-  if (!text.startsWith('#?RADIANCE') && !text.startsWith('#?RGBE')) return null
+  if (!/^#\?(?:RADIANCE|RGBE)\r?\n/.test(text)) return null
   const size = /\n[-+]Y (\d{1,9}) [-+]X (\d{1,9})\n/.exec(text)
   return {
     ext: 'hdr',

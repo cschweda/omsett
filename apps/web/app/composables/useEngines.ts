@@ -1,28 +1,56 @@
 import { engineInfo, type ConvertOutput, type Detail } from '@omsett/engines'
 import * as Comlink from 'comlink'
-import { PREVIEW_BUDGET_MS, withTimeout } from '~/utils/limits'
+import { PREVIEW_BUDGET_MS, withTimeout, ZIP_BUDGET_MS } from '~/utils/limits'
 import type { ConvertRequest, EngineWorkerApi } from '~/workers/engine.worker'
 import type { ThumbnailWorkerApi } from '~/workers/thumbnail.worker'
 
 interface Hosted<T> {
   worker: Worker
   api: Comlink.Remote<T>
+  /** Rejects when the worker dies, by itself or because it was stopped. */
   crashed: Promise<never>
+  /** Stop the worker, and settle everything still waiting on it. */
+  stop(): void
 }
 
 function host<T>(create: () => Worker): Hosted<T> {
   const worker = create()
   // Comlink never settles a call whose worker died, so a crash is surfaced as a rejection.
+  let stopped: (reason: Error) => void = () => {}
   const crashed = new Promise<never>((_, reject) => {
+    stopped = reject
     worker.addEventListener('error', (event) => reject(new Error(event.message || 'The worker crashed')))
     worker.addEventListener('messageerror', () => reject(new Error('The worker sent unreadable data')))
   })
   crashed.catch(() => {})
-  return { worker, api: Comlink.wrap<T>(worker), crashed }
+  const stop = () => {
+    worker.terminate()
+    // A stopped worker never answers. Whatever was waiting on it is told so, now.
+    stopped(new Error('The worker was stopped'))
+  }
+  return { worker, api: Comlink.wrap<T>(worker), crashed, stop }
 }
 
 let engineHost: Hosted<EngineWorkerApi> | undefined
 let thumbnailHost: Hosted<ThumbnailWorkerApi> | undefined
+// Reading a file's details and packing a ZIP happen beside conversions, in a worker of their
+// own: one worker does one thing at a time, and a question asked of the converting worker
+// would wait behind the conversion, run out of time, and take the conversion down with it.
+let sideHost: Hosted<EngineWorkerApi> | undefined
+/** Previews are drawn one at a time. */
+let previews: Promise<unknown> = Promise.resolve()
+
+function sideWorker(): Hosted<EngineWorkerApi> {
+  sideHost ??= host<EngineWorkerApi>(
+    () => new Worker(new URL('../workers/engine.worker.ts', import.meta.url), { type: 'module' }),
+  )
+  return sideHost
+}
+function stopSide(current: Hosted<EngineWorkerApi>) {
+  if (sideHost !== current) return
+  current.stop()
+  sideHost = undefined
+}
 
 function engineWorker(): Hosted<EngineWorkerApi> {
   engineHost ??= host<EngineWorkerApi>(
@@ -85,18 +113,26 @@ export function useEngines() {
     }
   }
 
-  async function thumbnail(blob: Blob, size: number): Promise<ImageBitmap> {
+  /** @param own true for a picture Omsett made itself; a dropped file is checked for size first */
+  function thumbnail(blob: Blob, size: number, own = false): Promise<ImageBitmap> {
+    // After the one before it, whether that one worked or not.
+    const next = previews.then(() => drawThumbnail(blob, size, own))
+    previews = next.catch(() => {})
+    return next
+  }
+
+  async function drawThumbnail(blob: Blob, size: number, own: boolean): Promise<ImageBitmap> {
     const current = thumbnailWorker()
     try {
       // On timeout the catch below terminates this worker; the next preview gets a fresh one.
       return await withTimeout(
-        Promise.race([current.api.thumbnail(blob, size), current.crashed]),
+        Promise.race([current.api.thumbnail(blob, size, own), current.crashed]),
         PREVIEW_BUDGET_MS,
         () => {},
       )
     } catch (error) {
       if (thumbnailHost === current) {
-        current.worker.terminate()
+        current.stop()
         thumbnailHost = undefined
       }
       throw error
@@ -105,25 +141,29 @@ export function useEngines() {
 
   /** What a file holds beside what it shows. Never throws: a file that cannot be read has none. */
   async function describe(blob: Blob, formatId: string): Promise<Detail[]> {
-    const current = engineWorker()
+    const current = sideWorker()
     try {
-      return await withTimeout(Promise.race([current.api.describe(blob, formatId), current.crashed]), PREVIEW_BUDGET_MS, () => {
-        if (engineHost === current) terminate()
-      })
+      return await withTimeout(Promise.race([current.api.describe(blob, formatId), current.crashed]), PREVIEW_BUDGET_MS, () => stopSide(current))
     } catch {
+      stopSide(current)
       return []
     }
   }
 
   /** Pack finished files into one ZIP, in the worker like everything else. */
   async function zip(files: Array<{ name: string; blob: Blob }>): Promise<Blob> {
-    const current = engineWorker()
-    return Promise.race([current.api.zip(files), current.crashed])
+    const current = sideWorker()
+    try {
+      return await withTimeout(Promise.race([current.api.zip(files), current.crashed]), ZIP_BUDGET_MS, () => stopSide(current))
+    } catch (error) {
+      stopSide(current)
+      throw error
+    }
   }
 
   /** Stop whatever the engine worker is doing. This is how a conversion is cancelled. */
   function terminate() {
-    engineHost?.worker.terminate()
+    engineHost?.stop()
     engineHost = undefined
     loaded.value = []
   }

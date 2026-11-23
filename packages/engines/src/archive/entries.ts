@@ -1,4 +1,4 @@
-import { Refusal, UNSAFE } from '../util'
+import { isDeviceName, Refusal, UNSAFE } from '../util'
 
 // What an archive holds, whatever kind it is: files and folders, each with a name. Reading any
 // archive gives this, and writing any archive starts from it.
@@ -30,6 +30,8 @@ export const tooLarge = () => new Refusal('This archive unpacks to more than Oms
 export const tooMany = () => new Refusal('This archive holds more files than Omsett will handle (10,000)')
 const escapes = () => new Refusal('This archive holds a file named so that it would land outside the folder it is unpacked into')
 const twice = () => new Refusal('This archive holds two files with the same name')
+const alike = () => new Refusal('This archive holds two files whose names differ only in capitals or accents. On many computers one would overwrite the other')
+const unkeepable = () => new Refusal('This archive holds a file with a name Windows cannot keep safely: a device name such as NUL, a name ending in a dot or a space, or one with a colon in it')
 
 /**
  * The name an entry is kept under, or null for one that names nothing ("./"). A name that
@@ -51,7 +53,12 @@ export function safeName(raw: string, format: string): string | null {
   for (const part of name.split('/')) {
     // Windows drops dots and spaces from the end of a name, so ".. " and "..." climb there too.
     if (part === '..' || /^\.\.[. ]*$/.test(part)) throw escapes()
-    if (part !== '' && part !== '.') parts.push(part)
+    if (part === '' || part === '.') continue
+    // Names that mean something else on Windows: a device ("NUL.txt"), a name it would
+    // shorten ("readme.txt." is "readme.txt" there), a second stream of another file
+    // ("notes.txt:hidden.exe").
+    if (isDeviceName(part) || /[. ]$/.test(part) || part.includes(':')) throw unkeepable()
+    parts.push(part)
   }
   return parts.length === 0 ? null : parts.join('/')
 }
@@ -60,6 +67,11 @@ export function safeName(raw: string, format: string): string | null {
 export class Contents {
   readonly entries: Entry[] = []
   private readonly names = new Set<string>()
+  /** Names as a disk that ignores capitals and accents' spelling would hold them. */
+  private readonly folded = new Set<string>()
+  /** Every folder a file has been put in, and every file: a name cannot be both. */
+  private readonly folders = new Set<string>()
+  private readonly files = new Set<string>()
   private bytes = 0
 
   constructor(private readonly format: string) {}
@@ -81,6 +93,24 @@ export class Contents {
       throw twice()
     }
     if (this.entries.length >= MAX_ENTRIES) throw tooMany()
+    // "Readme.txt" and "README.TXT", or one name spelled with an accent two ways, are two
+    // files here and one file on most Windows and Mac disks, where the second overwrites the first.
+    const fold = (text: string) => text.normalize('NFC').toLowerCase()
+    const key = fold(name)
+    if (this.folded.has(key)) throw alike()
+    // A file cannot also be a folder that other files are in.
+    const above = key.split('/')
+    if (!directory) above.pop()
+    for (let depth = 1; depth <= above.length; depth++) {
+      const folder = above.slice(0, depth).join('/')
+      if (this.files.has(folder)) throw invalid(this.format)
+      this.folders.add(folder)
+    }
+    if (!directory) {
+      if (this.folders.has(key)) throw invalid(this.format)
+      this.files.add(key)
+    }
+    this.folded.add(key)
     this.names.add(name)
     this.entries.push({ name, data, directory, modified, executable })
   }

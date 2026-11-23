@@ -152,10 +152,18 @@ and no cost per deploy.
 
 ## Afterwards
 
-- **When the headers change.** `publish-static.sh` prints
-  `NOTE: headers.nginx changed. Reload nginx…` when a deploy alters the header file. Reload
-  nginx from Forge then. This is rare: the part of the security policy that changes with every
-  build lives inside the HTML, not in a header.
+- **When the headers change.** nginx reads `headers.nginx` when it starts, not on each
+  request, so a deploy that alters the file changes nothing until nginx is reloaded.
+  `publish-static.sh` reloads it (`sudo -n service nginx reload`, which Forge allows its user)
+  and, where it cannot, prints a warning in the deploy log that is hard to miss. This is rare:
+  the part of the security policy that changes with every build lives inside the HTML.
+  To be sure of what the site is really sending, ask it:
+
+  ```
+  scripts/check-live-headers.sh https://omsett.com
+  ```
+
+  It lists each header the build calls for and whether the site sent it.
 - **Rolling back.** The last three builds are kept. To go back one:
 
   ```

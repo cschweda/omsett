@@ -2799,8 +2799,8 @@ work(
 work(
     "a-row-of-two-million-cells.xlsx",
     book({"xl/worksheets/sheet2.xml": sheet('<row r="1">' + "<c><v>1</v></c>" * 2_000_000 + "</row>")}),
-    "One row of two million cells, none of which says where it is.",
-    "xlsx", node="fails", note=NOT_BOOK,
+    "One row of two million cells, none of which says where it is. Four million tags: counted, and turned away, before any is read.",
+    "xlsx", node="fails", note=BOOK_TOO_BIG,
 )
 work(
     "dates-that-are-not-days.xlsx",
@@ -3643,11 +3643,187 @@ code("code.gif", GIF_SAMPLE[:-1] + b"\x21\xfe" + bytes([len(CB[:250])]) + CB[:25
 code("code.ttf", sfnt([(tag, data + CB if tag == b"name" else data) for tag, data in TT]),
      WHY % "in the table that holds a font's name. A font is carried across table by table, so it is still there afterwards, as bytes that nothing reads as code", "ttf", node="succeeds")
 
-names = [b"$(%s).txt" % SHELL.encode(), b"`%s`.txt" % SHELL.encode(), b"; %s ;.sh" % SHELL.encode(), b"__proto__", b"constructor", b"<img src=x onerror=alert(1)>.html", b"run.sh", b"index.html"]
+# Written with ${IFS} for the space: a folder name that ends in a space is refused for being one.
+SHELL_NAME = SHELL.replace(" ", "${IFS}").encode()
+names = [b"$(%s).txt" % SHELL_NAME, b"`%s`.txt" % SHELL_NAME, b";%s;.sh" % SHELL_NAME, b"__proto__", b"constructor", b"<img src=x onerror=alert(1)>.html", b"run.sh", b"index.html"]
 members = [{"name": n, "data": CB, "mode": 0o100755} for n in names]
 code("code.zip", zip_of(members, comment=CB[:200]), WHY % "as the contents of every file, with files named as commands, as markup, and as names that mean something to JavaScript, all marked as programs", "zip", node="succeeds")
 code("code.tar", tar_of(*[(tar_header(n[:99], len(CB), mode=0o755), CB) for n in names]), WHY % "as the contents of every file, with files named as commands and marked as programs", "tar", node="succeeds")
 code("code.tar.gz", gz(tar_of(*[(tar_header(n[:99], len(CB), mode=0o755), CB) for n in names])), WHY % "the same, squeezed", "tgz", node="succeeds")
+
+
+# --- Found by the audit of 23 November 2026 ------------------------------------------------------
+# Each of these got through, or cost far more than its size, until that audit. They are filed
+# with the traps of their own kind.
+
+HIDING_STYLES = ('<?xml version="1.0"?><w:styles %s>'
+    '<w:style w:type="character" w:styleId="Secret"><w:name w:val="Secret"/><w:rPr><w:vanish/></w:rPr></w:style>'
+    '<w:style w:type="character" w:styleId="SecretToo"><w:name w:val="SecretToo"/><w:basedOn w:val="Secret"/></w:style>'
+    '<w:style w:type="paragraph" w:styleId="HiddenPara"><w:name w:val="HiddenPara"/><w:rPr><w:vanish/></w:rPr></w:style>'
+    '</w:styles>' % WNS).encode()
+trap(
+    "hidden-every-other-way.docx",
+    doc({"word/styles.xml": HIDING_STYLES, "word/document.xml": body_of(
+        '<w:p><w:r><w:t xml:space="preserve">What the document says. </w:t></w:r><w:r><w:rPr><w:rStyle w:val="Secret"/></w:rPr><w:t>SECRET-BY-STYLE</w:t></w:r>'
+        '<w:r><w:rPr><w:rStyle w:val="SecretToo"/></w:rPr><w:t>SECRET-BY-A-STYLE-BASED-ON-IT</w:t></w:r></w:p>'
+        '<w:p><w:pPr><w:pStyle w:val="HiddenPara"/></w:pPr><w:r><w:t>SECRET-PARAGRAPH</w:t></w:r></w:p>'
+        '<w:p><w:r><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:instrText> SET price "9" </w:instrText></w:r><w:r><w:fldChar w:fldCharType="separate"/></w:r>'
+        '<w:r><w:t>SECRET-FIELD</w:t></w:r><w:r><w:fldChar w:fldCharType="end"/></w:r><w:r><w:t>And after the field.</w:t></w:r></w:p>'
+        '<w:p><w:fldSimple w:instr=" SET other &quot;x&quot; "><w:r><w:t>SECRET-SIMPLE-FIELD</w:t></w:r></w:fldSimple></w:p>'
+        '<w:tbl><w:tr><w:tc><w:p><w:r><w:t>A row that is shown</w:t></w:r></w:p></w:tc></w:tr>'
+        '<w:tr><w:trPr><w:del w:id="5" w:author="a"/></w:trPr><w:tc><w:p><w:r><w:t>SECRET-DELETED-ROW</w:t></w:r></w:p></w:tc></w:tr>'
+        '<w:tr><w:trPr><w:hidden/></w:trPr><w:tc><w:p><w:r><w:t>SECRET-HIDDEN-ROW</w:t></w:r></w:p></w:tc></w:tr></w:tbl>'
+    )}),
+    "Words hidden in every way but the plain one: by the style they are given, by a style based on that one, by their "
+    "paragraph's style, as the stored result of a field that shows nothing, and in table rows deleted or marked hidden. None is carried across.",
+    "docx", group="documents", node="succeeds", absent="SECRET-",
+)
+trap(
+    "two-million-empty-paragraphs.docx",
+    doc({"word/document.xml": body_of(words("x") + "<w:p/>" * 2_000_000)}),
+    "Two million paragraphs with nothing in them: twelve megabytes of tags, 18 KB as a file, and over a gigabyte once read. The tags are counted before any is read.",
+    "docx", group="documents", node="fails", note="This document is too large to convert in a browser",
+)
+HIDDEN_SHAPE = b'<p:sp><p:nvSpPr><p:cNvPr id="99" name="Hidden" hidden="1"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr><p:txBody><a:bodyPr/><a:p><a:r><a:t>SECRET-HIDDEN-SHAPE</a:t></a:r></a:p></p:txBody></p:sp></p:spTree>'
+trap(
+    "hidden-spelled-another-way.pptx",
+    deck({
+        "ppt/slides/slide2.xml": DECK["ppt/slides/slide2.xml"].replace(b"<p:sld ", b'<p:sld show="false" ', 1).replace(b"</p:spTree>", b'<p:sp><p:nvSpPr><p:cNvPr id="98" name="x"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr><p:txBody><a:bodyPr/><a:p><a:r><a:t>SECRET-HIDDEN-SLIDE</a:t></a:r></a:p></p:txBody></p:sp></p:spTree>', 1),
+        "ppt/slides/slide1.xml": FIRST.replace(b"</p:spTree>", HIDDEN_SHAPE, 1),
+    }),
+    'A slide hidden with the word "false" where most files write "0", and a text box hidden in the editor on a slide that is shown. Neither was shown to the audience, and neither is carried across.',
+    "pptx", group="slides", node="succeeds", absent="SECRET-",
+)
+trap(
+    "ten-million-empty-rows.xlsx",
+    book({"xl/worksheets/sheet2.xml": sheet("<row/>" * 10_000_000 + '<row r="1">' + text_cell("A1", "x") + '</row><row r="2">' + text_cell("A2", "y") + "</row>")}),
+    "Ten million rows with nothing in them: sixty megabytes of tags, under 100 KB as a file, and three gigabytes once read. Empty rows are counted like any others, before any is read.",
+    "xlsx", group="workbooks", node="fails", note=BOOK_TOO_BIG,
+)
+trap(
+    "tag-left-behind.srt",
+    b"1\n00:00:01,000 --> 00:00:02,000\n<<b>img src=x onerror=alert(1)>\n\n2\n00:00:03,000 --> 00:00:04,000\nhello\n\n<{\\x}script>alert(1)<{\\x}/script>\n",
+    "A tag written inside another, so that taking the inner one out leaves the outer one whole; and a tag broken up by a position code, after a blank line. Tags are taken out until none is left.",
+    "srt", group="subtitles", node="succeeds", absent="<img",
+)
+trap(
+    "tag-spelled-in-entities.vtt",
+    b"WEBVTT\n\n00:01.000 --> 00:02.000\n&lt;&lt;b&gt;script&gt;alert(1)&lt;&lt;b&gt;/script&gt;\n",
+    "A script tag spelled out in escapes, with another tag inside it: unescaped and stripped once, it is a script tag. It is stripped until it is not.",
+    "vtt", group="subtitles", node="succeeds", absent="<script",
+)
+trap(
+    "words-after-eighty-thousand-blank-lines.srt",
+    b"1\n00:00:01,000 --> 00:00:02,000\nhi\n\n" + b"x\n\n" * 80_000,
+    "One subtitle whose words go on after a blank line eighty thousand times. Each piece is added once, not re-read with all that came before.",
+    "srt", group="subtitles", node="succeeds",
+)
+_big = max(TT, key=lambda t: len(t[1]))
+_font = bytearray(sfnt(TT + [(b"zz%02d" % i, _big[1]) for i in range(40)]))
+_count = struct.unpack(">H", _font[4:6])[0]
+_where = {bytes(_font[12 + 16 * i : 16 + 16 * i]): 12 + 16 * i for i in range(_count)}
+_home = _font[_where[_big[0]] + 8 : _where[_big[0]] + 12]
+for _tag, _at in _where.items():
+    if _tag.startswith(b"zz"):
+        _font[_at + 8 : _at + 12] = _home
+trap(
+    "tables-that-share-their-bytes.ttf",
+    bytes(_font),
+    "A font with forty extra tables that all point at the same bytes as its largest. Read, it is one font; written out with each table given its own copy, it is forty times the size.",
+    "ttf", group="fonts", node="fails", note=NOT_FONT % "TTF",
+)
+ALIKE = "This archive holds two files whose names differ only in capitals or accents. On many computers one would overwrite the other"
+UNKEEPABLE = "This archive holds a file with a name Windows cannot keep safely: a device name such as NUL, a name ending in a dot or a space, or one with a colon in it"
+trap("names-differ-only-in-capitals.zip", zip_of([{"name": b"Readme.txt", "data": b"the one that is checked\n"}, {"name": b"README.TXT", "data": b"the one that is kept\n"}]),
+     "Two files whose names differ only in capitals. On a Windows or Mac disk they are one file, and the second replaces the first.", "zip", group="archives", node="fails", note=ALIKE)
+trap("names-differ-only-in-accents.zip", zip_of([{"name": "café.txt".encode(), "data": b"one\n"}, {"name": "café.txt".encode(), "data": b"two\n"}]),
+     "Two files with one name, its accent written two ways. They look the same and, on a Mac, are the same.", "zip", group="archives", node="fails", note=ALIKE)
+trap("named-for-a-device.zip", zip_of([{"name": b"notes.txt", "data": b"x\n"}, {"name": b"NUL.txt", "data": b"x\n"}]),
+     "A file named NUL.txt. On Windows that is not a file but the device that swallows whatever is written to it.", "zip", group="archives", node="fails", note=UNKEEPABLE)
+trap("a-second-stream.tar", tar_of((tar_header(b"notes.txt:hidden.exe", 2), b"x\n")),
+     "A name with a colon in it. On Windows this writes a hidden second stream of notes.txt, which no folder listing shows.", "tar", group="archives", node="fails", note=UNKEEPABLE)
+trap("a-file-that-is-also-a-folder.zip", zip_of([{"name": b"dir", "data": b"x\n"}, {"name": b"dir/inside.txt", "data": b"x\n"}]),
+     "A file called dir, and a file inside a folder called dir. It cannot be both.", "zip", group="archives", node="fails", note="This file is not a valid ZIP archive")
+_pax = b"0" * 80_000 + b"3 x"
+trap("length-of-eighty-thousand-zeros.tar", tar_of((tar_header(b"PaxHeader", len(_pax), kind=b"x"), _pax), (tar_header(b"a.txt", 2), b"hi")),
+     "An extended header whose record gives its length as eighty thousand zeros and a three. Read as a number that is three, and the reader would start again three characters on, eighty thousand digits at a time.", "tar", group="archives", node="succeeds")
+trap("brackets-never-closed.fountain", b"\n" + b"(" * 80_000 + b"\nsay\n\nx" + b" " * 80_000 + b"x\n",
+     "Eighty thousand opening brackets and not one closing, and a line of eighty thousand spaces between two letters. Each was searched again from every character in it.", "fountain", group="scripts", node="succeeds")
+trap("type-is-constructor.fdx", b'<?xml version="1.0"?>\n<FinalDraft DocumentType="Script" Version="5"><Content><Paragraph Type="Action"><Text>Seen.</Text></Paragraph><Paragraph Type="constructor"><Text>Also seen.</Text></Paragraph><Paragraph Type="__proto__"><Text>And this.</Text></Paragraph></Content></FinalDraft>\n',
+     "Paragraphs whose kind is given as \"constructor\" and \"__proto__\", names every JavaScript object answers to. They are lines of action like any other of unknown kind, and are kept.", "fdx", group="scripts", node="succeeds")
+trap("soft-breaks-eighty-thousand-times.vcf", b"BEGIN:VCARD\r\nVERSION:2.1\r\nFN:Ada\r\nNOTE;ENCODING=QUOTED-PRINTABLE:" + b"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa=\r\n" * 80_000 + b"z\r\nEND:VCARD\r\n",
+     "A note continued onto the next line eighty thousand times, the old way. The pieces are joined once, not copied for every line.", "vcf", group="contacts", node="succeeds")
+trap("html-a-thousand-deep.md", b"# Title\n\n" + b"<div>" * 1000 + b"x" + b"</div>" * 1000 + b"\n",
+     "Markdown holding HTML nested a thousand deep. The depth of the Markdown is checked before its HTML is read; now the HTML's is too.", "md", group="text", node="fails", note=TOO_DEEP)
+trap("long-and-flat.html", b"<!doctype html><title>Long</title><h1>Long</h1>" + b"<p>a</p>" * 130_000,
+     "A hundred and thirty thousand paragraphs, none inside another. It is long, not deep, and converts.", "html", group="text", node="succeeds")
+
+
+import base64 as _b64
+
+
+def big_png(width, height):
+    """A sound one-bit PNG of any size, in a few kilobytes."""
+    return b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", struct.pack(">IIBBBBB", width, height, 1, 0, 0, 0, 0)) + chunk(b"IDAT", zlib.compress(bytes((width + 7) // 8 + 1) * height, 9)) + chunk(b"IEND", b"")
+
+
+def svg_of(body, width=100, height=100):
+    return ('<svg xmlns="http://www.w3.org/2000/svg" width="%d" height="%d">%s</svg>\n' % (width, height, body)).encode()
+
+
+COSTLY = "This drawing asks for more work than Omsett will do to draw it"
+INSIDE = "This drawing holds a picture too large to convert in a browser"
+trap("picture-inside-is-huge.svg", svg_of('<image width="100" height="100" href="data:image/png;base64,%s"/>' % _b64.b64encode(big_png(20000, 20000)).decode()),
+     "A drawing of 100 by 100 pixels that carries a picture of 20,000 by 20,000 inside it. The drawing's own size is honest, and says nothing of what it will cost to draw.",
+     "svg", group="size", node="fails", note=INSIDE)
+trap("noise-a-hundred-million-deep.svg", svg_of('<filter id="f" x="0" y="0" width="1" height="1"><feTurbulence baseFrequency="0.01" numOctaves="100000000"/></filter><rect width="200" height="200" filter="url(#f)"/>', 200, 200),
+     "Under 300 bytes, asking for a hundred million layers of noise, each a pass over the whole picture. It would never finish.",
+     "svg", group="size", node="fails", note=COSTLY)
+trap("three-million-letters.svg", svg_of('<text x="0" y="50" font-size="1">%s</text>' % ("W" * 3_000_000)),
+     "One line of three million letters. Setting text slows sharply with its length; eighty thousand took six seconds.",
+     "svg", group="size", node="fails", note=COSTLY)
+_inner = svg_of('<rect width="100" height="100" fill="red"/>')
+for _ in range(25):
+    _inner = svg_of('<image width="100" height="100" href="data:image/svg+xml;base64,%s"/>' % _b64.b64encode(_inner).decode())
+trap("drawing-in-a-drawing-25-deep.svg", _inner,
+     "A drawing that holds a drawing that holds a drawing, twenty-five deep. It ran the renderer out of room and left it unfit for every file after.",
+     "svg", group="damage", node="fails", note=COSTLY)
+
+
+def ico_of(pictures, shared=False):
+    at = 6 + 16 * len(pictures)
+    out = struct.pack("<HHH", 0, 1, len(pictures))
+    for data in pictures:
+        out += bytes([16, 16, 0, 0, 1, 0, 32, 0]) + struct.pack("<II", len(data), at)
+        if not shared:
+            at += len(data)
+    return out + (pictures[0] if shared else b"".join(pictures))
+
+
+trap("picture-inside-is-huge.ico", ico_of([big_png(20000, 20000)]),
+     "An icon whose list says 16 by 16, which is all a list can say, and whose one picture is 20,000 by 20,000. The converter is told the limit and stops before making room for it.",
+     "ico", group="size", node="fails")
+trap("twenty-thousand-pictures.pbm", b"P4 1 1\n\0" * 20_000,
+     "Twenty thousand pictures of one pixel each, end to end in one file. Its first says 1 by 1, and the rest are never mentioned.",
+     "pnm", group="size", node="fails")
+trap("comment-ends-the-old-way.pbm", b"P4\n#c\r20000 20000\n1 1\n" + bytes(64),
+     "A comment ended with the line break old Macintoshes used. Read as still going on, the size after it is missed and the next two numbers, 1 and 1, are taken for it.",
+     "pnm", group="size", guard="refused")
+trap("two-widths.pam", b"P7\nWIDTH 1\nHEIGHT 1\nWIDTH 20000\nHEIGHT 20000\nDEPTH 1\nMAXVAL 1\nTUPLTYPE BLACKANDWHITE\nENDHDR\n" + bytes(64),
+     "A picture that gives its size twice: 1 by 1, then 20,000 by 20,000. The last one given is the one that counts.",
+     "pnm", group="size", guard="refused")
+trap("bmi.csv", b"BMI,weight,height\n22.1,70,178\n24.3,81,182\n",
+     "A table whose first column is called BMI. Its first two letters are the two that begin a bitmap.",
+     "csv", group="identity", node="succeeds")
+trap("p1-incidents.md", b"P1 incidents this week\n\n- one\n- two\n",
+     'Notes that begin "P1", which is also how the oldest kind of picture file begins.',
+     "md", group="identity", node="succeeds")
+trap("gif89a.csv", b"GIF89a,b\n1,2\n",
+     "A table whose first heading is the six letters every GIF begins with.",
+     "csv", group="identity", node="succeeds")
+trap("old-header.bmp", b"BM" + struct.pack("<IIII", 74, 0, 26, 12) + struct.pack("<HHHH", 4, 4, 1, 24) + bytes([200]) * 48,
+     "A sound bitmap of four pixels by four, with the oldest kind of header. Its size is kept in a different place, and was read as 262,148 by 1,572,865.",
+     "bmp", group="unusual", node="succeeds")
 
 with open(os.path.join(OUT, "manifest.json"), "w") as out:
     json.dump(manifest, out, indent=2)

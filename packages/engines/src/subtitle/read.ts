@@ -1,4 +1,4 @@
-import { Refusal } from '../util'
+import { lookup, Refusal } from '../util'
 
 // Subtitle files → cues: a start, an end, and the words. Every reader here is Omsett's own, and
 // each is written to be handed a file made to break it: nothing loops more than once over the
@@ -52,7 +52,7 @@ const fraction = (digits: string | undefined) => Number((digits ?? '').padEnd(3,
 const clock = (h: string | undefined, m: string, s: string, f?: string) =>
   ((Number(h ?? 0) * 60 + Number(m)) * 60 + Number(s)) * 1000 + fraction(f)
 
-const ENTITIES: Record<string, string> = {
+const ENTITIES = lookup<string>({
   amp: '&',
   lt: '<',
   gt: '>',
@@ -61,7 +61,7 @@ const ENTITIES: Record<string, string> = {
   nbsp: ' ',
   lrm: '',
   rlm: '',
-}
+})
 
 /** Named and numbered entities, each read once: "&amp;lt;" is "&lt;", not "<". */
 function decodeEntities(text: string): string {
@@ -75,8 +75,21 @@ function decodeEntities(text: string): string {
   })
 }
 
-/** <i>, </font>, <v Speaker>, <00:01.000>: anything shaped like a tag. "a < b" is left alone. */
-const withoutTags = (text: string) => text.replace(/<\/?[a-z0-9.:][^<>]*>/gi, '')
+const TAG = /<\/?[a-z0-9.:][^<>]*>/gi
+/**
+ * <i>, </font>, <v Speaker>, <00:01.000>: anything shaped like a tag. "a < b" is left alone.
+ * Taking a tag out can leave another behind ("<<b>script>" becomes "<script>"), so it is
+ * done again until nothing is left to take. A few times is enough for anything honest; text
+ * still making tags after that is doing it on purpose, and loses its angle brackets.
+ */
+function withoutTags(text: string): string {
+  for (let pass = 0; pass < 4; pass++) {
+    const less = text.replace(TAG, '')
+    if (less === text) return text
+    text = less
+  }
+  return text.replace(/[<>]/g, '')
+}
 
 /** Everything between <!-- and -->. Written as a loop so that a thousand unclosed ones cost nothing. */
 function withoutComments(text: string): string {
@@ -123,6 +136,15 @@ class Collector {
     this.cues.push({ start, end, text })
   }
 
+  /** More words for a subtitle already collected. Cleaned and counted like any others. */
+  extend(cue: Cue, raw: string): void {
+    const text = tidy(withoutTags(raw))
+    if (text === '') return
+    this.characters += text.length
+    if (this.characters > MAX_TEXT) throw tooMany()
+    cue.text = `${cue.text}\n${text}`
+  }
+
   /** Lines that say only when they start: each lasts until the next one. */
   addEntries(entries: Entry[]): void {
     if (entries.length > MAX_CUES) throw tooMany()
@@ -167,7 +189,7 @@ function readSrt(text: string): Cue[] {
     // its own and belongs to the subtitle above; before the first subtitle there is no "above".
     if (at < 0 || at > 1) {
       if (!last || at > 1) throw invalid('SRT')
-      last.text = tidy(`${last.text}\n${withoutOverrides(withoutTags(block.join('\n')))}`)
+      found.extend(last, withoutOverrides(withoutTags(block.join('\n'))))
       continue
     }
     if (at === 1 && !/^\d+$/.test(block[0]!.trim())) throw invalid('SRT')

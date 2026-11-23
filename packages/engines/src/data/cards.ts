@@ -26,15 +26,21 @@ const invalid = (name: string) => new Refusal(`This file is not valid ${name}`)
 
 /** `=C3=A9` and its kind, from the oldest vCards, read as UTF-8. */
 function quotedPrintable(value: string): string {
-  const bytes: number[] = []
-  for (let i = 0; i < value.length; i++) {
-    const hex = value[i] === '=' ? value.slice(i + 1, i + 3) : ''
-    if (/^[0-9a-f]{2}$/i.test(hex)) {
-      bytes.push(Number.parseInt(hex, 16))
+  // Worked on as bytes, all at once: taken a character at a time, a long note took seconds.
+  const source = new TextEncoder().encode(value)
+  const out = new Uint8Array(source.length)
+  const digit = (byte: number | undefined) =>
+    byte === undefined ? -1 : byte >= 0x30 && byte <= 0x39 ? byte - 0x30 : (byte | 0x20) >= 0x61 && (byte | 0x20) <= 0x66 ? (byte | 0x20) - 0x57 : -1
+  let length = 0
+  for (let i = 0; i < source.length; i++) {
+    const high = source[i] === 0x3D ? digit(source[i + 1]) : -1
+    const low = high < 0 ? -1 : digit(source[i + 2])
+    if (low >= 0) {
+      out[length++] = high * 16 + low
       i += 2
-    } else for (const byte of new TextEncoder().encode(value[i])) bytes.push(byte)
+    } else out[length++] = source[i]!
   }
-  return new TextDecoder('utf-8').decode(new Uint8Array(bytes))
+  return new TextDecoder('utf-8').decode(out.subarray(0, length))
 }
 
 /** The lines of the file, with folded ones joined, each split into its three parts. */
@@ -69,7 +75,13 @@ function contentLines(text: string, name: string): Line[] {
     let value = whole.slice(colon + 1)
     if ((params.ENCODING ?? '').toUpperCase() === 'QUOTED-PRINTABLE' || 'QUOTED-PRINTABLE' in params) {
       // Encoded this way, a line that ends in "=" goes on to the next.
-      while (value.endsWith('=') && i + 1 < raw.length) value = value.slice(0, -1) + raw[++i]!
+      // Gathered and joined once: a value continued over eighty thousand lines is not copied for each.
+      const parts = [value]
+      while (parts.at(-1)!.endsWith('=') && i + 1 < raw.length) {
+        parts[parts.length - 1] = parts.at(-1)!.slice(0, -1)
+        parts.push(raw[++i]!)
+      }
+      value = parts.join('')
       value = quotedPrintable(value)
     }
     const dot = first!.lastIndexOf('.')
@@ -242,6 +254,8 @@ function escaped(value: string, list = false): string {
     const code = char.codePointAt(0)!
     if (char === '\n') out += '\\n'
     else if (char === '\\' || char === ';' || (char === ',' && !list)) out += `\\${char}`
+    // Three characters beyond the usual two end a line for some readers of these files.
+    else if (code === 0x85 || code === 0x2028 || code === 0x2029) out += ' '
     else if (code >= 0x20 && code !== 0x7F) out += char
     else if (char === '\t') out += ' '
   }

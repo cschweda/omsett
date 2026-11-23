@@ -142,13 +142,15 @@ export async function readPptx(bytes: Uint8Array): Promise<ReadDocument> {
     return headed ? `<table><thead>${rows[0]}</thead><tbody>${rows.slice(1).join('')}</tbody></table>` : `<table><tbody>${rows.join('')}</tbody></table>`
   }
 
+  const yes = (setting: string) => setting === '1' || setting === 'true'
   let written = ''
   let first: string | null = null
   let shown = 0
   for (const path of slides) {
     const slide = root(path, 'sld')
     // A slide marked not to be shown is not part of the presentation as given.
-    if (!slide || attrs(slide)['@show'] === '0') continue
+    // "show" is a yes or a no, and a no is spelled more than one way. Anything that is not a yes is one.
+    if (!slide || !yes(attrs(slide)['@show'] ?? '1')) continue
     shown++
     const links = linksOf(path)
     let title = ''
@@ -158,6 +160,8 @@ export async function readPptx(bytes: Uint8Array): Promise<ReadDocument> {
       if (depth > MAX_DEPTH) throw notPresentation()
       for (const node of nodes) {
         const tag = tagOf(node)
+        // A shape hidden in the editor is not on the slide the audience saw.
+        if (kids(node).some((part) => tagOf(part).startsWith('nv') && yes(attrs(child(part, 'cNvPr') ?? {})['@hidden'] ?? '0'))) continue
         if (tag === 'sp') {
           const body = child(node, 'txBody')
           if (!body) continue

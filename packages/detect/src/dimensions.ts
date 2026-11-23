@@ -144,10 +144,14 @@ const jxl: Reader = (bytes) => {
   return { width, height }
 }
 
-/** BMP: width and height are little-endian at 18 and 22; a negative height means top-down. */
+/**
+ * BMP: width and height are little-endian at 18 and 22; a negative height means top-down.
+ * The oldest kind (OS/2, with a header of twelve bytes) keeps them as two short numbers instead.
+ */
 const bmp: Reader = (bytes) => {
   if (bytes.length < 26) return null
   const v = view(bytes)
+  if (v.getUint32(14, true) === 12) return { width: v.getUint16(18, true), height: v.getUint16(20, true) }
   return { width: Math.abs(v.getInt32(18, true)), height: Math.abs(v.getInt32(22, true)) }
 }
 

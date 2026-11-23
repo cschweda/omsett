@@ -8,6 +8,8 @@ import { outputName, throwIfAborted } from '../util'
 export interface HeifImage {
   get_width(): number
   get_height(): number
+  /** Whether this is the picture the file names as the one to show. */
+  is_primary?(): boolean
   display(
     target: { data: Uint8ClampedArray; width: number; height: number },
     done: (result: { data: Uint8ClampedArray } | null | undefined) => void,
@@ -58,7 +60,9 @@ export function createHeifEngine(host: HeifHost): Engine {
       try {
         // A file libheif cannot parse comes back as an empty list, not an exception.
         images = new heif.HeifDecoder().decode(bytes)
-        const image = images[0]
+        // A file may hold several pictures and names one as the one to show. That one is
+        // converted, wherever in the file it is; the first, where the file names none.
+        const image = images.find((candidate) => candidate.is_primary?.()) ?? images[0]
         if (!image) throw new Error(`libheif could not read ${input.name}`)
         const width = image.get_width()
         const height = image.get_height()

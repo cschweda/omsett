@@ -30,6 +30,52 @@ function refuseDeepMarkdown(text: string): void {
     while (indent < line.length && (line[indent] === ' ' || line[indent] === '\t')) indent++
     if (indent > DEEP_INDENT && ++deep > MAX_DEEP_LINES) throw new Refusal(TOO_DEEP)
   }
+  // HTML written inside the Markdown nests too, and is read after the Markdown's own depth
+  // has been checked. Counted here as tags opened and not yet closed.
+  const VOID = /^(?:area|base|br|col|embed|hr|img|input|link|meta|source|track|wbr)$/i
+  let open = 0
+  for (const tag of text.matchAll(/<(\/?)([a-z][a-z0-9-]*)\b[^<>]*?(\/?)>/gi)) {
+    if (VOID.test(tag[2]!) || tag[3]) continue
+    open = tag[1] ? Math.max(0, open - 1) : open + 1
+    if (open > MAX_DEPTH) throw new Refusal(TOO_DEEP)
+  }
+}
+
+/**
+ * A tag the cleaner does not keep is taken away and what was inside it left in its place. The
+ * cleaner does that itself, but by handing every child to one call, and a tag with a hundred
+ * thousand children is more than a call can take: a long page inside <main>, or inside <body>,
+ * was refused as "nested too deeply" when it was not nested at all. Done here first, one
+ * child at a time, so the cleaner never meets such a tag.
+ */
+function liftUnknown(schema: { tagNames?: readonly string[] | null; strip?: readonly string[] | null }) {
+  const kept = new Set(schema.tagNames ?? [])
+  const dropped = new Set(schema.strip ?? [])
+  return (tree: Tree) => {
+    const pending = [tree]
+    while (pending.length > 0) {
+      const node = pending.pop()!
+      if (!node.children) continue
+      const children: Tree[] = []
+      const work: Tree[] = []
+      pushAll(work, node.children)
+      while (work.length > 0) {
+        const child = work.pop()!
+        if (child.type !== 'element' || kept.has(child.tagName ?? '')) children.push(child)
+        // Dropped whole, with what is in it; or opened, and what is in it looked at in turn.
+        else if (!dropped.has(child.tagName ?? '')) pushAll(work, child.children)
+      }
+      node.children = children
+      pushAll(pending, children)
+    }
+  }
+}
+
+/** Children onto a stack, last first, so that they come off in the order they are written.
+ *  One at a time: handing a hundred thousand of them to one call is more than a call can take. */
+function pushAll(stack: Tree[], children: Tree[] | undefined): void {
+  if (!children) return
+  for (let i = children.length - 1; i >= 0; i--) stack.push(children[i]!)
 }
 
 interface Tree {
@@ -50,7 +96,7 @@ function withoutChrome() {
       const node = pending.pop()!
       if (!node.children) continue
       node.children = node.children.filter((child) => !(child.type === 'element' && NOT_CONTENT.has(child.tagName ?? '')))
-      pending.push(...node.children)
+      pushAll(pending, node.children)
     }
   }
 }
@@ -75,18 +121,18 @@ function limitDepth() {
 function firstHeading(tree: Tree): string | null {
   const pending = [tree]
   while (pending.length > 0) {
-    const node = pending.shift()!
+    const node = pending.pop()!
     if (node.type === 'element' && node.tagName === 'h1') {
       let words = ''
       const inside = [node]
       while (inside.length > 0) {
-        const part = inside.shift()!
+        const part = inside.pop()!
         if (part.type === 'text') words += part.value ?? ''
-        inside.unshift(...(part.children ?? []))
+        pushAll(inside, part.children)
       }
       return words.replace(/\s+/g, ' ').trim() || null
     }
-    pending.unshift(...(node.children ?? []))
+    pushAll(pending, node.children)
   }
   return null
 }
@@ -123,9 +169,12 @@ async function markdownToHtml(text: string, name: string, language: string): Pro
     // HTML written inside the Markdown is kept, then cleaned with everything else.
     .use(toHtml.default, { allowDangerousHtml: true, clobberPrefix: '' })
     .use(raw.default)
+    // And checked again, now that the HTML inside the Markdown is part of the tree.
+    .use(limitDepth)
     .use(withoutChrome)
     // Ids are left as written, so a footnote's link still finds its note. Prefixing them guards
     // a page's own scripts against names in the content, and this page has no scripts.
+    .use(liftUnknown, sanitize.defaultSchema)
     .use(sanitize.default, { ...sanitize.defaultSchema, clobberPrefix: '' })
     .use(() => (tree: Tree) => {
       title = firstHeading(tree)
@@ -164,6 +213,7 @@ async function htmlToMarkdown(text: string): Promise<string> {
     .use(limitDepth)
     .use(withoutChrome)
     // A picture carried inside the page stays inside the Markdown, as the same data: address.
+    .use(liftUnknown, sanitize.defaultSchema)
     .use(sanitize.default, { ...withPictures(sanitize.defaultSchema), clobberPrefix: 'user-content-' })
     .use(onlyPictures)
     .use(toMarkdown.default)
@@ -208,7 +258,7 @@ function onlyPictures() {
       if (typeof src === 'string' && /^data:/i.test(src) && !/^data:image\/(?:png|jpeg|gif|webp);base64,[a-z0-9+/=]+$/i.test(src)) {
         delete node.properties!.src
       }
-      pending.push(...(node.children ?? []))
+      pushAll(pending, node.children)
     }
   }
 }
@@ -227,6 +277,7 @@ export async function officeToHtml(document: ReadDocument, name: string): Promis
   const body = await unified()
     .use(parse.default, { fragment: true })
     .use(limitDepth)
+    .use(liftUnknown, sanitize.defaultSchema)
     .use(sanitize.default, withPictures(sanitize.defaultSchema))
     .use(onlyPictures)
     .use(() => (tree: Tree) => {
@@ -249,12 +300,13 @@ async function htmlToDocx(text: string, name: string): Promise<Uint8Array> {
       // The page's own title, read before its head is set aside.
       const pending = [tree]
       while (pending.length > 0 && title === null) {
-        const node = pending.shift()!
+        const node = pending.pop()!
         if (node.type === 'element' && node.tagName === 'title') title = (node.children ?? []).map((kid) => kid.value ?? '').join('').trim() || null
-        pending.push(...(node.children ?? []))
+        pushAll(pending, node.children)
       }
     })
     .use(withoutChrome)
+    .use(liftUnknown, sanitize.defaultSchema)
     .use(sanitize.default, withPictures(sanitize.defaultSchema))
     .use(onlyPictures)
   const tree = (await processor.run(processor.parse(text))) as Tree

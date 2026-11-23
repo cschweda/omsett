@@ -7,6 +7,52 @@ The paragraph that opens a version is its teaser: the home page shows its first 
 in the "What's new" banner, so keep it to two or three sentences on what a visitor will notice.
 A line beginning "Released" gives the date.
 
+## 0.27.0
+
+Released 23 November 2026.
+
+Omsett was audited again, by three reviewers told to break it and to prove what they claimed.
+They found no way to run code and no way for a file to leave your device. They did find text
+you had hidden in a Word or PowerPoint file being carried into the converted copy, and that is
+fixed, along with twenty-three other things.
+
+### Fixed
+
+- **Hidden text stays hidden.** Text hidden by its style in a Word document, the stored
+  result of a field that shows nothing, and table rows deleted or marked hidden are no longer
+  carried across. Nor are slides hidden with the word "false", or shapes hidden in the editor.
+- **Photographs come out the right way up.** A portrait taken on a phone was coming out on
+  its side.
+- **A Photoshop file becomes its finished picture**, never one of its layers. A HEIC file
+  becomes the picture it names as the one to show.
+- **Small files that asked for enormous work are refused, quickly, with the reason**: a
+  workbook of empty rows, a drawing with a huge picture inside it or a filter that never
+  finishes, an icon that understates its size, a font whose tables share their bytes, a table
+  that would be millions of cells.
+- **Tags cannot be smuggled through a subtitle** by writing one inside another.
+- **A long web page is no longer refused as "nested too deeply"**, and Markdown with deeply
+  nested HTML in it now is.
+- **A table whose first column is "BMI" is a table.** Text that happened to begin with the
+  letters of a picture format was being taken for a picture.
+- **Old-style BMP files convert.** They were always turned away as too large.
+- **Archives are refused if they hold names that would overwrite each other** on a Windows
+  or Mac disk, or names Windows treats as devices.
+- **"Convert another" during a conversion** no longer lets the abandoned files turn up in
+  the new session. Opening a file's details no longer risks stopping a long conversion.
+- Seven readers that slowed sharply on long, odd input now take one pass.
+
+### Changed
+
+- **Previews** are drawn one at a time, and only for pictures up to 40 megapixels that state
+  their size. Larger ones convert as before, without a preview.
+- 31 new trap files, 457 in all, and the record of the audit is on the Security page.
+
+### Known
+
+- The audit left four things open, all on the Security page: the live server needed
+  restarting to send one security header; the main branch is not yet protected by its own
+  checks; three supply-chain settings; and two warnings the picker does not yet give.
+
 ## 0.26.0
 
 Released 23 November 2026.
