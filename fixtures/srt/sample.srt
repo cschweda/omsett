@@ -1,0 +1,12 @@
+1
+00:00:01,000 --> 00:00:04,000
+<i>Drop a file.</i>
+
+2
+00:00:04,500 --> 00:00:07,250
+Pick a format.
+Nothing leaves your device.
+
+3
+00:01:02,000 --> 00:01:05,500
+{\an8}Café, naïve, 字幕: all carried across.

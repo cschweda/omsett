@@ -107,11 +107,15 @@ build by `apps/web/scripts/write-headers.ts`.
   format as the coder and never lets ImageMagick guess: some of what it can guess its way into
   (scripts, drawings that name other files) is not a picture. Do not add an unhinted read.
 - **A file is offered only formats of its own kind** (`packages/registry/src/kinds.ts`):
-  pictures and drawings are one kind, data another. A new category that should convert into an
+  pictures and drawings are one kind, data another, subtitles a third. A new category that should convert into an
   existing one must be added there, or its formats will never be listed for it.
 - **An engine's reason for refusing a file reaches the user only as a `Refusal`**
   (`packages/engines/src/util.ts`). Any other error is shown as "This file couldn't be
   converted". Write the message for the person who dropped the file.
+- **Readers of text formats are written to be attacked.** The subtitle readers
+  (`packages/engines/src/subtitle/read.ts`) pass over the text once, cap how many subtitles and
+  how much text a file may turn into, and refuse a time that does not read as a time. Keep a
+  new reader to the same rules, and give it a trap for each.
 - **Data outputs must be recognisable without a name.** The tests identify every output from
   its bytes alone, so what the data engine writes has to read unmistakably as its format.
 - **Kill a leftover test server after a rebuild.** `pnpm e2e` reuses a server already on its

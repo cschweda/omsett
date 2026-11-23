@@ -14,9 +14,29 @@ const ROWS_NAMED = [{ id: 'rows-named', text: 'TOML needs a name for everything,
 const ATTRIBUTES = [{ id: 'xml-attributes', text: 'Attributes are kept as values whose names begin with @.' }]
 const TEXT_VALUES = [{ id: 'values-typed', text: 'Values that are plainly numbers become numbers. Everything else stays text.' }]
 const TEXT_CELLS = [{ id: 'cells-typed', text: 'Cells that are plainly numbers become numbers. Everything else stays text.' }]
+// A spreadsheet program may run a cell as a formula. Omsett writes what the file said.
+const FORMULAS = [{ id: 'cells-exact', text: 'Cells are written exactly as they are. A spreadsheet program may treat one that starts with =, +, - or @ as a formula.' }]
+const DATA = ['json', 'jsonl', 'yaml', 'toml', 'xml', 'csv', 'tsv']
+
+// What the subtitle formats cannot say to each other.
+const SUBTITLES = ['srt', 'vtt', 'ass', 'ssa', 'ttml', 'lrc', 'sbv', 'smi', 'microdvd']
+const FRAMES = [{ id: 'frames-assumed', text: 'MicroDVD counts video frames, not time. 23.976 frames a second is assumed unless the file says otherwise.' }]
+const ONE_LINE = [{ id: 'lyrics-one-line', text: 'Each subtitle becomes a single line, timed to a hundredth of a second.' }]
+const NO_ENDS = [{ id: 'ends-guessed', text: 'LRC says when a line starts, not when it ends. Each line is shown until the next one.' }]
+const others = (id: string) => SUBTITLES.filter((other) => other !== id)
+
 const TYPED = ['json', 'jsonl', 'yaml', 'toml']
 
 export const overrides: EdgeOverride[] = [
+  ...['csv', 'tsv'].flatMap((to) => DATA.filter((from) => from !== to).map((from) => ({ from, to, warnings: FORMULAS }))),
+  ...others('microdvd').flatMap((other) => [
+    { from: 'microdvd', to: other, warnings: FRAMES },
+    { from: other, to: 'microdvd', warnings: FRAMES },
+  ]),
+  ...others('lrc').flatMap((other) => [
+    { from: 'lrc', to: other, warnings: NO_ENDS },
+    { from: other, to: 'lrc', warnings: ONE_LINE },
+  ]),
   ...['json', 'jsonl', 'yaml'].map((from) => ({ from, to: 'toml', warnings: NO_NULL })),
   ...['jsonl', 'csv', 'tsv'].map((from) => ({ from, to: 'toml', warnings: ROWS_NAMED })),
   ...[...TYPED, 'csv', 'tsv'].map((to) => ({ from: 'xml', to, warnings: ATTRIBUTES })),

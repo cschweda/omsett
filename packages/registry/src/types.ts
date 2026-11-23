@@ -27,6 +27,8 @@ export type Trait =
   // Data: values held inside other values, and notes written beside them.
   | 'nesting'
   | 'comments'
+  // Subtitles: how the text looks and where it sits.
+  | 'styling'
 
 export interface Format {
   /** 'png' */

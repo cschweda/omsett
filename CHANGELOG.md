@@ -7,6 +7,54 @@ The paragraph that opens a version is its teaser: the home page shows its first 
 in the "What's new" banner, so keep it to two or three sentences on what a visitor will notice.
 A line beginning "Released" gives the date.
 
+## 0.10.0
+
+Released 23 November 2026.
+
+Omsett now converts subtitles and lyrics: SRT, WebVTT, ASS, SSA, TTML, LRC, SBV, SAMI and
+MicroDVD, each to any of the others. Drop the SRT that came with a film and get the WebVTT a web
+page needs. The words and their times are carried across; fonts, colours and positions are not.
+
+### Added
+
+- **Nine subtitle formats, each read and written: SRT, WebVTT, ASS, SSA, TTML, LRC, SBV, SAMI,
+  MicroDVD.** All 72 conversions between them are one step. The readers and writers are
+  Omsett's own, apart from the XML parser TTML is read with, which the data formats already
+  use. Nothing extra is downloaded.
+- **The picker says what each conversion costs.** Only the words and their times are kept.
+  LRC says when a line starts and not when it ends, so each line lasts until the next. MicroDVD
+  counts video frames, so a frame rate has to be assumed: 23.976 a second unless the file
+  states its own.
+- **Specific reasons when a subtitle file is refused**: "This file is not valid SRT", "A
+  subtitle in this file ends before it starts", "This file has no subtitles in it", "This file
+  holds more subtitles than Omsett will convert".
+- **A warning on every conversion to CSV or TSV**: cells are written exactly as they are, and a
+  spreadsheet program may treat one that starts with =, +, - or @ as a formula.
+- 66 trap files for subtitles, several for every format. Among them: a lyrics file of 120 KB
+  that asks to become 40 MB, a subtitle nested ten thousand tags deep, two hundred thousand
+  braces that never close, the "billion laughs" as a subtitle, a TTML file that asks for a file
+  from the computer, scripts hidden in SRT and SAMI, a script tag escaped twice and one split
+  in two, times with twenty digits, subtitles that end before they start, and files of one
+  format named as another.
+
+### Changed
+
+- **Subtitles are identified by how they begin**, whatever the file is called: a time with an
+  arrow, frame numbers in braces, a time in square brackets, the headings ASS and SSA open
+  with. A TTML file is XML, and is recognised as subtitles first.
+- A file is offered only formats of its own kind, so a subtitle file lists subtitle formats.
+
+### Known
+
+- **Styling is not carried over**, italics included. A subtitle that was yellow and at the top
+  of the screen comes out plain.
+- Subtitle files must be UTF-8. Older files in Windows-1252 or UTF-16 show as unsupported.
+- In a SAMI file that holds several languages, only the first is read.
+- In TTML, times set on a section and added to the times inside it are not added up; each
+  line's own time is used.
+- SCC (broadcast captions) is not read yet.
+- There is still no side-by-side view for data or subtitles. It is planned as the next change.
+
 ## 0.9.0
 
 Released 22 November 2026.

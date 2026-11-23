@@ -82,9 +82,10 @@ for (const trap of traps) {
       await expect(convert).toBeDisabled()
     } else {
       // Convert it to something it is not: WebP, or PNG if it is a WebP already; for data,
-      // JSON, or YAML if it is JSON already.
-      const data = formatById(registry, trap.detect)?.category === 'data'
-      const [usual, otherwise] = data ? ['json', 'yaml'] : ['webp', 'png']
+      // JSON, or YAML if it is JSON already; for subtitles, SRT, or WebVTT.
+      const category = formatById(registry, trap.detect)?.category
+      const [usual, otherwise] =
+        category === 'data' ? ['json', 'yaml'] : category === 'subtitle' ? ['srt', 'vtt'] : ['webp', 'png']
       const target = trap.detect === usual ? otherwise : usual
       if (trap.mismatch) await expect(note).toContainText('the contents are')
       await page.locator(`[role="radio"][data-format="${target}"]`).click()

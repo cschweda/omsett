@@ -5,7 +5,8 @@
 // eslint-disable-next-line no-control-regex -- control characters are exactly what this removes
 const ILLEGAL = /[\u0000-\u0008\v\f\u000E-\u001F\uFFFE\uFFFF]/g
 
-const text = (value: string) =>
+/** Text made safe to sit between two tags. */
+export const text = (value: string) =>
   value.replace(ILLEGAL, '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;')
 const attribute = (value: string) => text(value).replaceAll('"', '&quot;').replaceAll('\n', '&#10;')
 

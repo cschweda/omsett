@@ -1,0 +1,8 @@
+WEBVTT
+
+NOTE
+00:00:01.000 --> 00:00:04.000
+This is inside a note.
+
+STYLE
+::cue { color: red }

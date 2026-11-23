@@ -97,6 +97,12 @@ app's scripts; nothing separate is downloaded.
 | smol-toml (reads and writes TOML) | 1.9.1 | BSD-3-Clause | <https://github.com/squirrelchat/smol-toml> |
 | fast-xml-parser (reads XML) | 5.12.1 | MIT | <https://github.com/NaturalIntelligence/fast-xml-parser> |
 
+### subtitle
+
+Omsett's own readers and writers for SRT, WebVTT, ASS, SSA, LRC, SBV, SAMI and MicroDVD, and its
+TTML writer. TTML is read with fast-xml-parser (MIT), listed under `data` above. Nothing
+separate is downloaded.
+
 ### canvas
 
 The browser's own `OffscreenCanvas` encoder. Nothing is downloaded; the wrapper around it is

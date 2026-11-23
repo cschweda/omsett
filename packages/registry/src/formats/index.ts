@@ -14,6 +14,15 @@ import { xml } from './xml'
 import { toml } from './toml'
 import { jsonl } from './jsonl'
 import { tsv } from './tsv'
+import { srt } from './srt'
+import { vtt } from './vtt'
+import { ass } from './ass'
+import { ssa } from './ssa'
+import { sbv } from './sbv'
+import { lrc } from './lrc'
+import { ttml } from './ttml'
+import { smi } from './smi'
+import { microdvd } from './microdvd'
 import { avif } from './avif'
 import { bmp } from './bmp'
 import { gif } from './gif'
@@ -38,4 +47,6 @@ export const formats: Format[] = [
   heic, svg, svgz, psd, ico, jp2, exr, hdr, pcx, sgi, ras,
   // Data. A picture never becomes one of these, nor the other way round.
   json, yaml, csv, xml, toml, jsonl, tsv,
+  // Subtitles and lyrics: text with times.
+  srt, vtt, ass, ssa, ttml, lrc, sbv, smi, microdvd,
 ]

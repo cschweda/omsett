@@ -1,7 +1,7 @@
-// Formats that are plain text: JSON, JSON Lines, XML, TOML, YAML, CSV, TSV. None has a
-// signature. JSON and XML can be told from their first characters. The others cannot always be
-// told apart from each other or from a note someone typed, so for those, and only those, the
-// file's name is allowed to settle it.
+// Formats that are plain text: the data formats (JSON, JSON Lines, XML, TOML, YAML, CSV, TSV)
+// and the subtitle formats. None has a signature. Subtitles, JSON and XML can be told from how
+// they begin. The others cannot always be told apart from each other or from a note someone
+// typed, so for those, and only those, the file's name is allowed to settle it.
 
 type Found = { ext: string; mime: string }
 
@@ -13,6 +13,16 @@ const TOML = found('toml', 'application/toml')
 const YAML = found('yaml', 'application/yaml')
 const CSV = found('csv', 'text/csv')
 const TSV = found('tsv', 'text/tab-separated-values')
+
+const SRT = found('srt', 'application/x-subrip')
+const VTT = found('vtt', 'text/vtt')
+const ASS = found('ass', 'text/x-ass')
+const SSA = found('ssa', 'text/x-ssa')
+const SBV = found('sbv', 'text/x-sbv')
+const LRC = found('lrc', 'application/x-lrc')
+const TTML = found('ttml', 'application/ttml+xml')
+const SMI = found('smi', 'application/x-sami')
+const MICRODVD = found('microdvd', 'text/x-microdvd')
 
 /** What a name's ending claims, for the formats whose contents cannot say. */
 const NAMED: Record<string, Found> = {
@@ -75,6 +85,60 @@ const looksTable = (lines: string[], delimiter: string) => {
   return columns > 0 && lines.length > 1 && count(lines[1]!, delimiter) === columns
 }
 
+// Subtitles. Each begins in a way nothing else does: a time with an arrow, a pair of frame
+// numbers in braces, a heading, a time in square brackets.
+const SRT_TIME = /^\d{1,4}:[0-5]\d:[0-5]\d[,.]\d{1,3}\s*-->\s*\d{1,4}:[0-5]\d:[0-5]\d[,.]\d{1,3}(?:\s|$)/
+const SBV_TIME = /^\d{1,4}:[0-5]\d:[0-5]\d\.\d{1,3},\d{1,4}:[0-5]\d:[0-5]\d\.\d{1,3}$/
+const FRAMES = /^\{\d{1,9}\}\{\d{0,9}\}/
+const LRC_TIME = /^\[\d{1,3}:[0-5]\d(?:[.:]\d{1,3})?\]/
+const LRC_NOTE = /^\[(?:ti|ar|al|au|by|re|ve|la|length|offset|#):[^\]]*\]$/i
+
+function sniffSubtitle(decoded: string, lines: string[]): Found | null {
+  const first = lines[0]!.trim()
+  if (/^WEBVTT(?:[ \t]|$)/.test(first)) return VTT
+  if (/^\[script info\]$/i.test(first)) {
+    // The older form names its styles "V4"; the newer, "V4+".
+    const old = /^\[v4 styles\]\s*$/im.test(decoded) || /^scripttype:\s*v4\.00\s*$/im.test(decoded)
+    return old ? SSA : ASS
+  }
+  if (SRT_TIME.test(first)) return SRT
+  if (/^\d+$/.test(first) && lines[1] !== undefined && SRT_TIME.test(lines[1].trim())) return SRT
+  if (SBV_TIME.test(first)) return SBV
+  if (FRAMES.test(first)) return MICRODVD
+  // Lyrics may open with the song's title and artist; somewhere near the top there is a time.
+  if (LRC_TIME.test(first)) return LRC
+  if (LRC_NOTE.test(first) && lines.slice(1, 20).some((line) => LRC_TIME.test(line.trim()))) return LRC
+  return null
+}
+
+/** Where the thing that opens `rest` ends: a declaration, a comment, or a doctype. -1 if it is none. */
+function prologEnd(rest: string): number {
+  const after = (close: string, from = 0) => {
+    const at = rest.indexOf(close, from)
+    return at < 0 ? -1 : at + close.length
+  }
+  if (rest.startsWith('<?')) return after('?>')
+  if (rest.startsWith('<!--')) return after('-->')
+  if (!/^<!doctype\s/i.test(rest)) return -1
+  // A doctype may hold declarations of its own in square brackets, with ">" inside them.
+  const bracket = rest.indexOf('[')
+  const close = rest.indexOf('>')
+  if (bracket < 0 || close < bracket) return after('>')
+  const end = rest.indexOf(']', bracket)
+  return end < 0 ? -1 : after('>', end)
+}
+
+/** The name of the outermost tag, without its prefix: "tt" for <tt:tt …>. */
+function rootTag(start: string): string | null {
+  let rest = start.trimStart()
+  for (let i = 0; i < 64; i++) {
+    const end = prologEnd(rest)
+    if (end < 0) break
+    rest = rest.slice(end).trimStart()
+  }
+  return /^<(?:[a-z_][\w.-]*:)?([a-z_][\w.-]*)/i.exec(rest)?.[1] ?? null
+}
+
 /**
  * @param head     the start of the file
  * @param complete whether `head` is the whole file
@@ -93,9 +157,15 @@ export function sniffText(head: Uint8Array, complete: boolean, name?: string): F
   // XML: a tag at the very start. A web page begins the same way and is not data.
   if (first.startsWith('<')) {
     const start = decoded.trimStart().slice(0, 4096)
+    // SAMI is written like a web page and is not XML. TTML is XML, and is subtitles.
+    if (/^<sami[\s>]/i.test(start)) return SMI
+    if (rootTag(start) === 'tt') return TTML
     if (/^<!doctype\s+html|^<html[\s>]/i.test(start)) return null
     return /^<(?:\?xml|!--|!DOCTYPE|[A-Za-z_])/.test(start) ? XML : null
   }
+
+  const subtitle = sniffSubtitle(decoded, lines)
+  if (subtitle) return subtitle
 
   const dot = name ? name.lastIndexOf('.') : -1
   const ending = name && dot > 0 ? name.slice(dot + 1).toLowerCase() : null

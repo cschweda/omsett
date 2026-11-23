@@ -1,0 +1,4 @@
+WEBVTT
+
+00:00:01.000 --> 00:00:04.000
+&amp;lt;script&amp;gt;alert(1)&amp;lt;/script&amp;gt;

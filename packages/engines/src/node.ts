@@ -1,6 +1,7 @@
 import { readFile } from 'node:fs/promises'
 import { createRequire } from 'node:module'
 import { createDataEngine } from './data'
+import { createSubtitleEngine } from './subtitle'
 import { createHeifEngine, type HeifModule } from './heif'
 import { engineInfo, resvgFonts, vipsModules } from './info'
 import { createResvgEngine, type ResvgHost } from './resvg'
@@ -52,5 +53,6 @@ export function createNodeEngines(): Record<string, Engine> {
       Promise.all(resvgFonts.map(async (file) => new Uint8Array(await readFile(require.resolve(`@fontsource/inter/files/${file}`))))),
   })
   engines.data = createDataEngine()
+  engines.subtitle = createSubtitleEngine()
   return engines
 }

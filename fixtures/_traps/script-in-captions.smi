@@ -1,0 +1,6 @@
+<SAMI>
+<BODY>
+<SYNC Start=1000><P Class=ENCC onmouseover=alert(1)><script>alert(document.cookie)</script><iframe src=//elsewhere.example></iframe>Hello
+<SYNC Start=4000><P Class=ENCC>&nbsp;
+</BODY>
+</SAMI>

@@ -1,0 +1,5 @@
+[Script Info]
+
+[Events]
+Format: Text, Start, End
+Dialogue: Hello, said the spider, to the fly,0:00:01.00,0:00:04.00

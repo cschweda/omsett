@@ -85,6 +85,17 @@ export const dataInfo: EngineInfo = {
   sourceUrl: 'https://github.com/cschweda/omsett/tree/main/packages/engines/src/data',
 }
 
+// Subtitles: Omsett's own readers and writers. TTML is XML, and is read by the same parser the
+// data engine uses.
+export const subtitleInfo: EngineInfo = {
+  id: 'subtitle',
+  sizeBytes: 0,
+  runtimes: ['browser', 'node'],
+  // fast-xml-parser is MIT.
+  license: 'MIT',
+  sourceUrl: 'https://github.com/cschweda/omsett/tree/main/packages/engines/src/subtitle',
+}
+
 /** The font files resvg is given, from @fontsource/inter. */
 export const resvgFonts = ['inter-latin-400-normal.woff2', 'inter-latin-700-normal.woff2']
 
@@ -104,4 +115,5 @@ export const engineInfo: Record<string, EngineInfo> = {
   [resvgInfo.id]: resvgInfo,
   [magickInfo.id]: magickInfo,
   [dataInfo.id]: dataInfo,
+  [subtitleInfo.id]: subtitleInfo,
 }
