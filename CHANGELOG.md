@@ -70,6 +70,9 @@ Headings, lists, tables, links, pictures and their descriptions are carried acro
 - A Markdown list nested a thousand levels deep took about 24 seconds to read. A trap file
   found it. Nesting that deep is now refused at once, with "This file is nested too deeply to
   convert".
+- Nesting deeper than 256 levels is refused in both formats by a stated limit, the same in
+  every browser. A first version left it to the browser to run out of room, and one browser
+  on one operating system did not.
 
 ### Known
 

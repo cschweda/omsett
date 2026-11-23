@@ -52,6 +52,22 @@ function withoutChrome() {
   }
 }
 
+/** Deeper than this is not writing. How deep a reader can go before it fails differs from one
+ *  browser to the next, so the limit is stated here and is the same in all of them. */
+const MAX_DEPTH = 256
+
+/** Refuses a tree nested past the limit. Walked with a list, not by calling itself. */
+function limitDepth() {
+  return (tree: Tree) => {
+    const pending: Array<[Tree, number]> = [[tree, 0]]
+    while (pending.length > 0) {
+      const [node, depth] = pending.pop()!
+      if (depth > MAX_DEPTH) throw new Refusal(TOO_DEEP)
+      for (const child of node.children ?? []) pending.push([child, depth + 1])
+    }
+  }
+}
+
 /** The words of the first top heading, for the page's title. */
 function firstHeading(tree: Tree): string | null {
   const pending = [tree]
@@ -88,6 +104,7 @@ async function markdownToHtml(text: string, name: string): Promise<string> {
   const body = await unified()
     .use(parse.default)
     .use(gfm.default)
+    .use(limitDepth)
     // HTML written inside the Markdown is kept, then cleaned with everything else.
     .use(toHtml.default, { allowDangerousHtml: true, clobberPrefix: '' })
     .use(raw.default)
@@ -128,6 +145,7 @@ async function htmlToMarkdown(text: string): Promise<string> {
   ])
   const written = await unified()
     .use(parse.default)
+    .use(limitDepth)
     .use(withoutChrome)
     .use(sanitize.default)
     .use(toMarkdown.default)
@@ -163,7 +181,8 @@ export function createMarkupEngine(): Engine {
         else throw new Error(`The markup engine does not convert ${pair}`)
       } catch (error) {
         // Running out of stack is what a file nested thousands deep does to a reader.
-        // Browsers name it differently: a RangeError in most, "too much recursion" in Firefox.
+        // A reader may run out of room before the depth limit is even checked. Browsers name
+        // that differently: a RangeError in most, "too much recursion" in Firefox.
         const message = error instanceof Error ? `${error.name} ${error.message}` : ''
         if (error instanceof RangeError || /recursion|call stack/i.test(message)) throw new Refusal(TOO_DEEP)
         throw error

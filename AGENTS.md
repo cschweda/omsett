@@ -130,6 +130,9 @@ build by `apps/web/scripts/write-headers.ts`.
 - **Data outputs must be recognisable without a name.** Markdown is the one format that
   cannot be; the tests give its name, and only its. The tests identify every output from
   its bytes alone, so what the data engine writes has to read unmistakably as its format.
+- **Never rely on a reader running out of stack to refuse a file.** How deep that is differs by
+  browser and by operating system; WebKit on Linux read what every other browser refused. State
+  the limit and check it (`limitDepth` in the markup engine).
 - **Word from the worker can arrive late.** A progress event may land after its file is
   finished. Nothing it does may bring a finished file back to "converting".
 - **`?slow=800` holds each file before it converts** (localhost only), so tests can see the

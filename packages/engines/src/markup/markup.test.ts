@@ -131,4 +131,12 @@ describe('nesting', () => {
     const page = `${'<div>'.repeat(10_000)}deep${'</div>'.repeat(10_000)}`
     await expect(convert(page, 'html', 'md')).rejects.toThrow('This file is nested too deeply to convert')
   })
+
+  it('refuses nesting past the limit even where there is room to read it', async () => {
+    // 300 deep is well within what any reader can hold, and past what Omsett allows.
+    await expect(convert(`${'>'.repeat(300)} deep`, 'md', 'html')).rejects.toThrow('This file is nested too deeply to convert')
+    await expect(convert(`${'<div>'.repeat(300)}deep${'</div>'.repeat(300)}`, 'html', 'md')).rejects.toThrow('nested too deeply')
+    expect(await convert(`${'>'.repeat(40)} deep`, 'md', 'html')).toContain('deep')
+    expect(await convert(`${'<div>'.repeat(100)}deep${'</div>'.repeat(100)}`, 'html', 'md')).toBe('deep\n')
+  })
 })
