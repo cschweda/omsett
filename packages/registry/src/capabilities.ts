@@ -88,7 +88,15 @@ export const capabilities: Capability[] = [
   // Small parsers written in JavaScript: nothing to download beyond the app itself.
   { engine: 'data', tier: 'browser', reads: DATA, writes: DATA_WRITES, priority: 20 },
   // Markdown and HTML, each to the other, through a tree that is cleaned on the way.
-  { engine: 'markup', tier: 'browser', reads: ['md'], writes: [{ format: 'html', lossy: false }], priority: 20 },
+  {
+    engine: 'markup',
+    tier: 'browser',
+    reads: ['md'],
+    // Markdown does not say what language it is in, and a page must. This is the default; the
+    // person converting can say otherwise.
+    writes: [{ format: 'html', lossy: false, defaultOptions: { language: 'en' } }],
+    priority: 20,
+  },
   { engine: 'markup', tier: 'browser', reads: ['html'], writes: [{ format: 'md', lossy: false }], priority: 20 },
   { engine: 'subtitle', tier: 'browser', reads: SUBTITLES, writes: SUBTITLE_WRITES, priority: 20 },
 ]

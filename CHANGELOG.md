@@ -7,6 +7,26 @@ The paragraph that opens a version is its teaser: the home page shows its first 
 in the "What's new" banner, so keep it to two or three sentences on what a visitor will notice.
 A line beginning "Released" gives the date.
 
+## 0.14.0
+
+Released 23 November 2026.
+
+When you turn Markdown into a web page, you can now say what language it is written in. The
+page is marked with it, so a screen reader reads it in the right voice. The choice starts at
+your browser's own language.
+
+### Added
+
+- **A language choice for Markdown to HTML**, with 31 languages, each under its own name. It
+  appears only for this conversion.
+- **Languages written right to left are marked as such**: Arabic, Hebrew, Persian and Urdu
+  pages get `dir="rtl"` as well.
+- Changing the language after converting converts again, and the side-by-side view follows.
+
+### Changed
+
+- The page is no longer always marked as English. The language offered first is the browser's.
+
 ## 0.13.0
 
 Released 23 November 2026.
@@ -77,8 +97,7 @@ Headings, lists, tables, links, pictures and their descriptions are carried acro
 ### Known
 
 - **A page made from Markdown is marked as English** (`lang="en"`), because Markdown does not
-  say what language it is in and a page must. The picker says so. Change it by hand if the
-  text is in another language.
+  say what language it is in and a page must. A language choice arrived in 0.14.0.
 - A page made from Markdown has no styling of its own: it looks the way a browser shows plain
   HTML.
 - HTML to Markdown keeps everything in the page's body, navigation and footers included. It

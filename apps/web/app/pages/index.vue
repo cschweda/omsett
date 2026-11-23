@@ -109,6 +109,8 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
           :suggested="queue.defaultQuality.value"
         />
 
+        <LanguageControl v-if="queue.language.value !== null" v-model="queue.language.value" />
+
         <div class="convert">
           <UButton
             size="xl"
