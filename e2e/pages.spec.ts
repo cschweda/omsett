@@ -11,6 +11,7 @@ const pages = [
   { path: '/whats-new', heading: 'What’s new' },
   { path: '/security', heading: 'Security' },
   { path: '/settings', heading: 'Settings' },
+  { path: '/traps', heading: 'Trap files' },
   { path: '/status', heading: 'Status' },
 ]
 
@@ -33,7 +34,7 @@ test('both navigations reach every page, the repository, and the changelog', asy
   await page.goto('/')
   const top = page.getByRole('navigation', { name: 'Site' })
   const bottom = page.getByRole('navigation', { name: 'Footer' })
-  for (const { path, heading } of pages.filter((p) => p.path !== '/status')) {
+  for (const { path, heading } of pages.filter((p) => p.path !== '/status' && p.path !== '/traps')) {
     await expect(top.getByRole('link', { name: heading })).toHaveAttribute('href', path)
     await expect(bottom.getByRole('link', { name: heading })).toHaveAttribute('href', path)
   }
@@ -180,4 +181,23 @@ test('phone width: no page scrolls sideways', async ({ page }) => {
     await page.waitForTimeout(path === '/technical' ? 2500 : 300)
     expect(await page.evaluate(() => document.documentElement.scrollWidth), path).toBeLessThanOrEqual(375)
   }
+})
+
+test('every trap file is listed, with what it is and what must happen to it', async ({ page }) => {
+  const manifest = traps as Array<{ file: string; why: string; group: string }>
+  await page.goto('/technical')
+  await page.getByTestId('all-traps').click()
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('Trap files')
+  await expect(page.getByTestId('count-all-traps')).toHaveText(String(manifest.length))
+  await expect(page.getByTestId('trap')).toHaveCount(manifest.length)
+  // One of them, in full: its name, what it is in the manifest's own words, and its outcome.
+  const empty = page.getByTestId('trap').filter({ hasText: 'empty.png' }).first()
+  await expect(empty).toContainText(manifest.find((trap) => trap.file === 'empty.png')!.why)
+  await expect(empty).toContainText('Not offered')
+  // Every kind of trap in the manifest has its own table, reached from the list at the top.
+  for (const group of new Set(manifest.map((trap) => trap.group))) {
+    await expect(page.getByTestId(`trap-group-${group}`)).toBeVisible()
+    await expect(page.locator(`a[href="#traps-${group}"]`)).toHaveCount(1)
+  }
+  await expect(page.getByRole('navigation', { name: 'Footer' }).getByRole('link', { name: 'Trap files' })).toHaveAttribute('href', '/traps')
 })

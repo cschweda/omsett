@@ -7,6 +7,26 @@ The paragraph that opens a version is its teaser: the home page shows its first 
 in the "What's new" banner, so keep it to two or three sentences on what a visitor will notice.
 A line beginning "Released" gives the date.
 
+## 0.26.0
+
+Released 23 November 2026.
+
+Every trap file Omsett is tested against is now listed on the site: the files made to be
+broken, hostile, or lying. For each one the page says what it is and what must happen to it.
+
+### Added
+
+- **Trap files**, a page reached from the foot of every page and from Technical details. All
+  of them, by kind, each with what is wrong with it and what the tests require: refused,
+  converted safely, or offered nothing. The page is read from the list the tests read.
+
+### Changed
+
+- **Counting visits loads no script at all.** A review found that serving Plausible's script
+  from omsett.com would still have run another party's code in the page where the files are.
+  Omsett's own code now makes the one small report itself. Counting had not yet been switched
+  on, so no visit was ever counted the old way.
+
 ## 0.25.0
 
 Released 23 November 2026.

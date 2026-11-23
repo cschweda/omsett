@@ -29,6 +29,7 @@ const status = computed(() => {
         <li v-for="page in pages" :key="page.to">
           <NuxtLink :to="page.to" class="text-button" :data-testid="page.to === '/settings' ? 'footer-settings' : undefined"><GearIcon v-if="page.to === '/settings'" />{{ page.label }}</NuxtLink>
         </li>
+        <li><NuxtLink to="/traps" class="text-button">Trap files</NuxtLink></li>
         <li><NuxtLink to="/status" class="text-button">Status</NuxtLink></li>
       </ul>
       <ul>
