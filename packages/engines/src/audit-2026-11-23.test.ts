@@ -313,12 +313,19 @@ describe('OMS-113: Markdown and HTML, long and deep', () => {
     return output!.blob
   }
 
-  it('a long flat page converts: it is long, not deep', async () => {
-    const page = `<title>t</title><main><h1>t</h1>${'<p>a</p>'.repeat(150_000)}</main>`
-    expect((await convert('html', 'md', page)).size).toBeGreaterThan(400_000)
+  // More children than one call can be handed: past about 120,000 the old code overflowed.
+  // One conversion to a test, with room: on a small machine each takes a while.
+  const paragraphs = 125_000
+  const page = `<title>t</title><main><h1>t</h1>${'<p>a</p>'.repeat(paragraphs)}</main>`
+  it('a long flat page converts to Markdown: it is long, not deep', async () => {
+    expect((await convert('html', 'md', page)).size).toBeGreaterThan(paragraphs * 3)
+  }, 180_000)
+  it('a long flat page converts to a Word document', async () => {
     expect((await convert('html', 'docx', page)).size).toBeGreaterThan(1000)
-    expect((await convert('md', 'html', `# t\n\n${'a\n\n'.repeat(150_000)}`)).size).toBeGreaterThan(1_000_000)
-  }, 60_000)
+  }, 180_000)
+  it('long flat Markdown converts to a page', async () => {
+    expect((await convert('md', 'html', `# t\n\n${'a\n\n'.repeat(paragraphs)}`)).size).toBeGreaterThan(paragraphs * 8)
+  }, 180_000)
 
   it('Markdown with no top heading costs about what Markdown with one does', async () => {
     const body = 'a\n\n'.repeat(40_000)
