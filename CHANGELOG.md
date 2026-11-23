@@ -7,6 +7,20 @@ The paragraph that opens a version is its teaser: the home page shows its first 
 in the "What's new" banner, so keep it to two or three sentences on what a visitor will notice.
 A line beginning "Released" gives the date.
 
+## 0.32.1
+
+Released 23 November 2026.
+
+"Check accessibility" appeared on omsett.com and then could not reach the checker. That is
+fixed.
+
+### Fixed
+
+- **The accessibility check and visit counting reach their servers.** The site's server was
+  told to check the certificate of the server it forwards to, and was following the chain of
+  certificates one step short, so every request was refused. The tests now send a real
+  question through the same rules before a change can be published.
+
 ## 0.32.0
 
 Released 23 November 2026.
