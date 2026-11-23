@@ -7,6 +7,50 @@ The paragraph that opens a version is its teaser: the home page shows its first 
 in the "What's new" banner, so keep it to two or three sentences on what a visitor will notice.
 A line beginning "Released" gives the date.
 
+## 0.32.0
+
+Released 23 November 2026.
+
+"Check accessibility" is now switched on for omsett.com: it appears on every PDF, Word,
+PowerPoint and Excel file. The drop zone offers a PDF and a Word document to try, as well as a
+picture, and the Trust page explains in full what a trap file is.
+
+### Added
+
+- **Try a PDF, try a DOCX.** Two more sample files in the drop zone, beside the sample PNG.
+- **Trust explains trap files in detail**: what they are made to do, what must happen to
+  each, and a list of every one by kind, each leading to its entry on the Trap files page.
+- **A menu button on narrow screens.** The links at the top fold away behind "Menu" where
+  there is no room for them in a row.
+
+### Changed
+
+- **About opens with what "omsett" means.**
+- On the Trap files page, each file's name leads to the file itself, and a link to one trap
+  arrives at that trap.
+- The figures on the Trust page stand a little clear of their labels.
+- omsett.com's settings for counting visits and for the accessibility checker are now part of
+  the site's own code, so they take effect when the site is deployed. Visits are counted only
+  on pages served from omsett.com itself.
+
+## 0.31.0
+
+Released 23 November 2026.
+
+A workbook with several sheets no longer has to be converted one way. You can now choose which
+sheet to convert, by its name, or convert all of them at once.
+
+### Added
+
+- **A "Sheet" choice** when the file is a workbook: the first sheet with anything in it (as
+  before), any sheet by name, or all sheets.
+- **All sheets** gives one file holding every sheet under its name where the format can do
+  that (JSON, YAML), and a file for each sheet, named for it, where it cannot (CSV and the
+  rest). Several files can be downloaded together as a ZIP.
+- Hidden sheets are never listed and never converted.
+- All the sheets of a workbook are held to one size limit between them, so a workbook of many
+  large sheets is refused as too large instead of being read sheet after sheet.
+
 ## 0.30.0
 
 Released 23 November 2026.

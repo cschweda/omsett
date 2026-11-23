@@ -43,7 +43,7 @@ const FROM_PDF = [{ id: 'pdf-read', text: 'Where the PDF is tagged, its headings
 
 // Workbooks.
 const WORKBOOK_READ = [
-  { id: 'first-sheet', text: 'Only the first sheet is converted.' },
+  { id: 'first-sheet', text: 'The first sheet is converted unless you choose another, or all of them, below. Hidden sheets never are.' },
   { id: 'formulas-as-values', text: 'A formula is replaced by the value it last showed. Formatting, charts and comments are not carried over.' },
 ]
 const WORKBOOK_WRITTEN = [{ id: 'one-plain-sheet', text: 'The workbook has one plain sheet. Text is written as text: nothing is turned into a formula.' }]

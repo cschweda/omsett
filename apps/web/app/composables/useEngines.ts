@@ -150,6 +150,17 @@ export function useEngines() {
     }
   }
 
+  /** The names of a workbook's sheets. Never throws: a file with no sheets, or one that cannot be read, has none. */
+  async function sheets(blob: Blob): Promise<string[]> {
+    const current = sideWorker()
+    try {
+      return await withTimeout(Promise.race([current.api.sheets(blob), current.crashed]), PREVIEW_BUDGET_MS, () => stopSide(current))
+    } catch {
+      stopSide(current)
+      return []
+    }
+  }
+
   /** Pack finished files into one ZIP, in the worker like everything else. */
   async function zip(files: Array<{ name: string; blob: Blob }>): Promise<Blob> {
     const current = sideWorker()
@@ -168,5 +179,5 @@ export function useEngines() {
     loaded.value = []
   }
 
-  return { info: engineInfo, availability, loaded, probe, convert, thumbnail, describe, zip, terminate }
+  return { info: engineInfo, availability, loaded, probe, convert, thumbnail, describe, sheets, zip, terminate }
 }

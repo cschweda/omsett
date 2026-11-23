@@ -36,7 +36,7 @@ describe('what a file carries', () => {
   })
 
   it('a workbook and a presentation: hidden sheets, speaker notes', async () => {
-    expect(await details('xlsx/sample.xlsx', 'xlsx')).toMatchObject({ Sheets: '3, 1 hidden. The first one shown is converted' })
+    expect(await details('xlsx/sample.xlsx', 'xlsx')).toMatchObject({ Sheets: '3, 1 hidden. The first one shown is converted, unless you choose another' })
     expect(await details('pptx/sample.pptx', 'pptx')).toMatchObject({ Title: 'About Omsett [kept]', 'Speaker notes': 'On 1 slide [removed]' })
   })
 

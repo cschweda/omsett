@@ -10,7 +10,16 @@ const emit = defineEmits<{ files: [files: File[]] }>()
 const accept = acceptAttribute(registry)
 const input = useTemplateRef<HTMLInputElement>('input')
 const dragging = ref(false)
-const sampleLabel = ref('Try a sample file')
+// Files to try the converter with. Each is named on its button by what it really is, read from
+// its bytes; until that is known, by nothing more than "a sample file".
+interface Sample {
+  url: string
+  name: string
+  /** The format's id and name, once the file has been identified. */
+  id: string | null
+  label: string
+}
+const samples = ref<Sample[]>(assets.samples.map((sample, index) => ({ ...sample, id: null, label: index === 0 ? 'Try a sample file' : '' })))
 const loadingSample = ref(false)
 
 function onChange(event: Event) {
@@ -34,16 +43,14 @@ function onPaste(event: ClipboardEvent) {
   }
 }
 
-async function sampleBlob(): Promise<Blob> {
-  const response = await fetch(assets.sample.url)
-  return response.blob()
-}
+const sampleBlob = async (url: string): Promise<Blob> => (await fetch(url)).blob()
 
-async function loadSample() {
+/** Add a sample as if it had been dropped: the first, where none is named. */
+async function loadSample(sample: { url: string; name: string } = assets.samples[0]!) {
   loadingSample.value = true
   try {
-    const blob = await sampleBlob()
-    emit('files', [new File([blob], assets.sample.name, { type: blob.type })])
+    const blob = await sampleBlob(sample.url)
+    emit('files', [new File([blob], sample.name, { type: blob.type })])
   } finally {
     loadingSample.value = false
   }
@@ -51,14 +58,20 @@ async function loadSample() {
 
 onMounted(async () => {
   window.addEventListener('paste', onPaste)
-  // Name the sample by what it really is, from its bytes and the registry.
-  try {
-    const found = await detect(await sampleBlob(), registry.formats)
-    const format = found.kind === 'known' ? formatForDetected(registry, found.ext) : undefined
-    if (format) sampleLabel.value = `Try a sample ${format.name}`
-  } catch {
-    // The generic label stands.
-  }
+  // Name each sample by what it really is, from its bytes and the registry.
+  await Promise.all(
+    samples.value.map(async (sample, index) => {
+      try {
+        const found = await detect(await sampleBlob(sample.url), registry.formats)
+        const format = found.kind === 'known' ? formatForDetected(registry, found.ext) : undefined
+        if (!format) return
+        sample.id = format.id
+        sample.label = index === 0 ? `Try a sample ${format.name}` : `Try a ${format.name}`
+      } catch {
+        // The first keeps its plain label; the others are not offered.
+      }
+    }),
+  )
 })
 onBeforeUnmount(() => window.removeEventListener('paste', onPaste))
 
@@ -88,9 +101,18 @@ defineExpose({ focus: () => input.value?.focus(), loadSample })
         @change="onChange"
       >
       <label for="file-input" class="button choose">Choose files</label>
-      <button type="button" class="text-button" data-testid="sample" :disabled="loadingSample" @click="loadSample">
-        {{ sampleLabel }}
-      </button>
+      <template v-for="(sample, index) in samples" :key="sample.url">
+        <button
+          v-if="sample.label"
+          type="button"
+          class="text-button"
+          :data-testid="index === 0 ? 'sample' : `sample-${sample.id}`"
+          :disabled="loadingSample"
+          @click="loadSample(sample)"
+        >
+          {{ sample.label }}
+        </button>
+      </template>
     </div>
     <p id="drop-hint" class="hint">You can also paste an image. Files are converted in this tab and are never uploaded.</p>
   </div>

@@ -201,10 +201,16 @@ build by `apps/web/scripts/write-headers.ts`.
   the limit and check it (`limitDepth` in the markup engine).
 - **Results are kept per file and per format** (`${file}:${format}:${n}`). Converting to
   another format adds; converting to the same one replaces its own results and nothing else.
+- **Which sheet of a workbook is converted is such a choice** (`sheet`: `first`, `all`, or a
+  position among the sheets shown). The names in the control are read from the file in the
+  side worker (`listSheets`); hidden sheets have no position and cannot be asked for.
 - **A choice offered to the user is a key in a capability's `defaultOptions`**, and one of the
   names `useConversionQueue` knows (`OFFERED`). The page shows a control for each key the
   selected conversion has; nothing in the page names a format. To offer a choice for some
   sources only, give those sources their own capability entry, as tables have.
+- **omsett.com's own settings are in `site.env`**, which only `scripts/publish-static.sh` reads
+  (and, for the checker, the development server). `pnpm build`, the tests and the self-host
+  image never read it, so they stay a copy of Omsett that counts nothing and checks nothing.
 - **What a copy passes on to another server is written by the build** (`forwardingRules` in
   `apps/web/security-headers.ts`, into `headers.nginx`), from `OMSETT_VISITS_SITE` and
   `OMSETT_ACCESSIBILITY_CHECKER`. No forwarding rule is typed by hand, and none takes a key.

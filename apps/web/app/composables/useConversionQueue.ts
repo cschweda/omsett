@@ -111,11 +111,11 @@ export function useConversionQueue() {
 
   /**
    * The choices the selected conversion offers beyond quality: the language of a page, whether
-   * a table's first row names its columns, the shape of the result. Which are offered is read
+   * a table's first row names its columns, the shape of the result, which sheet of a workbook. Which are offered is read
    * from the capability's default options, so no format is named here; a conversion that
    * offers none leaves this empty.
    */
-  const OFFERED = ['language', 'headerRow', 'shape']
+  const OFFERED = ['language', 'headerRow', 'shape', 'sheet']
   const choices = ref<Record<string, unknown>>({})
   const defaults = computed(() => {
     const options = selected.value?.route?.edges.at(-1)?.candidates[0]?.defaultOptions ?? {}

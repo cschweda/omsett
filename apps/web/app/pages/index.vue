@@ -168,6 +168,11 @@ onBeforeUnmount(() => {
           v-model:named="choices.headerRow"
           v-model:shape="choices.shape as string | undefined"
         />
+        <SheetControl
+          v-if="typeof choices.sheet === 'string'"
+          v-model="choices.sheet"
+          :files="queue.files.value.map((entry) => entry.file)"
+        />
 
         <!-- Once there is something to convert this stays at the foot of the window, so that
              it is in sight wherever in the list of formats the choice was made. -->

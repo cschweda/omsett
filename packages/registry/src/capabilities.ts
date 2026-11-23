@@ -50,6 +50,7 @@ const SUBTITLES = ['srt', 'vtt', 'ass', 'ssa', 'ttml', 'lrc', 'sbv', 'smi', 'mic
 const SUBTITLE_WRITES: WriteSpec[] = SUBTITLES.map((format) => ({ format, lossy: false, drops: ['styling'] }))
 
 const TABLES = ['csv', 'tsv', 'xlsx']
+const SHEETS = ['xlsx']
 const SHAPED = ['json', 'yaml']
 const TABLE_WRITES: WriteSpec[] = DATA.map((format) => ({
   format,
@@ -57,6 +58,9 @@ const TABLE_WRITES: WriteSpec[] = DATA.map((format) => ({
   drops: ['comments'],
   defaultOptions: { headerRow: true, ...(SHAPED.includes(format) ? { shape: 'records' } : {}) },
 }))
+// A workbook has sheets, and which of them is converted is a choice: the first with anything
+// in it, one by its position, or all of them.
+const SHEET_WRITES: WriteSpec[] = TABLE_WRITES.map((write) => ({ ...write, defaultOptions: { ...write.defaultOptions, sheet: 'first' } }))
 const SCRIPTS = ['fountain', 'fdx', 'drafter']
 const ARCHIVES = ['zip', 'tgz', 'tar']
 const SFNT = ['ttf', 'otf', 'woff']
@@ -102,7 +106,8 @@ export const capabilities: Capability[] = [
   // Small parsers written in JavaScript: nothing to download beyond the app itself.
   // A table going in has two things to say about itself that nothing else does: whether its
   // first row is the names of its columns, and, for a format that can nest, what shape to take.
-  { engine: 'data', tier: 'browser', reads: TABLES, writes: TABLE_WRITES, priority: 20 },
+  { engine: 'data', tier: 'browser', reads: TABLES.filter((format) => !SHEETS.includes(format)), writes: TABLE_WRITES, priority: 20 },
+  { engine: 'data', tier: 'browser', reads: SHEETS, writes: SHEET_WRITES, priority: 20 },
   { engine: 'data', tier: 'browser', reads: DATA.filter((format) => !TABLES.includes(format)), writes: DATA_WRITES, priority: 20 },
   // Screenplays are read into their elements and written from them, in Omsett's own code.
   { engine: 'script', tier: 'browser', reads: SCRIPTS, writes: SCRIPTS.map((format) => ({ format, lossy: false })), priority: 20 },

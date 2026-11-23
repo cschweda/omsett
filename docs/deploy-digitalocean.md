@@ -207,8 +207,7 @@ file and check it". The file goes to your own domain, and nginx passes it on.
 
 ### Setting them up
 
-1. **Name them.** In Forge, open the site's **Environment** and add either line, or both.
-   Neither is a secret.
+1. **Name them.** They are two lines, and neither is a secret:
 
    ```
    OMSETT_VISITS_SITE=omsett.com
@@ -216,8 +215,13 @@ file and check it". The file goes to your own domain, and nginx passes it on.
    ```
 
    The first is your site's name as Plausible lists it. The second is the checker's site.
-   `scripts/publish-static.sh` reads lines beginning `OMSETT_` from the site's `.env`, which is
-   where Forge keeps them, and ignores everything else in it.
+   For omsett.com they are already in [`site.env`](../site.env), in the repository, so there is
+   nothing to do. For a copy of your own, change that file, or delete it and put your lines in
+   the site's **Environment** in Forge: `scripts/publish-static.sh` reads lines beginning
+   `OMSETT_` from `site.env` and then from the site's `.env`, where a line overrides the same
+   line in `site.env`, and ignores everything else in either. Visits are counted only on pages
+   served from the site that is named, so a copy left pointing at someone else's name counts
+   nothing.
 
 2. **Deploy.** The build writes the forwarding rules into `headers.nginx`, and the publish
    script reloads nginx because that file changed. If the deploy log ends with a warning that

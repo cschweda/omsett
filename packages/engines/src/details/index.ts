@@ -86,7 +86,7 @@ async function office(blob: Blob, format: string): Promise<Detail[]> {
   if (format === 'xlsx') {
     const sheets = [...part('xl/workbook.xml').matchAll(/<sheet\s([^>]*)>/g)]
     const hidden = sheets.filter((sheet) => /state="(?:hidden|veryHidden)"/.test(sheet[1]!)).length
-    if (sheets.length) add('Sheets', `${sheets.length}${hidden ? `, ${hidden} hidden` : ''}. The first one shown is converted`)
+    if (sheets.length) add('Sheets', `${sheets.length}${hidden ? `, ${hidden} hidden` : ''}. The first one shown is converted, unless you choose another`)
     if (/<f\b|<f>/.test(part('xl/worksheets/sheet1.xml'))) add('Formulas', 'Yes. Each is replaced by the value it last showed', 'removed')
   }
   if (format === 'pptx') {

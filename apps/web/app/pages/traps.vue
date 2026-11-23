@@ -7,6 +7,22 @@ import { trapGroups } from '~/utils/trap-groups'
 
 useHead({ title: 'Trap files — Omsett' })
 
+// A link to one trap arrives at that trap: its row is brought into view and marked. Done here
+// because a link followed inside the site moves no page, and so the browser marks nothing itself.
+const route = useRoute()
+const arrived = computed(() => {
+  try {
+    return decodeURIComponent(route.hash.slice(1))
+  } catch {
+    return ''
+  }
+})
+function bringIntoView() {
+  if (arrived.value.startsWith('trap-')) document.getElementById(arrived.value)?.scrollIntoView({ block: 'center' })
+}
+onMounted(() => nextTick(bringIntoView))
+watch(arrived, () => nextTick(bringIntoView))
+
 type Trap = (typeof traps)[number]
 
 // What the file really is, by its contents, in the registry's own name for it.
@@ -82,8 +98,10 @@ const count = (word: ReturnType<typeof verdict>) => traps.filter((trap) => verdi
               </tr>
             </thead>
             <tbody>
-              <tr v-for="trap in group.traps" :key="trap.file" data-testid="trap">
-                <th scope="row" class="file">{{ trap.file }}</th>
+              <tr v-for="trap in group.traps" :id="`trap-${trap.file}`" :key="trap.file" :class="{ arrived: arrived === `trap-${trap.file}` }" data-testid="trap">
+                <th scope="row" class="file">
+                  <a :href="`${REPOSITORY}/blob/main/fixtures/_traps/${encodeURIComponent(trap.file)}`" :title="`${trap.file}, in the repository`">{{ trap.file }}</a>
+                </th>
                 <td>{{ trap.why }}</td>
                 <td>
                   <span class="verdict" :data-verdict="verdict(trap)">{{ verdict(trap) }}</span>
@@ -99,6 +117,18 @@ const count = (word: ReturnType<typeof verdict>) => traps.filter((trap) => verdi
 </template>
 
 <style scoped>
+/* A row arrived at from a link stands clear of the top of the window, and is marked. */
+tr[id] {
+  scroll-margin-top: 1rem;
+}
+tr.arrived {
+  background: var(--surface);
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+.file a {
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
 .index {
   margin: 0;
   padding: 0;

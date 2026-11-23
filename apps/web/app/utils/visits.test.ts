@@ -23,6 +23,14 @@ describe('whether a visit is counted', () => {
     expect(visitCounting({ ...base, privacyControl: true, stored: 'on' })).toBe('off-by-browser')
   })
 
+  it('is, only on pages served from the site that is named, or a part of it', () => {
+    expect(visitCounting({ ...base, host: 'omsett.com' })).toBe('on')
+    expect(visitCounting({ ...base, host: 'www.omsett.com' })).toBe('on')
+    for (const host of ['localhost', 'fork.example', 'notomsett.com', 'omsett.com.evil.example', '192.168.1.5']) {
+      expect(visitCounting({ ...base, host }), host).toBe('not-set-up')
+    }
+  })
+
   it('takes only a plain site name for a setting', () => {
     expect(isSiteName('omsett.com')).toBe(true)
     const tab = String.fromCodePoint(9)

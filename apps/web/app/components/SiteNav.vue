@@ -4,6 +4,13 @@ import { pages, REPOSITORY } from '~/utils/links'
 const route = useRoute()
 const { state, label } = useReadiness()
 const home = computed(() => route.path === '/')
+
+// On a narrow screen the links fold away behind one button, and open below it.
+const open = ref(false)
+watch(
+  () => route.fullPath,
+  () => (open.value = false),
+)
 </script>
 
 <template>
@@ -12,7 +19,15 @@ const home = computed(() => route.path === '/')
     <NuxtLink v-if="!home" to="/" class="brand">omsett<span class="dot">.</span></NuxtLink>
     <span v-else class="brand muted">File converter</span>
 
-    <ul class="links">
+    <button type="button" class="menu" :aria-expanded="open" aria-controls="site-links" data-testid="nav-menu" @click="open = !open">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" aria-hidden="true">
+        <path v-if="!open" d="M3 6h18M3 12h18M3 18h18" />
+        <path v-else d="M5 5l14 14M19 5L5 19" />
+      </svg>
+      <span>{{ open ? 'Close' : 'Menu' }}</span>
+    </button>
+
+    <ul id="site-links" class="links" :class="{ open }">
       <li v-for="page in pages" :key="page.to">
         <NuxtLink :to="page.to" class="link" :data-testid="page.to === '/settings' ? 'nav-settings' : undefined"><GearIcon v-if="page.to === '/settings'" />{{ page.label }}</NuxtLink>
       </li>
@@ -65,6 +80,59 @@ const home = computed(() => route.path === '/')
 .link {
   color: var(--ink);
   text-decoration: none;
+}
+/* Wide enough for every link in a row, the button is not needed and is not there. */
+.menu {
+  display: none;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.25rem 0;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+.menu:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+@media (max-width: 960px) {
+  .nav {
+    align-items: center;
+  }
+  .menu {
+    display: inline-flex;
+  }
+  .links {
+    display: none;
+    flex-basis: 100%;
+    flex-direction: column;
+    gap: 0;
+    padding-top: 0.5rem;
+  }
+  .links.open {
+    display: flex;
+  }
+  .links li {
+    border-top: 1px solid var(--rule);
+  }
+  .links .link {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding: 0.75rem 0;
+    font-size: var(--text-body);
+  }
+  /* In a list the page you are on is marked by a blue bar at its left. */
+  .links .link.router-link-exact-active {
+    padding-left: 0.75rem;
+    box-shadow: inset 3px 0 0 var(--accent);
+  }
+  .links .link.router-link-exact-active::after {
+    content: none;
+  }
 }
 .link:hover {
   text-decoration: underline;

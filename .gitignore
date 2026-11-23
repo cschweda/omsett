@@ -11,7 +11,7 @@ dist/
 # generated at install/build time by apps/web/scripts/prepare-assets.ts
 apps/web/public/engines/*
 !apps/web/public/engines/README.md
-apps/web/public/sample.png
+apps/web/public/sample.*
 apps/web/app/generated/
 # test output
 test-results/

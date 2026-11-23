@@ -4,6 +4,8 @@ import audits from '~/generated/audits.json'
 import facts from '~/generated/facts.json'
 import { REPOSITORY } from '~/utils/links'
 import { registry } from '~/utils/registry'
+import traps from '~/generated/traps.json'
+import { trapGroups } from '~/utils/trap-groups'
 
 useHead({ title: 'Can I trust this? — Omsett' })
 
@@ -21,6 +23,11 @@ for (const audit of [...audits].reverse()) for (const finding of audit.findings)
 const findings = [...latest.values()]
 const state = (status: string) => findings.filter((finding) => finding.status === status).length
 const open = findings.filter((finding) => finding.status === 'open')
+// Every trap file, by kind, for the list on this page. Read from the list the tests read.
+const trapKinds = Object.entries(trapGroups)
+  .map(([id, label]) => ({ id, label, files: traps.filter((trap) => trap.group === id).map((trap) => trap.file) }))
+  .filter((kind) => kind.files.length > 0)
+
 const browsers = facts.tests.browsers.map((name) => ({ chromium: 'Chromium', firefox: 'Firefox', webkit: 'WebKit' })[name] ?? name)
 const browserList = `${browsers.slice(0, -1).join(', ')} and ${browsers.at(-1)}`
 </script>
@@ -88,18 +95,95 @@ const browserList = `${browsers.slice(0, -1).join(', ')} and ${browsers.at(-1)}`
       <StepSection title="What a hostile file can do" heading-id="trust-hostile">
         <div class="prose">
           <p>
-            People convert files that other people sent them. So Omsett is tested against files made to attack
-            it: {{ number(facts.traps.total) }} of them, each broken, hostile or lying in one deliberate way.
-            Files that claim to be tiny and unpack to gigabytes. Archives with files named to land outside their
-            folder. Documents carrying programs. Subtitles carrying scripts. A file of every format with code
-            planted wherever that format holds text.
+            People convert files that other people sent them. A file can be built to attack whatever opens it,
+            and a converter opens everything it is given. So the question is not whether Omsett handles good
+            files well, but what it does with bad ones.
           </p>
           <p>
-            For each, the tests state in advance what must happen, and check it. Whatever the file is, nothing
-            in it may run, the page must survive it, and an ordinary file must still convert afterwards. A
-            conversion that runs too long is stopped. Damaged files are refused, not half-converted.
+            A conversion that runs too long is stopped. A damaged file is refused, not half-converted. Nothing a
+            file contains is ever run, and nothing it contains is put on this page except as plain text. None of
+            that is taken on trust: it is tested, with trap files.
           </p>
-          <p><NuxtLink to="/traps" data-testid="trust-to-traps">See every trap file</NuxtLink>, with what each is and what must happen to it.</p>
+        </div>
+      </StepSection>
+
+      <StepSection title="Trap files" heading-id="trust-traps">
+        <div class="prose" data-testid="trust-trap-definition">
+          <p>
+            A <strong>trap file</strong> is a file made on purpose to be wrong in one particular way, to find out
+            what Omsett does with it. Each one is small, each is built by a program so that it is exactly as wrong
+            as intended and no more, and each comes with a statement, written before the test is run, of what
+            must happen to it. There are {{ number(facts.traps.total) }} of them. They are test files, kept with
+            the code. Nothing of yours is ever one.
+          </p>
+          <h3>What they are made to do</h3>
+          <ul>
+            <li>
+              <strong>Lie about what they are.</strong> A JPEG named .png. A web page named as a picture. A
+              table whose first letters spell the start of a picture file. Omsett must go by what a file
+              contains, not what it is called.
+            </li>
+            <li>
+              <strong>Lie about their size.</strong> A few kilobytes that claim to be a picture forty thousand
+              pixels wide, or that unpack to gigabytes: the “bomb”, in a ZIP, a spreadsheet, a font, a drawing.
+              Omsett must refuse before it has made room for them, not after.
+            </li>
+            <li>
+              <strong>Be damaged.</strong> Cut off halfway, a byte changed, a checksum that does not match. Omsett
+              must say the file is damaged, and must not hand back half a picture as if it were whole.
+            </li>
+            <li>
+              <strong>Carry something that could run.</strong> A script in a subtitle, a program in a PDF, a
+              formula in a spreadsheet that starts another program, a web page with a hidden form. For every
+              format there is a file with code planted wherever that format holds text. None of it may run, here
+              or in anything the file is converted into.
+            </li>
+            <li>
+              <strong>Reach outside themselves.</strong> An archive with a file named to land outside its
+              folder. A document that asks for a file from your computer, or from another site. Omsett must
+              refuse the first and never fetch the second.
+            </li>
+            <li>
+              <strong>Hold what their author meant to be gone.</strong> Deleted text still in a Word file,
+              hidden slides, comments, speaker notes, a photograph’s location. None may be carried into the
+              converted copy.
+            </li>
+            <li>
+              <strong>Take forever.</strong> A list nested ten thousand deep, a line of three million letters, a
+              length written as eighty thousand zeros. Omsett must be done, or have refused, in moments.
+            </li>
+          </ul>
+          <h3>What must happen to each</h3>
+          <p>
+            One of three things, stated in advance: it is <strong>refused</strong>, with the reason shown to the
+            person; it is <strong>converted</strong> safely, with whatever was planted in it gone; or it is
+            <strong>offered nothing</strong>, because it is not a file Omsett reads. Whichever it is, the page
+            must survive, nothing in the file may run, and an ordinary file must convert straight afterwards.
+            Every trap is tried in Chromium, Firefox and WebKit on every change.
+          </p>
+          <p>
+            When an audit finds something Omsett got wrong, the file that showed it becomes a trap, so that the
+            same mistake cannot come back unnoticed.
+          </p>
+          <h3>Every trap file</h3>
+          <p>
+            All {{ number(facts.traps.total) }}, by kind. Each name leads to its entry on the
+            <NuxtLink to="/traps" data-testid="trust-to-traps">Trap files</NuxtLink> page, which says what that file
+            is, what must happen to it, and where the file itself can be had.
+          </p>
+        </div>
+        <div class="trap-list" data-testid="trust-trap-list">
+          <details v-for="kind in trapKinds" :key="kind.id" class="kind">
+            <summary>
+              <span>{{ kind.label }}</span>
+              <span class="figures count">{{ kind.files.length }}</span>
+            </summary>
+            <ul>
+              <li v-for="file in kind.files" :key="file">
+                <NuxtLink :to="{ path: '/traps', hash: `#trap-${file}` }" data-testid="trust-trap">{{ file }}</NuxtLink>
+              </li>
+            </ul>
+          </details>
         </div>
       </StepSection>
 
@@ -195,6 +279,44 @@ const browserList = `${browsers.slice(0, -1).join(', ')} and ${browsers.at(-1)}`
 </template>
 
 <style scoped>
+.trap-list {
+  border-bottom: 1px solid var(--rule);
+}
+.kind {
+  border-top: 1px solid var(--rule);
+}
+.kind summary {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.625rem 0;
+  font-weight: 700;
+  cursor: pointer;
+}
+.kind summary:hover {
+  color: var(--accent-text);
+}
+.kind .count {
+  color: var(--muted);
+  font-weight: 400;
+}
+.kind ul {
+  margin: 0 0 1rem;
+  padding: 0;
+  list-style: none;
+  columns: 3 14rem;
+  column-gap: var(--gutter);
+  font-size: var(--text-small);
+}
+.kind li {
+  padding: 0.2rem 0;
+  break-inside: avoid;
+  overflow-wrap: anywhere;
+}
+.kind a {
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
 /* Figures in the thousands need more room than the row gives by default. */
 .figure-row.wide {
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
