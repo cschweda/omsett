@@ -182,44 +182,44 @@ and no cost per deploy.
 
 ## Counting visits (optional)
 
-Omsett can count visits with [Plausible](https://plausible.io). It is off unless you set it up,
-and it is set up so that the page still asks no other site for anything: nginx forwards two
-addresses on your own domain to Plausible, and the page loads the counting script from there.
-The page's security policy is the same with counting on as with it off.
+Omsett can count visits with [Plausible](https://plausible.io). It is off unless you set it up.
+
+No script of Plausible's is loaded, from Plausible or from anywhere. Omsett's own code reports
+that a page was opened, in one small request to your own domain, and nginx passes that request
+on. So no third party's code ever runs in the page where the files are, and the page still asks
+no other site for anything. Its security policy is the same with counting on as with it off.
 
 Three steps, all on the server.
 
-1. **nginx.** In the same `server { }` block, add the two locations below. Replace the script's
-   name with the one in the snippet Plausible gave you (`pa-….js`).
+1. **nginx.** In the same `server { }` block, add this one location. It accepts a small POST
+   and nothing else, and it checks that it is really Plausible on the other end.
 
    ```
-   # The counting script, served from this domain.
-   location = /js/pa-XXXXXXXXXXXXXXXXXXXXXXXX.js {
-       proxy_pass https://plausible.io/js/pa-XXXXXXXXXXXXXXXXXXXXXXXX.js;
-       proxy_set_header Host plausible.io;
-       proxy_ssl_server_name on;
-       proxy_buffering on;
-   }
-
-   # Where a visit is reported. Plausible is told the visitor's address so that it can count
-   # people and not requests; it does not keep the address.
+   # Where a page view is reported. Passed on to Plausible, which is told the visitor's
+   # address so that it can count people and not requests; it does not keep the address.
    location = /api/event {
+       limit_except POST { deny all; }
+       client_max_body_size 2k;
+
        proxy_pass https://plausible.io/api/event;
        proxy_set_header Host plausible.io;
        proxy_ssl_server_name on;
-       proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+       proxy_ssl_name plausible.io;
+       proxy_ssl_verify on;
+       proxy_ssl_trusted_certificate /etc/ssl/certs/ca-certificates.crt;
+       proxy_set_header X-Forwarded-For $remote_addr;
        proxy_set_header X-Forwarded-Proto $scheme;
        proxy_set_header X-Forwarded-Host $host;
-       proxy_buffering on;
+       proxy_set_header Cookie "";
        proxy_http_version 1.1;
    }
    ```
 
-2. **The build's setting.** In Forge, open the site's **Environment** and add one line, with the
-   same script name. This is not a secret: it is an address on your own site.
+2. **The build's setting.** In Forge, open the site's **Environment** and add one line: your
+   site's name as Plausible lists it. This is not a secret.
 
    ```
-   OMSETT_VISITS_SCRIPT=/js/pa-XXXXXXXXXXXXXXXXXXXXXXXX.js
+   OMSETT_VISITS_SITE=omsett.com
    ```
 
    The deploy script must pass it to the build. If your Forge deploy script does not load the
@@ -227,11 +227,14 @@ Three steps, all on the server.
    `scripts/publish-static.sh`.
 
 3. **Deploy, then check.** Open the site, then Plausible's dashboard: the visit should appear
-   within a minute. In the browser's developer tools, the Network tab should show `/js/pa-….js`
-   and `/api/event` on your own domain and nothing on `plausible.io`.
+   within a minute. In the browser's developer tools, the Network tab should show one request
+   to `/api/event` on your own domain, no script from Plausible, and nothing on `plausible.io`.
 
 What a visitor can do about it is on the site's Settings page: turn it off, or it is off already
 if their browser sends Do Not Track or Global Privacy Control.
+
+You do not need the script snippet Plausible gives you, and should not add it: it would run
+Plausible's code in the page, which is exactly what this arrangement avoids.
 
 A Plausible **API key** (for reading your statistics) is a secret and has no place here. Nothing
 in Omsett needs it. Never put it in the site's environment: anything a static site's build can

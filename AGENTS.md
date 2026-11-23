@@ -47,9 +47,9 @@ These are invariants. A change that breaks one is wrong even if it works.
 6. **Nothing leaves the origin.** No request to another origin, ever; no request carrying file
    bytes to its own. Enforced by policy, not intention (see below), and asserted in
    `e2e/gate.spec.ts`. Counting visits does not change this: where a copy of Omsett is set up
-   to count them, the script and its reports go to the copy's own origin, whose server forwards
-   them (`app/utils/visits.ts`, `docs/deploy-digitalocean.md`). A script on another origin is
-   never loaded, whatever a setting says.
+   to count them, the app's own code reports a page view to the copy's own origin, whose server
+   forwards it (`app/utils/visits.ts`, `docs/deploy-digitalocean.md`). No analytics script is
+   ever loaded, from anywhere: third-party code does not run in the page where the files are.
 7. **Every engine is tested where it really runs.** Engines whose `runtimes` include `node` run
    the fixtures in Vitest; browser-only engines run them in Playwright.
 8. **Accessibility work waits for the final phase.** Until then: no audits, no axe gate, no
@@ -192,8 +192,10 @@ build by `apps/web/scripts/write-headers.ts`.
   selected conversion has; nothing in the page names a format. To offer a choice for some
   sources only, give those sources their own capability entry, as tables have.
 - **Counting visits is off unless three things hold** (`visitCounting` in `app/utils/visits.ts`):
-  the build names a script on its own origin, the visitor has not turned it off in Settings, and
-  the browser has not asked not to be tracked. The self-host image and the tests name no script.
+  the build names the site (`OMSETT_VISITS_SITE`), the visitor has not turned it off in Settings,
+  and the browser has not asked not to be tracked. The self-host image and the tests name none.
+  Never proxy or vendor an analytics script to "satisfy" the policy: a red-team review found
+  that doing so keeps the policy intact while handing a third party the page.
 - **Word from the worker can arrive late.** A progress event may land after its file is
   finished. Nothing it does may bring a finished file back to "converting".
 - **`?slow=800` holds each file before it converts** (localhost only), so tests can see the

@@ -154,7 +154,7 @@ await writeFile(join(generatedDir, 'changelog.json'), JSON.stringify(releases, n
 
 // Facts the Technical details page states as numbers. Counted here from the repository on every
 // build, so the page is right by construction and never needs editing when a file is added.
-interface Trap { group: string }
+interface Trap { file: string; group: string; why: string; detect: string; mismatch: boolean; guard: string; node: string; note: string | null; absent: string | null }
 const traps = JSON.parse(await readFile(join(repo, 'fixtures', '_traps', 'manifest.json'), 'utf8')) as Trap[]
 const trapGroups: Record<string, number> = {}
 for (const trap of traps) trapGroups[trap.group] = (trapGroups[trap.group] ?? 0) + 1
@@ -169,6 +169,13 @@ const facts = {
   built: new Date().toISOString().slice(0, 10),
 }
 await writeFile(join(generatedDir, 'facts.json'), JSON.stringify(facts, null, 2) + '\n')
+
+// Every trap, for the page that lists them: what each is and what must happen to it, as the
+// tests are told. Read from the same manifest the tests read, so the page cannot disagree.
+const trapList = traps.map(({ file, group, why, detect, mismatch, guard, node, note, absent }) => ({
+  file, group, why, detect, mismatch, guard, outcome: node, note, payload: absent !== null,
+}))
+await writeFile(join(generatedDir, 'traps.json'), JSON.stringify(trapList) + '\n')
 
 // The Security page is the audit record itself.
 await copyFile(join(repo, 'security', 'audits.json'), join(generatedDir, 'audits.json'))

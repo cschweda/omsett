@@ -6,7 +6,10 @@
 //   the visitor has not turned it off in Settings;
 //   the visitor's browser has not asked not to be tracked.
 //
-// A file is never part of it. What is counted is that a page was opened.
+// No script of Plausible's is loaded, from anywhere. The page's own code reports that a page
+// was opened, in one small request to this origin, whose server passes it on. Code from a
+// third party never runs in the page where the files are. A file is never part of it, and
+// neither is anything about one.
 
 /** Where the choice is kept on the visitor's device. */
 export const VISITS_SETTING = 'omsett:count-visits'
@@ -22,30 +25,26 @@ export type VisitCounting =
   | 'not-set-up'
 
 export interface VisitSignals {
-  /** The script's address on this origin, from the build's settings; empty where there is none. */
-  script: string
+  /** The site's name as Plausible knows it ("omsett.com"), from the build's settings; empty where there is none. */
+  site: string
   /** What the visitor chose, as stored: 'off', 'on', or nothing. */
   stored: string | null
   doNotTrack: boolean
   privacyControl: boolean
 }
 
-/**
- * The script must be on this origin: an address that begins with one slash and not two. A
- * setting that names another site is treated as no setting, so that no configuration can make
- * the page load code from elsewhere.
- */
-export const ownOrigin = (script: string) => /^\/[^/\\]/.test(script)
+/** A site's name is letters, digits, dots and hyphens, and nothing else. Anything else is no setting. */
+export const isSiteName = (site: string) => /^[a-z0-9](?:[a-z0-9.-]{0,251}[a-z0-9])?$/i.test(site)
 
 export function visitCounting(signals: VisitSignals): VisitCounting {
-  if (!ownOrigin(signals.script)) return 'not-set-up'
+  if (!isSiteName(signals.site)) return 'not-set-up'
   // A browser's request not to be tracked is honoured, whatever is stored.
   if (signals.doNotTrack || signals.privacyControl) return 'off-by-browser'
   return signals.stored === 'off' ? 'off-by-choice' : 'on'
 }
 
 /** The signals as they stand in this browser. */
-export function visitSignals(script: string): VisitSignals {
+export function visitSignals(site: string): VisitSignals {
   let stored: string | null = null
   try {
     stored = localStorage.getItem(VISITS_SETTING)
@@ -53,5 +52,14 @@ export function visitSignals(script: string): VisitSignals {
     // Storage that cannot be read is storage with nothing in it.
   }
   const nav = navigator as Navigator & { globalPrivacyControl?: boolean }
-  return { script, stored, doNotTrack: nav.doNotTrack === '1', privacyControl: nav.globalPrivacyControl === true }
+  return { site, stored, doNotTrack: nav.doNotTrack === '1', privacyControl: nav.globalPrivacyControl === true }
+}
+
+/**
+ * Everything that is reported about a visit: that a page of this site was opened, which page,
+ * and what page linked to it. The page's address is given without anything after a "?" or a
+ * "#", so nothing typed into the address bar goes with it.
+ */
+export function visitReport(site: string, origin: string, path: string, referrer: string) {
+  return { name: 'pageview', domain: site, url: `${origin}${path}`, referrer: referrer || null }
 }

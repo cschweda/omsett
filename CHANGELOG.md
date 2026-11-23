@@ -7,6 +7,26 @@ The paragraph that opens a version is its teaser: the home page shows its first 
 in the "What's new" banner, so keep it to two or three sentences on what a visitor will notice.
 A line beginning "Released" gives the date.
 
+## 0.26.0
+
+Released 23 November 2026.
+
+Every trap file Omsett is tested against is now listed on the site: the files made to be
+broken, hostile, or lying. For each one the page says what it is and what must happen to it.
+
+### Added
+
+- **Trap files**, a page reached from the foot of every page and from Technical details. All
+  of them, by kind, each with what is wrong with it and what the tests require: refused,
+  converted safely, or offered nothing. The page is read from the list the tests read.
+
+### Changed
+
+- **Counting visits loads no script at all.** A review found that serving Plausible's script
+  from omsett.com would still have run another party's code in the page where the files are.
+  Omsett's own code now makes the one small report itself. Counting had not yet been switched
+  on, so no visit was ever counted the old way.
+
 ## 0.25.0
 
 Released 23 November 2026.
@@ -25,9 +45,10 @@ what it remembers on your device, and one new thing: whether your visit is count
 - **It is off without your doing anything if your browser asks not to be tracked** (Do Not
   Track, or Global Privacy Control). Settings says which of the three it is: counted, turned
   off by you, or turned off by your browser.
-- **The page still asks no other site for anything.** The counting script and its reports go
-  to omsett.com itself, whose server passes them on. The security policy that stops the page
-  talking to other sites is unchanged, and the test that checks it still runs on every page.
+- **No code of Plausible's runs in the page.** Omsett's own code makes one small report to
+  omsett.com, which passes it on: that a page was opened, which page, and what linked to it.
+  The page still asks no other site for anything, the security policy that stops it is
+  unchanged, and the test that checks it still runs on every page.
 - **A copy of Omsett you run yourself counts nothing** unless you set it up to. The Docker
   image has no counting in it, and Settings there says so.
 

@@ -15,7 +15,7 @@ export default defineNuxtConfig({
   // Each page is written out as its own index.html, so a plain file server can answer for it.
   nitro: {
     preset: 'static',
-    prerender: { routes: ['/', '/about', '/technical', '/whats-new', '/security', '/status'] },
+    prerender: { routes: ['/', '/about', '/technical', '/whats-new', '/security', '/settings', '/traps', '/status'] },
   },
 
   // Production headers and policies come from security-headers.ts via scripts/write-headers.ts.
@@ -33,9 +33,9 @@ export default defineNuxtConfig({
     public: {
       siteUrl: 'https://omsett.com',
       commit: process.env.COMMIT_REF?.slice(0, 7) ?? 'dev',
-      // Counting visits is off unless the build is told where, on this origin, the counting
-      // script is served from (OMSETT_VISITS_SCRIPT=/js/….js). See docs/deploy-digitalocean.md.
-      visitsScript: process.env.OMSETT_VISITS_SCRIPT ?? '',
+      // Counting visits is off unless the build is told the site's name as Plausible knows it
+      // (OMSETT_VISITS_SITE=omsett.com). See docs/deploy-digitalocean.md.
+      visitsSite: process.env.OMSETT_VISITS_SITE ?? '',
       visitsEndpoint: '/api/event',
     },
   },
