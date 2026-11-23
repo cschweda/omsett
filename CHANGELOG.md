@@ -7,6 +7,49 @@ The paragraph that opens a version is its teaser: the home page shows its first 
 in the "What's new" banner, so keep it to two or three sentences on what a visitor will notice.
 A line beginning "Released" gives the date.
 
+## 0.16.0
+
+Released 23 November 2026.
+
+Omsett now converts address books and calendars. Turn the contacts exported from a phone
+(vCard) into a spreadsheet, or a spreadsheet of names and emails into contacts a phone can
+import. The same goes for calendar files (iCalendar) and tables of events.
+
+### Added
+
+- **vCard, read and written.** Each contact becomes a row with plain columns: name, given
+  name, family name, organization, title, email, phone, address, url, birthday, note. All
+  three generations of the format are read, the oldest with its own way of writing accents.
+- **iCalendar, read and written.** Each event becomes a row: summary, start, end, whether it
+  is all day, time zone, location, description, organizer, attendees, and the rule it repeats
+  by.
+- **Both convert to and from every data format**: CSV, TSV, JSON, JSON Lines, YAML, TOML, XML.
+- **Columns are found under the names people and programs use.** "First Name", "E-mail 1 -
+  Value" and "Mobile Phone", as Google and Outlook export them, are recognised.
+- **Dates are never guessed.** A date such as 11/12/2026 means one day in the United States
+  and another in Europe, so it is refused, with the form to use: 2026-11-23 or 2026-11-23 14:30.
+- **Nothing in a cell can start a new contact or event.** Line breaks, commas and semicolons
+  in a value are escaped on the way out. A table written to break out of its row produces one
+  contact, with an odd name.
+- 27 trap files: contacts and events opened and never closed, one inside another a thousand
+  deep, a contact with five thousand email addresses, a note folded over two hundred thousand
+  lines, an event that repeats every second forever, a calendar that fetches from another
+  site, and tables written to inject records.
+
+### Fixed
+
+- **A table whose first row has a line break inside a cell was not recognised** unless it was
+  named `.csv`. Rows are now counted by where their quotes close, not by lines.
+
+### Known
+
+- Photos in contacts are left out, as are details beyond the usual ones.
+- A contact's address is kept as one line. Written back to vCard it goes in the street field.
+- Reminders and time-zone rules are not carried. A time zone is kept by name.
+- A repeating event is one row with its rule as text ("FREQ=WEEKLY;BYDAY=MO"); its dates are
+  not written out one by one.
+- An address book cannot become a calendar, or the reverse.
+
 ## 0.15.0
 
 Released 23 November 2026.

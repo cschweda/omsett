@@ -124,6 +124,11 @@ build by `apps/web/scripts/write-headers.ts`.
 - **A web font unwraps to TTF or OTF, not both.** Which one depends on the outlines inside, so
   each web-font sample converts to one and is refused for the other, in exact words the fixture
   test allows. Every conversion must still succeed for at least one sample.
+- **A value written into a line-based format is escaped, always** (`escaped` in
+  `packages/engines/src/data/cards.ts`). Anything written as a parameter or an unescaped value
+  (a time zone, a repeat rule, a status) is held to a pattern first, and left out if it fails.
+- **`file-type` is believed about bytes, not about text.** It calls anything that begins
+  `BEGIN:VCARD` a vCard. For text formats Omsett's own sniffing decides.
 - **File contents go on the page as text, never as markup**, and never more than
   `app/utils/text-preview.ts` allows. No `v-html` for anything that came out of a file.
 - **Tailwind owns some class names.** A scoped class called `contents` or `hidden` picks up the

@@ -49,6 +49,10 @@ export async function detect(blob: Blob, formats: Format[], name?: string): Prom
       }
     }
     // Plain text has no signature at all. What it holds is worked out from how it reads.
+    // The library takes anything that opens with BEGIN:VCARD or BEGIN:VCALENDAR for one, text or
+    // not, UTF-8 or not, and whatever follows on that line. Omsett's own reading of the text
+    // decides those.
+    if (found?.ext === 'vcf' || found?.ext === 'ics') found = undefined
     // The library calls anything that opens with an XML declaration "XML", which is as far as
     // it looks; some of those are subtitles.
     if (!found || found.ext === 'xml') {

@@ -87,7 +87,8 @@ encoder, so it does not read or write HEIC.
 
 ### data
 
-Omsett's own readers and writers for JSON, JSON Lines, CSV and TSV, and its XML writer, with
+Omsett's own readers and writers for JSON, JSON Lines, CSV, TSV, vCard and iCalendar, and its
+XML writer, with
 three small libraries for the formats too intricate to parse well by hand. They are part of the
 app's scripts; nothing separate is downloaded.
 

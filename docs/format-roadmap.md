@@ -192,7 +192,8 @@ When a format ships, update its row here, in the same change.
 | JSON, JSON Lines, YAML, TOML, XML, CSV, TSV to each other | Browser | `data` (yaml, smol-toml, fast-xml-parser, and Omsett's own CSV) | **Shipped** (0.9.0) |
 | The same to XLSX | Browser | SheetJS | Planned, with spreadsheets |
 | Cells that a spreadsheet would run as formulas | — | — | Decided: written exactly as they are, with a warning in the picker. Never altered |
-| vCard, iCalendar ↔ CSV | Browser | JavaScript | Planned |
+| vCard, iCalendar ↔ CSV, TSV, JSON, JSON Lines, YAML, TOML, XML | Browser | `data` (Omsett's own reader and writer) | **Shipped** (0.16.0) |
+| Contact photos; a structured address; repeating events written out as dates | Browser | the same | Planned |
 
 ## 3D models
 
@@ -275,7 +276,7 @@ with [audit.icjia.app](https://audit.icjia.app).
 ## Suggested order
 
 1. Images are largely done: 22 formats. Left: CUR, DDS, ICNS, FITS, APNG, PSB, camera RAW, DICOM, and writing ICO and JPEG 2000.
-2. Data and subtitles are done: seven data formats, nine subtitle formats. The side-by-side view for text formats is done too, and Markdown ↔ HTML. Fonts are done as well: four formats. Next: vCard and iCalendar, then archives. Small JavaScript libraries, no large downloads.
+2. Data and subtitles are done: seven data formats, nine subtitle formats. The side-by-side view for text formats is done too, and Markdown ↔ HTML. Fonts are done as well, and vCard and iCalendar. Next: archives. Small JavaScript libraries, no large downloads.
 3. Archives, then audio.
 4. Documents and e-books through Pandoc; then the PDF tools. A converted document must not score lower for accessibility than its original (see "Accessibility of converted documents").
 5. Video in the browser.

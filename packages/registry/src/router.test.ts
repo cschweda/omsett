@@ -56,7 +56,7 @@ describe('router, real registry', () => {
     expect(ids).toEqual([
       'webp', 'jpeg', 'png', 'avif', 'gif', 'tiff', 'jxl', 'bmp', 'tga', 'qoi', 'pnm',
       'heic', 'svg', 'svgz', 'psd', 'ico', 'jp2', 'exr', 'hdr', 'pcx', 'sgi', 'ras',
-      'json', 'yaml', 'csv', 'xml', 'toml', 'jsonl', 'tsv',
+      'json', 'yaml', 'csv', 'xml', 'toml', 'jsonl', 'tsv', 'vcf', 'ics',
       'srt', 'vtt', 'ass', 'ssa', 'ttml', 'lrc', 'sbv', 'smi', 'microdvd',
       'md', 'html',
       'woff2', 'woff', 'ttf', 'otf',
@@ -69,14 +69,15 @@ describe('router, real registry', () => {
     for (const from of ids) {
       for (const to of ids) {
         // TTF and OTF hold different kinds of outline, and neither becomes the other.
-        const redrawn = [from, to].sort().join('>') === 'otf>ttf'
+        // Nor does an address book become a calendar.
+        const redrawn = ['otf>ttf', 'ics>vcf'].includes([from, to].sort().join('>'))
         const impossible = from === to || readOnly.has(to) || !sameKind(kind(from), kind(to)) || redrawn
         expect(all.route(from, to) === null, `${from} → ${to}`).toBe(impossible)
       }
     }
     // Data formats convert to each other in one step, and a file is offered only its own kind.
     expect(all.route('csv', 'yaml')!.edges.map((e) => e.candidates[0]!.engine)).toEqual(['data'])
-    expect(all.targetsFor(['json']).map((t) => t.format.id)).toEqual(['json', 'yaml', 'csv', 'xml', 'toml', 'jsonl', 'tsv'])
+    expect(all.targetsFor(['json']).map((t) => t.format.id)).toEqual(['json', 'yaml', 'csv', 'xml', 'toml', 'jsonl', 'tsv', 'vcf', 'ics'])
     expect(all.targetsFor(['png']).some((t) => t.format.category === 'data')).toBe(false)
     expect(all.targetsFor(['png', 'json']).find((t) => t.format.id === 'webp')!.reason).toBe('JSON files cannot become WebP')
     expect(all.route('yaml', 'json')!.warnings.map((w) => w.id)).toEqual(['comments-lost'])

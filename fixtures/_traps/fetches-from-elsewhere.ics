@@ -1,0 +1,11 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//x//EN
+BEGIN:VEVENT
+UID:1
+DTSTART:20261123T090000Z
+SUMMARY:Meeting
+ATTACH:http://elsewhere.example/track.png
+X-ALT-DESC;FMTTYPE=text/html:<img src="http://elsewhere.example/pixel"><script>alert(1)</script>
+END:VEVENT
+END:VCALENDAR

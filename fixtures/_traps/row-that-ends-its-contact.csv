@@ -1,0 +1,6 @@
+name,email,note
+"Mallory
+END:VCARD
+BEGIN:VCARD
+FN:Injected",m@example.org,"a;b,c"
+Ada,ada@example.org,
