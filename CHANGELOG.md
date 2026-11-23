@@ -7,6 +7,52 @@ The paragraph that opens a version is its teaser: the home page shows its first 
 in the "What's new" banner, so keep it to two or three sentences on what a visitor will notice.
 A line beginning "Released" gives the date.
 
+## 0.24.0
+
+Released 23 November 2026.
+
+Every file you add now has a "Details" control beside "Remove". It shows what the file holds
+besides what it shows: for a photograph, when and with what it was taken, and where; for a
+document, who wrote it and what is still in it that its author may think is gone. Each line
+says whether converting keeps it or removes it.
+
+### Added
+
+- **Details for a photograph**: the date it was taken, the camera and lens, the program that
+  saved it, the photographer and copyright where they are recorded, and the place, as latitude
+  and longitude, where the picture holds one. All of it is marked "removed when converted",
+  because it is.
+- **Details for a Word document, workbook or presentation**: title, author, who last changed
+  it, when, and with what program; and what is inside that does not show: tracked changes,
+  comments, hidden text, hidden sheets, speaker notes, macros.
+- **Details for a PDF**: title, author, the program it was written in and the one that made
+  the PDF, dates, pages, language, and whether it is tagged, which decides how well it will
+  convert.
+- **Details for the rest**: a font's family, style, version, licence and how many letters it
+  has; what an archive holds and how large it unpacks; how many subtitles and over what span;
+  a script's title page and number of scenes; what is in a Drafter package beside the script.
+- **Read in the worker, on your device, when you ask.** Nothing is read until "Details" is
+  pressed, and nothing is sent anywhere.
+- **Overflow fuzzing.** For every format that is bytes and not text, 34 of them, the sample
+  is damaged about 340 ways: each size, count and offset in its header set to nothing, to the
+  most its field holds, and to either side of where a signed number turns negative; the file
+  cut short; stretches inverted. That is some 11,500 damaged files on every test run. Each must
+  be refused or convert to a real file. A conversion that never comes back, a result that is
+  not what it claims, or a damaged file that brings an engine down fails the run. On its first
+  run there were none of the three.
+- Asking for the details of every trap file is part of the trap tests: it never fails, whatever
+  the file.
+- **A full entry for the word "omsett" on the About page**: how it is said, its three
+  meanings in Norwegian, its forms in Nynorsk and Bokmål, where it comes from, the words
+  beside it, and why it is the name.
+
+### Known
+
+- Details are what Omsett reads, not everything a file can hold. XMP data in pictures, and the
+  properties of audio and video, are not listed yet.
+- The date "last changed on this device" is the one your computer keeps for the file. It is not
+  inside the file.
+
 ## 0.23.0
 
 Released 23 November 2026.

@@ -60,10 +60,66 @@ const conversions = deriveEdges(registry).edges.length
       </StepSection>
 
       <StepSection title="The name" heading-id="about-name">
-        <div class="prose">
+        <div class="prose entry" data-testid="definition">
+          <p class="headword">
+            <strong lang="nn">omsett</strong>
+            <span class="said">/ˈɔmˌsɛt/, roughly “OM-set”</span>
+          </p>
           <p>
-            <em>Omsett</em> is Norwegian Nynorsk, from the verb <em>omsetja</em>: to translate, and by extension to
-            convert. Literally, to set over.
+            Norwegian. A form of the verb <em lang="nn">omsetje</em> (also written <em lang="nn">omsetja</em>) in
+            Nynorsk, and <em lang="nb">omsette</em> in Bokmål, the two written standards of Norwegian.
+          </p>
+
+          <h3>What it means</h3>
+          <ol>
+            <li>
+              <strong>To translate</strong> from one language into another. This is the everyday word for it in
+              Nynorsk: <em lang="nn">Boka er omsett frå engelsk</em>, “the book is translated from English”. Bokmål
+              says <em lang="nb">oversette</em> for this.
+            </li>
+            <li>
+              <strong>To convert</strong>, to turn one thing into another: energy into heat, a plan into action.
+              <em lang="nb">Å omsette teori i praksis</em>, “to put theory into practice”.
+            </li>
+            <li>
+              <strong>To sell or trade</strong>, to turn goods over. From this sense comes
+              <em lang="nb">omsetning</em>, a company’s turnover.
+            </li>
+          </ol>
+
+          <h3>Its forms</h3>
+          <dl class="forms">
+            <div><dt>Nynorsk</dt><dd><em lang="nn">å omsetje</em>, <em lang="nn">omset</em>, <em lang="nn">omsette</em>, <em lang="nn">har omsett</em></dd></div>
+            <div><dt>Bokmål</dt><dd><em lang="nb">å omsette</em>, <em lang="nb">omsetter</em>, <em lang="nb">omsatte</em>, <em lang="nb">har omsatt</em></dd></div>
+          </dl>
+          <p>
+            <em lang="nn">Omsett</em> itself is two of these at once. It is the Nynorsk past participle, what a
+            thing is once the work is done: translated, converted. And it is the imperative, the form used to ask
+            for it: translate this, convert this.
+          </p>
+
+          <h3>Where it comes from</h3>
+          <p>
+            Two older words joined: <em lang="nn">om</em>, “around, over, anew”, and <em lang="nn">setje</em>, “to
+            set, to put”. To <em lang="nn">omsetje</em> a thing is to set it over into another place or another
+            shape. The same pair makes the same word across the neighbouring languages: German
+            <em lang="de">umsetzen</em>, Dutch <em lang="nl">omzetten</em>, Danish <em lang="da">omsætte</em>, Swedish
+            <em lang="sv">omsätta</em>.
+          </p>
+
+          <h3>Words beside it</h3>
+          <dl class="forms">
+            <div><dt><em lang="nn">omsetjing</em></dt><dd>a translation; the act of translating</dd></div>
+            <div><dt><em lang="nn">omsetjar</em></dt><dd>a translator</dd></div>
+            <div><dt><em lang="nb">omsetning</em></dt><dd>turnover; sales</dd></div>
+          </dl>
+
+          <h3>Why it is the name</h3>
+          <p>
+            A file converter does to a file what a translator does to a book. The words stay; the language they are
+            written in changes. A photograph is the same photograph as a PNG and as a WebP, and a table is the same
+            table as a spreadsheet and as JSON. Omsett is named for that: for the first meaning and the second
+            together, for the request, and for the state of the file when you get it back.
           </p>
         </div>
       </StepSection>
@@ -89,3 +145,45 @@ const conversions = deriveEdges(registry).edges.length
     </main>
   </div>
 </template>
+
+<style scoped>
+.headword {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem 1rem;
+  margin-bottom: 0.5rem;
+}
+.headword strong {
+  font-size: var(--text-title);
+  letter-spacing: -0.035em;
+  line-height: 1;
+}
+.said {
+  color: var(--muted);
+}
+.entry h3 {
+  margin: 1.5rem 0 0.375rem;
+  font-size: var(--text-body);
+  font-weight: 700;
+}
+.entry ol {
+  padding-left: 1.25rem;
+}
+.entry li + li {
+  margin-top: 0.5rem;
+}
+.forms {
+  margin: 0 0 0.75rem;
+}
+.forms > div {
+  display: grid;
+  grid-template-columns: minmax(6rem, 9rem) minmax(0, 1fr);
+  column-gap: 1rem;
+  padding: 0.25rem 0;
+  border-top: 1px solid var(--rule);
+}
+.forms dd {
+  margin: 0;
+}
+</style>

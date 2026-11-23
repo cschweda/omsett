@@ -1,4 +1,4 @@
-import { engineInfo, type ConvertOutput } from '@omsett/engines'
+import { engineInfo, type ConvertOutput, type Detail } from '@omsett/engines'
 import * as Comlink from 'comlink'
 import { PREVIEW_BUDGET_MS, withTimeout } from '~/utils/limits'
 import type { ConvertRequest, EngineWorkerApi } from '~/workers/engine.worker'
@@ -103,6 +103,18 @@ export function useEngines() {
     }
   }
 
+  /** What a file holds beside what it shows. Never throws: a file that cannot be read has none. */
+  async function describe(blob: Blob, formatId: string): Promise<Detail[]> {
+    const current = engineWorker()
+    try {
+      return await withTimeout(Promise.race([current.api.describe(blob, formatId), current.crashed]), PREVIEW_BUDGET_MS, () => {
+        if (engineHost === current) terminate()
+      })
+    } catch {
+      return []
+    }
+  }
+
   /** Pack finished files into one ZIP, in the worker like everything else. */
   async function zip(files: Array<{ name: string; blob: Blob }>): Promise<Blob> {
     const current = engineWorker()
@@ -116,5 +128,5 @@ export function useEngines() {
     loaded.value = []
   }
 
-  return { info: engineInfo, availability, loaded, probe, convert, thumbnail, zip, terminate }
+  return { info: engineInfo, availability, loaded, probe, convert, thumbnail, describe, zip, terminate }
 }
