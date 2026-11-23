@@ -25,9 +25,10 @@ what it remembers on your device, and one new thing: whether your visit is count
 - **It is off without your doing anything if your browser asks not to be tracked** (Do Not
   Track, or Global Privacy Control). Settings says which of the three it is: counted, turned
   off by you, or turned off by your browser.
-- **The page still asks no other site for anything.** The counting script and its reports go
-  to omsett.com itself, whose server passes them on. The security policy that stops the page
-  talking to other sites is unchanged, and the test that checks it still runs on every page.
+- **No code of Plausible's runs in the page.** Omsett's own code makes one small report to
+  omsett.com, which passes it on: that a page was opened, which page, and what linked to it.
+  The page still asks no other site for anything, the security policy that stops it is
+  unchanged, and the test that checks it still runs on every page.
 - **A copy of Omsett you run yourself counts nothing** unless you set it up to. The Docker
   image has no counting in it, and Settings there says so.
 

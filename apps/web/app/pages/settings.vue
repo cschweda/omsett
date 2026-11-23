@@ -14,15 +14,15 @@ const themes = [
 // Whether this visit is counted, and why. Worked out in the browser, where the signals are.
 const config = useRuntimeConfig().public
 const counting = ref<VisitCounting | null>(null)
-const script = () => testHook('visits', location) ?? config.visitsScript
-onMounted(() => (counting.value = visitCounting(visitSignals(script()))))
+const site = () => testHook('visits', location) ?? config.visitsSite
+onMounted(() => (counting.value = visitCounting(visitSignals(site()))))
 function setCounting(on: boolean) {
   try {
     localStorage.setItem(VISITS_SETTING, on ? 'on' : 'off')
   } catch {
     // Without storage the choice cannot be kept, and the page says what is true now.
   }
-  counting.value = visitCounting(visitSignals(script()))
+  counting.value = visitCounting(visitSignals(site()))
 }
 
 function startAgain() {
@@ -53,8 +53,9 @@ function startAgain() {
           <template v-else-if="counting !== null">
             <p>
               Omsett counts visits with <a href="https://plausible.io/privacy-focused-web-analytics">Plausible</a>, which
-              sets no cookie, keeps no record of a person, and cannot follow you to another site. It learns that a
-              page was opened, and roughly where in the world from. It never learns what you converted.
+              sets no cookie, keeps no record of a person, and cannot follow you to another site. No code of
+              Plausible’s runs here: Omsett itself reports that a page was opened, and nothing more. It never
+              learns what you converted.
             </p>
             <p data-testid="visits-state">
               <strong v-if="counting === 'on'">Your visits are counted.</strong>
