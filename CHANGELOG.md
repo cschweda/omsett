@@ -7,6 +7,45 @@ The paragraph that opens a version is its teaser: the home page shows its first 
 in the "What's new" banner, so keep it to two or three sentences on what a visitor will notice.
 A line beginning "Released" gives the date.
 
+## 0.18.0
+
+Released 23 November 2026.
+
+Omsett now converts Excel workbooks. Drop an XLSX and get a CSV or JSON, or drop a CSV and get
+a workbook that Excel, Numbers and Google Sheets open. Dates come out as dates, and a formula
+comes out as the value it last showed.
+
+### Added
+
+- **XLSX, read and written**, to and from CSV, TSV, JSON, JSON Lines, YAML, TOML and XML, and
+  on to contacts (vCard) and calendars (iCalendar).
+- **Reading keeps what each cell is.** Numbers are numbers, text that looks like a number
+  (a postcode such as 01234) stays text, true and false stay so, and a number shown as a date
+  is read as the date: `2026-11-23`, or `2026-11-23T14:30:00` where it has a time.
+- **Nothing in a workbook is run.** A formula is not worked out; the value it last showed is
+  stored beside it and that is what is read. Macros, links to other files and embedded objects
+  are never opened.
+- **Hidden sheets are not read.** The first sheet that is shown and has rows is the one
+  converted.
+- **Writing never makes a formula.** Text is written as text, so a cell that reads `=1+1` is
+  those four characters in Excel too.
+- 19 trap files: the "billion laughs" inside a sheet, a sheet of two thousand cells that
+  lays out as thirty-two million, a sheet that is 300 MB of spaces, a
+  workbook that asks for a file from the computer, formulas that start programs and send cells
+  elsewhere, a sheet said to be a file outside the workbook, a row of two million cells, and
+  dates that are no day there has been.
+- No new dependency. A workbook is a ZIP of XML, and Omsett already reads both itself.
+
+### Known
+
+- **Only the first sheet is converted.** A way to choose the sheet is planned.
+- Formatting, column widths, charts, comments and merged cells are not carried over.
+- The workbook Omsett writes has one plain sheet, with the column names in bold.
+- A workbook locked with a password, the older XLS, and the macro-enabled XLSM are recognised
+  and not converted.
+- A date before 1900 has no number in Excel, so workbooks hold such dates as text, and they
+  are read as text.
+
 ## 0.17.0
 
 Released 23 November 2026.

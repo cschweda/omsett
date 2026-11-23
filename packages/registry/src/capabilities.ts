@@ -40,7 +40,8 @@ const CORE_WRITES = [webp, jpeg, png, gif, tiff]
 // Data formats are all read into the same plain values and written back out, so every one
 // converts to every other in a single step. Comments have nowhere to live in between.
 // Address books and calendars are rows too: a contact or an event to a row.
-const DATA = ['json', 'yaml', 'csv', 'xml', 'toml', 'jsonl', 'tsv', 'vcf', 'ics']
+// And a workbook is rows in a sheet.
+const DATA = ['json', 'yaml', 'csv', 'xlsx', 'xml', 'toml', 'jsonl', 'tsv', 'vcf', 'ics']
 const DATA_WRITES: WriteSpec[] = DATA.map((format) => ({ format, lossy: false, drops: ['comments'] }))
 
 // Subtitles are read into lines of text with a start and an end, and written from those. How

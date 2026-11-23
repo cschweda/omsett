@@ -42,6 +42,7 @@ const trapGroups: Record<string, string> = {
   fonts: 'Fonts: damaged, lying about their size, or misnamed',
   contacts: 'Contacts and calendars: unfinished, bottomless, or written to inject',
   archives: 'Archives: bombs, files named to escape, and lists that lie',
+  workbooks: 'Workbooks: bombs, formulas that run programs, and parts that point elsewhere',
 }
 </script>
 

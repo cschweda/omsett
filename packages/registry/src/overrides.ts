@@ -17,7 +17,7 @@ const TEXT_CELLS = [{ id: 'cells-typed', text: 'Cells that are plainly numbers b
 // A spreadsheet program may run a cell as a formula. Omsett writes what the file said.
 const FORMULAS = [{ id: 'cells-exact', text: 'Cells are written exactly as they are. A spreadsheet program may treat one that starts with =, +, - or @ as a formula.' }]
 // Every format that can be written into a table, address books and calendars included.
-const DATA = ['json', 'jsonl', 'yaml', 'toml', 'xml', 'csv', 'tsv', 'vcf', 'ics']
+const DATA = ['json', 'jsonl', 'yaml', 'toml', 'xml', 'csv', 'tsv', 'vcf', 'ics', 'xlsx']
 
 // What the subtitle formats cannot say to each other.
 const SUBTITLES = ['srt', 'vtt', 'ass', 'ssa', 'ttml', 'lrc', 'sbv', 'smi', 'microdvd']
@@ -26,13 +26,21 @@ const ONE_LINE = [{ id: 'lyrics-one-line', text: 'Each subtitle becomes a single
 const NO_ENDS = [{ id: 'ends-guessed', text: 'LRC says when a line starts, not when it ends. Each line is shown until the next one.' }]
 const others = (id: string) => SUBTITLES.filter((other) => other !== id)
 
+// Workbooks.
+const WORKBOOK_READ = [
+  { id: 'first-sheet', text: 'Only the first sheet is converted.' },
+  { id: 'formulas-as-values', text: 'A formula is replaced by the value it last showed. Formatting, charts and comments are not carried over.' },
+]
+const WORKBOOK_WRITTEN = [{ id: 'one-plain-sheet', text: 'The workbook has one plain sheet. Text is written as text: nothing is turned into a formula.' }]
+const BESIDE_WORKBOOK = ['json', 'jsonl', 'yaml', 'toml', 'xml', 'csv', 'tsv', 'vcf', 'ics']
+
 // Contacts and events.
 const NOT_THE_SAME = 'An address book holds people and a calendar holds events. One cannot become the other'
 const CONTACT_COLUMNS = [{ id: 'contact-columns', text: 'Each row becomes a contact, from the columns Omsett recognises: name, given name, family name, organization, title, email, phone, address, url, birthday, note. Other columns are left out.' }]
 const EVENT_COLUMNS = [{ id: 'event-columns', text: 'Each row becomes an event, from the columns Omsett recognises: summary (or title), start, end, location, description, url, timezone. Write dates as 2026-11-23 or 2026-11-23 14:30.' }]
 const CONTACT_EXTRAS = [{ id: 'contact-extras', text: 'Photos, and details beyond the usual ones, are left out.' }]
 const EVENT_EXTRAS = [{ id: 'event-extras', text: 'Reminders and time-zone rules are left out. A repeating event is one row, with its rule as text.' }]
-const TABLES = ['json', 'jsonl', 'yaml', 'toml', 'xml', 'csv', 'tsv']
+const TABLES = ['json', 'jsonl', 'yaml', 'toml', 'xml', 'csv', 'tsv', 'xlsx']
 
 // Archives.
 const ARCHIVES = ['zip', 'tgz', 'tar']
@@ -49,6 +57,10 @@ const OUTLINES = [{ id: 'font-outlines', text: 'A web font unwraps to TTF or to 
 const TYPED = ['json', 'jsonl', 'yaml', 'toml']
 
 export const overrides: EdgeOverride[] = [
+  ...BESIDE_WORKBOOK.flatMap((other) => [
+    { from: 'xlsx', to: other, warnings: WORKBOOK_READ },
+    { from: other, to: 'xlsx', warnings: WORKBOOK_WRITTEN },
+  ]),
   ...ARCHIVES.flatMap((from) => ARCHIVES.filter((to) => to !== from).map((to) => ({ from, to, warnings: ARCHIVE_NOTES }))),
   { from: 'vcf', to: 'ics', block: NOT_THE_SAME },
   { from: 'ics', to: 'vcf', block: NOT_THE_SAME },
