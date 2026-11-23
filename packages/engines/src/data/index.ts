@@ -1,10 +1,12 @@
 import { dataInfo } from '../info'
 import type { ConvertInput, ConvertOutput, Engine } from '../types'
 import { outputName, Refusal, throwIfAborted } from '../util'
+import { readContacts, readEvents, writeContacts, writeEvents } from './cards'
 import { readTable, rowsOf, writeTable } from './table'
 import { writeXml } from './xml'
 
-// Data formats: JSON, JSON Lines, YAML, TOML, XML, CSV and TSV. Each is read into the same plain
+// Data formats: JSON, JSON Lines, YAML, TOML, XML, CSV and TSV, and two kinds of record that
+// are tables at heart: address books (vCard) and calendars (iCalendar). Each is read into the same plain
 // values (lists, named values, text, numbers, true/false, nothing) and written out from them.
 // Nothing here runs anything a file says: no tags that build objects, no entities fetched.
 
@@ -81,6 +83,10 @@ async function read(format: string, text: string): Promise<unknown> {
       return readTable(text, false)
     case 'tsv':
       return readTable(text, true)
+    case 'vcf':
+      return readContacts(text)
+    case 'ics':
+      return readEvents(text)
   }
   throw new Error(`The data engine does not read ${format}`)
 }
@@ -126,6 +132,10 @@ async function write(format: string, value: unknown): Promise<string> {
       return writeTable(value, false)
     case 'tsv':
       return writeTable(value, true)
+    case 'vcf':
+      return writeContacts(rowsOf(value))
+    case 'ics':
+      return writeEvents(rowsOf(value))
   }
   throw new Error(`The data engine does not write ${format}`)
 }

@@ -2062,6 +2062,201 @@ font(
     "woff2", node="fails", note=NOT_FONT % "WOFF2",
 )
 
+# --- contacts and calendars: vCard, iCalendar -----------------------------------------------------
+# Lines of NAME:value between BEGIN and END. What goes wrong: a BEGIN that is never ended, one
+# inside another without limit, values written to break out of their line and start a new
+# record, and a table on the way in whose cells were written to do the same on the way out.
+# Each is converted to JSON.
+G = "contacts"
+NOT_CARD = "This file is not valid vCard"
+NOT_CAL = "This file is not valid iCalendar"
+CRLF = b"\r\n"
+
+
+def record(name, lines, why, detect, **more):
+    trap(name, CRLF.join(lines) + CRLF if isinstance(lines, list) else lines, why, detect, group=G, **more)
+
+
+CARD = [b"BEGIN:VCARD", b"VERSION:3.0", b"FN:Ada Lovelace", b"EMAIL:ada@example.org", b"END:VCARD"]
+EVENT = [b"BEGIN:VEVENT", b"UID:1@example.org", b"DTSTART:20261123T090000Z", b"SUMMARY:Meeting", b"END:VEVENT"]
+
+record(
+    "truncated.vcf",
+    CARD + [b"BEGIN:VCARD", b"VERSION:3.0", b"FN:Grace Hop"],
+    "An address book that stops in the middle of a contact, with no END for it.",
+    "vcf", node="fails", note=NOT_CARD,
+)
+record(
+    "contact-inside-a-contact.vcf",
+    [b"BEGIN:VCARD", b"FN:Outer"] + CARD + [b"END:VCARD"],
+    "One contact opened inside another. Which details belong to whom is anyone's guess.",
+    "vcf", node="fails", note=NOT_CARD,
+)
+record(
+    "begins-a-thousand-deep.vcf",
+    [b"BEGIN:VCARD"] + [b"BEGIN:X-BOX"] * 1000 + [b"FN:Deep"] + [b"END:X-BOX"] * 1000 + [b"END:VCARD"],
+    "A thousand things opened inside one contact, each inside the last.",
+    "vcf", node="fails", note=NOT_CARD,
+)
+record(
+    "ended-by-the-wrong-thing.vcf",
+    [b"BEGIN:VCARD", b"FN:Ada", b"END:VCALENDAR"],
+    "A contact that is opened as a contact and closed as a calendar.",
+    "vcf", node="fails", note=NOT_CARD,
+)
+record(
+    "a-line-with-no-colon.vcf",
+    [b"BEGIN:VCARD", b"FN:Ada", b"this line is not a property at all", b"END:VCARD"],
+    "A line inside a contact that is not a name and a value.",
+    "vcf", node="fails", note=NOT_CARD,
+)
+record(
+    "nobody-in-it.vcf",
+    [b"BEGIN:VCARD", b"VERSION:3.0", b"END:VCARD"],
+    "A contact with no name, no address and no number. It is still a contact, and converts "
+    "as an empty one.",
+    "vcf", node="succeeds",
+)
+record(
+    "ten-megabyte-photo.vcf",
+    [b"BEGIN:VCARD", b"VERSION:3.0", b"FN:Ada Lovelace", b"PHOTO;ENCODING=b;TYPE=JPEG:" + b"QUFB" * 600_000, b"EMAIL:ada@example.org", b"END:VCARD"],
+    "A contact carrying a photo of two megabytes on a single line. Photos are left out, so "
+    "none of it reaches the result.",
+    "vcf", node="succeeds", absent="QUFBQUFB",
+)
+record(
+    "five-thousand-emails.vcf",
+    [b"BEGIN:VCARD", b"FN:Ada"] + [b"EMAIL:a%d@example.org" % i for i in range(5000)] + [b"END:VCARD"],
+    "One contact with five thousand email addresses, each of which would be a column. Nine "
+    "are kept.",
+    "vcf", node="succeeds", absent="a4999@example.org",
+)
+record(
+    "folded-forever.vcf",
+    [b"BEGIN:VCARD", b"FN:Ada", b"NOTE:start"] + [b" x"] * 200_000 + [b"END:VCARD"],
+    "One note continued over two hundred thousand lines.",
+    "vcf", node="succeeds",
+)
+record(
+    "formula-in-a-name.vcf",
+    [b"BEGIN:VCARD", b"VERSION:3.0", b"FN:=HYPERLINK(\"http://elsewhere.example\"\\,\"Ada\")", b"TEL:+1 (555) 0100", b"NOTE:@SUM(1+1)", b"END:VCARD"],
+    "A contact whose name is a spreadsheet formula. To Omsett it is a name and is carried "
+    "across as one; the picker warns before it goes into a table.",
+    "vcf", node="succeeds",
+)
+record(
+    "picture-named.vcf",
+    GOOD,
+    "A PNG with a .vcf name.",
+    "png", node="succeeds", mismatch=True,
+)
+record(
+    "almost-the-first-line.vcf",
+    [b"BEGIN:VCARDS", b"FN:Ada", b"END:VCARDS"],
+    "The opening line with one letter too many.",
+    "unknown",
+)
+record(
+    "latin-1.vcf",
+    "BEGIN:VCARD\r\nFN:Zoë Renée\r\nEND:VCARD\r\n".encode("latin-1"),
+    "An address book saved in an older encoding.",
+    "unknown",
+)
+record(
+    "contacts-named.csv",
+    CARD,
+    "A sound address book with a .csv name.",
+    "vcf", node="succeeds", mismatch=True,
+)
+
+CAL = lambda *inner: [b"BEGIN:VCALENDAR", b"VERSION:2.0", b"PRODID:-//x//EN"] + [l for part in inner for l in part] + [b"END:VCALENDAR"]
+record(
+    "truncated.ics",
+    CAL(EVENT)[:-3],
+    "A calendar that stops in the middle of an event.",
+    "ics", node="fails", note=NOT_CAL,
+)
+record(
+    "event-outside-a-calendar.ics",
+    [b"BEGIN:VCALENDAR", b"END:VCALENDAR"] + EVENT,
+    "An event after the calendar has been closed: it belongs to no calendar.",
+    "ics", node="fails", note="This file has no events in it",
+)
+record(
+    "event-inside-an-event.ics",
+    CAL([b"BEGIN:VEVENT", b"DTSTART:20261123T090000Z", b"SUMMARY:Outer"] + EVENT + [b"END:VEVENT"]),
+    "One event opened inside another.",
+    "ics", node="fails", note=NOT_CAL,
+)
+record(
+    "no-start.ics",
+    CAL([b"BEGIN:VEVENT", b"UID:1", b"SUMMARY:Sometime", b"END:VEVENT"]),
+    "An event that does not say when it is.",
+    "ics", node="fails", note=NOT_CAL,
+)
+record(
+    "start-is-a-word.ics",
+    CAL([b"BEGIN:VEVENT", b"UID:1", b"DTSTART:tomorrow", b"SUMMARY:Soon", b"END:VEVENT"]),
+    "An event that starts 'tomorrow'.",
+    "ics", node="fails", note=NOT_CAL,
+)
+record(
+    "only-tasks.ics",
+    CAL([b"BEGIN:VTODO", b"UID:1", b"SUMMARY:Buy milk", b"END:VTODO"]),
+    "A calendar holding a task and no events.",
+    "ics", node="fails", note="This file has no events in it",
+)
+record(
+    "alarms-a-thousand-deep.ics",
+    CAL([b"BEGIN:VEVENT", b"DTSTART:20261123T090000Z", b"SUMMARY:Deep"] + [b"BEGIN:VALARM"] * 1000 + [b"END:VALARM"] * 1000 + [b"END:VEVENT"]),
+    "An event holding a reminder inside a reminder, a thousand times over.",
+    "ics", node="fails", note=NOT_CAL,
+)
+record(
+    "repeats-every-second-forever.ics",
+    CAL([b"BEGIN:VEVENT", b"UID:1", b"DTSTART:19700101T000000Z", b"RRULE:FREQ=SECONDLY;INTERVAL=1", b"SUMMARY:Tick", b"END:VEVENT"]),
+    "An event that repeats every second from 1970 without end. A reader that wrote out each "
+    "occurrence would never finish; the rule is kept as a rule, and it is one row.",
+    "ics", node="succeeds",
+)
+record(
+    "fetches-from-elsewhere.ics",
+    CAL([b"BEGIN:VEVENT", b"UID:1", b"DTSTART:20261123T090000Z", b"SUMMARY:Meeting", b"ATTACH:http://elsewhere.example/track.png",
+         b"X-ALT-DESC;FMTTYPE=text/html:<img src=\"http://elsewhere.example/pixel\"><script>alert(1)</script>", b"END:VEVENT"]),
+    "An event with an attachment on another site and a description in HTML with a script in "
+    "it. Neither is a column Omsett keeps.",
+    "ics", node="succeeds", absent="elsewhere.example",
+)
+record(
+    "calendar-named.vcf",
+    CAL(EVENT),
+    "A sound calendar with a .vcf name.",
+    "ics", node="succeeds", mismatch=True,
+)
+record(
+    "picture-named.ics",
+    GOOD,
+    "A PNG with an .ics name.",
+    "png", node="succeeds", mismatch=True,
+)
+
+# Tables on the way in, written to break out of the address book or calendar on the way out.
+# These are converted to JSON here like any other table; the unit tests take them the other way
+# (packages/engines/src/data/cards.test.ts) and show that one row stays one contact.
+record(
+    "row-that-ends-its-contact.csv",
+    b'name,email,note\r\n"Mallory\r\nEND:VCARD\r\nBEGIN:VCARD\r\nFN:Injected",m@example.org,"a;b,c"\r\nAda,ada@example.org,\r\n',
+    "A table whose first name holds the lines that end one contact and begin another. As a "
+    "table it is a name with line breaks in it.",
+    "csv", node="succeeds",
+)
+record(
+    "row-that-ends-its-event.csv",
+    b'summary,start,timezone\r\n"x\r\nEND:VEVENT\r\nBEGIN:VEVENT\r\nSUMMARY:Injected",2026-01-01,"Europe/Oslo:1\r\nATTACH:http://elsewhere.example"\r\nReal,2026-01-02,\r\n',
+    "A table of events whose first title and time zone hold lines of their own.",
+    "csv", node="succeeds",
+)
+
 with open(os.path.join(OUT, "manifest.json"), "w") as out:
     json.dump(manifest, out, indent=2)
     out.write("\n")

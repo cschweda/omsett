@@ -1,0 +1,7 @@
+summary,start,timezone
+"x
+END:VEVENT
+BEGIN:VEVENT
+SUMMARY:Injected",2026-01-01,"Europe/Oslo:1
+ATTACH:http://elsewhere.example"
+Real,2026-01-02,

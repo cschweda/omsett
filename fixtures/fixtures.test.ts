@@ -7,9 +7,15 @@ import { deriveEdges, engineIds, everything, formatById, registry } from '@omset
 import { describe, expect, it } from 'vitest'
 
 const nodeEngines = createNodeEngines()
+// The few conversions that depend on what a sample holds, and the exact words each is refused
+// in when it holds the other thing. Every conversion must still succeed for at least one sample.
 const UNWRAPS_TO_THE_OTHER = [
+  // A web font unwraps to TTF or to OTF, whichever its outlines are.
   'This font has PostScript outlines, so it unwraps to OTF, not TTF. Choose OTF.',
   'This font has TrueType outlines, so it unwraps to TTF, not OTF. Choose TTF.',
+  // A table of people is not a calendar, and a table of events is not an address book.
+  'No events found. An event needs a column called summary (or title) and one called start',
+  'No contacts found. A contact needs a column called name, email or phone',
 ]
 const derived = deriveEdges(registry)
 
@@ -82,9 +88,7 @@ describe('fixtures through every Node-capable engine', () => {
               onProgress: () => {},
             })
             .catch((error: unknown) => {
-              // A web font unwraps to TTF or to OTF, whichever its outlines are, and the other
-              // is refused in these words. Nothing else may be refused, and below, every
-              // conversion must still succeed for at least one sample.
+              // Refused in the words listed at the top, and in no others.
               if (error instanceof Error && UNWRAPS_TO_THE_OTHER.includes(error.message)) return null
               throw error
             })

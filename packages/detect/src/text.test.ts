@@ -154,4 +154,18 @@ describe('telling text formats apart', () => {
     // Other text cut mid-line says nothing about what it is.
     expect(sniff('x'.repeat(1000), 'big.txt', false)).toBeNull()
   })
+
+  it('knows a table whose first row has a line break inside a cell', () => {
+    expect(sniff('name,note,born\nAda,"first line\nsecond line",1815\nGrace,x,1906\n')).toBe('csv')
+    expect(sniff('name\tnote\nAda\t"one\ntwo"\n')).toBe('tsv')
+    // A quote that never closes swallows the rest, and that is not two rows.
+    expect(sniff('name,note\nAda,"never closed\nGrace,x\n')).toBeNull()
+  })
+
+  it('knows an address book and a calendar from their first line', () => {
+    expect(sniff('BEGIN:VCARD\r\nVERSION:3.0\r\nFN:Ada\r\nEND:VCARD\r\n', 'x.txt')).toBe('vcf')
+    expect(sniff('begin:vcard\nfn:Ada\nend:vcard\n')).toBe('vcf')
+    expect(sniff('BEGIN:VCALENDAR\r\nVERSION:2.0\r\nEND:VCALENDAR\r\n', 'x.csv')).toBe('ics')
+    expect(sniff('BEGIN:VCARDS\n')).not.toBe('vcf')
+  })
 })

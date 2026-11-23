@@ -37,6 +37,8 @@ const samples: Record<string, string> = {
   xml: 'xml/sample.xml',
   csv: 'csv/sample.csv',
   tsv: 'tsv/sample.tsv',
+  vcf: 'vcf/sample.vcf',
+  ics: 'ics/sample.ics',
   srt: 'srt/sample.srt',
   vtt: 'vtt/sample.vtt',
   ass: 'ass/sample.ass',
@@ -58,6 +60,14 @@ const samples: Record<string, string> = {
 const particular: Record<string, string> = {
   'woff>otf': 'woff/postscript.woff',
   'woff2>otf': 'woff2/postscript.woff2',
+  // A calendar is made from rows that are events, which the usual samples (people) are not.
+  'json>ics': 'json/events.json',
+  'jsonl>ics': 'jsonl/events.jsonl',
+  'yaml>ics': 'yaml/events.yaml',
+  'toml>ics': 'toml/events.toml',
+  'xml>ics': 'xml/events.xml',
+  'csv>ics': 'csv/events.csv',
+  'tsv>ics': 'tsv/events.tsv',
 }
 const path = (id: string, to?: string) =>
   fileURLToPath(new URL(`../fixtures/${particular[`${id}>${to}`] ?? samples[id]}`, import.meta.url))

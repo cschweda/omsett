@@ -1,5 +1,5 @@
 // Formats that are plain text: the data formats (JSON, JSON Lines, XML, TOML, YAML, CSV, TSV),
-// the subtitle formats, HTML and Markdown. None has a signature. Subtitles, JSON and XML can be told from how
+// the subtitle formats, HTML and Markdown, and address books and calendars. None has a signature. Subtitles, JSON and XML can be told from how
 // they begin. The others cannot always be told apart from each other or from a note someone
 // typed, so for those, and only those, the file's name is allowed to settle it.
 
@@ -23,6 +23,8 @@ const LRC = found('lrc', 'application/x-lrc')
 const TTML = found('ttml', 'application/ttml+xml')
 const SMI = found('smi', 'application/x-sami')
 const MICRODVD = found('microdvd', 'text/x-microdvd')
+const VCARD = found('vcf', 'text/vcard')
+const CALENDAR = found('ics', 'text/calendar')
 const HTML = found('html', 'text/html')
 const MARKDOWN = found('md', 'text/markdown')
 
@@ -62,17 +64,6 @@ function parses(text: string): boolean {
   }
 }
 
-/** Number of `delimiter` outside quotes. */
-function count(line: string, delimiter: string): number {
-  let total = 0
-  let quoted = false
-  for (const char of line) {
-    if (char === '"') quoted = !quoted
-    else if (!quoted && char === delimiter) total++
-  }
-  return total
-}
-
 const TOML_HEADING = /^\[{1,2}([^\][]+)\]{1,2}\s*(?:#.*)?$/
 /** "[package]" or "[[person]]": brackets around a name, and nothing else on the line. */
 const isTomlTable = (line: string) => /^[\w."' -]+$/.test(TOML_HEADING.exec(line)?.[1] ?? '')
@@ -81,10 +72,35 @@ const YAML_START = /^(?:---|%YAML\b|-(?:\s|$)|[^\s#,[\]{}"'][^:,]*:(?:\s|$)|"[^"
 
 const looksToml = (line: string) => isTomlTable(line) || TOML_PAIR.test(line)
 const looksYaml = (line: string) => YAML_START.test(line)
-/** A table: the first line has columns, and the next has the same number. */
-const looksTable = (lines: string[], delimiter: string) => {
-  const columns = count(lines[0]!, delimiter)
-  return columns > 0 && lines.length > 1 && count(lines[1]!, delimiter) === columns
+/**
+ * How many times `delimiter` separates cells in each of the first two rows. A row is not always
+ * a line: a quoted cell may hold line breaks, and the row goes on until the quote closes.
+ */
+function firstRows(text: string, delimiter: string): number[] {
+  const counts: number[] = []
+  let count = 0
+  let quoted = false
+  let empty = true
+  for (let i = 0; i < text.length && counts.length < 2; i++) {
+    const char = text[i]!
+    if (char === '"') quoted = !quoted
+    else if (!quoted && char === delimiter) count++
+    else if (!quoted && (char === '\n' || char === '\r')) {
+      // A line with nothing on it is not a row.
+      if (!empty) counts.push(count)
+      count = 0
+      empty = true
+      continue
+    }
+    empty = false
+  }
+  return counts
+}
+
+/** A table: the first row has columns, and the next has the same number. */
+const looksTable = (text: string, delimiter: string) => {
+  const [first, second] = firstRows(`${text}\n`, delimiter)
+  return first !== undefined && first > 0 && second === first
 }
 
 // Subtitles. Each begins in a way nothing else does: a time with an arrow, a pair of frame
@@ -164,6 +180,10 @@ export function sniffText(head: Uint8Array, complete: boolean, name?: string): F
   // it is Markdown. Its name is the only thing that can.
   if (ending !== null && ['md', 'markdown', 'mdown'].includes(ending)) return MARKDOWN
 
+  // An address book and a calendar each open with a line that says so.
+  if (/^BEGIN:VCARD\s*$/i.test(first)) return VCARD
+  if (/^BEGIN:VCALENDAR\s*$/i.test(first)) return CALENDAR
+
   // A tag at the very start: a web page, subtitles written as tags, or XML.
   if (first.startsWith('<')) {
     const start = decoded.trimStart().slice(0, 4096)
@@ -205,7 +225,9 @@ export function sniffText(head: Uint8Array, complete: boolean, name?: string): F
   if (line === undefined) return null
   if (looksToml(line)) return TOML
   if (looksYaml(line)) return YAML
-  if (looksTable(lines, '\t')) return TSV
-  if (looksTable(lines, ',') || looksTable(lines, ';')) return CSV
+  // What is in hand, less a last line that the end of the sample may have cut short.
+  const table = complete ? decoded : decoded.slice(0, Math.max(0, decoded.lastIndexOf('\n')))
+  if (looksTable(table, '\t')) return TSV
+  if (looksTable(table, ',') || looksTable(table, ';')) return CSV
   return null
 }

@@ -16,7 +16,8 @@ const TEXT_VALUES = [{ id: 'values-typed', text: 'Values that are plainly number
 const TEXT_CELLS = [{ id: 'cells-typed', text: 'Cells that are plainly numbers become numbers. Everything else stays text.' }]
 // A spreadsheet program may run a cell as a formula. Omsett writes what the file said.
 const FORMULAS = [{ id: 'cells-exact', text: 'Cells are written exactly as they are. A spreadsheet program may treat one that starts with =, +, - or @ as a formula.' }]
-const DATA = ['json', 'jsonl', 'yaml', 'toml', 'xml', 'csv', 'tsv']
+// Every format that can be written into a table, address books and calendars included.
+const DATA = ['json', 'jsonl', 'yaml', 'toml', 'xml', 'csv', 'tsv', 'vcf', 'ics']
 
 // What the subtitle formats cannot say to each other.
 const SUBTITLES = ['srt', 'vtt', 'ass', 'ssa', 'ttml', 'lrc', 'sbv', 'smi', 'microdvd']
@@ -24,6 +25,14 @@ const FRAMES = [{ id: 'frames-assumed', text: 'MicroDVD counts video frames, not
 const ONE_LINE = [{ id: 'lyrics-one-line', text: 'Each subtitle becomes a single line, timed to a hundredth of a second.' }]
 const NO_ENDS = [{ id: 'ends-guessed', text: 'LRC says when a line starts, not when it ends. Each line is shown until the next one.' }]
 const others = (id: string) => SUBTITLES.filter((other) => other !== id)
+
+// Contacts and events.
+const NOT_THE_SAME = 'An address book holds people and a calendar holds events. One cannot become the other'
+const CONTACT_COLUMNS = [{ id: 'contact-columns', text: 'Each row becomes a contact, from the columns Omsett recognises: name, given name, family name, organization, title, email, phone, address, url, birthday, note. Other columns are left out.' }]
+const EVENT_COLUMNS = [{ id: 'event-columns', text: 'Each row becomes an event, from the columns Omsett recognises: summary (or title), start, end, location, description, url, timezone. Write dates as 2026-11-23 or 2026-11-23 14:30.' }]
+const CONTACT_EXTRAS = [{ id: 'contact-extras', text: 'Photos, and details beyond the usual ones, are left out.' }]
+const EVENT_EXTRAS = [{ id: 'event-extras', text: 'Reminders and time-zone rules are left out. A repeating event is one row, with its rule as text.' }]
+const TABLES = ['json', 'jsonl', 'yaml', 'toml', 'xml', 'csv', 'tsv']
 
 // Fonts.
 const REDRAW = 'TTF and OTF draw letters in different ways. Changing one into the other means redrawing every letter, which Omsett does not do yet'
@@ -33,6 +42,14 @@ const OUTLINES = [{ id: 'font-outlines', text: 'A web font unwraps to TTF or to 
 const TYPED = ['json', 'jsonl', 'yaml', 'toml']
 
 export const overrides: EdgeOverride[] = [
+  { from: 'vcf', to: 'ics', block: NOT_THE_SAME },
+  { from: 'ics', to: 'vcf', block: NOT_THE_SAME },
+  ...TABLES.flatMap((other) => [
+    { from: other, to: 'vcf', warnings: CONTACT_COLUMNS },
+    { from: other, to: 'ics', warnings: EVENT_COLUMNS },
+    { from: 'vcf', to: other, warnings: CONTACT_EXTRAS },
+    { from: 'ics', to: other, warnings: EVENT_EXTRAS },
+  ]),
   // A TTF and an OTF hold different kinds of outline. Going between them is drawing.
   { from: 'ttf', to: 'otf', block: REDRAW },
   { from: 'otf', to: 'ttf', block: REDRAW },

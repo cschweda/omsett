@@ -1,0 +1,4 @@
+BEGIN:VCARD
+FN:Ada
+this line is not a property at all
+END:VCARD

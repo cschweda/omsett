@@ -14,6 +14,8 @@ import { xml } from './xml'
 import { toml } from './toml'
 import { jsonl } from './jsonl'
 import { tsv } from './tsv'
+import { vcf } from './vcf'
+import { ics } from './ics'
 import { srt } from './srt'
 import { vtt } from './vtt'
 import { ass } from './ass'
@@ -52,7 +54,7 @@ export const formats: Format[] = [
   webp, jpeg, png, avif, gif, tiff, jxl, bmp, tga, qoi, pnm,
   heic, svg, svgz, psd, ico, jp2, exr, hdr, pcx, sgi, ras,
   // Data. A picture never becomes one of these, nor the other way round.
-  json, yaml, csv, xml, toml, jsonl, tsv,
+  json, yaml, csv, xml, toml, jsonl, tsv, vcf, ics,
   // Subtitles and lyrics: text with times.
   srt, vtt, ass, ssa, ttml, lrc, sbv, smi, microdvd,
   // Writing: text with structure.

@@ -1,0 +1,6 @@
+BEGIN:VCARD
+VERSION:3.0
+FN:=HYPERLINK("http://elsewhere.example"\,"Ada")
+TEL:+1 (555) 0100
+NOTE:@SUM(1+1)
+END:VCARD

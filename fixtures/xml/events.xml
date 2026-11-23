@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<events>
+  <event>
+    <summary>Planning meeting, room 4</summary>
+    <start>2026-11-23 09:00</start>
+    <end>2026-11-23 10:00</end>
+    <timezone>America/Chicago</timezone>
+    <location>Springfield; second floor</location>
+    <description>Bring the roadmap.</description>
+  </event>
+  <event>
+    <summary>Holiday</summary>
+    <start>2026-12-25</start>
+    <end>2026-12-26</end>
+    <timezone></timezone>
+    <location></location>
+    <description></description>
+  </event>
+  <event>
+    <summary>Release</summary>
+    <start>2027-01-04T15:00:00Z</start>
+    <end>2027-01-04T16:00:00Z</end>
+    <timezone></timezone>
+    <location>Online</location>
+    <description>Version 1.0</description>
+  </event>
+</events>
