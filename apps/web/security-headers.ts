@@ -114,6 +114,9 @@ const passOn = (host: string) => [
   '    proxy_ssl_server_name on;',
   `    proxy_ssl_name ${host};`,
   '    proxy_ssl_verify on;',
+  // A certificate is signed by one that is signed by another. nginx follows one step unless
+  // told otherwise, which is one too few for most sites: every request was refused as a 502.
+  '    proxy_ssl_verify_depth 3;',
   '    proxy_ssl_trusted_certificate /etc/ssl/certs/ca-certificates.crt;',
   '    proxy_set_header X-Forwarded-For $remote_addr;',
   '    proxy_set_header X-Forwarded-Proto $scheme;',

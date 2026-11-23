@@ -13,6 +13,7 @@ describe('what a copy of Omsett passes on to another server', () => {
     expect(rules).toContain('client_max_body_size 2k;')
     expect(rules).toContain('proxy_pass https://plausible.io/api/event;')
     expect(rules).toContain('proxy_ssl_verify on;')
+    expect(rules).toContain('proxy_ssl_verify_depth 3;')
     expect(rules).toContain('proxy_set_header Cookie "";')
     expect(rules).not.toContain('/api/accessibility')
   })

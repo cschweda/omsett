@@ -107,10 +107,19 @@ jobs:
           node -e "import('./apps/web/security-headers.ts').then((m) => console.log(m.forwardingRules({ visitsSite: 'omsett.com', checker: 'https://audit.icjia.app' })))" > "$RUNNER_TEMP/forwarding.nginx"
           grep -c '^location = ' "$RUNNER_TEMP/forwarding.nginx" | grep -qx 4
           { sed '$d' "$RUNNER_TEMP/nginx.conf"; cat "$RUNNER_TEMP/forwarding.nginx"; echo '}'; } > "$RUNNER_TEMP/nginx-forwarding.conf"
-          docker run --rm \
+          docker run -d --name nginx-forwarding -p 8083:8080 \
             -v "$RUNNER_TEMP/site:/srv/omsett:ro" \
             -v "$RUNNER_TEMP/nginx-forwarding.conf:/etc/nginx/conf.d/default.conf:ro" \
-            nginx:alpine@sha256:fb4658584bd9a916ffb6f6e365f97c25cfdb2923801f551ea08356e695f14ff7 nginx -t
+            nginx:alpine@sha256:fb4658584bd9a916ffb6f6e365f97c25cfdb2923801f551ea08356e695f14ff7
+          for i in $(seq 1 20); do curl -fsS http://localhost:8083/ > /dev/null && break; sleep 1; done
+          docker exec nginx-forwarding nginx -t
+          # And that they work: a question that changes nothing is asked of the checker through
+          # them, and must come back answered. Accepted by nginx and refused at every request
+          # is what these rules were, the first time they were deployed.
+          curl -fsS --max-time 30 http://localhost:8083/api/accessibility/health | grep -q '"status"' || { docker logs nginx-forwarding 2>&1 | tail -5; exit 1; }
+          # The rule for counting takes a POST and nothing else; a GET is turned away by nginx itself.
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8083/api/event)" = "403"
+          docker rm -f nginx-forwarding
       - name: Conversion tests against nginx
         run: BASE_URL=http://localhost:8082 pnpm e2e e2e/gate.spec.ts e2e/fixtures.spec.ts e2e/compare.spec.ts --project=chromium
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
