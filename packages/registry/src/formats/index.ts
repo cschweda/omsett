@@ -23,6 +23,10 @@ import { lrc } from './lrc'
 import { ttml } from './ttml'
 import { smi } from './smi'
 import { microdvd } from './microdvd'
+import { woff2 } from './woff2'
+import { woff } from './woff'
+import { ttf } from './ttf'
+import { otf } from './otf'
 import { md } from './md'
 import { html } from './html'
 import { avif } from './avif'
@@ -53,4 +57,6 @@ export const formats: Format[] = [
   srt, vtt, ass, ssa, ttml, lrc, sbv, smi, microdvd,
   // Writing: text with structure.
   md, html,
+  // Fonts: the same tables in four wrappings.
+  woff2, woff, ttf, otf,
 ]

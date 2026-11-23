@@ -119,6 +119,24 @@ part of the app's scripts; nothing separate is downloaded.
 | rehype-raw (HTML inside Markdown) | 7.0.0 | MIT | <https://github.com/rehypejs/rehype-raw> |
 | rehype-sanitize (removes what could run) | 6.0.0 | MIT | <https://github.com/rehypejs/rehype-sanitize> |
 
+### font
+
+Omsett's own reader and writer for TTF, OTF and WOFF, using the compression built into every
+browser. Nothing is downloaded.
+
+The sample fonts in `fixtures/` are a typeface drawn for the tests by
+`fixtures/_tools/make-fonts.py`; no one else's font is in the repository.
+
+### font-woff2
+
+WOFF2 is read and written by Google's woff2 library and Brotli, built to WebAssembly.
+
+| Library | Version | License | Source |
+| --- | --- | --- | --- |
+| woff2-encoder | 2.0.0 | MIT | <https://github.com/itskyedo/woff2-encoder> |
+| woff2 (inside it) | — | MIT | <https://github.com/google/woff2> |
+| Brotli (inside it) | — | MIT | <https://github.com/google/brotli> |
+
 ### canvas
 
 The browser's own `OffscreenCanvas` encoder. Nothing is downloaded; the wrapper around it is

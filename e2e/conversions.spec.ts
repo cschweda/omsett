@@ -48,8 +48,19 @@ const samples: Record<string, string> = {
   microdvd: 'microdvd/sample.sub',
   md: 'md/sample.md',
   html: 'html/sample.html',
+  ttf: 'ttf/sample.ttf',
+  otf: 'otf/sample.otf',
+  woff: 'woff/sample.woff',
+  woff2: 'woff2/sample.woff2',
 }
-const path = (id: string) => fileURLToPath(new URL(`../fixtures/${samples[id]}`, import.meta.url))
+// A web font unwraps to TTF or to OTF, whichever its letters are drawn as. The usual samples
+// hold TrueType outlines; unwrapping to OTF needs one that holds PostScript outlines.
+const particular: Record<string, string> = {
+  'woff>otf': 'woff/postscript.woff',
+  'woff2>otf': 'woff2/postscript.woff2',
+}
+const path = (id: string, to?: string) =>
+  fileURLToPath(new URL(`../fixtures/${particular[`${id}>${to}`] ?? samples[id]}`, import.meta.url))
 
 test('there is a sample for every format that can be read', () => {
   const readable = new Set(registry.capabilities.flatMap((c) => c.reads))
@@ -63,9 +74,9 @@ for (const edge of deriveEdges(registry).edges) {
   const to = formatById(registry, edge.to)!
 
   test(`${from.name} → ${to.name}`, async ({ page }) => {
-    const source = await detect(new Blob([readFileSync(path(from.id))]), registry.formats)
+    const source = await detect(new Blob([readFileSync(path(from.id, to.id))]), registry.formats)
     await open(page)
-    await page.locator('#file-input').setInputFiles(path(from.id))
+    await page.locator('#file-input').setInputFiles(path(from.id, to.id))
     await page.locator(`[role="radio"][data-format="${to.id}"]`).click()
     await page.getByTestId('convert').click()
     const link = page.getByTestId('download')

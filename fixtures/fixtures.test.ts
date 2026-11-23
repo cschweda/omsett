@@ -7,6 +7,10 @@ import { deriveEdges, engineIds, everything, formatById, registry } from '@omset
 import { describe, expect, it } from 'vitest'
 
 const nodeEngines = createNodeEngines()
+const UNWRAPS_TO_THE_OTHER = [
+  'This font has PostScript outlines, so it unwraps to OTF, not TTF. Choose OTF.',
+  'This font has TrueType outlines, so it unwraps to TTF, not OTF. Choose TTF.',
+]
 const derived = deriveEdges(registry)
 
 async function fixturesFor(formatId: string): Promise<Array<{ name: string; blob: Blob }>> {
@@ -63,18 +67,29 @@ describe('fixtures through every Node-capable engine', () => {
         expect(fixtures.length, `no fixture for ${edge.from}`).toBeGreaterThan(0)
         const engine = nodeEngines[candidate.engine]!
 
+        let converted = 0
         for (const fixture of fixtures) {
           const before = await detect(fixture.blob, registry.formats)
-          const outputs = await engine.convert({
-            blob: fixture.blob,
-            name: fixture.name,
-            from,
-            to,
-            options: candidate.defaultOptions,
-            maxPixels: MAX_PIXELS,
-            signal: new AbortController().signal,
-            onProgress: () => {},
-          })
+          const outputs = await engine
+            .convert({
+              blob: fixture.blob,
+              name: fixture.name,
+              from,
+              to,
+              options: candidate.defaultOptions,
+              maxPixels: MAX_PIXELS,
+              signal: new AbortController().signal,
+              onProgress: () => {},
+            })
+            .catch((error: unknown) => {
+              // A web font unwraps to TTF or to OTF, whichever its outlines are, and the other
+              // is refused in these words. Nothing else may be refused, and below, every
+              // conversion must still succeed for at least one sample.
+              if (error instanceof Error && UNWRAPS_TO_THE_OTHER.includes(error.message)) return null
+              throw error
+            })
+          if (outputs === null) continue
+          converted++
           expect(outputs).toHaveLength(1)
           const output = outputs[0]!
           expect(output.name).toBe(fixture.name.replace(/\.[^.]+$/, `.${to.extensions[0]}`))
@@ -89,6 +104,7 @@ describe('fixtures through every Node-capable engine', () => {
           )
           expect(output.blob.size, 'output is not empty').toBeGreaterThan(0)
         }
+        expect(converted, 'at least one sample converts').toBeGreaterThan(0)
       })
     }
   }

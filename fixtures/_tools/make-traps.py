@@ -1781,6 +1781,287 @@ text(
     "unknown",
 )
 
+# --- fonts: TTF, OTF, WOFF, WOFF2 -----------------------------------------------------------------
+# A font is a list of tables, each with a place, a length and a checksum, and a web font packs
+# those tables smaller. What goes wrong: the list points outside the file or at itself, a
+# packed table unpacks to far more than it said, a byte is changed and the checksum is not,
+# and files that open like a font and hold nothing a font needs. Each is converted to WOFF (a
+# WOFF, to TTF).
+G = "fonts"
+NOT_FONT = "This file is not a valid %s font"
+DAMAGED = "This font is damaged: part of it does not match its own checksum"
+TOO_BIG = "This font is too large to convert"
+
+
+def sample(path):
+    with open(os.path.join(FIXTURES, path), "rb") as f:
+        return f.read()
+
+
+TTF, OTF, WOFF_, WOFF2_ = sample("ttf/sample.ttf"), sample("otf/sample.otf"), sample("woff/sample.woff"), sample("woff2/sample.woff2")
+
+
+def font_sum(data: bytes) -> int:
+    data += b"\0" * (-len(data) % 4)
+    return sum(struct.unpack(">%dI" % (len(data) // 4), data)) & 0xFFFFFFFF
+
+
+def tables_of(font: bytes):
+    count = struct.unpack(">H", font[4:6])[0]
+    found = []
+    for i in range(count):
+        tag, _, offset, length = struct.unpack(">4sIII", font[12 + 16 * i : 28 + 16 * i])
+        found.append((tag, font[offset : offset + length]))
+    return found
+
+
+def sfnt(tables, flavor=b"\x00\x01\x00\x00") -> bytes:
+    """A font file from tables, every checksum correct: what is wrong with it is only what was meant."""
+    tables = sorted(tables, key=lambda t: t[0])
+    offset = 12 + 16 * len(tables)
+    directory, body = b"", b""
+    for tag, data in tables:
+        summed = data[:8] + b"\0\0\0\0" + data[12:] if tag == b"head" else data
+        directory += struct.pack(">4sIII", tag, font_sum(summed), offset, len(data))
+        body += data + b"\0" * (-len(data) % 4)
+        offset += len(data) + (-len(data) % 4)
+    return flavor + struct.pack(">HHHH", len(tables), 0, 0, 0) + directory + body
+
+
+def woff(tables, flavor=b"\x00\x01\x00\x00", pack=None, said=None, extra=b"") -> bytes:
+    """A WOFF from tables. `pack` replaces how a table is compressed; `said` what size it claims."""
+    tables = sorted(tables, key=lambda t: t[0])
+    offset = 44 + 20 * len(tables)
+    directory, body = b"", b""
+    for tag, data in tables:
+        packed = (pack or {}).get(tag) or zlib.compress(data, 9)
+        if tag not in (pack or {}) and len(packed) >= len(data):
+            packed = data
+        summed = data[:8] + b"\0\0\0\0" + data[12:] if tag == b"head" else data
+        directory += struct.pack(">4sIIII", tag, offset, len(packed), (said or {}).get(tag, len(data)), font_sum(summed))
+        body += packed + b"\0" * (-len(packed) % 4)
+        offset += len(packed) + (-len(packed) % 4)
+    total = 44 + len(directory) + len(body) + len(extra)
+    header = b"wOFF" + flavor + struct.pack(">IHHIHHIIIII", total, len(tables), 0, 12 + 16 * len(tables), 1, 0, 0, 0, 0, 0, 0)
+    return header + directory + body + extra
+
+
+def patched(data: bytes, at: int, new: bytes) -> bytes:
+    return data[:at] + new + data[at + len(new) :]
+
+
+def font(name, data, why, detect, **more):
+    trap(name, data, why, detect, group=G, **more)
+
+
+TT = tables_of(TTF)
+without = lambda *tags: [t for t in TT if t[0] not in tags]
+
+font(
+    "truncated.ttf",
+    TTF[: len(TTF) // 2],
+    "A TTF cut off half-way, as a download cut short is. Its list of tables points past the end.",
+    "ttf", node="fails", note=NOT_FONT % "TTF",
+)
+font(
+    "one-byte-changed.ttf",
+    patched(TTF, len(TTF) - 40, bytes([TTF[len(TTF) - 40] ^ 0xFF])),
+    "A sound TTF with a single byte changed inside one table. The table no longer matches the "
+    "checksum the font gives for it.",
+    "ttf", node="fails", note=DAMAGED,
+)
+font(
+    "table-outside-the-file.ttf",
+    patched(TTF, 12 + 8, struct.pack(">II", 0xFFFFFF00, 0x00010000)),
+    "The first table is said to start four gigabytes in and to be sixty-four megabytes long.",
+    "ttf", node="fails", note=NOT_FONT % "TTF",
+)
+font(
+    "table-is-the-list-itself.ttf",
+    patched(TTF, 12 + 8, struct.pack(">I", 4)),
+    "A table said to lie inside the list of tables, so that reading it reads the list.",
+    "ttf", node="fails", note=NOT_FONT % "TTF",
+)
+font(
+    "sixty-five-thousand-tables.ttf",
+    patched(TTF, 4, b"\xff\xff"),
+    "A font that says it holds 65,535 tables, in a file of a thousand bytes. It is not taken "
+    "for a font at all.",
+    "unknown",
+)
+font(
+    "no-letters.ttf",
+    sfnt(without(b"glyf", b"loca")),
+    "Every checksum correct, and no outlines: a font with nothing to draw.",
+    "ttf", node="fails", note=NOT_FONT % "TTF",
+)
+font(
+    "same-table-twice.ttf",
+    patched(sfnt(TT), 12 + 16, sfnt(TT)[12:28]),
+    "The list of tables names the same table twice. Which one a reader takes is up to the "
+    "reader, and two readers may not agree.",
+    "ttf", node="fails", note=NOT_FONT % "TTF",
+)
+font(
+    "wrong-magic-number.ttf",
+    sfnt([(tag, patched(data, 12, b"\xde\xad\xbe\xef") if tag == b"head" else data) for tag, data in TT]),
+    "Checksums all correct, but the number every font carries to say it is a font is another "
+    "number.",
+    "ttf", node="fails", note=NOT_FONT % "TTF",
+)
+font(
+    "first-bytes-only.ttf",
+    b"\x00\x01\x00\x00\x00\x01\x00\x10\x00\x00\x00\x00junk" + b"\0" * 12,
+    "The bytes a TTF opens with, one table of nothing, and no font.",
+    "ttf", node="fails", note=NOT_FONT % "TTF",
+)
+font(
+    "picture-named.ttf",
+    GOOD,
+    "A PNG with a .ttf name.",
+    "png", node="succeeds", mismatch=True,
+)
+font(
+    "words-named.ttf",
+    b"This is not a font. It is a sentence.\n",
+    "A sentence with a .ttf name.",
+    "unknown",
+)
+font(
+    "collection.ttc",
+    b"ttcf\x00\x01\x00\x00\x00\x00\x00\x01\x00\x00\x00\x10" + TTF,
+    "Several fonts in one file, which Omsett does not take apart yet.",
+    "unregistered",
+)
+
+OT = tables_of(OTF)
+font(
+    "truncated.otf",
+    OTF[: len(OTF) // 2],
+    "An OTF cut off half-way.",
+    "otf", node="fails", note=NOT_FONT % "OTF",
+)
+font(
+    "one-byte-changed.otf",
+    patched(OTF, len(OTF) - 40, bytes([OTF[len(OTF) - 40] ^ 0xFF])),
+    "A sound OTF with a single byte changed inside one table.",
+    "otf", node="fails", note=DAMAGED,
+)
+font(
+    "wrong-outlines-inside.otf",
+    sfnt(TT, flavor=b"OTTO"),
+    "A file that opens as an OTF does and holds the tables of a TTF: the outlines it promises "
+    "are not there.",
+    "otf", node="fails", note=NOT_FONT % "OTF",
+)
+font(
+    "ttf-named.otf",
+    TTF,
+    "A sound TTF with an .otf name. It is converted as the TTF it is.",
+    "ttf", node="succeeds", mismatch=True,
+)
+
+font(
+    "truncated.woff",
+    WOFF_[: len(WOFF_) // 2],
+    "A WOFF cut off half-way. It says how long it should be, and it is not.",
+    "woff", node="fails", note=NOT_FONT % "WOFF",
+)
+font(
+    "something-added-after.woff",
+    WOFF_ + b"<script>alert(1)</script>",
+    "A sound WOFF with a script added after the font. The file says how long it is, and it is "
+    "longer.",
+    "woff", node="fails", note=NOT_FONT % "WOFF",
+)
+font(
+    "unpacks-to-far-more.woff",
+    woff(TT, pack={b"glyf": zlib.compress(b"\0" * (64 * 1024 * 1024), 9)}),
+    "One table is packed from sixty-four megabytes of nothing into sixty kilobytes, and says "
+    "it unpacks to a few hundred bytes. Unpacking stops at the size it gave.",
+    "woff", node="fails", note=NOT_FONT % "WOFF",
+)
+font(
+    "claims-four-gigabytes.woff",
+    woff(TT, said={b"glyf": 0xFFFFFFF0}),
+    "One table says it unpacks to four gigabytes. Refused from the figure alone, before "
+    "anything is unpacked.",
+    "woff", node="fails", note=TOO_BIG,
+)
+font(
+    "unpacks-to-less.woff",
+    woff(TT, said={b"glyf": dict(TT)[b"glyf"].__len__() + 400}),
+    "One table says it unpacks to more than it does.",
+    "woff", node="fails", note=NOT_FONT % "WOFF",
+)
+font(
+    "packing-is-noise.woff",
+    woff(TT, pack={b"glyf": bytes(random.Random(7).randrange(256) for _ in range(40))}),
+    "One table's packed bytes are noise that unpacks to nothing.",
+    "woff", node="fails", note=NOT_FONT % "WOFF",
+)
+font(
+    "table-changed-after-packing.woff",
+    woff([(tag, patched(data, 4, b"\xff") if tag == b"hmtx" else data) for tag, data in TT]).replace(
+        struct.pack(">I", font_sum(patched(dict(TT)[b"hmtx"], 4, b"\xff"))), struct.pack(">I", font_sum(dict(TT)[b"hmtx"])), 1
+    ),
+    "A table whose contents were changed and whose checksum was not.",
+    "woff", node="fails", note=DAMAGED,
+)
+font(
+    "no-such-kind-of-font.woff",
+    woff(TT, flavor=b"evil"),
+    "A WOFF that says the font inside is of a kind that does not exist. It is not taken for a "
+    "font at all.",
+    "unknown",
+)
+font(
+    "postscript-inside.woff",
+    woff(OT, flavor=b"OTTO"),
+    "A sound WOFF whose letters are drawn as PostScript outlines. Asked for a TTF, which "
+    "cannot hold them, Omsett says which format can.",
+    "woff", node="fails",
+    note="This font has PostScript outlines, so it unwraps to OTF, not TTF. Choose OTF.",
+)
+font(
+    "woff-named.woff2",
+    WOFF_,
+    "A sound WOFF with a .woff2 name.",
+    "woff", node="succeeds", mismatch=True,
+)
+
+font(
+    "truncated.woff2",
+    WOFF2_[: len(WOFF2_) // 2],
+    "A WOFF2 cut off half-way.",
+    "woff2", node="fails", note=NOT_FONT % "WOFF2",
+)
+font(
+    "packing-damaged.woff2",
+    WOFF2_[:-60] + bytes(b ^ 0xFF for b in WOFF2_[-60:-20]) + WOFF2_[-20:],
+    "A sound WOFF2 with forty bytes of its packed data inverted.",
+    "woff2", node="fails", note=NOT_FONT % "WOFF2",
+)
+font(
+    "claims-four-gigabytes.woff2",
+    patched(WOFF2_, 16, b"\xff\xff\xff\xf0"),
+    "A WOFF2 whose first lines say the font inside is four gigabytes. The figure is not "
+    "believed: the font is unpacked to the size it really is.",
+    "woff2", node="succeeds",
+)
+font(
+    "first-bytes-only.woff2",
+    b"wOF2" + b"\0" * 60,
+    "The four bytes a WOFF2 opens with, and sixty of nothing.",
+    "unknown",
+)
+font(
+    "length-lies.woff2",
+    patched(WOFF2_, 8, struct.pack(">I", len(WOFF2_) * 1000)),
+    "A WOFF2 that says it is a thousand times longer than it is.",
+    "woff2", node="fails", note=NOT_FONT % "WOFF2",
+)
+
 with open(os.path.join(OUT, "manifest.json"), "w") as out:
     json.dump(manifest, out, indent=2)
     out.write("\n")

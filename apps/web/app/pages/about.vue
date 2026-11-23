@@ -22,7 +22,7 @@ const conversions = deriveEdges(registry).edges.length
             drop is read, converted, and handed back inside the tab you have open.
           </p>
           <p>
-            It is at an early stage. Today it handles {{ formats.length }} formats, pictures, data, subtitles and web pages
+            It is at an early stage. Today it handles {{ formats.length }} formats, pictures, data, subtitles, web pages and fonts
             ({{ formats.join(', ') }}): {{ conversions }} conversions in all. More formats, and then documents and
             sound, are the work ahead.
           </p>

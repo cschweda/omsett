@@ -25,9 +25,21 @@ const ONE_LINE = [{ id: 'lyrics-one-line', text: 'Each subtitle becomes a single
 const NO_ENDS = [{ id: 'ends-guessed', text: 'LRC says when a line starts, not when it ends. Each line is shown until the next one.' }]
 const others = (id: string) => SUBTITLES.filter((other) => other !== id)
 
+// Fonts.
+const REDRAW = 'TTF and OTF draw letters in different ways. Changing one into the other means redrawing every letter, which Omsett does not do yet'
+const WEB_LICENCE = [{ id: 'font-licence', text: "Check that the font's licence allows it to be used on a website." }]
+const OUTLINES = [{ id: 'font-outlines', text: 'A web font unwraps to TTF or to OTF, depending on how its letters are drawn. If one is refused, choose the other.' }]
+
 const TYPED = ['json', 'jsonl', 'yaml', 'toml']
 
 export const overrides: EdgeOverride[] = [
+  // A TTF and an OTF hold different kinds of outline. Going between them is drawing.
+  { from: 'ttf', to: 'otf', block: REDRAW },
+  { from: 'otf', to: 'ttf', block: REDRAW },
+  ...['ttf', 'otf', 'woff', 'woff2'].flatMap((from) =>
+    ['woff', 'woff2'].filter((to) => to !== from).map((to) => ({ from, to, warnings: WEB_LICENCE })),
+  ),
+  ...['woff', 'woff2'].flatMap((from) => ['ttf', 'otf'].map((to) => ({ from, to, warnings: OUTLINES }))),
   {
     from: 'md',
     to: 'html',

@@ -7,6 +7,50 @@ The paragraph that opens a version is its teaser: the home page shows its first 
 in the "What's new" banner, so keep it to two or three sentences on what a visitor will notice.
 A line beginning "Released" gives the date.
 
+## 0.15.0
+
+Released 23 November 2026.
+
+Omsett now converts fonts: TTF, OTF, WOFF and WOFF2. Turn a font into the small WOFF2 a website
+needs, or unwrap a web font back into a file a computer can install. The letters themselves are
+never touched, so nothing about how the font looks can change.
+
+### Added
+
+- **Four font formats: TTF, OTF, WOFF, WOFF2.** A font is a set of tables, and these are four
+  ways of wrapping them. Converting moves the tables from one wrapping to another, exactly.
+  A TTF wrapped as WOFF and unwrapped again is the same file, byte for byte.
+- **TTF, OTF and WOFF need nothing downloaded**: the code is Omsett's own. WOFF2 uses Google's
+  own packer, about 1 MB, fetched the first time a conversion needs it.
+- **Fonts are checked before they are believed.** Every table must lie inside the file and
+  match the checksum the font gives for it, and nothing is unpacked past the size it stated. A
+  font with a single byte changed is refused, and told apart from one that is simply not a
+  font.
+- **The picker says what matters**: check that the font's licence allows web use; and a web
+  font unwraps to TTF or to OTF depending on how its letters are drawn, so if one is refused,
+  choose the other.
+- 31 trap files for fonts: a table packed from 64 MB into 60 KB that claims to be a few hundred
+  bytes, a table said to be four gigabytes, a table list that points outside the file and one
+  that points at itself, the same table listed twice, a script added after the font, a font
+  with every checksum right and no letters, and fonts of one kind named as another.
+
+### Changed
+
+- **A conversion that is ruled out is ruled out by any road.** TTF to OTF is not offered,
+  because it means redrawing every letter; before this, the app would have found a way round
+  through WOFF and produced a file with the wrong name.
+
+### Known
+
+- **TTF to OTF and OTF to TTF are not done.** The two draw letters differently, and changing
+  one into the other is drawing, not converting.
+- A font whose checksums are wrong is refused, even if a browser would have used it. Some old
+  fonts are like this.
+- Font collections (TTC) and EOT are not read.
+- The extra description a few WOFF files carry (a block of XML about the font) is not copied.
+  Everything in the font itself, its name and licence included, is.
+- There is no preview of the letters yet.
+
 ## 0.14.0
 
 Released 23 November 2026.

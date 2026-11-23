@@ -19,6 +19,8 @@ const srt = formatById(registry, 'srt')!
 const vtt = formatById(registry, 'vtt')!
 const md = formatById(registry, 'md')!
 const html = formatById(registry, 'html')!
+const woff = formatById(registry, 'woff')!
+const ttf = formatById(registry, 'ttf')!
 
 const load = async (file: string) => new File([await readFile(new URL(`./_traps/${file}`, import.meta.url))], file)
 
@@ -89,7 +91,7 @@ describe('trap files', () => {
       // 3. Convert it to something it is not: WebP, or PNG if it is a WebP already; for data,
       //    JSON, or YAML if it is JSON already; for subtitles, SRT, or WebVTT.
       const from = found.format
-      //    for Markdown and HTML, the other of the two.
+      //    for Markdown and HTML, the other of the two; for fonts, WOFF, or TTF.
       const [usual, otherwise] =
         from.category === 'data'
           ? [json, yaml]
@@ -97,7 +99,9 @@ describe('trap files', () => {
             ? [srt, vtt]
             : from.category === 'text'
               ? [md, html]
-              : [webp, png]
+              : from.category === 'font'
+                ? [woff, ttf]
+                : [webp, png]
       const to = from.id === usual.id ? otherwise : usual
       if (!router.route(from.id, to.id)) {
         expect(trap.node, 'no route, so no engine').toBe('none')
@@ -126,7 +130,7 @@ describe('trap files', () => {
         expect(error, 'a failure is an ordinary error').toBeInstanceOf(Error)
         outcome = 'fails'
         // Where the app must give a particular reason, the engine is where it comes from.
-        if (trap.note && ['data', 'subtitle', 'text'].includes(from.category)) expect((error as Error).message).toBe(trap.note)
+        if (trap.note && ['data', 'subtitle', 'text', 'font'].includes(from.category)) expect((error as Error).message).toBe(trap.note)
       }
       expect(outcome, 'the engine').toBe(trap.node)
 

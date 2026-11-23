@@ -47,6 +47,8 @@ const DATA_WRITES: WriteSpec[] = DATA.map((format) => ({ format, lossy: false, d
 const SUBTITLES = ['srt', 'vtt', 'ass', 'ssa', 'ttml', 'lrc', 'sbv', 'smi', 'microdvd']
 const SUBTITLE_WRITES: WriteSpec[] = SUBTITLES.map((format) => ({ format, lossy: false, drops: ['styling'] }))
 
+const SFNT = ['ttf', 'otf', 'woff']
+
 export const capabilities: Capability[] = [
   {
     engine: 'canvas',
@@ -87,6 +89,12 @@ export const capabilities: Capability[] = [
 
   // Small parsers written in JavaScript: nothing to download beyond the app itself.
   { engine: 'data', tier: 'browser', reads: DATA, writes: DATA_WRITES, priority: 20 },
+  // Fonts. TTF, OTF and WOFF are read and written by Omsett's own code. WOFF2 needs a
+  // compressor of its own, which is a separate engine so that only WOFF2 work fetches it.
+  { engine: 'font', tier: 'browser', reads: SFNT, writes: SFNT.map((format) => ({ format, lossy: false })), priority: 20 },
+  { engine: 'font-woff2', tier: 'browser', reads: SFNT, writes: [{ format: 'woff2', lossy: false }], priority: 30 },
+  { engine: 'font-woff2', tier: 'browser', reads: ['woff2'], writes: SFNT.map((format) => ({ format, lossy: false })), priority: 30 },
+
   // Markdown and HTML, each to the other, through a tree that is cleaned on the way.
   {
     engine: 'markup',

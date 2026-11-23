@@ -41,6 +41,8 @@ export function createRouter(registry: Registry): Router {
   // extends every best-so-far path by one edge, and the best over all rounds wins.
   function route(from: string, to: string): Route | null {
     if (from === to || !formats.has(from) || !formats.has(to)) return null
+    // A pair that is ruled out is ruled out by any road: no going round through a third format.
+    if (derived.blocked.has(`${from}>${to}`)) return null
     let frontier = new Map<string, Path>([[from, { edges: [], cost: 0, native: 0 }]])
     let best: Path | undefined
     for (let hop = 1; hop <= MAX_HOPS; hop++) {
