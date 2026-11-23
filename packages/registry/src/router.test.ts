@@ -58,12 +58,12 @@ describe('router, real registry', () => {
       'heic', 'svg', 'svgz', 'psd', 'ico', 'jp2', 'exr', 'hdr', 'pcx', 'sgi', 'ras',
       'json', 'yaml', 'csv', 'xlsx', 'xml', 'toml', 'jsonl', 'tsv', 'vcf', 'ics',
       'srt', 'vtt', 'ass', 'ssa', 'ttml', 'lrc', 'sbv', 'smi', 'microdvd',
-      'md', 'html', 'docx',
+      'md', 'html', 'docx', 'pptx',
       'woff2', 'woff', 'ttf', 'otf',
       'zip', 'tgz', 'tar',
     ])
     const readOnly = new Set(everything.formats.filter((f) => f.readOnly).map((f) => f.id))
-    expect([...readOnly].sort()).toEqual(['exr', 'hdr', 'heic', 'ico', 'jp2', 'pcx', 'psd', 'ras', 'sgi', 'svg', 'svgz'])
+    expect([...readOnly].sort()).toEqual(['exr', 'hdr', 'heic', 'ico', 'jp2', 'pcx', 'pptx', 'psd', 'ras', 'sgi', 'svg', 'svgz'])
     // Every pair of the same kind converts, directly or through a step in between; nothing is
     // written as HEIC. A picture never becomes data, nor data a picture.
     const kind = (id: string) => formatById(everything, id)!.category
@@ -98,7 +98,7 @@ describe('router, real registry', () => {
     expect(all.route('otf', 'woff2')!.warnings.map((w) => w.id)).toEqual(['font-licence'])
     // Markdown and HTML become each other and nothing else.
     expect(all.route('md', 'html')!.edges.map((e) => e.candidates[0]!.engine)).toEqual(['markup'])
-    expect(all.targetsFor(['html']).map((t) => t.format.id)).toEqual(['md', 'html', 'docx'])
+    expect(all.targetsFor(['html']).map((t) => t.format.id)).toEqual(['md', 'html', 'docx', 'pptx'])
     // A Word document reaches Markdown through a page, and says what to check on the way.
     expect(all.route('docx', 'md')!.edges.map((e) => `${e.from}>${e.to}`)).toEqual(['docx>html', 'html>md'])
     expect(all.route('md', 'docx')!.warnings.map((w) => w.id)).toContain('accessibility-check')

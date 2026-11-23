@@ -7,6 +7,48 @@ The paragraph that opens a version is its teaser: the home page shows its first 
 in the "What's new" banner, so keep it to two or three sentences on what a visitor will notice.
 A line beginning "Released" gives the date.
 
+## 0.21.0
+
+Released 23 November 2026.
+
+Omsett now reads PowerPoint presentations. Drop a PPTX and get a web page or Markdown, with
+each slide as a section under its own title. Bullets keep their levels, tables stay tables,
+and each picture keeps its description.
+
+### Added
+
+- **PPTX to HTML and to Markdown.** One heading for the presentation, then one for every slide,
+  in the order the slides are shown. A slide with no title is headed "Slide 4", so every
+  section can still be reached by its heading.
+- **Bullets at their levels**, bold and italics, links, tables with their header rows, and
+  pictures carried inside the page with the descriptions their authors gave them.
+- **What the audience was not shown is not carried across.** Hidden slides and speaker notes
+  are not read, nor is the author's name.
+- **Nothing is fetched and nothing is run.** A picture kept on another site is not loaded. A
+  link that is a script, or that starts a program when clicked during the show, keeps its
+  words and loses its address.
+- The caution shown on every document conversion applies here too: check headings, picture
+  descriptions and table headers before publishing.
+- 15 trap files: the "billion laughs" as a slide title, a slide of 300 MB of spaces, a link
+  that starts a program, a picture said to be a file elsewhere on the computer, shapes grouped
+  two hundred deep, and a presentation with every slide hidden.
+- No new dependency.
+
+### Changed
+
+- **The tooltip on a format is easier to see and to read.** It sits above the format, or below
+  where there is no room above, on a ground a step lighter than the page with a line round it
+  and a small pointer. It is narrower, so a long explanation is several short lines.
+
+### Known
+
+- **PPTX is read, not written.** Making slides from a page means deciding what goes on each
+  slide, which is design, not conversion.
+- Layout, animations, transitions, charts, SmartArt, and sound or video on a slide are not
+  carried. What is carried is the words, their structure, and the pictures.
+- Speaker notes are left out. A choice to include them is planned, for handouts.
+- The older PPT is recognised and not converted.
+
 ## 0.20.0
 
 Released 23 November 2026.

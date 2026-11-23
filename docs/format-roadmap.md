@@ -116,7 +116,8 @@ When a format ships, update its row here, in the same change.
 | Format | Home | Engine | Status |
 | --- | --- | --- | --- |
 | Markdown to PPTX | Browser | Pandoc | Planned |
-| PPTX to its text as Markdown | Browser | unzip | Planned |
+| PPTX to HTML and Markdown: a section to a slide, with titles, bullets, tables, links and pictures | Browser | `markup` (Omsett's own reader) | **Shipped** (0.21.0) |
+| Speaker notes, as a choice; charts and SmartArt as their text; PPSX, PPTM, ODP | Browser | the same | Planned |
 | PPTX, PPTM, PPSX, PPT, ODP, Keynote to PDF, PNG, JPEG, DOCX | Desktop | LibreOffice | Planned |
 
 ## HWP
@@ -293,7 +294,7 @@ with [audit.icjia.app](https://audit.icjia.app).
 ## Suggested order
 
 1. Images are largely done: 22 formats. Left: CUR, DDS, ICNS, FITS, APNG, PSB, camera RAW, DICOM, and writing ICO and JPEG 2000.
-2. Data and subtitles are done: seven data formats, nine subtitle formats. The side-by-side view for text formats is done too, and Markdown ↔ HTML. Fonts are done as well, vCard and iCalendar, and the first archives. XLSX and DOCX are done. Next: PPTX to Markdown and HTML. All three are ZIPs of XML, and Omsett reads both itself. Then the screenwriting formats, Fountain, Final Draft (FDX) and Drafter. Small JavaScript libraries, no large downloads.
+2. Data and subtitles are done: seven data formats, nine subtitle formats. The side-by-side view for text formats is done too, and Markdown ↔ HTML. Fonts are done as well, vCard and iCalendar, and the first archives. XLSX, DOCX and PPTX are done. Next: the screenwriting formats. All three are ZIPs of XML, and Omsett reads both itself. Then the screenwriting formats, Fountain, Final Draft (FDX) and Drafter. Small JavaScript libraries, no large downloads.
 3. Archives, then audio.
 4. Documents and e-books through Pandoc; then the PDF tools. A converted document must not score lower for accessibility than its original (see "Accessibility of converted documents").
 5. Video in the browser.

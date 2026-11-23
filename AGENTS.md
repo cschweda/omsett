@@ -143,7 +143,8 @@ build by `apps/web/scripts/write-headers.ts`.
   picture descriptions carried (`packages/engines/src/markup/docx-*.ts`). Every document pair
   carries the `accessibility-check` warning. A change that drops one of these is a regression.
 - **What a document's author deleted or hid is never carried across**: tracked deletions,
-  hidden text, comments, author names. There is a trap for each.
+  hidden text, comments, author names; and from a presentation, hidden slides and speaker
+  notes. There is a trap for each.
 - **A value written into a line-based format is escaped, always** (`escaped` in
   `packages/engines/src/data/cards.ts`). Anything written as a parameter or an unescaped value
   (a time zone, a repeat rule, a status) is held to a pattern first, and left out if it fails.
@@ -151,6 +152,8 @@ build by `apps/web/scripts/write-headers.ts`.
   `BEGIN:VCARD` a vCard. For text formats Omsett's own sniffing decides.
 - **File contents go on the page as text, never as markup**, and never more than
   `app/utils/text-preview.ts` allows. No `v-html` for anything that came out of a file.
+- **The tooltip is styled in `main.css` (`.tile-tip`)**, over the component library's own
+  classes, which is why those rules carry `!important`. Its colours are tokens.
 - **Tailwind owns some class names.** A scoped class called `contents` or `hidden` picks up the
   utility of that name; `contents` made an element vanish from layout.
 - **HTML is cleaned on the way in and on the way out** (`packages/engines/src/markup`), with

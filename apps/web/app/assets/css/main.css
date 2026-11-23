@@ -246,3 +246,33 @@ body {
     scroll-behavior: auto !important;
   }
 }
+
+/* The tooltip on a format: what it is, or why it is not offered. Set above the format, and
+   below where there is no room above; the component works out which. A ground a step away
+   from the page's and a rule around it, so that it reads as laid over the page; narrow, so
+   that a long explanation is several short lines and not one long one. Square, no shadow. */
+.tile-tip {
+  display: block !important;
+  width: max-content;
+  max-width: min(17rem, calc(100vw - 2rem));
+  height: auto !important;
+  padding: 0.5rem 0.75rem !important;
+  border: 1px solid var(--tip-rule);
+  border-radius: 0 !important;
+  background: var(--tip-bg) !important;
+  box-shadow: none !important;
+  color: var(--ink) !important;
+  --tw-ring-shadow: 0 0 #0000;
+}
+.tile-tip-text {
+  display: block;
+  overflow: visible !important;
+  font-size: var(--text-small);
+  line-height: 1.4;
+  text-overflow: clip !important;
+  white-space: normal !important;
+  text-wrap: pretty;
+}
+.tile-tip-arrow {
+  fill: var(--tip-rule) !important;
+}

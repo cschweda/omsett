@@ -8,6 +8,9 @@
   /* control outlines need 3:1 against the ground; hairlines do not */
   --rule-strong: #777773;
   --surface: #ebebe8;
+  /* A tooltip sits above the page, and has to read as something laid over it. */
+  --tip-bg: #ffffff;
+  --tip-rule: #777773;
   --accent: #3b6cff;
   --on-accent: #ffffff;
   /* The blue set as text. On the light ground the brand blue is a shade too pale to read at
@@ -55,6 +58,8 @@
   --rule: #2a2a28;
   --rule-strong: #6b6b67;
   --surface: #171716;
+  --tip-bg: #2b2b29;
+  --tip-rule: #8a8a86;
   --accent-text: #7d9dff;
   --signal: #ff6b57;
   --positive: #2fe38f;

@@ -11,26 +11,26 @@ import { Refusal } from '../util'
 // picture that is only a link to another site is left out, and text that was deleted with
 // changes tracked stays deleted.
 
-type Node = Record<string, unknown>
+export type Node = Record<string, unknown>
 
 const MAX_PART_BYTES = 64 * 1024 * 1024
 /** Pictures are carried inside the page. Past this much, the rest are left out. */
-const MAX_PICTURE_BYTES = 24 * 1024 * 1024
+export const MAX_PICTURE_BYTES = 24 * 1024 * 1024
 const MAX_DEPTH = 64
 
 export const notDocument = () => new Refusal('This file is not a valid DOCX document')
 
-const tagOf = (node: Node) => Object.keys(node).find((key) => key !== ':@') ?? ''
-const attrs = (node: Node) => (node[':@'] ?? {}) as Record<string, string>
-const kids = (node: Node): Node[] => {
+export const tagOf = (node: Node) => Object.keys(node).find((key) => key !== ':@') ?? ''
+export const attrs = (node: Node) => (node[':@'] ?? {}) as Record<string, string>
+export const kids = (node: Node): Node[] => {
   const inner = node[tagOf(node)]
   return Array.isArray(inner) ? (inner as Node[]) : []
 }
-const child = (node: Node, tag: string) => kids(node).find((kid) => tagOf(kid) === tag)
-const all = (node: Node, tag: string) => kids(node).filter((kid) => tagOf(kid) === tag)
-const value = (node: Node | undefined) => (node ? attrs(node)['@val'] : undefined)
+export const child = (node: Node, tag: string) => kids(node).find((kid) => tagOf(kid) === tag)
+export const all = (node: Node, tag: string) => kids(node).filter((kid) => tagOf(kid) === tag)
+export const value = (node: Node | undefined) => (node ? attrs(node)['@val'] : undefined)
 /** A setting such as <w:b/> is on unless it says otherwise. */
-const on = (node: Node | undefined) => node !== undefined && !['0', 'false', 'off', 'none'].includes(value(node) ?? '')
+export const on = (node: Node | undefined) => node !== undefined && !['0', 'false', 'off', 'none'].includes(value(node) ?? '')
 
 export const escapeHtml = (text: string) =>
   text.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;')
@@ -50,16 +50,27 @@ export interface ReadDocument {
   language: string | null
 }
 
-export async function readDocx(bytes: Uint8Array): Promise<ReadDocument> {
+/** The parts of an office file (a ZIP of XML), opened one at a time as they are asked for. */
+export interface OfficeFile {
+  parts: Map<string, Uint8Array>
+  /** The outermost tag of a part, or undefined if the part is missing or is not that. */
+  root(path: string, tag: string): Node | undefined
+}
+
+/**
+ * @param bytes   the file
+ * @param invalid the refusal for a file that is not one of these
+ * @param what    what to call it when it is too large: "document", "presentation"
+ */
+export async function openOffice(bytes: Uint8Array, invalid: () => Refusal, what: string): Promise<OfficeFile> {
+  const tooLarge = () => new Refusal(`This ${what} is too large to convert in a browser`)
   let entries: Entry[]
   try {
     entries = await readZip(bytes)
   } catch (error) {
-    if (error instanceof Refusal && /more than Omsett will handle/.test(error.message)) {
-      throw new Refusal('This document is too large to convert in a browser')
-    }
+    if (error instanceof Refusal && /more than Omsett will handle/.test(error.message)) throw tooLarge()
     if (error instanceof Refusal && /password/.test(error.message)) throw error
-    throw notDocument()
+    throw invalid()
   }
   const parts = new Map(entries.filter((entry) => !entry.directory).map((entry) => [entry.name.toLowerCase(), entry.data]))
   const { XMLParser } = await import('fast-xml-parser')
@@ -77,19 +88,34 @@ export async function readDocx(bytes: Uint8Array): Promise<ReadDocument> {
   const open = (path: string): Node[] => {
     const data = parts.get(path.toLowerCase())
     if (!data) return []
-    if (data.length > MAX_PART_BYTES) throw new Refusal('This document is too large to convert in a browser')
+    if (data.length > MAX_PART_BYTES) throw tooLarge()
     const source = new TextDecoder('utf-8').decode(data)
-    // A document's XML never declares a document type. One that does is defining shorthand of
-    // its own, which is how a small file is made to expand into a vast one.
-    if (/<!DOCTYPE/i.test(source.slice(0, 4096))) throw notDocument()
+    // An office file's XML never declares a document type. One that does is defining shorthand
+    // of its own, which is how a small file is made to expand into a vast one.
+    if (/<!DOCTYPE/i.test(source.slice(0, 4096))) throw invalid()
     try {
       return parser.parse(source) as Node[]
     } catch {
       // The parser has limits of its own (how deep tags may nest, for one) and says so by throwing.
-      throw notDocument()
+      throw invalid()
     }
   }
-  const root = (path: string, tag: string) => open(path).find((node) => tagOf(node) === tag)
+  return { parts, root: (path, tag) => open(path).find((node) => tagOf(node) === tag) }
+}
+
+/** A picture held inside the file, as an address that carries it; null if it is not one Omsett carries. */
+export function pictureAddress(parts: Map<string, Uint8Array>, path: string, budget: { left: number }): string | null {
+  const data = parts.get(path.toLowerCase())
+  const type = PICTURES[path.slice(path.lastIndexOf('.') + 1).toLowerCase()]
+  if (!data || !type || data.length > budget.left) return null
+  budget.left -= data.length
+  let binary = ''
+  for (let i = 0; i < data.length; i += 0x8000) binary += String.fromCodePoint(...data.subarray(i, i + 0x8000))
+  return `data:${type};base64,${btoa(binary)}`
+}
+
+export async function readDocx(bytes: Uint8Array): Promise<ReadDocument> {
+  const { parts, root } = await openOffice(bytes, notDocument, 'document')
 
   const document = root('word/document.xml', 'document')
   const body = document && child(document, 'body')
@@ -138,7 +164,7 @@ export async function readDocx(bytes: Uint8Array): Promise<ReadDocument> {
     if (levels) lists.set(attrs(num)['@numId'] ?? '', levels)
   }
 
-  let pictureBytes = 0
+  const budget = { left: MAX_PICTURE_BYTES }
   function picture(drawing: Node): string {
     // The description is on the drawing; the picture itself is named some way inside it.
     let alt = ''
@@ -155,13 +181,9 @@ export async function readDocx(bytes: Uint8Array): Promise<ReadDocument> {
     const link = embed ? links.get(embed) : undefined
     // A picture kept on another site would have to be fetched. It is not; its description stays.
     const path = link && !link.external && !link.target.includes('..') ? `word/${link.target.replace(/^\/?(?:word\/)?/, '')}` : null
-    const data = path ? parts.get(path.toLowerCase()) : undefined
-    const type = path ? PICTURES[path.slice(path.lastIndexOf('.') + 1).toLowerCase()] : undefined
-    if (!data || !type || pictureBytes + data.length > MAX_PICTURE_BYTES) return alt ? `[Picture: ${escapeHtml(alt)}]` : ''
-    pictureBytes += data.length
-    let binary = ''
-    for (let i = 0; i < data.length; i += 0x8000) binary += String.fromCodePoint(...data.subarray(i, i + 0x8000))
-    return `<img src="data:${type};base64,${btoa(binary)}" alt="${escapeHtml(alt)}">`
+    const address = path ? pictureAddress(parts, path, budget) : null
+    if (!address) return alt ? `[Picture: ${escapeHtml(alt)}]` : ''
+    return `<img src="${address}" alt="${escapeHtml(alt)}">`
   }
 
   /** The text of a paragraph, as pieces that each know what is around them. */

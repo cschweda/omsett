@@ -6,8 +6,8 @@ import type { Category } from './types'
 const KINDS: Category[][] = [
   ['image', 'vector'],
   ['data', 'spreadsheet'],
-  // A document is writing, and so are Markdown and a web page.
-  ['text', 'document'],
+  // A document is writing, and so are Markdown and a web page; a presentation is writing on slides.
+  ['text', 'document', 'presentation'],
 ]
 
 /** Whether a file in one category could ever become a format in the other. */

@@ -1,7 +1,8 @@
 import { markupInfo } from '../info'
 import type { ConvertInput, ConvertOutput, Engine } from '../types'
 import { outputName, Refusal, safeBaseName, throwIfAborted } from '../util'
-import { readDocx } from './docx-read'
+import { readDocx, type ReadDocument } from './docx-read'
+import { readPptx } from './pptx-read'
 import { writeDocx } from './docx-write'
 
 // Markdown and HTML, each to the other. Both are read into a tree of headings, paragraphs,
@@ -212,8 +213,8 @@ function onlyPictures() {
   }
 }
 
-async function docxToHtml(bytes: Uint8Array, name: string): Promise<string> {
-  const document = await readDocx(bytes)
+/** A Word document or a presentation, read to a page and cleaned like any other page. */
+async function officeToHtml(document: ReadDocument, name: string): Promise<string> {
   const [{ unified }, parse, sanitize, stringify] = await Promise.all([
     import('unified'),
     import('rehype-parse'),
@@ -234,7 +235,7 @@ async function docxToHtml(bytes: Uint8Array, name: string): Promise<string> {
     .use(stringify.default)
     .process(document.body)
   // One block to a line, so that the page can be read as well as opened.
-  const lines = String(body).replace(/(<\/(?:p|h[1-6]|ul|ol|li|table|thead|tbody|tr|blockquote)>|<(?:ul|ol|table|thead|tbody|tr)>)(?=<)/g, '$1\n')
+  const lines = String(body).replace(/(<\/(?:p|h[1-6]|ul|ol|li|table|thead|tbody|tr|blockquote|section)>|<(?:ul|ol|table|thead|tbody|tr|section)>)(?=<)/g, '$1\n')
   return page(lines, document.title ?? heading ?? safeBaseName(name), document.language ?? 'en')
 }
 
@@ -289,7 +290,8 @@ export function createMarkupEngine(): Engine {
           refuseDeepMarkdown(text)
           written = await markdownToHtml(text, input.name, languageTag(input.options.language))
         } else if (pair === 'html>md') written = await htmlToMarkdown(decode())
-        else if (pair === 'docx>html') written = await docxToHtml(bytes, input.name)
+        else if (pair === 'docx>html') written = await officeToHtml(await readDocx(bytes), input.name)
+        else if (pair === 'pptx>html') written = await officeToHtml(await readPptx(bytes), input.name)
         else if (pair === 'html>docx') written = await htmlToDocx(decode(), input.name)
         else throw new Error(`The markup engine does not convert ${pair}`)
       } catch (error) {
