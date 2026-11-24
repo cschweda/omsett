@@ -7,6 +7,41 @@ The paragraph that opens a version is its teaser: the home page shows its first 
 in the "What's new" banner, so keep it to two or three sentences on what a visitor will notice.
 A line beginning "Released" gives the date.
 
+## 0.48.0
+
+Released 24 November 2026.
+
+PDFs can now be written in Chinese, Japanese, Korean, Arabic, Hebrew, Hindi and Thai, as well
+as in Latin, Greek and Cyrillic. A document in one of those scripts was refused yesterday; now
+it is set in a typeface for that script, fetched a piece at a time.
+
+### Added
+
+- **Eight more typefaces for PDF**, all from Google's Noto family: Simplified Chinese,
+  Traditional Chinese, Japanese, Korean, Arabic, Hebrew, Devanagari (Hindi, Marathi, Nepali)
+  and Thai. Arabic and Hebrew are set right to left, with their letters joined as they should be.
+- **Only the pieces a document needs are fetched.** Each typeface comes cut into pieces by
+  the letters a piece draws, a hundred or so for Chinese. A page of Japanese fetches a few
+  hundred kilobytes, not the ten megabytes the whole face weighs. Every piece comes from
+  omsett.com, and is checked against the hash recorded when the site was built.
+- **The characters Chinese, Japanese and Korean share** are drawn the way of the language the
+  document says it is in.
+
+### Changed
+
+- A letter no typeface here draws (an emoji, a hieroglyph) is still left out of the PDF and
+  named in the result. A page is refused only when such letters are much of it.
+
+### Known
+
+- Scripts not yet covered: Bengali, Tamil and the other scripts of India beyond Devanagari,
+  Armenian, Georgian, Ethiopic, and emoji.
+- A bold word in these scripts is bold; an italic one is upright, as these typefaces have no
+  italic.
+- **Omsett's own PDF reader garbles Arabic and Hebrew** when reading a PDF back, though the
+  text in the PDF is right (another reader, poppler, gives it correctly). That is a fault in
+  the reader, not in the PDFs, and is still to be fixed.
+
 ## 0.47.0
 
 Released 24 November 2026.

@@ -114,7 +114,9 @@ When a format ships, update its row here, in the same change.
 | DOC (the older binary form, from Word 97 on) to DOCX, HTML and Markdown; read only | Browser | `markup` (Omsett's own reader, on the same container reader) | **Done** (0.46.0) |
 | PPT (the older binary form) to the newer formats; read only | Browser | Omsett's own reader, on the same container reader | Next |
 | **Writing PDF** from HTML, DOCX, DOC, Markdown and PPTX, tagged | Browser | `typst` (Typst, built to WebAssembly by typst.ts, 28 MB fetched on demand) | **Done** (0.47.0) |
-| PDF in scripts beyond Latin, Greek and Cyrillic: a typeface for each, fetched when a document needs it | Browser | the same, with more fonts | Next |
+| PDF in Chinese, Japanese, Korean, Arabic, Hebrew, Devanagari and Thai: a typeface for each, fetched a piece at a time | Browser | the same, with Noto faces from @fontsource | **Done** (0.48.0) |
+| PDF in the remaining scripts (Bengali, Tamil and others of India, Armenian, Georgian, Ethiopic) and emoji | Browser | the same | Planned |
+| Reading Arabic and Hebrew back out of a PDF in the right order | Browser | `pdf` | Planned |
 | Pictures to PDF; combining, splitting and rearranging PDFs | Browser | to be decided | Planned |
 | Workbooks from Excel 95 and earlier | Browser | — | Planned |
 | Numbers (read) | Browser | SheetJS | Planned |

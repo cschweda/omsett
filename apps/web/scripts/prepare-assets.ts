@@ -35,6 +35,33 @@ for (const name of await readdir(enginesDir)) {
   if (name !== 'README.md') await rm(join(enginesDir, name))
 }
 
+// The typefaces a PDF falls back on for other scripts, a piece at a time. The same faces as
+// `SCRIPTS` in packages/engines, which a test holds this to. For each: its own list of which
+// piece draws which letters, and a list of where each piece is and what its hash is. Neither
+// list is in the manifest the app imports, which would grow by a thousand entries; each is a
+// file of its own, fetched and checked when a document needs that script.
+const SCRIPT_FACES = ['sc', 'tc', 'jp', 'kr', 'arabic', 'hebrew', 'devanagari', 'thai']
+const DRAWN_ALREADY = new Set(['latin', 'latin-ext', 'cyrillic', 'cyrillic-ext', 'greek', 'greek-ext', 'vietnamese', 'math', 'symbols'])
+async function scriptFace(id: string) {
+  const pack = `@fontsource/noto-sans-${id}`
+  const listPath = fromEngines.resolve(`${pack}/unicode.json`)
+  const list = JSON.parse(await readFile(listPath, 'utf8')) as Record<string, string>
+  const pieces: Record<string, { url: string; sha256: string }> = {}
+  for (const key of Object.keys(list)) {
+    const name = key.replace(/^\[|\]$/g, '')
+    if (DRAWN_ALREADY.has(name)) continue
+    for (const weight of [400, 700]) {
+      const made = await hashed(fromEngines.resolve(`${pack}/files/noto-sans-${id}-${name}-${weight}-normal.woff`), `noto-sans-${id}-${name}-${weight}`, 'woff')
+      pieces[`${name}:${weight}`] = { url: made.url, sha256: made.sha256 }
+    }
+  }
+  const piecesPath = join(enginesDir, `noto-sans-${id}.pieces.tmp`)
+  await writeFile(piecesPath, JSON.stringify(pieces))
+  const made = { ranges: await hashed(listPath, `noto-sans-${id}.ranges`, 'json'), pieces: await hashed(piecesPath, `noto-sans-${id}.pieces`, 'json') }
+  await rm(piecesPath)
+  return made
+}
+
 const vipsLib = dirname(fromEngines.resolve('wasm-vips/vips.wasm'))
 // The weights of Inter that resvg draws text in. The same list as `resvgFonts` in packages/engines.
 const resvgFonts = ['inter-latin-400-normal.woff2', 'inter-latin-700-normal.woff2']
@@ -64,6 +91,7 @@ const manifest = {
   typst: {
     wasm: await hashed(fromEngines.resolve('@myriaddreamin/typst-ts-web-compiler/pkg/typst_ts_web_compiler_bg.wasm'), 'typst', 'wasm'),
     fonts: await Promise.all(typstFonts.map((file) => hashed(fromEngines.resolve(file), file.split('/').pop()!.replace('.woff', ''), 'woff'))),
+    scripts: Object.fromEntries(await Promise.all(SCRIPT_FACES.map(async (id) => [id, await scriptFace(id)]))) as Record<string, Awaited<ReturnType<typeof scriptFace>>>,
   },
   // LAME, which packs MP3. The decoder, mpg123, is carried inside its own script.
   mp3: {

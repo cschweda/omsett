@@ -20,15 +20,14 @@ export interface Hast {
 }
 
 export interface Written {
-  /** The program. */
-  source: string
+  /** The program, set in Omsett's own typeface and then, for what that cannot draw, in these others. */
+  program(families: string[]): string
   /** Pictures the program names, by the name it gives them. */
   files: Map<string, Uint8Array>
-  /** Letters the typeface has no drawing for, in the order met: a few, to name in the result. */
-  missing: string[]
-  /** How many letters the page has, and how many of them the typeface cannot draw. */
+  /** How many letters the page has. */
   letters: number
-  undrawn: number
+  /** The letters Omsett's own typeface has no drawing for, each with how often it is used. */
+  outside: Map<number, number>
   /** Pictures that live on a website, and so are not in the PDF. */
   elsewhere: number
 }
@@ -61,19 +60,18 @@ const DRAWN = /[\u0020-\u052F\u1E00-\u1FFF\u2000-\u206F\u20A0-\u20BF\u2100-\u212
 
 export function writeTypst(tree: Hast, title: string, language: string): Written {
   const files = new Map<string, Uint8Array>()
-  const missing: string[] = []
+  const outside = new Map<number, number>()
   let elsewhere = 0
   let pictureBytes = 0
 
   let letters = 0
-  let undrawn = 0
   const text = (value: string) => {
     for (const letter of value) {
       if (letter.trim() === '') continue
       letters++
       if (DRAWN.test(letter)) continue
-      undrawn++
-      if (missing.length < 12 && !missing.includes(letter)) missing.push(letter)
+      const code = letter.codePointAt(0)!
+      outside.set(code, (outside.get(code) ?? 0) + 1)
     }
     return quoted(value)
   }
@@ -233,9 +231,9 @@ export function writeTypst(tree: Hast, title: string, language: string): Written
   // "en-US" is a language and a region; Typst takes them apart.
   const [tongue, region] = language.toLowerCase().split('-')
   const letter = /^(?:us|ca|mx|ph|co|cl|ve|gt|cr|pa|do)$/.test(region ?? '')
-  const source = [
+  const program = (families: string[]) => [
     `#set document(title: ${quoted(title)}, author: (), date: none)`,
-    `#set text(lang: ${quoted(/^[a-z]{2,3}$/.test(tongue ?? '') ? tongue! : 'en')}${/^[a-z]{2}$/.test(region ?? '') ? `, region: ${quoted(region!.toUpperCase())}` : ''}, font: "Inter", size: 11pt)`,
+    `#set text(lang: ${quoted(/^[a-z]{2,3}$/.test(tongue ?? '') ? tongue! : 'en')}${/^[a-z]{2}$/.test(region ?? '') ? `, region: ${quoted(region!.toUpperCase())}` : ''}, font: (${['Inter', ...families].map(quoted).join(', ')},), size: 11pt)`,
     `#set page(paper: ${letter ? '"us-letter"' : '"a4"'}, margin: 2.5cm, numbering: "1")`,
     '#set par(leading: 0.7em, spacing: 1.1em)',
     '#set heading(numbering: none)',
@@ -250,5 +248,5 @@ export function writeTypst(tree: Hast, title: string, language: string): Written
     '#set quote(block: true)',
     ...body.map((block) => `#${block}`),
   ].join('\n')
-  return { source, files, missing, elsewhere, letters, undrawn }
+  return { program, files, elsewhere, letters, outside }
 }

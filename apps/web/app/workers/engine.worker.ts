@@ -117,6 +117,9 @@ async function loadMagick() {
 }
 
 // Threads need SharedArrayBuffer, which needs cross-origin isolation (and so HTTPS).
+const scriptFaces = assets.typst.scripts as Record<string, { ranges: { url: string; sha256: string }; pieces: { url: string; sha256: string } }>
+const pieceLists: Record<string, Promise<Record<string, { url: string; sha256: string }>>> = {}
+
 const threadsAvailable = async () => self.crossOriginIsolated === true && typeof SharedArrayBuffer !== 'undefined'
 
 const engines: Record<string, Engine> = Object.fromEntries(
@@ -142,6 +145,14 @@ const engines: Record<string, Engine> = Object.fromEntries(
     createTypstEngine({
       wasm: () => verified(assets.typst.wasm),
       fonts: () => Promise.all(assets.typst.fonts.map(async (font) => new Uint8Array(await verified(font)))),
+      // Another script's typeface: its list of pieces, and a piece, each checked as it arrives.
+      pieces: async (script) => JSON.parse(new TextDecoder().decode(await verified(scriptFaces[script]!.ranges))) as Record<string, string>,
+      async piece(script, name, weight) {
+        const where = (pieceLists[script] ??= verified(scriptFaces[script]!.pieces).then((bytes) => JSON.parse(new TextDecoder().decode(bytes)) as Record<string, { url: string; sha256: string }>))
+        const found = (await where)[`${name}:${weight}`]
+        if (!found) throw new Error('No such piece of the typeface')
+        return new Uint8Array(await verified(found))
+      },
     }),
     createAudioEngine(),
     // MP3: mpg123 unpacks and LAME packs. LAME is started from its verified binary; its small

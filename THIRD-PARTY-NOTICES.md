@@ -199,7 +199,10 @@ from the packages `@myriaddreamin/typst.ts` and `@myriaddreamin/typst-ts-web-com
 not changed. It is fetched only when a PDF is asked for, and is given no way to read a file or
 reach a network: only the program Omsett writes for it, the pictures that program names, and
 the typeface. The PDFs are set in Inter (SIL Open Font License 1.1, via `@fontsource/inter`),
-whose files are embedded in each PDF in part, as the licence allows.
+whose files are embedded in each PDF in part, as the licence allows. For other scripts the
+PDFs are set in Noto Sans SC, TC, JP and KR, Noto Sans Arabic, Noto Sans Hebrew, Noto Sans
+Devanagari and Noto Sans Thai (all SIL Open Font License 1.1, via the `@fontsource/noto-sans-*`
+packages), fetched a piece at a time and embedded in part in the same way.
 
 ### font-woff2
 
