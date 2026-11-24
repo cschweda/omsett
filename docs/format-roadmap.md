@@ -38,7 +38,7 @@ When a format ships, update its row here, in the same change.
 | SVG (to a raster image) | yes | no | Browser | resvg (WASM), the `resvg` engine | Done. Drawn to PNG, then on to any other format. Text is drawn in Inter (Latin only); linked pictures are left out; no script runs. libvips's own SVG module was tried first and dropped: it has no fonts, so all text vanished |
 | SVGZ | yes | no | Browser | gunzip with a limit, then resvg | Done |
 | BMP, QOI, TGA, Netpbm (PPM, PGM, PBM, PAM) | yes | yes | Browser | ImageMagick (WASM), the `magick` engine | Done |
-| ICO | yes | no | Browser | ImageMagick (WASM) | Done (read, the largest size in the file). Writing waits for a "favicon" preset that resizes |
+| ICO | yes | yes | Browser | ImageMagick (WASM) | Done. Reads the largest size in the file; writes 16, 32, 48 and 256, square, never larger than the source |
 | PCX, SGI, Sun Raster | yes | no | Browser | ImageMagick (WASM) | Done (read). No demand for writing them |
 | CUR, DDS | yes | no | Browser | ImageMagick (WASM) | **Reading done** (0.34.0): the largest picture in the file. Writing is planned |
 | ICNS | yes | no | Browser | Omsett's own reader | **Reading done** (0.35.0): the largest picture, PNG or the old packing. JPEG 2000 inside an icon is not read yet. Writing is planned |
@@ -296,7 +296,7 @@ with [audit.icjia.app](https://audit.icjia.app).
 
 ## Suggested order
 
-1. Images are largely done: 29 formats. Left: camera RAW, DICOM, carrying animation across, and writing ICO, ICNS, CUR, DDS and JPEG 2000.
+1. Images are largely done: 29 formats. Left: camera RAW, DICOM, carrying animation across, and writing ICNS, CUR, DDS and JPEG 2000.
 2. Data and subtitles are done: seven data formats, nine subtitle formats. The side-by-side view for text formats is done too, and Markdown ↔ HTML. Fonts are done as well, vCard and iCalendar, and the first archives. XLSX, DOCX, PPTX, the screenwriting formats and reading PDF are done. Details of a file before converting are done too. Next: the remaining image formats; then audio. All three are ZIPs of XML, and Omsett reads both itself. Then the screenwriting formats, Fountain, Final Draft (FDX) and Drafter. Small JavaScript libraries, no large downloads.
 3. Archives, then audio.
 4. Documents and e-books through Pandoc; then the PDF tools. A converted document must not score lower for accessibility than its original (see "Accessibility of converted documents").

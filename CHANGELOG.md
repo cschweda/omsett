@@ -7,6 +7,33 @@ The paragraph that opens a version is its teaser: the home page shows its first 
 in the "What's new" banner, so keep it to two or three sentences on what a visitor will notice.
 A line beginning "Released" gives the date.
 
+## 0.36.0
+
+Released 24 November 2026.
+
+Any picture can now be made into an icon (ICO), the kind a website shows in a browser tab.
+The icon is written at 16, 32, 48 and 256 pixels, and the result says which sizes it holds.
+
+### Added
+
+- **Writing ICO.** A picture is made square, with clear margins where it was not, and held at
+  256 pixels and at 48, 32 and 16. It is never made larger than it was: a picture of 100
+  pixels gives an icon of 100, 48, 32 and 16. The result card lists the sizes and says when
+  margins were added.
+- Tests of the writer against pictures that are large, small, smaller than any icon size, not
+  square, and a thousand times wider than tall, reading the margins back to see that they are
+  clear.
+
+### Changed
+
+- The tests that hold every conversion to the size of the original now take the size from the
+  registry, which knows an icon is the one output written at another.
+
+### Known
+
+- The sizes are fixed. Choosing them, and writing Mac icons, cursors, DDS and JPEG 2000, are
+  still to come.
+
 ## 0.35.0
 
 Released 24 November 2026.

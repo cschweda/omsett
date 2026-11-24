@@ -56,6 +56,41 @@ export function dimensionProblem(to: Format, width: number, height: number): str
   return `Too large for ${to.name}, which holds ${to.maxDimension} pixels a side at most`
 }
 
+/** The smallest size an icon is written at from a larger picture, and the largest an icon holds. */
+const ICON_SIDES = { least: 16, most: 256 }
+
+/**
+ * The sizes an icon is to be written at, where a conversion's options ask for an icon: largest
+ * first. Null for every conversion that does not.
+ */
+export function iconSizes(options: Record<string, unknown>): number[] | null {
+  const sizes = options.iconSizes
+  if (!Array.isArray(sizes)) return null
+  const whole = sizes.filter((size): size is number => Number.isInteger(size) && size >= ICON_SIDES.least && size <= ICON_SIDES.most)
+  return whole.length ? [...new Set(whole)].sort((a, b) => b - a) : null
+}
+
+/**
+ * The sizes one picture is held at as an icon: its own longest side, or the largest size asked
+ * for if that is smaller, and each size asked for below that. A picture is never made larger,
+ * and one too small for the smallest size is kept as it is.
+ */
+export function iconSidesFor(sizes: number[], width: number, height: number): number[] {
+  const side = Math.min(Math.max(width, height), sizes[0]!)
+  return side < ICON_SIDES.least ? [side] : [side, ...sizes.filter((size) => size < side)]
+}
+
+/**
+ * The size a picture comes out at. Every conversion keeps the size it was given but one that
+ * makes an icon, which is square and no larger than an icon can be.
+ */
+export function writtenSize(options: Record<string, unknown>, size: { width: number; height: number } | null): { width: number; height: number } | null {
+  const sizes = iconSizes(options)
+  if (!size || !sizes) return size
+  const side = iconSidesFor(sizes, size.width, size.height)[0]!
+  return { width: side, height: side }
+}
+
 /** Every engine id named by a capability. */
 export function engineIds(reg: Registry): string[] {
   return [...new Set(reg.capabilities.map((c) => c.engine))]

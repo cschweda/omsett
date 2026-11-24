@@ -3,7 +3,7 @@
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { detect } from '@omsett/detect'
-import { deriveEdges, formatById, registry } from '@omsett/registry'
+import { deriveEdges, formatById, registry, writtenSize } from '@omsett/registry'
 import { expect, test } from '@playwright/test'
 import { describeDownload, open } from './helpers'
 
@@ -111,8 +111,9 @@ for (const edge of deriveEdges(registry).edges) {
 
     const output = await describeDownload(page, () => link.click())
     expect(output.found.kind === 'known' && output.found.format.id, 'the output is the format asked for').toBe(to.id)
+    // An icon is the one thing written at another size, and the registry says which.
     expect(output.found.kind === 'known' && output.found.dimensions, 'at the size of the original').toEqual(
-      source.kind === 'known' ? source.dimensions : null,
+      writtenSize(edge.candidates[0]!.defaultOptions, source.kind === 'known' ? source.dimensions : null),
     )
     expect(output.name).toMatch(new RegExp(`\\.${to.extensions[0]}$`))
     // Only an engine the registry names for this pair may have done it.
@@ -136,4 +137,23 @@ test('a HEIC photograph becomes a JPEG in two steps: decoded to PNG, then encode
   expect(output.found).toMatchObject({ kind: 'known', dimensions: { width: 320, height: 200 } })
   expect(output.found.kind === 'known' && output.found.format.id).toBe('jpeg')
   expect(output.name).toBe('sample.jpg')
+})
+
+test('a photograph becomes an icon in two steps, square, and the result says what sizes it holds', async ({ page }) => {
+  await open(page)
+  await page.locator('#file-input').setInputFiles(path('jpeg'))
+  await page.locator('[role="radio"][data-format="ico"]').click()
+  await page.getByTestId('convert').click()
+  const link = page.getByTestId('download')
+  await expect(link).toBeVisible({ timeout: 30_000 })
+  await expect(page.locator('.result-card')).toContainText('This icon holds the picture at')
+  const output = await describeDownload(page, () => link.click())
+  expect(output.found.kind === 'known' && output.found.format.id).toBe('ico')
+  // The largest picture in it is square, and no larger than the photograph was.
+  const source = await detect(new Blob([readFileSync(path('jpeg'))]), registry.formats)
+  const longest = source.kind === 'known' && source.dimensions ? Math.max(source.dimensions.width, source.dimensions.height) : 0
+  const side = Math.min(256, longest)
+  expect(output.found).toMatchObject({ dimensions: { width: side, height: side } })
+  expect(output.bytes.readUInt16LE(4), 'more than one size').toBeGreaterThan(1)
+  expect(output.name).toBe('sample.ico')
 })
