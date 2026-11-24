@@ -168,7 +168,9 @@ build by `apps/web/scripts/write-headers.ts`.
   list of which stretches of the file are the text, the numbered pages that say how each run is
   set, the count of characters. Text is taken in the order of the list, never the order of the
   file. What is struck out (`sprmCFRMarkDel`) or hidden (`sprmCFVanish`) is dropped as it is
-  read, and so is everything between a field's opening mark and its separator.
+  read, and so is everything between a field's opening mark and its separator. A reader that
+  writes HTML writes tags from a fixed list and nothing else: words from a file (an address, a
+  name) are escaped into text or an attribute, and never join the names of tags.
 - **The two workbook readers give the same shape and are held to the same answer.** XLS is
   opened into the `Opened` that XLSX is, so sheets, limits, dates and the column names are one
   piece of code. `xls/sample.xls` holds what `xlsx/sample.xlsx` holds; a change to either

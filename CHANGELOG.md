@@ -26,7 +26,11 @@ struck out or hid does not.
   Macros are never run or carried over.
 - Read by Omsett's own code, through the same container reader as old Excel workbooks. A
   document saved quickly, with its text stored out of order, is put back in order.
-- 17 trap files for it (a trap file is one made on purpose to be broken, hostile or
+- Only three tags are ever written for the letters of a DOC: bold, italic and a link, and a
+  link only for a web or mail address. A link's address is the file's own words and is never
+  treated as the name of a tag; a fault of that kind was found by review before release, and
+  has a test and a trap.
+- 18 trap files for it (a trap file is one made on purpose to be broken, hostile or
   dishonest): text said to start two gigabytes in, two billion characters, an instruction that
   never ends, a link whose address is code, a macro set to run on opening.
 - Two samples: one written by a script that says exactly what each paragraph is, and one

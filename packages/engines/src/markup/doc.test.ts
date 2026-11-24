@@ -52,6 +52,17 @@ describe('old Word documents (DOC)', () => {
     expect(body).not.toMatch(/not final|do not publish|HYPERLINK/)
   })
 
+  it('writes three tags and no others, whatever a link\'s address says', async () => {
+    // A link whose address is code is words and no link. One whose address has spaces and
+    // tags in it was once cut at the spaces, and each piece written as a tag of its own.
+    const code = readDoc(await fixture('_traps/link-that-is-code.doc')).body
+    expect(code).toBe('<p>Please read the report today.</p>')
+    const tags = readDoc(await fixture('_traps/link-with-tags-in-its-address.doc')).body
+    expect(tags).toBe('<p>See <a href="https://example.com/a b script&gt;alert(1)&lt;/script img src=x onerror=alert(1)">the page</a>.</p>')
+    expect(tags.match(/<[a-z][^>]*>/gi)).toEqual(['<p>', '<a href="https://example.com/a b script&gt;alert(1)&lt;/script img src=x onerror=alert(1)">'])
+    expect(readDoc(await fixture('_traps/code.doc')).body.match(/<\/?([a-z0-9]+)/gi)!.every((tag) => /^<\/?(?:h1|p|a|strong|em|table|thead|tbody|tr|td|th)$/i.test(tag))).toBe(true)
+  })
+
   it('reads a document written by another program', async () => {
     const { body } = readDoc(await fixture('doc/from-macos.doc'))
     expect(body).toContain('Heading one')

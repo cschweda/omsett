@@ -4358,6 +4358,9 @@ trap("what-the-author-hid.doc", W.document([W.para("Minutes of the meeting.", W.
 trap("link-that-is-code.doc", W.document([W.para("Please ", W.link("read the report", "javascript:" + MARK), " today.")]),
      "A link whose address is a line of code. The words of the link are kept; the address is not.",
      "doc", node="succeeds", group=G, absent="javascript:")
+trap("link-with-tags-in-its-address.doc", W.document([W.para("See ", W.link("the page", "https://example.com/a b script>alert(1)</script img src=x onerror=alert(1)"), ".")]),
+     "A link whose address has spaces in it, and between them the names of tags. A reader that kept the address among the names of the tags it was writing, and cut that list at its spaces, would write each piece as a tag of its own.",
+     "doc", node="succeeds", group=G, absent="<script")
 trap("macro-in-an-old-document.doc", W.document(PLAIN, extra=[("_VBA_PROJECT", b"Sub AutoOpen(): Shell \"" + SHELL.encode() + b"\": End Sub" + b"\0" * 64)]),
      "An old Word document with a macro set to run when it is opened, which is how such documents were used to attack people for twenty years. The macro is neither run nor carried anywhere.",
      "doc", node="succeeds", group=G, absent="AutoOpen")

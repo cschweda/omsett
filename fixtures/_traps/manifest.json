@@ -6768,6 +6768,18 @@
     "absent": "javascript:"
   },
   {
+    "file": "link-with-tags-in-its-address.doc",
+    "group": "documents",
+    "why": "A link whose address has spaces in it, and between them the names of tags. A reader that kept the address among the names of the tags it was writing, and cut that list at its spaces, would write each piece as a tag of its own.",
+    "detect": "doc",
+    "mismatch": false,
+    "guard": "ok",
+    "node": "succeeds",
+    "browser": "succeeds",
+    "note": null,
+    "absent": "<script"
+  },
+  {
     "file": "macro-in-an-old-document.doc",
     "group": "documents",
     "why": "An old Word document with a macro set to run when it is opened, which is how such documents were used to attack people for twenty years. The macro is neither run nor carried anywhere.",

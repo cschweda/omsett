@@ -250,7 +250,9 @@ export function readDoc(bytes: Uint8Array): ReadDocument {
   const blocks: Block[] = []
   let written = 0
   let line = ''
+  /** What is open around the letters being written: bold, italic, and a link. Only these three tags are ever written. */
   let marks = ''
+  let linked: string | undefined
   /** Cells of the row being read, and the paragraphs of the cell being read. */
   let cells: string[] = []
   let cell: string[] = []
@@ -258,8 +260,11 @@ export function readDoc(bytes: Uint8Array): ReadDocument {
   /** Fields: an instruction to Word, and after it what the instruction last gave. Only that is text. */
   const fields: Array<{ code: string; result: boolean; link?: string }> = []
   const close = () => {
-    if (marks) line += marks.split(' ').reverse().map((mark) => `</${mark.startsWith('a:') ? 'a' : mark}>`).join('')
+    if (marks.includes('em')) line += '</em>'
+    if (marks.includes('strong')) line += '</strong>'
+    if (linked !== undefined) line += '</a>'
     marks = ''
+    linked = undefined
   }
   const flushTable = () => {
     if (rows.length) blocks.push({ kind: 'table', rows })
@@ -321,9 +326,11 @@ export function readDoc(bytes: Uint8Array): ReadDocument {
     }
     const set = find(letters, places[cp]!)
     if (set?.gone) continue
-    let wanted = [set?.bold ? 'strong' : '', set?.italic ? 'em' : ''].filter(Boolean).join(' ')
-    const link = fields.findLast((open) => open.link)?.link
-    if (link) wanted = [`a:${link}`, wanted].filter(Boolean).join(' ')
+    const wanted = `${set?.bold ? 'strong' : ''}${set?.italic ? ' em' : ''}`
+    // An address is the file's own words, and is kept apart from the names of tags. Only an
+    // address a browser would fetch or write to is made a link; any other is left as its words.
+    const address = fields.findLast((open) => open.link)?.link?.trim()
+    const link = address !== undefined && /^(?:https?:|mailto:)/i.test(address) ? address : undefined
     let out: string
     if (code === 0x0B) out = '<br>'
     else if (code === 0x09) out = ' '
@@ -332,10 +339,13 @@ export function readDoc(bytes: Uint8Array): ReadDocument {
     // A picture, a drawing, the number of a note, a hyphen to use only at a line's end: none is a letter.
     else if (code < 0x20 || code === 0x1F) continue
     else out = escapeHtml(String.fromCharCode(code))
-    if (wanted !== marks) {
+    if (wanted !== marks || link !== linked) {
       close()
-      line += wanted ? wanted.split(' ').map((mark) => (mark.startsWith('a:') ? `<a href="${escapeHtml(mark.slice(2))}">` : `<${mark}>`)).join('') : ''
+      if (link !== undefined) line += `<a href="${escapeHtml(link)}">`
+      if (wanted.includes('strong')) line += '<strong>'
+      if (wanted.includes('em')) line += '<em>'
       marks = wanted
+      linked = link
     }
     line += out
     written += out.length
