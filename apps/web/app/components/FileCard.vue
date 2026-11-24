@@ -71,6 +71,10 @@ const FATE = { removed: 'removed when converted', kept: 'kept' }
 // Checking the file's accessibility, where this copy of Omsett is set up for it. It sends the
 // file to a server, so nothing happens until the person has read where it goes and said to.
 const check = useFileCheck(() => props.entry.file, () => known.value?.format.category)
+// From a score, the next thing to do is to choose what the file becomes: the formats, just below.
+function toFormats() {
+  document.getElementById('pick-heading')?.scrollIntoView({ block: 'start', behavior: 'auto' })
+}
 
 // Only a picture has a preview. Anything else gets no empty square where one would be.
 const pictured = computed(() => known.value !== null && ['image', 'vector'].includes(known.value.format.category))
@@ -143,7 +147,7 @@ watch(
         Nothing more is recorded in this file, or nothing Omsett reads.
       </p>
     </div>
-    <CheckPanel :check="check" which="This is the file as you added it, before any conversion." />
+    <CheckPanel :check="check" which="This is the file as you added it, before any conversion." onward @onward="toFormats" />
     <div v-if="entry.status !== 'ready'" class="progress">
       <div
         class="bar"

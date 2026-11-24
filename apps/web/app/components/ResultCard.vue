@@ -70,15 +70,19 @@ const delta = computed(() => formatDelta(props.result.inputBytes, props.result.b
     <a class="button solid" :href="url || undefined" :download="result.name" data-testid="download">
       Download<span class="sr-only"> {{ result.name }}</span>
     </a>
+    <!-- A button, not a link in passing: after converting a document, whether it is still accessible is the next question. -->
+    <p v-if="check.offered && check.stage === 'closed'" class="check-hint" data-testid="result-check-hint">
+      {{ check.result ? 'This file has been checked.' : 'To see that nothing a screen reader relies on was lost, check the converted file.' }}
+    </p>
     <button
       v-if="check.offered"
       type="button"
-      class="text-button check-toggle"
+      class="button check-toggle"
       :aria-expanded="check.stage !== 'closed'"
       data-testid="result-check-toggle"
       @click="check.toggle"
     >
-      Check accessibility<span class="sr-only"> of {{ result.name }}</span>
+      {{ check.stage !== 'closed' ? 'Close the accessibility check' : check.result ? 'Show the accessibility score' : 'Check accessibility' }}<span class="sr-only"> of {{ result.name }}</span>
     </button>
     <CheckPanel :check="check" which="This is the converted file." />
     <!-- What converting found out about the file, which the person could not have known before. -->
@@ -113,6 +117,13 @@ const delta = computed(() => formatDelta(props.result.inputBytes, props.result.b
   padding: 0.875rem 0 1.5rem;
   border-top: 1px solid var(--rule);
   list-style: none;
+}
+.check-hint {
+  grid-column: 1 / -1;
+  margin: 0.75rem 0 0;
+  max-width: 60ch;
+  font-size: var(--text-small);
+  color: var(--muted);
 }
 /* Under the name, at the left, where the eye is after reading what was made. */
 .check-toggle {

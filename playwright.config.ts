@@ -16,6 +16,13 @@ export default defineConfig({
     // Tests ask for reduced motion, so nothing moves by itself while they measure and click.
     // The one test of the comparison's opening movement turns it back on.
     contextOptions: { reducedMotion: 'reduce' },
+    // The tests ask for plain names ("sample.yaml"), as a person can in Settings, so that what
+    // they say about a file's name is about the conversion. The default, "-converted" after
+    // the name, is tested in e2e/settings.spec.ts with nothing chosen.
+    storageState: {
+      cookies: [],
+      origins: [{ origin: new URL(remote ?? `http://localhost:${port}`).origin, localStorage: [{ name: 'omsett:file-names', value: '{"prefix":"","suffix":""}' }] }],
+    },
   },
   webServer: remote
     ? undefined

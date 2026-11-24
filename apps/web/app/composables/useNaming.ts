@@ -1,8 +1,8 @@
-import { NAMING_SETTING, NO_NAMING, readNaming, type Naming } from '~/utils/naming'
+import { DEFAULT_NAMING, NAMING_SETTING, readNaming, type Naming } from '~/utils/naming'
 
 /** The words a person has asked to have put before and after the names of converted files. */
 export function useNaming() {
-  const naming = useState<Naming>('file-naming', () => ({ ...NO_NAMING }))
+  const naming = useState<Naming>('file-naming', () => ({ ...DEFAULT_NAMING }))
   const read = useState('file-naming-read', () => false)
   if (import.meta.client && !read.value) {
     read.value = true
@@ -16,7 +16,8 @@ export function useNaming() {
   function set(next: Naming) {
     naming.value = readNaming(JSON.stringify(next))
     try {
-      if (naming.value.prefix === '' && naming.value.suffix === '') localStorage.removeItem(NAMING_SETTING)
+      // The default is kept by keeping nothing; anything else, no words at all included, is kept as it is.
+      if (naming.value.prefix === DEFAULT_NAMING.prefix && naming.value.suffix === DEFAULT_NAMING.suffix) localStorage.removeItem(NAMING_SETTING)
       else localStorage.setItem(NAMING_SETTING, JSON.stringify(naming.value))
     } catch {
       // Without storage the choice lasts as long as the page does.

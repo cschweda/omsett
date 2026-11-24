@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Target } from '@omsett/registry'
+import type { Format, Target } from '@omsett/registry'
 import { categoryLabels } from '~/utils/registry'
 import { formatBytes } from '~/utils/format-bytes'
 
@@ -55,12 +55,12 @@ const filterable = computed(() => others.value.length + unavailable.value.length
 
 // What Omsett handles at all, shown before a file is dropped, by category.
 const supported = computed(() => {
-  const byCategory = new Map<string, string[]>()
+  const byCategory = new Map<string, Format[]>()
   for (const { format } of props.targets) {
     const label = categoryLabels[format.category]
-    byCategory.set(label, [...(byCategory.get(label) ?? []), format.name])
+    byCategory.set(label, [...(byCategory.get(label) ?? []), format])
   }
-  return [...byCategory].map(([label, names]) => ({ label, names }))
+  return [...byCategory].map(([label, formats]) => ({ label, formats }))
 })
 
 // Roving tabindex: the group is one Tab stop. It rests on the selected target, else the first.
@@ -126,7 +126,8 @@ function onKeydown(event: KeyboardEvent) {
       <dl class="supported">
         <div v-for="kind in supported" :key="kind.label">
           <dt>{{ kind.label }}</dt>
-          <dd>{{ kind.names.join(', ') }}</dd>
+          <!-- Each name says what it is when pointed at, in the words its tile uses. Kept on one line: the commas are text. -->
+          <dd><template v-for="(format, at) in kind.formats" :key="format.id"><UTooltip :text="format.explain" :delay-duration="250" :content="{ side: 'top', sideOffset: 6, collisionPadding: 12 }" arrow :ui="{ content: 'tile-tip', text: 'tile-tip-text', arrow: 'tile-tip-arrow' }"><span class="known" :data-format="format.id" data-testid="known-format">{{ format.name }}</span></UTooltip><template v-if="at < kind.formats.length - 1">, </template></template></dd>
         </div>
       </dl>
     </div>
@@ -215,6 +216,15 @@ function onKeydown(event: KeyboardEvent) {
 }
 .supported dd {
   margin: 0;
+}
+/* A dotted rule under a name: there is more to read by pointing at it. */
+.known {
+  cursor: help;
+  text-decoration: underline dotted var(--rule-strong);
+  text-underline-offset: 0.2em;
+}
+.known:hover {
+  text-decoration-color: var(--accent);
 }
 /* Each tile is three columns of the page grid. */
 .grid {

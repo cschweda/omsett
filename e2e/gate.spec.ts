@@ -255,3 +255,26 @@ test('a file Omsett recognises and does not convert is named, with no empty pict
   await expect(page.locator('.file-card .thumb')).toHaveCount(0)
   await expect(page.getByTestId('convert')).toBeDisabled()
 })
+
+test('before a file is added, each format named says what it is when pointed at', async ({ page }) => {
+  await open(page)
+  const names = page.getByTestId('known-format')
+  await expect(names).toHaveCount(registry.formats.length)
+  for (const id of ['drafter', 'webp', 'epub']) {
+    const format = registry.formats.find((entry) => entry.id === id)!
+    const name = page.locator(`[data-testid="known-format"][data-format="${id}"]`)
+    // Brought into view first: a page that scrolls under the pointer closes a tip, as it should.
+    await name.scrollIntoViewIfNeeded()
+    await expect(async () => {
+      await page.mouse.move(5, 5)
+      await name.hover()
+      await expect(page.locator('.tile-tip')).toContainText(format.explain, { timeout: 1500 })
+    }).toPass({ timeout: 10_000 })
+    // Pointed somewhere else, it goes.
+    await page.getByRole('heading', { level: 1 }).hover()
+    await page.mouse.move(5, 5, { steps: 4 })
+    await expect(page.locator('.tile-tip')).toHaveCount(0)
+  }
+  // Drafter says where it comes from and what it goes to and from.
+  expect(registry.formats.find((entry) => entry.id === 'drafter')!.explain).toMatch(/drafter\.dev.*Fountain.*Final Draft/)
+})

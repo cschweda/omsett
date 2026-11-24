@@ -16,6 +16,9 @@ export function useFileCheck(file: () => File, category: () => Category | undefi
   })
 
   const stage = ref<'closed' | 'asking' | 'sending' | 'done' | 'failed'>('closed')
+  /** While a check is going: which of its two steps it is on, and when it began. */
+  const step = ref<'checking' | 'saving'>('checking')
+  const since = ref(0)
   const result = ref<CheckResult | null>(null)
   const error = ref('')
 
@@ -31,8 +34,10 @@ export function useFileCheck(file: () => File, category: () => Category | undefi
   /** The person has read where the file goes and has said to send it. */
   async function send() {
     stage.value = 'sending'
+    step.value = 'checking'
+    since.value = Date.now()
     try {
-      result.value = await checker.check(file())
+      result.value = await checker.check(file(), (now) => (step.value = now))
       stage.value = 'done'
     } catch (reason) {
       error.value = reason instanceof CheckFailed ? reason.message : 'The checker did not answer. The file was not checked.'
@@ -48,6 +53,8 @@ export function useFileCheck(file: () => File, category: () => Category | undefi
   return reactive({
     offered,
     stage,
+    step,
+    since,
     result,
     error,
     host: computed(() => site.value?.host ?? ''),

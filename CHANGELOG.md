@@ -7,6 +7,45 @@ The paragraph that opens a version is its teaser: the home page shows its first 
 in the "What's new" banner, so keep it to two or three sentences on what a visitor will notice.
 A line beginning "Released" gives the date.
 
+## 0.52.0
+
+Released 24 November 2026.
+
+A converted file is now named "-converted", so it is not mistaken for the file it was made
+from. The accessibility check shows that it is working while it works, and its result is a
+card of its own with buttons for what to do next.
+
+### Added
+
+- **A sign that a check is going.** After a file is sent to the accessibility checker, the
+  card shows a moving band, how many seconds it has been, and which step it is on: checking,
+  then saving the report. The checker says nothing until it has finished, so this shows that
+  it is working and not how far it has got, and says so.
+- **A button on every converted document to check its accessibility**, with the reason beside
+  it: to see that nothing a screen reader relies on was lost in converting. It was there
+  before as a small link under the name, and was easy to miss.
+- **What each format is, before a file is added.** In the list of everything Omsett converts,
+  pointing at a name says what that format is, in a sentence or two. Drafter now says where
+  it comes from: drafter.dev, a screenplay format built on Fountain that goes to and from
+  Final Draft.
+- **Buttons under a score**: open the full report, go on to convert the file, or close. A
+  check that failed has a button to try again.
+
+### Changed
+
+- **Converted files are named "-converted" by default**: "report.docx" becomes
+  "report-converted.html". A picture made smaller in its own format used to come out with the
+  very name of the original. The words can be changed or emptied in Settings, under File
+  names, and there is a button to go back to the default. If you had already chosen words of
+  your own they are kept; if you had chosen none, your files now get "-converted".
+- **The accessibility check is a card of its own**, ruled off from the file it belongs to
+  with a blue rule across its top, instead of a grey band.
+- **A page's title ends in one blue mark.** "Can I trust this?" had a white question mark and
+  then a blue full stop; the question mark is now the blue one.
+- Settings says plainly what turning visit counting off does: nothing about your visits is
+  sent to Plausible. Visits are "counted" everywhere in the app; "track" now appears only in
+  the name of the browser setting, Do Not Track.
+
 ## 0.51.0
 
 Released 24 November 2026.

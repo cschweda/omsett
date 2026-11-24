@@ -28,6 +28,9 @@ describe('what a converted file is called', () => {
   it('reads back what was stored, and takes anything else for no choice', () => {
     expect(readNaming('{"prefix":"a-","suffix":"-b"}')).toEqual({ prefix: 'a-', suffix: '-b' })
     expect(readNaming('{"prefix":"../x","suffix":7}')).toEqual({ prefix: 'x', suffix: '' })
-    for (const not of [null, '', 'nonsense', '[]', '"x"', '{"__proto__":{"prefix":"p"}}']) expect(readNaming(not)).toEqual({ prefix: '', suffix: '' })
+    // Nothing chosen is the default: "-converted" after the name. No words at all is a choice, and is kept.
+    for (const not of [null, '', 'nonsense', '[]', '"x"', '{}', '{"__proto__":{"prefix":"p"}}']) expect(readNaming(not)).toEqual({ prefix: '', suffix: '-converted' })
+    expect(readNaming('{"prefix":"","suffix":""}')).toEqual({ prefix: '', suffix: '' })
+    expect(namedAs('photo.jpg', readNaming(null))).toBe('photo-converted.jpg')
   })
 })

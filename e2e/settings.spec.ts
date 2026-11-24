@@ -37,7 +37,7 @@ test('where it is set up, a visit is one small report to this origin, with no sc
   for (const path of scripts) expect(path.startsWith('/_nuxt/'), path).toBe(true)
 
   await page.getByTestId('visits-off').click()
-  await expect(page.getByTestId('visits-state')).toHaveText('Your visits are not counted. You turned this off.')
+  await expect(page.getByTestId('visits-state')).toHaveText('Your visits are not counted. You turned counting off, so nothing about your visits is sent to Plausible.')
   // On the next page opened, nothing is reported.
   await page.goto(`/?visits=${SITE}`)
   await expect(page.getByRole('radiogroup')).toBeVisible()
@@ -101,6 +101,7 @@ test('Settings says what counting visits means, whether or not this copy counts 
 
 test('words asked for in Settings are put before and after the names of converted files, and remembered', async ({ page }) => {
   await page.goto('/settings')
+  // The tests run with plain names (see playwright.config.ts); the default has a test of its own, below.
   await expect(page.getByTestId('name-example')).toContainText('report.html')
   await page.getByTestId('name-prefix').fill('omsett-')
   await page.getByTestId('name-suffix').fill('-v2/..')
@@ -123,4 +124,34 @@ test('words asked for in Settings are put before and after the names of converte
   await expect(page.getByRole('radiogroup')).toBeVisible()
   await page.goto('/settings')
   await expect(page.getByTestId('name-prefix')).toHaveValue('')
+  // Forgetting everything is going back to the default.
+  await expect(page.getByTestId('name-suffix')).toHaveValue('-converted')
+})
+
+test.describe('with nothing chosen', () => {
+  test.use({ storageState: { cookies: [], origins: [] } })
+
+  test('a converted file is named "-converted", so it is not mistaken for the one added; the words can be changed, emptied and put back', async ({ page }) => {
+    await page.goto('/')
+    await expect(page.getByRole('radiogroup')).toBeVisible()
+    await page.locator('#file-input').setInputFiles(fileURLToPath(new URL('../fixtures/json/sample.json', import.meta.url)))
+    await page.getByRole('radio', { name: /YAML/ }).click()
+    await page.getByTestId('convert').click()
+    await expect(page.getByTestId('download')).toHaveAttribute('download', 'sample-converted.yaml', { timeout: 20_000 })
+
+    await page.goto('/settings')
+    await expect(page.getByTestId('name-suffix')).toHaveValue('-converted')
+    await expect(page.getByTestId('name-example')).toContainText('report-converted.html')
+    await expect(page.getByTestId('name-default')).toHaveCount(0)
+    // No words at all is a choice, and is remembered as one.
+    await page.getByTestId('name-suffix').fill('')
+    await expect(page.getByTestId('name-example')).toContainText('report.html')
+    await page.reload()
+    await expect(page.getByTestId('name-suffix')).toHaveValue('')
+    await expect(page.getByTestId('name-example')).toContainText('report.html')
+    await page.getByTestId('name-default').click()
+    await expect(page.getByTestId('name-suffix')).toHaveValue('-converted')
+    await page.reload()
+    await expect(page.getByTestId('name-example')).toContainText('report-converted.html')
+  })
 })

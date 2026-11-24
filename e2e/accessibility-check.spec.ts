@@ -165,3 +165,104 @@ test('a document shows the check before converting and again on what it becomes'
   await expect(page.locator('.result-card')).toHaveCount(1, { timeout: 30_000 })
   await expect(page.getByTestId('result-check-toggle')).toHaveCount(1)
 })
+
+test('while a file is being checked the card says so, counts the seconds, and names the step it is on', async ({ page }) => {
+  let answer = () => {}
+  let save = () => {}
+  const analyzed = new Promise<void>((resolve) => (answer = resolve))
+  const saved = new Promise<void>((resolve) => (save = resolve))
+  await page.route('**/api/accessibility/**', async (route) => {
+    const path = new URL(route.request().url()).pathname
+    if (path.endsWith('/analyze')) {
+      await analyzed
+      return route.fulfill({ json: { overallScore: 82.4, grade: 'B' } })
+    }
+    if (path.endsWith('/reports')) {
+      await saved
+      return route.fulfill({ json: { id: ID } })
+    }
+    return route.fulfill({ json: { status: 'ok' } })
+  })
+  await open(page, SET_UP)
+  await page.locator('#file-input').setInputFiles(fixture('pdf/sample.pdf'))
+  await page.getByTestId('check-toggle').click()
+  await page.getByTestId('check-send').click()
+
+  const sending = page.getByTestId('check-sending')
+  await expect(sending).toContainText('Sent to checker.example. Checking.')
+  await expect(page.getByTestId('check-working')).toBeVisible()
+  // It does not pretend to know how far the checker has got; it says so, and counts.
+  await expect(sending).toContainText('not how far it has got')
+  await expect(page.getByTestId('check-elapsed')).toHaveText(/^[1-9]\d* s$/, { timeout: 5000 })
+  // The page is not held meanwhile: a format can be chosen.
+  await page.locator('[role="radio"][data-format="docx"]').click()
+  await expect(page.getByTestId('convert')).toBeEnabled()
+
+  answer()
+  await expect(sending).toContainText('Checked. Saving the report on checker.example.')
+  save()
+  await expect(page.getByTestId('check-score')).toHaveText('Accessibility: 82 out of 100, grade B.')
+  await expect(sending).toHaveCount(0)
+})
+
+test('a score comes with buttons: the report, on to converting, and close', async ({ page }) => {
+  await checker(page)
+  await open(page, SET_UP)
+  await page.locator('#file-input').setInputFiles(fixture('pdf/sample.pdf'))
+  await page.getByTestId('check-toggle').click()
+  await page.getByTestId('check-send').click()
+  const card = page.getByTestId('check')
+  await expect(card).toHaveAttribute('data-stage', 'done')
+  await expect(card).toContainText('Accessibility check')
+  for (const id of ['check-report', 'check-onward', 'check-close']) await expect(card.getByTestId(id)).toHaveClass(/button/)
+  // On to converting: the list of formats is brought into view, and the score stays where it is.
+  await card.getByTestId('check-onward').click()
+  await expect(page.locator('#pick-heading')).toBeInViewport()
+  await expect(page.getByTestId('check-score')).toHaveCount(1)
+  // Closed, and opened again, the score is still there: nothing is sent a second time.
+  await card.getByTestId('check-close').click()
+  await expect(card).toHaveCount(0)
+  await page.getByTestId('check-toggle').click()
+  await expect(page.getByTestId('check-score')).toHaveText('Accessibility: 82 out of 100, grade B.')
+})
+
+test('a check that failed can be tried again from the card', async ({ page }) => {
+  await checker(page, { status: 503 })
+  await open(page, SET_UP)
+  await page.locator('#file-input').setInputFiles(fixture('pdf/sample.pdf'))
+  await page.getByTestId('check-toggle').click()
+  await page.getByTestId('check-send').click()
+  await expect(page.getByTestId('check-failed')).toHaveText('The checker is busy. Try again in a minute.')
+  await page.unroute('**/api/accessibility/**')
+  await checker(page)
+  await page.getByTestId('check-again').click()
+  await expect(page.getByTestId('check-score')).toHaveText('Accessibility: 82 out of 100, grade B.')
+})
+
+test('a PDF that Omsett wrote has a button to check it, with the reason, so that what converting lost can be found', async ({ page }) => {
+  const sent = await checker(page)
+  await open(page, SET_UP)
+  await page.locator('#file-input').setInputFiles(fixture('docx/sample.docx'))
+  await page.locator('[role="radio"][data-format="pdf"]').click()
+  const convert = page.getByTestId('convert')
+  // The engine that writes PDF is fetched on a first press, where it is not yet here.
+  await convert.click()
+  const result = page.locator('.result-card')
+  await expect(result).toHaveCount(1, { timeout: 120_000 })
+  const button = result.getByTestId('result-check-toggle')
+  await expect(button).toHaveText(/^Check accessibility/)
+  await expect(button).toHaveClass(/\bbutton\b/)
+  await expect(result.getByTestId('result-check-hint')).toHaveText('To see that nothing a screen reader relies on was lost, check the converted file.')
+  expect(sent).toEqual([])
+  await button.click()
+  await expect(result.getByTestId('check')).toContainText('This sends the file to a server.')
+  expect(sent).toEqual([])
+  await result.getByTestId('check-send').click()
+  await expect(result.getByTestId('check-score')).toHaveText('Accessibility: 82 out of 100, grade B.')
+  // It was the PDF that went, not the Word document it was made from.
+  expect(sent[0]!.body).toContain('filename="sample.pdf"')
+  // A result has nothing further to convert to, so no button for that.
+  await expect(result.getByTestId('check-onward')).toHaveCount(0)
+  await result.getByTestId('check-close').click()
+  await expect(button).toHaveText(/^Show the accessibility score/)
+})

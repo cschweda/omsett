@@ -295,6 +295,13 @@ build by `apps/web/scripts/write-headers.ts`.
   and the browser has not asked not to be tracked. The self-host image and the tests name none.
   Never proxy or vendor an analytics script to "satisfy" the policy: a red-team review found
   that doing so keeps the policy intact while handing a third party the page.
+- **A converted file is named "-converted" unless the person says otherwise** (`DEFAULT_NAMING` in
+  `app/utils/naming.ts`). Nothing stored means the default; no words at all is a choice and is
+  stored as one. The browser tests ask for plain names in `playwright.config.ts`, so a test
+  that states a file's name is about the conversion; the default is tested in `settings.spec.ts`.
+- **The accessibility check shows that it is working, never how far.** The checker answers once,
+  at the end. Do not draw a bar that fills: it would be made up. The steps that can be told
+  apart are the two requests (`onStep` in `useAccessibilityCheck`).
 - **Details and the ZIP of results have a worker of their own** (`sideWorker` in
   `useEngines`). One worker does one thing at a time; asked of the converting worker, they
   would wait behind a long conversion, time out, and stop it.

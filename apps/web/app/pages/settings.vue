@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { visitCounting, visitSignals, VISITS_SETTING, type VisitCounting } from '~/utils/visits'
 import { testHook } from '~/utils/limits'
-import { MAX_AFFIX, namedAs } from '~/utils/naming'
+import { DEFAULT_NAMING, MAX_AFFIX, namedAs } from '~/utils/naming'
 
 useHead({ title: 'Settings — Omsett' })
 
@@ -38,6 +38,12 @@ onMounted(() => {
   suffix.value = names.naming.value.suffix
 })
 const saveNames = () => names.set({ prefix: prefix.value, suffix: suffix.value })
+const isDefaultNames = computed(() => prefix.value === DEFAULT_NAMING.prefix && suffix.value === DEFAULT_NAMING.suffix)
+function defaultNames() {
+  prefix.value = DEFAULT_NAMING.prefix
+  suffix.value = DEFAULT_NAMING.suffix
+  saveNames()
+}
 const example = computed(() => namedAs('report.html', { prefix: prefix.value, suffix: suffix.value }))
 
 function startAgain() {
@@ -81,10 +87,10 @@ function startAgain() {
           <template v-else-if="counting !== null">
             <p data-testid="visits-state">
               <strong v-if="counting === 'on'">Your visits are counted.</strong>
-              <strong v-else-if="counting === 'off-by-choice'">Your visits are not counted. You turned this off.</strong>
+              <strong v-else-if="counting === 'off-by-choice'">Your visits are not counted. You turned counting off, so nothing about your visits is sent to Plausible.</strong>
               <strong v-else>
-                Your visits are not counted. Your browser asks sites not to track you, and Omsett takes that as your
-                answer.
+                Your visits are not counted. Your browser sends Do Not Track or Global Privacy Control, and Omsett
+                takes that as your answer.
               </strong>
             </p>
             <p v-if="counting !== 'off-by-browser'" class="choices">
@@ -124,8 +130,9 @@ function startAgain() {
       <StepSection title="File names" heading-id="settings-names">
         <div class="prose">
           <p>
-            A converted file keeps its name and takes its new ending. You can have words put before the name, after
-            it, or both. Leave them empty for the name alone.
+            A converted file keeps its name, with “-converted” after it, and takes its new ending, so that it is
+            not mistaken for the file you added. You can change those words, have words put before the name
+            too, or leave both empty for the name alone.
           </p>
           <div class="fields">
             <label>
@@ -139,6 +146,9 @@ function startAgain() {
           </div>
           <p class="small" data-testid="name-example">
             For example, “report.docx” converted to HTML is saved as <strong>{{ example }}</strong>.
+          </p>
+          <p v-if="!isDefaultNames" class="choices">
+            <button type="button" class="button" data-testid="name-default" @click="defaultNames">Go back to “-converted”</button>
           </p>
           <p class="small">
             Letters, numbers, spaces and most marks are kept; a few that a file name cannot hold, such as / and :,
