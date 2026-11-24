@@ -196,8 +196,12 @@ build by `apps/web/scripts/write-headers.ts`.
 - **An EPUB's pages are written by Omsett's own writer** (`written` in `ebook/epub-write.ts`),
   from a tree that has been through the sanitizer, so they are well-formed whatever went in.
   Marks (`id`) are kept, since a book's links depend on them; a link whose mark did not
-  survive cleaning falls back to its page. A stylesheet has `@import`, `@font-face` and any
-  address on the web taken out.
+  survive cleaning falls back to its page.
+- **A stylesheet is cleaned by allowing, not by forbidding** (`cleanStyle`). CSS lets any letter
+  be an escape and has many ways to name an address, so a list of bad patterns always misses
+  one. Escapes and comments are removed first; `url()` is kept only for a picture in the book;
+  every other function that takes an address is renamed. Add a new case to its test, and never
+  a new pattern that keeps something.
 - **Copy protection is never worked round.** A locked book is refused in words that say so.
 - **Books lent for testing live in `docs/ebooks`, which git ignores.** They are other people's
   work: never commit one, never quote from one, and print only counts when testing with them.

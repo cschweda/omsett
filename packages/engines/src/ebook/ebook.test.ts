@@ -4,6 +4,7 @@ import { formatById, registry } from '@omsett/registry'
 import { describe, expect, it } from 'vitest'
 import { readZip } from '../archive/zip'
 import { describeFile } from '../details'
+import { cleanStyle } from './epub-write'
 import { createEbookEngine, readKindle } from './index'
 
 // Kindle books to EPUB. The samples are written by fixtures/_tools/kindle.py: a book of three
@@ -155,5 +156,61 @@ describe('a Kindle book as an EPUB', () => {
     const locked = await describeFile(new Blob([(await fixture('_traps/copy-protected.azw3')) as BlobPart]), formatById(registry, 'azw3')!)
     expect(locked).toEqual([{ label: 'Copy protection', value: 'Yes (DRM). Omsett does not unlock books, so this one cannot be converted' }])
     expect(readKindle(await fixture('mobi/sample.mobi')).chapters).toHaveLength(3)
+  })
+})
+
+describe('a stylesheet, cleaned', () => {
+  const inBook = (path: string) => path === '../images/image0001.png'
+  /** Whether anything is left that a reader would take for an address, or for something to run. */
+  const fetches = (css: string) => /:\/\/|url\s*\(\s*["']?\/\/|@import|@font-face|\bimage\s*\(|cross-fade\s*\(|\burl\s*\((?!"\.\.\/images\/image0001\.png"\))|image-set\s*\(|\bsrc\s*\(|expression\s*\(|javascript:/i.test(css)
+
+  it('keeps what styles a page, and an address only for a picture that is in the book', () => {
+    const css = 'h1 { font-size: 1.6em; color: #333 }\n.note { font-style: italic }\ndiv.cover { background: url("../images/image0001.png") no-repeat }\n@media (max-width: 30em) { p { margin: 0 } }'
+    expect(cleanStyle(css, inBook)).toBe(css)
+    expect(cleanStyle('a { background: url(../images/other.png) }', inBook)).toBe('a { background: none }')
+    expect(cleanStyle('a { background: url(../../../etc/passwd) }', inBook)).toBe('a { background: none }')
+  })
+
+  it('takes out every address on the web, however it is spelled', () => {
+    for (const css of [
+      'a { background: url(http://canary.invalid/a.png) }',
+      'a { background: url( "https://canary.invalid/a.png" ) }',
+      "a { background: URL('//canary.invalid/a.png') }",
+      // Letters written as escapes, which a reader turns back into the letters.
+      'a { background: u\\72l(http://canary.invalid/a.png) }',
+      'a { background: \\75\\72\\6c(http://canary.invalid/a.png) }',
+      'a { background: url(ht\\74p://canary.invalid/a.png) }',
+      'a { background: url("\\68ttp://canary.invalid/a.png") }',
+      '@\\69mport "http://canary.invalid/a.css";',
+      '@import url(http://canary.invalid/a.css);',
+      '@import "http://canary.invalid/a.css" screen;',
+      '@IMPORT\n"http://canary.invalid/a.css";',
+      '@font-face { font-family: x; src: url(http://canary.invalid/f.woff) }',
+      '@font-\\66 ace { font-family: x; src: url(http://canary.invalid/f.woff) }',
+      // The other ways of naming an address.
+      'a { background: image-set("http://canary.invalid/a.png" 1x) }',
+      'a { background: -webkit-image-set(url(http://canary.invalid/a.png) 1x) }',
+      'a { background: image("http://canary.invalid/a.png") }',
+      'a { content: src("http://canary.invalid/a.png") }',
+      'a { background: cross-fade(url(http://canary.invalid/a.png), url(x.png)) }',
+      // A comment in the middle of a name, and one that is never closed.
+      'a { background: ur/**/l(http://canary.invalid/a.png) }',
+      'a { background: url(/* x */http://canary.invalid/a.png) }',
+      'a { color: red } /* a { background: url(http://canary.invalid/a.png) }',
+      // An address that is never closed.
+      'a { background: url(http://canary.invalid/a.png',
+      // Things that ran, in browsers that are gone, and are still not written.
+      'a { width: expression(alert(1)); behavior: url(x.htc); -moz-binding: url(x.xml#y) }',
+      'a { background: url("javascript:alert(1)") }',
+    ]) {
+      const cleaned = cleanStyle(css, inBook)
+      expect(fetches(cleaned), `${css}\n  → ${cleaned}`).toBe(false)
+    }
+  })
+
+  it('is quick on a stylesheet written to make it slow', () => {
+    const started = performance.now()
+    cleanStyle(`${'url('.repeat(50_000)}${' '.repeat(50_000)}${'/*'.repeat(50_000)}${'\\'.repeat(50_000)}@import${' '.repeat(50_000)}`, inBook)
+    expect(performance.now() - started).toBeLessThan(2000)
   })
 })

@@ -61,16 +61,44 @@ function written(nodes: Hast[], depth = 0): string {
   return out
 }
 
-/** A stylesheet with what could fetch from elsewhere taken out: fonts it names, other stylesheets, addresses on the web. */
-function cleanStyle(css: string): string {
-  return css
-    .replace(/@import[^;]*;?/gi, '')
-    .replace(/@font-face\s*\{[^}]*\}/gi, '')
-    // An address on the web, or one with nothing in it (a font or a picture that was not carried).
-    .replace(/url\([\s'"]*(?:[a-z][a-z0-9+.-]*:|\/\/)[^)]*\)/gi, 'none')
-    .replace(/url\([\s'"]*\)/gi, 'none')
-    .replace(/expression\s*\(|behavior\s*:|-moz-binding\s*:/gi, 'x-removed:')
+/**
+ * A stylesheet with everything that could fetch taken out. Patterns alone will not do: CSS lets
+ * any letter be written as an escape ("u\\72l(" is "url("), and has more ways to name an
+ * address than one. So nothing is left that can hide a name, and then only what is known to be
+ * harmless is let through:
+ *
+ *  - comments and every escape are removed first, so that what is searched is what a reader sees;
+ *  - @import and @font-face go, however they are written;
+ *  - an address is kept only if it is the plain name of a picture that is in the book;
+ *  - every other way of naming an address, or of running anything, is taken out.
+ *
+ * `inBook` says whether a path, relative to the stylesheet, is a picture in the book.
+ */
+export function cleanStyle(css: string, inBook: (path: string) => boolean = () => false): string {
+  const plain = css
     .replace(NOT_XML, '')
+    .replace(/\/\*[\s\S]*?\*\//g, ' ')
+    // An unfinished comment hides the rest of the sheet from a reader, and so from here too.
+    .replace(/\/\*[\s\S]*$/, '')
+    // Escapes: a backslash and what follows it. Without them a name can only be spelled as itself.
+    .replace(/\\(?:[0-9a-f]{1,6}\s?|[\s\S])?/gi, '')
+  return (
+    plain
+      .replace(/@import\b[^;{}]*;?/gi, '')
+      .replace(/@font-face\b[^{}]*\{[^{}]*\}?/gi, '')
+      .replace(/@(?:charset|namespace)\b[^;{}]*;?/gi, '')
+      // url( … ): kept where it names a picture in the book, and nowhere else.
+      .replace(/\burl\s*\(([^()]*)\)?/gi, (_, inside: string | undefined) => {
+        const path = (inside ?? '').trim().replace(/^(['"])([\s\S]*)\1$/, '$2').trim()
+        return /^[\w./-]{1,200}$/.test(path) && !path.includes('//') && inBook(path) ? `url("${path}")` : 'none'
+      })
+      // The other functions that take an address, or that run something.
+      .replace(/(?:-webkit-|-moz-)?(?:image-set|cross-fade|element|image|src|expression|paint|attr)\s*\(/gi, 'x-removed(')
+      .replace(/\b(?:behavior|-moz-binding)\s*:/gi, 'x-removed:')
+      .replace(/(?:java|vb)script\s*:/gi, 'x-removed:')
+      // And whatever is left that reads as an address on the web is left unable to be one.
+      .replace(/:\/\//g, ':')
+  )
 }
 
 const TYPES: Record<string, string> = { xhtml: 'application/xhtml+xml', css: 'text/css', jpg: 'image/jpeg', png: 'image/png', gif: 'image/gif', ncx: 'application/x-dtbncx+xml' }
@@ -146,7 +174,21 @@ export async function writeEpub(parts: Parts): Promise<Uint8Array> {
     files.push({ name, data: encoder.encode(page(title, styles, written(tree.children ?? []))) })
     chapters.push(name)
   }
-  for (const style of parts.styles) files.push({ name: style.file, data: encoder.encode(cleanStyle(style.css)) })
+  for (const style of parts.styles) {
+    // A path in a stylesheet starts from the stylesheet's own folder.
+    const folder = style.file.split('/').slice(0, -1)
+    const inBook = (path: string) => {
+      const steps = [...folder]
+      for (const step of path.split('/')) {
+        if (step === '..') {
+          if (steps.length === 0) return false
+          steps.pop()
+        } else if (step !== '' && step !== '.') steps.push(step)
+      }
+      return parts.pictures.some((picture) => picture.file === steps.join('/'))
+    }
+    files.push({ name: style.file, data: encoder.encode(cleanStyle(style.css, inBook)) })
+  }
   for (const picture of parts.pictures) files.push({ name: picture.file, data: picture.bytes })
 
   // A page for the cover, where the book names one: the first thing a reader opens to.
