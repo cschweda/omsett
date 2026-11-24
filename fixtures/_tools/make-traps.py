@@ -859,7 +859,7 @@ trap(
     SIGNATURE + ihdr(SMALL_W, SMALL_H) + chunk(b"acTL", struct.pack(">II", 1_000_000, 0)) + idat(SMALL) + IEND,
     "Announces itself as an animation of a million frames and contains one picture. A reader "
     "that allocates per announced frame runs out of memory.",
-    "png",
+    "apng",
     node="succeeds",
     group=G,
 )
@@ -3824,6 +3824,50 @@ trap("gif89a.csv", b"GIF89a,b\n1,2\n",
 trap("old-header.bmp", b"BM" + struct.pack("<IIII", 74, 0, 26, 12) + struct.pack("<HHHH", 4, 4, 1, 24) + bytes([200]) * 48,
      "A sound bitmap of four pixels by four, with the oldest kind of header. Its size is kept in a different place, and was read as 262,148 by 1,572,865.",
      "bmp", group="unusual", node="succeeds")
+
+
+# --- Animated PNG ---------------------------------------------------------------------------
+# A PNG with more pictures inside it. Each frame after the first is announced by a chunk that
+# says where it goes and how long it stays, and its pixels follow in chunks numbered in order.
+
+
+def fctl(sequence, width, height, x=0, y=0, delay=(1, 10)):
+    return chunk(b"fcTL", struct.pack(">IIIIIHHBB", sequence, width, height, x, y, delay[0], delay[1], 0, 0))
+
+
+def fdat(sequence, raw):
+    return chunk(b"fdAT", struct.pack(">I", sequence) + zlib.compress(raw, 9))
+
+
+def apng_of(frames=2, said=None, width=SMALL_W, height=SMALL_H, second=None, text=b""):
+    """A small sound animation: the same picture, `frames` times. `said` is the count it claims."""
+    out = SIGNATURE + ihdr(width, height) + chunk(b"acTL", struct.pack(">II", frames if said is None else said, 0)) + text
+    out += fctl(0, width, height) + idat(SMALL)
+    sequence = 1
+    for _ in range(frames - 1):
+        out += (second or fctl)(sequence, width, height) + fdat(sequence + 1, SMALL)
+        sequence += 2
+    return out + IEND
+
+
+MOVING = apng_of(3)
+trap("animation-cut-short.png", MOVING[: len(MOVING) * 2 // 3],
+     "An animated PNG cut off in the middle of its second picture. Its first picture is whole, and the first picture is all that is ever read from an animation, so it converts; what was lost was never going to be carried.",
+     "apng", group="damage", node="succeeds")
+trap("four-billion-frames.png", apng_of(2, said=0xFFFFFFFF),
+     "An animation of two pictures that says it has four billion. The count is a claim; the first picture is what is read, and no room is made for the rest.",
+     "apng", group="size", node="succeeds")
+trap("frame-larger-than-the-picture.png", apng_of(2, second=lambda n, w, h: fctl(n, 60000, 60000)),
+     "A second picture that says it is sixty thousand pixels square, in an animation of 64 by 40. Only the first picture is read, at the size the file's own header gives.",
+     "apng", group="size", node="succeeds")
+trap("animation-named-gif.gif", MOVING,
+     "An animated PNG with a .gif name. Both move, and it is the contents that say which this is.",
+     "apng", group="identity", mismatch=True, node="succeeds")
+trap("frames-out-of-order.png", SIGNATURE + ihdr(SMALL_W, SMALL_H) + chunk(b"acTL", struct.pack(">II", 2, 0)) + fctl(0, SMALL_W, SMALL_H) + idat(SMALL) + fdat(9, SMALL) + fctl(1, SMALL_W, SMALL_H) + IEND,
+     "An animation whose second picture comes before the chunk that announces it, numbered out of turn. The first picture is sound, and is what is converted.",
+     "apng", group="unusual", node="succeeds")
+trap("code.apng", apng_of(2, text=chunk(b"tEXt", b"Comment\x00" + CB) + chunk(b"iTXt", b"XML:com.adobe.xmp\x00\x00\x00\x00\x00" + CB)),
+     WHY % "in the comments an animated PNG may carry", "apng", group="code", node="succeeds", absent="omsett_canary")
 
 with open(os.path.join(OUT, "manifest.json"), "w") as out:
     json.dump(manifest, out, indent=2)

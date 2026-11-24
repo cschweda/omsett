@@ -55,7 +55,7 @@ describe('router, real registry', () => {
     const ids = everything.formats.map((f) => f.id)
     expect(ids).toEqual([
       'webp', 'jpeg', 'png', 'avif', 'gif', 'tiff', 'jxl', 'bmp', 'tga', 'qoi', 'pnm',
-      'heic', 'svg', 'svgz', 'psd', 'ico', 'jp2', 'exr', 'hdr', 'pcx', 'sgi', 'ras',
+      'heic', 'apng', 'svg', 'svgz', 'psd', 'ico', 'jp2', 'exr', 'hdr', 'pcx', 'sgi', 'ras',
       'json', 'yaml', 'csv', 'xlsx', 'xml', 'toml', 'jsonl', 'tsv', 'vcf', 'ics',
       'srt', 'vtt', 'ass', 'ssa', 'ttml', 'lrc', 'sbv', 'smi', 'microdvd',
       'md', 'html', 'docx', 'pptx', 'pdf',
@@ -64,7 +64,7 @@ describe('router, real registry', () => {
       'zip', 'tgz', 'tar',
     ])
     const readOnly = new Set(everything.formats.filter((f) => f.readOnly).map((f) => f.id))
-    expect([...readOnly].sort()).toEqual(['exr', 'hdr', 'heic', 'ico', 'jp2', 'pcx', 'pdf', 'pptx', 'psd', 'ras', 'sgi', 'svg', 'svgz'])
+    expect([...readOnly].sort()).toEqual(['apng', 'exr', 'hdr', 'heic', 'ico', 'jp2', 'pcx', 'pdf', 'pptx', 'psd', 'ras', 'sgi', 'svg', 'svgz'])
     // Every pair of the same kind converts, directly or through a step in between; nothing is
     // written as HEIC. A picture never becomes data, nor data a picture.
     const kind = (id: string) => formatById(everything, id)!.category
@@ -157,6 +157,9 @@ describe('router, real registry', () => {
     // By way of PNG, which loses nothing: still one lossy format to another, and said so once.
     expect(lost('heic', 'jpeg').filter((id) => id === 'lossy-to-lossy')).toHaveLength(1)
     expect(lost('heic', 'png')).not.toContain('lossy-to-lossy')
+    // An animated PNG becomes its first picture, whatever it becomes, and that is said.
+    for (const to of ['png', 'jpeg', 'webp', 'gif', 'avif', 'bmp']) expect(lost('apng', to), to).toContain('animation-lost')
+    expect(lost('png', 'webp')).not.toContain('animation-lost')
     expect(lost('gif', 'webp')).toContain('animation-lost')
     expect(lost('tiff', 'png')).toContain('pages-lost')
     expect(lost('psd', 'png')).toContain('layers-lost')

@@ -53,6 +53,7 @@ import { png } from './png'
 import { psd } from './psd'
 import { qoi } from './qoi'
 import { svg } from './svg'
+import { apng } from './apng'
 import { tiff } from './tiff'
 import { webp } from './webp'
 
@@ -62,7 +63,7 @@ import { webp } from './webp'
  */
 export const formats: Format[] = [
   webp, jpeg, png, avif, gif, tiff, jxl, bmp, tga, qoi, pnm,
-  heic, svg, svgz, psd, ico, jp2, exr, hdr, pcx, sgi, ras,
+  heic, apng, svg, svgz, psd, ico, jp2, exr, hdr, pcx, sgi, ras,
   // Data. A picture never becomes one of these, nor the other way round.
   json, yaml, csv, xlsx, xml, toml, jsonl, tsv, vcf, ics,
   // Subtitles and lyrics: text with times.

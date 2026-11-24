@@ -62,7 +62,7 @@ test('a converter that has to be fetched first says that is what is happening', 
     await route.continue()
   })
   await page.locator('#file-input').setInputFiles(fixture('jpeg/sample.jpg'))
-  await page.getByRole('radio', { name: /PNG/ }).click()
+  await page.getByRole('radio', { name: /^PNG/ }).click()
   await page.getByTestId('convert').click()
   await expect(page.getByTestId('file-stage')).toHaveText(/^Getting the converter \(\d.* MB, once\)/)
   await expect(page.getByTestId('file-progress')).toHaveClass(/active/)

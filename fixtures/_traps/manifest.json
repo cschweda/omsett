@@ -987,7 +987,7 @@
     "file": "claims-a-million-frames.png",
     "group": "damage",
     "why": "Announces itself as an animation of a million frames and contains one picture. A reader that allocates per announced frame runs out of memory.",
-    "detect": "png",
+    "detect": "apng",
     "mismatch": false,
     "guard": "ok",
     "node": "succeeds",
@@ -5482,5 +5482,77 @@
     "browser": "succeeds",
     "note": null,
     "absent": null
+  },
+  {
+    "file": "animation-cut-short.png",
+    "group": "damage",
+    "why": "An animated PNG cut off in the middle of its second picture. Its first picture is whole, and the first picture is all that is ever read from an animation, so it converts; what was lost was never going to be carried.",
+    "detect": "apng",
+    "mismatch": false,
+    "guard": "ok",
+    "node": "succeeds",
+    "browser": "succeeds",
+    "note": null,
+    "absent": null
+  },
+  {
+    "file": "four-billion-frames.png",
+    "group": "size",
+    "why": "An animation of two pictures that says it has four billion. The count is a claim; the first picture is what is read, and no room is made for the rest.",
+    "detect": "apng",
+    "mismatch": false,
+    "guard": "ok",
+    "node": "succeeds",
+    "browser": "succeeds",
+    "note": null,
+    "absent": null
+  },
+  {
+    "file": "frame-larger-than-the-picture.png",
+    "group": "size",
+    "why": "A second picture that says it is sixty thousand pixels square, in an animation of 64 by 40. Only the first picture is read, at the size the file's own header gives.",
+    "detect": "apng",
+    "mismatch": false,
+    "guard": "ok",
+    "node": "succeeds",
+    "browser": "succeeds",
+    "note": null,
+    "absent": null
+  },
+  {
+    "file": "animation-named-gif.gif",
+    "group": "identity",
+    "why": "An animated PNG with a .gif name. Both move, and it is the contents that say which this is.",
+    "detect": "apng",
+    "mismatch": true,
+    "guard": "ok",
+    "node": "succeeds",
+    "browser": "succeeds",
+    "note": null,
+    "absent": null
+  },
+  {
+    "file": "frames-out-of-order.png",
+    "group": "unusual",
+    "why": "An animation whose second picture comes before the chunk that announces it, numbered out of turn. The first picture is sound, and is what is converted.",
+    "detect": "apng",
+    "mismatch": false,
+    "guard": "ok",
+    "node": "succeeds",
+    "browser": "succeeds",
+    "note": null,
+    "absent": null
+  },
+  {
+    "file": "code.apng",
+    "group": "code",
+    "why": "The adversarial payload in the comments an animated PNG may carry. Nothing in it may run, here or in any format this becomes.",
+    "detect": "apng",
+    "mismatch": false,
+    "guard": "ok",
+    "node": "succeeds",
+    "browser": "succeeds",
+    "note": null,
+    "absent": "omsett_canary"
   }
 ]
