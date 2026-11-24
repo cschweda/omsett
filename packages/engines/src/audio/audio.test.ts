@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises'
 import { formatById, registry } from '@omsett/registry'
 import { describe, expect, it } from 'vitest'
 import { describeFile } from '../details'
+import { createNodeEngines } from '../node'
 import { createAudioEngine, readFlac, readSound, unpackFlac, type Read } from './index'
 import { recode, type Layout } from './sound'
 
@@ -442,4 +443,160 @@ describe('FLAC: sound packed and unpacked without loss', () => {
       }
     }
   })
+})
+
+describe('MP3: sound made small by leaving some out', () => {
+  const mp3Engine = createNodeEngines()['audio-mp3']!
+  async function through(bytes: Uint8Array, from: string, to: string, options: Record<string, unknown> = {}) {
+    const [output] = await mp3Engine.convert({
+      blob: new Blob([bytes as BlobPart]),
+      name: `sound.${from}`,
+      from: formatById(registry, from)!,
+      to: formatById(registry, to)!,
+      options,
+      signal: new AbortController().signal,
+      onProgress: () => {},
+    })
+    return { ...output!, bytes: new Uint8Array(await output!.blob.arrayBuffer()) }
+  }
+  const outcome = (work: Promise<unknown>) => work.then(() => 'converted', (error: Error) => `${error.name}: ${error.message}`)
+
+  /** Two notes, one to a channel, as a 16-bit AU: something a packer handles well. */
+  function notes(seconds: number, rate: number, channels: number): { file: Uint8Array; values: number[] } {
+    const frames = Math.round(seconds * rate)
+    const data = new Uint8Array(frames * channels * 2)
+    const view = new DataView(data.buffer)
+    const values: number[] = []
+    for (let i = 0; i < frames; i++) {
+      for (let c = 0; c < channels; c++) {
+        const value = Math.round(12000 * Math.sin((2 * Math.PI * (440 + 220 * c) * i) / rate))
+        values.push(value)
+        view.setInt16((i * channels + c) * 2, value)
+      }
+    }
+    return { file: au(data, 3, channels, rate), values }
+  }
+  /** How far apart two sounds are, as a share of how loud the first is. */
+  const apart = (a: number[], b: number[]) => {
+    let [gap, loud] = [0, 0]
+    for (let i = 0; i < a.length; i++) {
+      gap += (a[i]! - b[i]!) ** 2
+      loud += a[i]! ** 2
+    }
+    return Math.sqrt(gap / loud)
+  }
+
+  it('comes back the same length and in step with what was packed, at every setting', async () => {
+    const source = notes(2, 44100, 2)
+    const sizes: number[] = []
+    for (const soundQuality of ['smaller', 'standard', 'best']) {
+      const mp3 = await through(source.file, 'au', 'mp3', { soundQuality })
+      sizes.push(mp3.bytes.length)
+      // The label counts exactly the moments that were packed: not the padding at either end.
+      expect(readSound('mp3', mp3.bytes).sound.frames, soundQuality).toBe(88200)
+      const back = numbers('wav', (await through(mp3.bytes, 'mp3', 'wav')).bytes)
+      expect([back.read.sound.frames, back.read.sound.channels, back.read.sound.rate, back.read.sound.bytes], soundQuality).toEqual([88200, 2, 44100, 2])
+      // Not the same numbers, but the same sound, starting at the same moment: within two
+      // percent. A sound that had slipped by one moment would be six percent out.
+      expect(apart(source.values, back.values), soundQuality).toBeLessThan(0.02)
+    }
+    expect(sizes[0]!).toBeLessThan(sizes[1]!)
+    expect(sizes[1]!).toBeLessThan(sizes[2]!)
+    // The most MP3 holds is 320,000 bits a second: two seconds are 80,000 bytes and a little.
+    expect(sizes[2]!).toBeGreaterThan(80_000)
+    expect(sizes[2]!).toBeLessThan(82_000)
+    // Left to itself the setting is the middle one.
+    expect((await through(source.file, 'au', 'mp3')).bytes.length).toBe(sizes[1])
+  })
+
+  it('opens what it writes with a list of contents, so that a player shows the right length', async () => {
+    const uneven = (await through(notes(1, 44100, 1).file, 'au', 'mp3')).bytes
+    const even = (await through(notes(1, 44100, 1).file, 'au', 'mp3', { soundQuality: 'best' })).bytes
+    const text = (bytes: Uint8Array) => new TextDecoder('latin1').decode(bytes.subarray(0, 200))
+    expect(text(uneven).indexOf('Xing')).toBe(21)
+    expect(text(even).indexOf('Info')).toBe(21)
+    expect(text(uneven)).toContain('LAME3.100')
+  })
+
+  it('unpacks files made by another program to the sound they were made from', async () => {
+    const pattern = numbers('wav', await sample('wav/sample.wav'))
+    const back = numbers('wav', (await through(await sample('mp3/sample.mp3'), 'mp3', 'wav')).bytes)
+    expect(back.read.sound.frames).toBe(pattern.read.sound.frames)
+    expect(apart(pattern.values, back.values)).toBeLessThan(0.25)
+    // One with no count of its stretches comes out with the padding its packer added: a little longer.
+    const even = numbers('wav', (await through(await sample('mp3/even-speed.mp3'), 'mp3', 'wav')).bytes)
+    expect(even.read.sound.rate).toBe(44100)
+    expect(even.read.sound.frames).toBeGreaterThanOrEqual(11024)
+    expect(even.read.sound.frames).toBeLessThan(11024 + 3 * 1152)
+    expect(numbers('aiff', (await through(await sample('mp3/one-channel.mp3'), 'mp3', 'aiff')).bytes).read.sound.channels).toBe(1)
+  })
+
+  it('goes to and from each of the other formats', async () => {
+    const mp3 = await sample('mp3/sample.mp3')
+    for (const other of ['wav', 'flac', 'aiff', 'au']) {
+      const there = await through(mp3, 'mp3', other)
+      const read = other === 'flac' ? unpackFlac(there.bytes) : readSound(other, there.bytes)
+      expect([read.sound.frames, read.sound.rate, read.sound.channels], `mp3 → ${other}`).toEqual([2756, 11025, 2])
+      const back = await through(await sample(`${other}/sample.${other}`), other, 'mp3')
+      expect(readSound('mp3', back.bytes).sound.frames, `${other} → mp3`).toBe(2756)
+    }
+  })
+
+  it('writes sound at the nearest rate MP3 has, and says so', async () => {
+    const fast = await through(notes(0.5, 96000, 1).file, 'au', 'mp3')
+    expect(fast.note).toBe('MP3 cannot hold sound at 96,000 a second. It is written at 48,000, the nearest rate it has.')
+    expect([readSound('mp3', fast.bytes).sound.rate, readSound('mp3', fast.bytes).sound.frames]).toEqual([48000, 24000])
+    const mac = await through(await sample('aiff/old-mac.aiff'), 'aiff', 'mp3')
+    expect(mac.note).toBe('MP3 cannot hold sound at 22,254.545 a second. It is written at 22,050, the nearest rate it has.')
+    expect((await through(notes(0.5, 8000, 1).file, 'au', 'mp3', { soundQuality: 'best' })).note).toBeUndefined()
+  })
+
+  it('takes every way the other formats store sound', async () => {
+    for (const path of ['wav/one-byte.wav', 'wav/three-bytes.wav', 'wav/fractions.wav', 'wav/telephone.wav', 'aiff/fractions.aifc', 'au/four-bytes.au', 'au/a-law.au', 'flac/three-bytes.flac']) {
+      const from = path.split('/')[0]!
+      const source = await sample(path)
+      const mp3 = await through(source, from, 'mp3')
+      const back = numbers('wav', (await through(mp3.bytes, 'mp3', 'wav')).bytes)
+      const expected = numbers('wav', (await convert(source, from, 'wav')).bytes)
+      expect(back.read.sound.frames, path).toBe(expected.read.sound.frames)
+      // Brought to the same scale, it is the same sound, as near as MP3 keeps it.
+      const scale = 32768 / (expected.read.sound.coding === 'float' ? 1 : 2 ** (expected.read.sound.bytes * 8 - 1))
+      expect(apart(expected.values.map((value) => value * scale), back.values), path).toBeLessThan(0.3)
+    }
+  })
+
+  it('refuses what MP3 cannot hold and what is not sound', async () => {
+    expect(await outcome(through(await sample('wav/six-channels.wav'), 'wav', 'mp3'))).toBe('Refusal: MP3 holds one or two channels of sound, and this file has 6. Choose FLAC or WAV')
+    expect(await outcome(through(new Uint8Array(400), 'mp3', 'wav'))).toBe('Refusal: This file is not a valid MP3 file')
+  })
+
+  it('says what an MP3 holds from its start alone, and that sound was left out', async () => {
+    const details = await describeFile(new Blob([(await sample('mp3/sample.mp3')) as BlobPart]), formatById(registry, 'mp3')!)
+    expect(details.slice(0, 3)).toEqual([
+      { label: 'Length', value: '0.25 seconds', fate: 'kept' },
+      { label: 'Rate', value: '11,025 samples a second', fate: 'kept' },
+      { label: 'Channels', value: '2 (stereo)', fate: 'kept' },
+    ])
+    expect(details[3]).toEqual({ label: 'Stored as', value: expect.stringMatching(/^MP3, about \d+ kbps\. Sound was left out to make the file small, and converting does not bring it back$/) as string })
+    expect(details.slice(4)).toEqual([
+      { label: 'Artist', value: 'Omsett', fate: 'removed' },
+      { label: 'Title', value: 'Test pattern', fate: 'removed' },
+    ])
+    // An hour at even speed, from its first four bytes and its size.
+    const head = (await sample('mp3/even-speed.mp3')).subarray(0, 4)
+    const label = readSound('mp3', head, 3600 * 16000)
+    expect(Math.round(label.sound.frames / label.sound.rate)).toBe(3600)
+  })
+
+  it('never throws anything but a refusal, whatever is done to a file', async () => {
+    const bytes = await sample('mp3/even-speed.mp3')
+    for (let at = 0; at < bytes.length; at += 7) {
+      for (const value of [0x00, 0xFF, bytes[at]! ^ 0x10]) {
+        const damaged = bytes.slice()
+        damaged[at] = value
+        const result = await outcome(through(damaged, 'mp3', 'wav'))
+        expect(result === 'converted' || result.startsWith('Refusal: '), `byte ${at} = ${value}: ${result}`).toBe(true)
+      }
+    }
+  }, 60_000)
 })

@@ -69,6 +69,11 @@ const REDRAW = 'TTF and OTF draw letters in different ways. Changing one into th
 const WEB_LICENCE = [{ id: 'font-licence', text: "Check that the font's licence allows it to be used on a website." }]
 const OUTLINES = [{ id: 'font-outlines', text: 'A web font unwraps to TTF or to OTF, depending on how its letters are drawn. If one is refused, choose the other.' }]
 
+// Sound.
+const KEPT_WHOLE = ['wav', 'flac', 'aiff', 'au']
+const LEFT_OUT = [{ id: 'sound-left-out', text: 'MP3 leaves out sound to make the file small. It cannot be put back, so keep the original.' }]
+const NOT_RESTORED = [{ id: 'sound-not-restored', text: 'An MP3 has already left sound out. Converting it does not bring that back; the file only gets larger.' }]
+
 const TYPED = ['json', 'jsonl', 'yaml', 'toml']
 
 export const overrides: EdgeOverride[] = [
@@ -131,6 +136,10 @@ export const overrides: EdgeOverride[] = [
   ...[...TYPED, 'csv', 'tsv'].map((to) => ({ from: 'xml', to, warnings: ATTRIBUTES })),
   ...TYPED.map((to) => ({ from: 'xml', to, warnings: TEXT_VALUES })),
   ...['csv', 'tsv'].flatMap((from) => TYPED.map((to) => ({ from, to, warnings: TEXT_CELLS }))),
+  ...KEPT_WHOLE.flatMap((other) => [
+    { from: other, to: 'mp3', warnings: LEFT_OUT },
+    { from: 'mp3', to: other, warnings: NOT_RESTORED },
+  ]),
   { from: 'svgz', to: 'png', warnings: SVG_NOTES },
   { from: 'exr', to: 'png', warnings: CLIPPED },
   { from: 'hdr', to: 'png', warnings: CLIPPED },

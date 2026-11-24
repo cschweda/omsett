@@ -270,6 +270,19 @@ build by `apps/web/scripts/write-headers.ts`.
   and quietest numbers by turns) at every width and reads every number back. When changing the
   packer, also run a file through the reference tool by hand: `flac -t` must accept it. The
   samples in `fixtures/flac` come from that tool and from ffmpeg, never from Omsett.
+- **A decoder that forgives is given only what Omsett has walked.** mpg123 plays whatever it can
+  find in a damaged MP3 and reports nothing. `readMp3` follows the file from its first stretch
+  to its last by the length each gives, and refuses one that stops inside a stretch, counts
+  more stretches than it has, changes rate or channels part-way, or holds anything between
+  stretches. Only that span is handed to the decoder. Do not loosen the walk to read a file a
+  player accepts; a player's job is to make noise, and Omsett's is to hand back the whole sound
+  or say why not.
+- **Import one thing from `wasm-media-encoders`, through `app/workers/lame.ts`.** The package
+  carries LAME and an Ogg encoder inside its own script; imported whole it adds 780 KB that
+  never runs, and would start LAME from a copy the app has not verified.
+- **A choice of how much sound to leave out is `soundQuality`** (`smaller`, `standard`, `best`),
+  a key in the capability's `defaultOptions` like any other choice. The engine maps it to the
+  encoder's settings; the page names no format and no bitrate.
 - **The time a conversion is given grows with pixels and with bytes** (`conversionBudgetMs`).
   Sound has no pixels; without the bytes a long recording would be stopped half-way.
 - **A setting for ImageMagick's writer is data in the registry** (`defines` in a capability's

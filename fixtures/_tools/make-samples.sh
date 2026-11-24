@@ -96,3 +96,9 @@ fl -8 -b 512 "$out/wav/three-bytes.wav" -o "$out/flac/three-bytes.flac"      # s
 fl -5 "$out/wav/one-byte.wav" -o "$out/flac/one-byte.flac"
 fl -5 --channel-map=none "$out/wav/six-channels.wav" -o "$out/flac/six-channels.flac"
 ff -i "$out/wav/sample.wav" -map_metadata -1 -fflags +bitexact -c:a flac -compression_level 12 "$out/flac/from-ffmpeg.flac"
+# MP3 is packed by LAME through ffmpeg: a file of uneven speed with tags and a count of its
+# stretches, one of even speed with neither, and one channel at a slower rate.
+dir mp3
+ff -i "$out/wav/sample.wav" -fflags +bitexact -c:a libmp3lame -q:a 4 -id3v2_version 3 -metadata title="Test pattern" -metadata artist=Omsett "$out/mp3/sample.mp3"
+ff -i "$out/wav/sample.wav" -fflags +bitexact -ar 44100 -c:a libmp3lame -b:a 128k -write_xing 0 -id3v2_version 0 -map_metadata -1 "$out/mp3/even-speed.mp3"
+ff -i "$out/wav/sample.wav" -fflags +bitexact -ar 22050 -ac 1 -c:a libmp3lame -q:a 6 -id3v2_version 4 -metadata title="Test pattern" "$out/mp3/one-channel.mp3"
