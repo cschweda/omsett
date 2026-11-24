@@ -53,11 +53,33 @@ test('writing a PDF asks nothing of any other site: the typesetter and its typef
   expect(fetched.filter((path) => /\/engines\/inter-.*\.woff$/.test(path)).length).toBeGreaterThan(20)
 })
 
-test('a page mostly in a script the typeface cannot draw is refused, and says what to choose instead', async ({ page }) => {
+test('a page in Japanese is set in a Japanese typeface, fetched a piece at a time from this site', async ({ page }) => {
+  const seen = await watch(page)
   await open(page)
-  await page.locator('#file-input').setInputFiles({ name: 'report.html', mimeType: 'text/html', buffer: Buffer.from(`<h1>報告</h1><p>${'これは日本語の文書です。'.repeat(8)}</p>`) })
+  await page.locator('#file-input').setInputFiles({ name: 'report.html', mimeType: 'text/html', buffer: Buffer.from(`<html lang="ja"><h1>報告書</h1><p>${'これは日本語の文書です。'.repeat(8)}</p></html>`) })
   await page.locator('[role="radio"][data-format="pdf"]').click()
   await page.getByTestId('convert').click()
-  await expect(page.locator('.file-card')).toContainText('Much of this page is in another script')
+  const link = page.getByTestId('download')
+  await expect(link).toBeVisible({ timeout: 60_000 })
+  const output = await describeDownload(page, () => link.click())
+  expect(output.bytes.subarray(0, 5).toString('latin1')).toBe('%PDF-')
+  // Nothing was left out, so nothing is said about letters.
+  await expect(page.locator('.result-card')).not.toContainText('left out of the PDF')
+  expectPrivate(page, seen)
+  const pieces = seen.requests.map((request) => new URL(request.url).pathname).filter((path) => /\/engines\/noto-sans-/.test(path))
+  // The face's list, the list of where its pieces are, and some of the pieces: far from all 250 of them.
+  expect(pieces.filter((path) => /noto-sans-jp\.(?:ranges|pieces)\./.test(path))).toHaveLength(2)
+  const fonts = pieces.filter((path) => path.endsWith('.woff'))
+  expect(fonts.length).toBeGreaterThan(1)
+  expect(fonts.length).toBeLessThan(60)
+  expect(fonts.every((path) => path.includes('noto-sans-jp-'))).toBe(true)
+})
+
+test('a page mostly in a script no typeface here draws is refused, and says what to choose instead', async ({ page }) => {
+  await open(page)
+  await page.locator('#file-input').setInputFiles({ name: 'report.html', mimeType: 'text/html', buffer: Buffer.from(`<p>${'𓀀𓀁𓀂𓀃𓀄 '.repeat(10)}</p>`) })
+  await page.locator('[role="radio"][data-format="pdf"]').click()
+  await page.getByTestId('convert').click()
+  await expect(page.locator('.file-card')).toContainText('Much of this page is in a script Omsett’s PDFs cannot draw yet'.replace('’', "'"))
   await expect(page.locator('.file-card')).toContainText('Choose DOCX or a web page, which keep every letter')
 })

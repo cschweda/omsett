@@ -11,7 +11,7 @@ import { createPdfEngine } from './pdf'
 import { createAudioEngine, createAudioMp3Engine, type Mp3Decoder, type Mp3Encoder } from './audio'
 import { createHeifEngine, type HeifModule } from './heif'
 import { engineInfo, resvgFonts, typstFonts, vipsModules } from './info'
-import { createTypstEngine } from './typst'
+import { createTypstEngine, SCRIPTS } from './typst'
 import { createResvgEngine, type ResvgHost } from './resvg'
 import { createMagickEngine, type MagickApi } from './magick'
 import { createVipsEngine, type VipsModule } from './vips'
@@ -71,6 +71,8 @@ export function createNodeEngines(): Record<string, Engine> {
   engines.typst = createTypstEngine({
     wasm: () => readFile(require.resolve('@myriaddreamin/typst-ts-web-compiler/pkg/typst_ts_web_compiler_bg.wasm')),
     fonts: () => Promise.all(typstFonts.map(async (file) => new Uint8Array(await readFile(require.resolve(file))))),
+    pieces: async (script) => JSON.parse(await readFile(require.resolve(`${SCRIPTS[script].pack}/unicode.json`), 'utf8')) as Record<string, string>,
+    piece: async (script, name, weight) => new Uint8Array(await readFile(require.resolve(`${SCRIPTS[script].pack}/files/${SCRIPTS[script].stem}-${name}-${weight}-normal.woff`))),
   })
   engines.audio = createAudioEngine()
   engines['audio-mp3'] = createAudioMp3Engine({

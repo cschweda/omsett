@@ -206,9 +206,12 @@ build by `apps/web/scripts/write-headers.ts`.
   PDF to Omsett's own reader and requires headings, lists, the table's head and links from the
   tags. In Typst a picture must be set in a `box`: put any other way inside a paragraph it is
   silently left out, tags and all.
-- **Letters the PDF's typeface cannot draw are left out by Typst, not shown as boxes.** The
-  engine counts them, names them in the result, and refuses a page that is mostly such
-  letters. Do not turn that into a quiet conversion: a blank PDF is worse than a refusal.
+- **Letters the PDF's typeface cannot draw are left out by Typst, not shown as boxes.** For
+  other scripts there are Noto faces, fetched a piece at a time (`typst/scripts.ts`): the
+  engine asks a face's own list which piece draws a letter, and fetches only those. The list
+  of faces is in three places that a test holds together: `SCRIPTS`, `SCRIPT_FACES` in
+  `prepare-assets.ts`, and the packages in `packages/engines/package.json`. What no face draws
+  is counted, named in the result, and a page that is mostly such letters is refused. Do not turn that into a quiet conversion: a blank PDF is worse than a refusal.
 - **A PDF's tags are believed only if they describe and cover its text**
   (`packages/engines/src/pdf/read.ts`). Do not loosen that to make a file come out "tagged":
   the fallback exists because real PDFs are tagged for their pictures alone.

@@ -83,13 +83,58 @@ describe('a page written as a PDF', () => {
     expect(pdf.note).toBe('One picture lives on a website and not in the page, and Omsett fetches nothing: the description is written in its place.')
   })
 
-  it('says which letters the typeface cannot draw, and refuses a page that is mostly such letters', async () => {
-    const pdf = await pdfOf('<p>Zażółć gęślą jaźń. Привет, мир. Καλημέρα. 字幕</p>')
-    expect(pdf.note).toBe('The PDF is set in a typeface that draws Latin, Greek and Cyrillic letters. It has no drawing for 2 letters on this page (字 幕), and they are left out of the PDF. Check the result, or choose DOCX, which keeps every letter.')
-    // Everything else on the page is in the PDF, in three scripts.
-    expect(await readBack(pdf.bytes)).toContain('Zażółć gęślą jaźń. Привет, мир. Καλημέρα.')
-    expect((await pdfOf('<p>Zażółć gęślą jaźń. Привет, мир. Καλημέρα.</p>')).note).toBeUndefined()
-    await expect(pdfOf(`<h1>報告</h1><p>${'これは日本語の文書です。'.repeat(8)}</p>`)).rejects.toThrow(/Much of this page is in another script \(報 告 こ れ は 日\), which would be left out\. Choose DOCX or a web page/)
+  it('sets other scripts in a typeface of their own, fetching only the pieces a page has letters for', async () => {
+    const fetched: string[] = []
+    const real = createNodeEngines().typst!
+    // The same engine, with every request for a piece of a typeface written down.
+    const { createTypstEngine, SCRIPTS } = await import('./index')
+    const { readFile: read } = await import('node:fs/promises')
+    const { createRequire } = await import('node:module')
+    const require = createRequire(import.meta.url)
+    const counting = createTypstEngine({
+      wasm: () => read(require.resolve('@myriaddreamin/typst-ts-web-compiler/pkg/typst_ts_web_compiler_bg.wasm')),
+      fonts: () => Promise.all(typstFonts.map(async (file) => new Uint8Array(await read(require.resolve(file))))),
+      pieces: async (script) => JSON.parse(await read(require.resolve(`${SCRIPTS[script].pack}/unicode.json`), 'utf8')) as Record<string, string>,
+      async piece(script, name, weight) {
+        fetched.push(`${script}:${name}:${weight}`)
+        return new Uint8Array(await read(require.resolve(`${SCRIPTS[script].pack}/files/${SCRIPTS[script].stem}-${name}-${weight}-normal.woff`)))
+      },
+    })
+    expect(real.id).toBe('typst')
+    const make = async (html: string) => {
+      const [output] = await counting.convert({ blob: new Blob([html]), name: 'page.html', from: formatById(registry, 'html')!, to: formatById(registry, 'pdf')!, options: {}, signal: new AbortController().signal, onProgress: () => {} })
+      return { note: output!.note, bytes: new Uint8Array(await output!.blob.arrayBuffer()) }
+    }
+    // A page in Latin letters asks for nothing.
+    await make('<h1>Plain</h1><p>Zażółć gęślą jaźń. Привет. Καλημέρα.</p>')
+    expect(fetched).toEqual([])
+    // A page in Japanese is set in the Japanese face, and all of it is in the PDF.
+    const japanese = await make(`<html lang="ja"><h1>報告書</h1><p>${'これは日本語の文書です。'.repeat(6)}<strong>太字</strong></p></html>`)
+    expect(japanese.note).toBeUndefined()
+    expect(fetched.length).toBeGreaterThan(0)
+    expect(fetched.every((piece) => piece.startsWith('jp:'))).toBe(true)
+    // A few dozen pieces at most, of the hundred and twenty the face has, in two weights.
+    expect(fetched.length).toBeLessThan(60)
+    const back = await readBack(japanese.bytes)
+    expect(back).toContain('<h1>報告書</h1>')
+    expect(back.replace(/\s+/g, '')).toContain('これは日本語の文書です。'.repeat(6))
+    // The same characters in a page that says it is Chinese are drawn the Chinese way.
+    fetched.length = 0
+    await make('<html lang="zh-TW"><p>報告書</p></html>')
+    expect(fetched.every((piece) => piece.startsWith('tc:'))).toBe(true)
+    // Korean, Hebrew, Hindi and Thai, each from its own face, on one page.
+    fetched.length = 0
+    const mixed = await make('<p>한국어 שלום हिन्दी สวัสดี 中文</p>')
+    expect(new Set(fetched.map((piece) => piece.split(':')[0]))).toEqual(new Set(['kr', 'hebrew', 'devanagari', 'thai', 'sc']))
+    expect(mixed.note).toBeUndefined()
+    expect((await readBack(mixed.bytes)).replace(/\s+/g, '')).toContain('한국어')
+  })
+
+  it('names the letters no typeface here draws, and refuses a page that is mostly such letters', async () => {
+    const pdf = await pdfOf('<p>A smile 😀 and an old sign 𓀀, among ordinary words that are all kept as they are.</p>')
+    expect(pdf.note).toBe('2 letters on this page have no drawing in any typeface Omsett has (😀 𓀀), and are left out of the PDF. Check the result, or choose DOCX, which keeps every letter.')
+    expect(await readBack(pdf.bytes)).toContain('among ordinary words that are all kept as they are.')
+    await expect(pdfOf(`<p>${'𓀀𓀁𓀂𓀃𓀄 '.repeat(10)}</p>`)).rejects.toThrow(/^Much of this page is in a script Omsett's PDFs cannot draw yet \(𓀀 𓀁 𓀂 𓀃 𓀄\), and it would be left out\. Choose DOCX or a web page, which keep every letter$/)
   })
 
   it('makes a PDF of a Word document, of Markdown, and of an old Word document, each by way of a page', async () => {
@@ -134,11 +179,11 @@ describe('the program written for Typst', () => {
 
   it('writes every word of the page inside quotes, and nothing outside them but its own functions', async () => {
     const hostile = '#import "@preview/x:1.0.0": * #read("/etc/passwd") #sys.inputs ` $ * _ [ ] <label> @ref \\ " \n #{ while true {} }'
-    const { source } = await written(`<h1>${hostile}</h1><p>${hostile} <a href="https://example.com/&quot;) + read(&quot;/x">${hostile}</a></p><ul><li>${hostile}</li></ul><table><tr><td>${hostile}</td></tr></table><pre>${hostile}</pre><img alt="${hostile.replaceAll('"', '&quot;')}" src="https://example.com/x.png">`)
+    const source = (await written(`<h1>${hostile}</h1><p>${hostile} <a href="https://example.com/&quot;) + read(&quot;/x">${hostile}</a></p><ul><li>${hostile}</li></ul><table><tr><td>${hostile}</td></tr></table><pre>${hostile}</pre><img alt="${hostile.replaceAll('"', '&quot;')}" src="https://example.com/x.png">`)).program(['Noto Sans SC'])
     // With every quoted string taken out, what is left is Omsett's own: no word of the page.
     const bare = source.replace(/"(?:[^"\\]|\\.)*"/g, '""')
     expect(bare).not.toMatch(/import|read\(|sys|passwd|while|preview|label|ref/)
-    for (const line of bare.split('\n').filter((entry) => !/^#(?:set|show) /.test(entry))) expect(line, line).toMatch(/^#(?:heading|par|list|enum|table|quote|raw|line|layout)\(/)
+    for (const line of bare.split('\n').filter((entry: string) => !/^#(?:set|show) /.test(entry))) expect(line, line).toMatch(/^#(?:heading|par|list|enum|table|quote|raw|line|layout)\(/)
     // And it lays out, as text: the page's words are in the PDF as words.
     const pdf = await pdfOf(`<p>${hostile}</p>`)
     expect(await readBack(pdf.bytes)).toContain('#read(')
@@ -151,7 +196,8 @@ describe('the program written for Typst', () => {
   })
 
   it('makes a link only of a web or mail address, and a picture only of one inside the page', async () => {
-    const { source, files, elsewhere } = await written('<p><a href="javascript:alert(1)">one</a> <a href="file:///etc/passwd">two</a> <a href="mailto:a@example.com">three</a></p><img src="file:///etc/passwd" alt="x"><img src="data:image/svg+xml;base64,PHN2Zy8+" alt="y">')
+    const { program, files, elsewhere } = await written('<p><a href="javascript:alert(1)">one</a> <a href="file:///etc/passwd">two</a> <a href="mailto:a@example.com">three</a></p><img src="file:///etc/passwd" alt="x"><img src="data:image/svg+xml;base64,PHN2Zy8+" alt="y">')
+    const source = program([])
     expect(source.match(/link\(/g)).toHaveLength(1)
     expect(source).toContain('link("mailto:a@example.com"')
     expect(source).not.toMatch(/javascript|passwd/)
@@ -161,6 +207,11 @@ describe('the program written for Typst', () => {
 })
 
 describe('the typeface', () => {
+  it('names the same faces for other scripts where the app fetches them as where the engine picks them', async () => {
+    const { SCRIPTS } = await import('./index')
+    expect(Object.keys(assets.typst.scripts).sort()).toEqual(Object.keys(SCRIPTS).sort())
+  })
+
   it('is the same list where the app fetches it as where the engine names it', () => {
     expect(assets.typst.fonts).toHaveLength(typstFonts.length)
     for (const [i, file] of typstFonts.entries()) expect(assets.typst.fonts[i]!.url).toContain(file.split('/').pop()!.replace('.woff', ''))

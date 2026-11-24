@@ -55,7 +55,7 @@ A file is offered the formats of its own kind: a picture becomes another picture
 - **Shows what a file holds besides what it shows** (who wrote it, when, where a photo was taken, tracked changes, hidden text), and whether converting keeps or removes each.
 - **Goes by what a file contains, not what it is called.** A JPEG named `.png` is converted as a JPEG.
 - **Refuses a damaged or hostile file with a reason**, instead of returning half of one or freezing the tab. Every conversion runs against a clock.
-- **Writes PDF, tagged for screen readers**: a Word document, a web page or Markdown becomes a PDF whose headings, lists, tables and picture descriptions are marked as what they are. And reads PDF back to a web page, Markdown or DOCX.
+- **Writes PDF, tagged for screen readers**: a Word document, a web page or Markdown becomes a PDF whose headings, lists, tables and picture descriptions are marked as what they are. In Latin, Greek, Cyrillic, Chinese, Japanese, Korean, Arabic, Hebrew, Hindi and Thai. And reads PDF back to a web page, Markdown or DOCX.
 - **Never carries across what an author hid or deleted**: tracked deletions, hidden text and slides, comments, speaker notes.
 - **Makes icons**: any picture to a Windows icon, a Mac icon or a mouse pointer, at the sizes each expects.
 - **Develops a raw photograph (DNG)** with standard settings, the right way up.
