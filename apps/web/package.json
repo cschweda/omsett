@@ -1,6 +1,6 @@
 {
   "name": "web",
-  "version": "0.46.0",
+  "version": "0.47.0",
   "private": true,
   "type": "module",
   "license": "MIT",
@@ -19,6 +19,8 @@
     "@fontsource/inter": "^5.0.0",
     "@iconify-json/lucide": "^1.2.0",
     "@imagemagick/magick-wasm": "^0.0.46",
+    "@myriaddreamin/typst-ts-web-compiler": "0.7.0",
+    "@myriaddreamin/typst.ts": "0.7.0",
     "@nuxt/ui": "^4.13.0",
     "@omsett/detect": "workspace:*",
     "@omsett/engines": "workspace:*",

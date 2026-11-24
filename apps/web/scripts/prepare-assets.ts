@@ -38,6 +38,10 @@ for (const name of await readdir(enginesDir)) {
 const vipsLib = dirname(fromEngines.resolve('wasm-vips/vips.wasm'))
 // The weights of Inter that resvg draws text in. The same list as `resvgFonts` in packages/engines.
 const resvgFonts = ['inter-latin-400-normal.woff2', 'inter-latin-700-normal.woff2']
+// The typeface a PDF is set in. The same list as `typstFonts` in packages/engines, which a test holds this to.
+const typstFonts = ['latin', 'latin-ext', 'cyrillic', 'cyrillic-ext', 'greek', 'greek-ext', 'vietnamese'].flatMap((script) =>
+  ['400-normal', '700-normal', '400-italic', '700-italic'].map((cut) => `@fontsource/inter/files/inter-${script}-${cut}.woff`),
+)
 const heifLib = dirname(fromEngines.resolve('libheif-js/libheif-wasm/libheif.wasm'))
 const manifest = {
   vips: {
@@ -55,6 +59,11 @@ const manifest = {
   },
   magick: {
     wasm: await hashed(fromEngines.resolve('@imagemagick/magick-wasm/magick.wasm'), 'magick', 'wasm'),
+  },
+  // Typst, which lays out PDFs, and the typeface it sets them in.
+  typst: {
+    wasm: await hashed(fromEngines.resolve('@myriaddreamin/typst-ts-web-compiler/pkg/typst_ts_web_compiler_bg.wasm'), 'typst', 'wasm'),
+    fonts: await Promise.all(typstFonts.map((file) => hashed(fromEngines.resolve(file), file.split('/').pop()!.replace('.woff', ''), 'woff'))),
   },
   // LAME, which packs MP3. The decoder, mpg123, is carried inside its own script.
   mp3: {

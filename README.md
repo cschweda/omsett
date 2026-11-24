@@ -29,7 +29,7 @@ Omsett is a free, open-source file converter. Every conversion runs in your brow
 <!-- facts:start -->
 <!-- Generated from the registry by `pnpm readme:facts`. Do not edit by hand. -->
 
-**71 formats, 296 conversions**, every one of them run in your browser, on your device, and tested against 645 files made on purpose to be broken, hostile or dishonest. How many tests there are today is on the site's [Trust](https://omsett.com/trust) page, counted at every build.
+**71 formats, 297 conversions**, every one of them run in your browser, on your device, and tested against 645 files made on purpose to be broken, hostile or dishonest. How many tests there are today is on the site's [Trust](https://omsett.com/trust) page, counted at every build.
 
 | Kind | Converts to and from | Reads only |
 | --- | --- | --- |
@@ -37,7 +37,7 @@ Omsett is a free, open-source file converter. Every conversion runs in your brow
 | Drawings | — | SVG, SVGZ |
 | Documents | DOCX | DOC |
 | Presentations | — | PPTX |
-| PDF | — | PDF |
+| PDF | PDF | — |
 | Text and markup | Markdown, HTML | — |
 | Spreadsheets | XLSX | XLS |
 | Data | JSON, YAML, CSV, XML, TOML, JSON Lines, TSV, vCard, iCalendar | — |
@@ -55,7 +55,7 @@ A file is offered the formats of its own kind: a picture becomes another picture
 - **Shows what a file holds besides what it shows** (who wrote it, when, where a photo was taken, tracked changes, hidden text), and whether converting keeps or removes each.
 - **Goes by what a file contains, not what it is called.** A JPEG named `.png` is converted as a JPEG.
 - **Refuses a damaged or hostile file with a reason**, instead of returning half of one or freezing the tab. Every conversion runs against a clock.
-- **Does not write PDF yet.** It reads PDF, to a web page, Markdown or DOCX. Writing one is next.
+- **Writes PDF, tagged for screen readers**: a Word document, a web page or Markdown becomes a PDF whose headings, lists, tables and picture descriptions are marked as what they are. And reads PDF back to a web page, Markdown or DOCX.
 - **Never carries across what an author hid or deleted**: tracked deletions, hidden text and slides, comments, speaker notes.
 - **Makes icons**: any picture to a Windows icon, a Mac icon or a mouse pointer, at the sizes each expects.
 - **Develops a raw photograph (DNG)** with standard settings, the right way up.
@@ -127,7 +127,7 @@ A self-hostable image (Docker) serves the same site on your own network. There i
 
 ## Stack
 
-Nuxt 4 + Nuxt UI (a static site, served by nginx) · TypeScript · pnpm · Web Workers + WebAssembly (libvips, ImageMagick, libheif, resvg, pdf.js, mpg123, LAME) and Omsett's own readers and writers for data, documents, subtitles, screenplays, fonts, archives and sound · Docker for self-hosting. Every engine and its license is in [`THIRD-PARTY-NOTICES.md`](THIRD-PARTY-NOTICES.md).
+Nuxt 4 + Nuxt UI (a static site, served by nginx) · TypeScript · pnpm · Web Workers + WebAssembly (libvips, ImageMagick, libheif, resvg, pdf.js, Typst, mpg123, LAME) and Omsett's own readers and writers for data, documents, subtitles, screenplays, fonts, archives and sound · Docker for self-hosting. Every engine and its license is in [`THIRD-PARTY-NOTICES.md`](THIRD-PARTY-NOTICES.md).
 
 ## Run it locally
 

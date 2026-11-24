@@ -176,6 +176,9 @@ export const capabilities: Capability[] = [
   { engine: 'markup', tier: 'browser', reads: ['html'], writes: [{ format: 'docx', lossy: false }], priority: 20 },
   // A Word document from before 2007 is read to a page as the newer kind is. It is never written.
   { engine: 'markup', tier: 'browser', reads: ['doc'], writes: [{ format: 'html', lossy: false }], priority: 20 },
+  // A page is laid out as a PDF by Typst, which is large and is fetched only for this. Every
+  // other document reaches PDF through a page: a Word document in two steps, Markdown in two.
+  { engine: 'typst', tier: 'browser', reads: ['html'], writes: [{ format: 'pdf', lossy: false }], priority: 30 },
   // A PDF is read to a page, from its tags where it has them and from its layout where not.
   { engine: 'pdf', tier: 'browser', reads: ['pdf'], writes: [{ format: 'html', lossy: false }], priority: 20 },
   // A presentation is read to a page, a section to a slide.

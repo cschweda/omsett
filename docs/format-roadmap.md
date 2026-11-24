@@ -113,7 +113,9 @@ When a format ships, update its row here, in the same change.
 | XLS, XLT (the older binary form, from Excel 97 on) to XLSX and every data format; read only | Browser | `data` (Omsett's own reader, of the container and of the workbook) | **Done** (0.45.0) |
 | DOC (the older binary form, from Word 97 on) to DOCX, HTML and Markdown; read only | Browser | `markup` (Omsett's own reader, on the same container reader) | **Done** (0.46.0) |
 | PPT (the older binary form) to the newer formats; read only | Browser | Omsett's own reader, on the same container reader | Next |
-| **Writing PDF**, from pictures and from documents | Browser | To be chosen; a document written as PDF must be tagged, so that it is no less accessible than its source | **Next, and overdue** |
+| **Writing PDF** from HTML, DOCX, DOC, Markdown and PPTX, tagged | Browser | `typst` (Typst, built to WebAssembly by typst.ts, 28 MB fetched on demand) | **Done** (0.47.0) |
+| PDF in scripts beyond Latin, Greek and Cyrillic: a typeface for each, fetched when a document needs it | Browser | the same, with more fonts | Next |
+| Pictures to PDF; combining, splitting and rearranging PDFs | Browser | to be decided | Planned |
 | Workbooks from Excel 95 and earlier | Browser | — | Planned |
 | Numbers (read) | Browser | SheetJS | Planned |
 | OTS, FODS, ET | Desktop | LibreOffice | Planned |

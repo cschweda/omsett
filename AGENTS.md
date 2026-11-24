@@ -192,6 +192,23 @@ build by `apps/web/scripts/write-headers.ts`.
   (`fixtures/code-traps.test.ts`). A new format gets one in the "code" section of
   `make-traps.py`, with the payload wherever the format holds text. `expectNoCodeRan` runs after
   every trap in both suites; a test of the test fails if a kind of file has no code trap.
+- **No word of a document is ever written as Typst markup** (`packages/engines/src/typst/source.ts`).
+  Typst's language runs code. Every word from a page is written as a quoted string, an
+  argument to a function this file chose, through `quoted`; a link is made only of a web or
+  mail address, a picture only of one inside the page. A test takes every quoted string out of
+  the program and requires that nothing of the page is left. Do not add a path that writes
+  markup, however well escaped.
+- **Typst is given the program, the pictures it names, and the typeface, and nothing else.**
+  `loadFonts(..., { assets: false })`: without that the library fetches fonts from another
+  site. No package registry and no access to files is set. A browser test asserts that writing
+  a PDF asks nothing of any other origin.
+- **A PDF Omsett writes must be tagged, and is read back to prove it.** `typst.test.ts` gives the
+  PDF to Omsett's own reader and requires headings, lists, the table's head and links from the
+  tags. In Typst a picture must be set in a `box`: put any other way inside a paragraph it is
+  silently left out, tags and all.
+- **Letters the PDF's typeface cannot draw are left out by Typst, not shown as boxes.** The
+  engine counts them, names them in the result, and refuses a page that is mostly such
+  letters. Do not turn that into a quiet conversion: a blank PDF is worse than a refusal.
 - **A PDF's tags are believed only if they describe and cover its text**
   (`packages/engines/src/pdf/read.ts`). Do not loosen that to make a file come out "tagged":
   the fallback exists because real PDFs are tagged for their pictures alone.

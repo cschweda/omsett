@@ -191,6 +191,16 @@ the list of contents written at the front of each MP3 are Omsett's own code.
 
 The sample MP3s in `fixtures/` are Omsett's two test notes, packed by ffmpeg.
 
+### typst
+
+PDFs are laid out and written by **Typst** (Apache-2.0), <https://github.com/typst/typst>,
+built to WebAssembly by [typst.ts](https://github.com/Myriad-Dreamin/typst.ts) (Apache-2.0),
+from the packages `@myriaddreamin/typst.ts` and `@myriaddreamin/typst-ts-web-compiler`. It is
+not changed. It is fetched only when a PDF is asked for, and is given no way to read a file or
+reach a network: only the program Omsett writes for it, the pictures that program names, and
+the typeface. The PDFs are set in Inter (SIL Open Font License 1.1, via `@fontsource/inter`),
+whose files are embedded in each PDF in part, as the licence allows.
+
 ### font-woff2
 
 WOFF2 is read and written by Google's woff2 library and Brotli, built to WebAssembly.

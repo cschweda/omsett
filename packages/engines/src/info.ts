@@ -168,6 +168,17 @@ export const audioMp3Info: EngineInfo = {
   sourceUrl: 'https://github.com/eshaz/wasm-audio-decoders',
 }
 
+// Writing PDF: Typst, a typesetting program, built to WebAssembly by typst.ts. It is the
+// largest thing Omsett fetches, and is fetched only when a PDF is asked for. The size is the
+// binary as shipped; packed with gzip, as omsett.com sends it, it is about ten megabytes.
+export const typstInfo: EngineInfo = {
+  id: 'typst',
+  sizeBytes: 28_325_178,
+  runtimes: ['browser', 'node'],
+  license: 'Apache-2.0',
+  sourceUrl: 'https://github.com/Myriad-Dreamin/typst.ts',
+}
+
 // Fonts. TTF, OTF and WOFF are read and written by Omsett's own code, with the compression
 // every browser has built in.
 export const fontInfo: EngineInfo = {
@@ -191,6 +202,16 @@ export const fontWoff2Info: EngineInfo = {
 
 /** The font files resvg is given, from @fontsource/inter. */
 export const resvgFonts = ['inter-latin-400-normal.woff2', 'inter-latin-700-normal.woff2']
+
+/**
+ * The typeface a PDF is set in, from @fontsource/inter: four cuts of it, each in the pieces that
+ * together draw Latin, Greek and Cyrillic.
+ */
+export const typstFonts = [
+  ...['latin', 'latin-ext', 'cyrillic', 'cyrillic-ext', 'greek', 'greek-ext', 'vietnamese'].flatMap((script) =>
+    ['400-normal', '700-normal', '400-italic', '700-italic'].map((cut) => `@fontsource/inter/files/inter-${script}-${cut}.woff`),
+  ),
+]
 
 /** The libvips module each engine needs, by file name, beyond libvips itself. */
 export const vipsModules: Record<string, string[]> = {
@@ -218,4 +239,5 @@ export const engineInfo: Record<string, EngineInfo> = {
   [fontWoff2Info.id]: fontWoff2Info,
   [audioInfo.id]: audioInfo,
   [audioMp3Info.id]: audioMp3Info,
+  [typstInfo.id]: typstInfo,
 }

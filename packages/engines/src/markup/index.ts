@@ -291,7 +291,8 @@ export async function officeToHtml(document: ReadDocument, name: string): Promis
   return page(lines, document.title ?? heading ?? safeBaseName(name), document.language ?? 'en')
 }
 
-async function htmlToDocx(text: string, name: string): Promise<Uint8Array> {
+/** A page read into a tree and cleaned, with the title and the language it gives for itself. */
+export async function readPage(text: string, name: string): Promise<{ tree: Tree; title: string; language: string }> {
   const [{ unified }, parse, sanitize] = await Promise.all([import('unified'), import('rehype-parse'), import('rehype-sanitize')])
   let title: string | null = null
   const processor = unified()
@@ -313,7 +314,12 @@ async function htmlToDocx(text: string, name: string): Promise<Uint8Array> {
   const tree = (await processor.run(processor.parse(text))) as Tree
   // The language the page says it is in, where it says so in a form that is one.
   const stated = /<html[^>]*\slang\s*=\s*["']?([a-z]{2,3}(?:-[a-z0-9]{2,8}){0,3})["'\s>]/i.exec(text.slice(0, 4096))?.[1]
-  return writeDocx(tree, title ?? firstHeading(tree) ?? safeBaseName(name), stated ?? 'en')
+  return { tree, title: title ?? firstHeading(tree) ?? safeBaseName(name), language: stated ?? 'en' }
+}
+
+async function htmlToDocx(text: string, name: string): Promise<Uint8Array> {
+  const page = await readPage(text, name)
+  return writeDocx(page.tree, page.title, page.language)
 }
 
 export function createMarkupEngine(): Engine {

@@ -38,7 +38,7 @@ describe('router, real registry', () => {
     for (const edge of deriveEdges(registry).edges) {
       const engines = edge.candidates.map((c) => c.engine)
       if (edge.from !== 'png') expect(engines, `${edge.from} → ${edge.to}`).not.toContain('canvas')
-      for (const engine of engines) expect(engine === 'canvas' || ['heif', 'resvg', 'magick', 'data', 'subtitle', 'markup', 'font', 'font-woff2', 'icon', 'archive', 'script', 'pdf', 'audio', 'audio-mp3'].includes(engine) || engine.startsWith('vips')).toBe(true)
+      for (const engine of engines) expect(engine === 'canvas' || ['heif', 'resvg', 'magick', 'data', 'subtitle', 'markup', 'font', 'font-woff2', 'icon', 'archive', 'script', 'pdf', 'audio', 'audio-mp3', 'typst'].includes(engine) || engine.startsWith('vips')).toBe(true)
       // The data engine reads and writes data and nothing else; no picture engine touches data.
       const data = [edge.from, edge.to].map((id) => ['data', 'spreadsheet'].includes(formatById(registry, id)!.category))
       expect(data[0], `${edge.from} → ${edge.to}`).toBe(data[1])
@@ -58,14 +58,14 @@ describe('router, real registry', () => {
       'heic', 'apng', 'svg', 'svgz', 'psd', 'psb', 'ico', 'icns', 'cur', 'jp2', 'exr', 'hdr', 'dds', 'fits', 'dcm', 'dng', 'pcx', 'sgi', 'ras',
       'json', 'yaml', 'csv', 'xlsx', 'xml', 'toml', 'jsonl', 'tsv', 'vcf', 'ics', 'xls',
       'srt', 'vtt', 'ass', 'ssa', 'ttml', 'lrc', 'sbv', 'smi', 'microdvd',
-      'md', 'html', 'docx', 'pptx', 'pdf', 'doc',
+      'md', 'html', 'docx', 'pdf', 'pptx', 'doc',
       'fountain', 'fdx', 'drafter',
       'woff2', 'woff', 'ttf', 'otf',
       'zip', 'tgz', 'tar',
       'mp3', 'wav', 'flac', 'aiff', 'au',
     ])
     const readOnly = new Set(everything.formats.filter((f) => f.readOnly).map((f) => f.id))
-    expect([...readOnly].sort()).toEqual(['apng', 'dcm', 'dng', 'doc', 'exr', 'fits', 'hdr', 'heic', 'pcx', 'pdf', 'pptx', 'psb', 'psd', 'ras', 'sgi', 'svg', 'svgz', 'xls'])
+    expect([...readOnly].sort()).toEqual(['apng', 'dcm', 'dng', 'doc', 'exr', 'fits', 'hdr', 'heic', 'pcx', 'pptx', 'psb', 'psd', 'ras', 'sgi', 'svg', 'svgz', 'xls'])
     // Every pair of the same kind converts, directly or through a step in between; nothing is
     // written as HEIC. A picture never becomes data, nor data a picture.
     const kind = (id: string) => formatById(everything, id)!.category
@@ -104,7 +104,14 @@ describe('router, real registry', () => {
     expect(all.route('otf', 'woff2')!.warnings.map((w) => w.id)).toEqual(['font-licence'])
     // Markdown and HTML become each other and nothing else.
     expect(all.route('md', 'html')!.edges.map((e) => e.candidates[0]!.engine)).toEqual(['markup'])
-    expect(all.targetsFor(['html']).map((t) => t.format.id)).toEqual(['md', 'html', 'docx', 'pptx', 'pdf', 'doc'])
+    expect(all.targetsFor(['html']).map((t) => t.format.id)).toEqual(['md', 'html', 'docx', 'pdf', 'pptx', 'doc'])
+    // PDF is written from a page, by the engine fetched for that alone; everything else reaches it through a page.
+    expect(all.route('html', 'pdf')!.edges.map((e) => e.candidates[0]!.engine)).toEqual(['typst'])
+    expect(all.route('docx', 'pdf')!.edges.map((e) => `${e.from}>${e.to}`)).toEqual(['docx>html', 'html>pdf'])
+    expect(all.route('md', 'pdf')!.edges.map((e) => `${e.from}>${e.to}`)).toEqual(['md>html', 'html>pdf'])
+    expect(all.route('doc', 'pdf')!.edges.map((e) => `${e.from}>${e.to}`)).toEqual(['doc>html', 'html>pdf'])
+    expect(all.route('pptx', 'pdf')).not.toBeNull()
+    expect(all.route('docx', 'pdf')!.warnings.map((w) => w.id)).toEqual(expect.arrayContaining(['pdf-written', 'accessibility-check']))
     // A Word document from before 2007 becomes the newer kind by way of a page, and says what to check.
     expect(all.route('doc', 'docx')!.edges.map((e) => `${e.from}>${e.to}`)).toEqual(['doc>html', 'html>docx'])
     expect(all.route('doc', 'md')!.warnings.map((w) => w.id)).toEqual(expect.arrayContaining(['old-word-kept', 'accessibility-check']))

@@ -138,7 +138,7 @@ export async function readPdf(bytes: Uint8Array): Promise<ReadPdf> {
     // page as one block say nothing. And they must cover the text: a PDF tagged only for its
     // pictures would otherwise come out with its pictures' descriptions and none of its words.
     let body = hasTags ? written(fromTags) : ''
-    const words = pages.reduce((sum, page) => sum + content(page.items), 0)
+    const words = pages.reduce((sum, page) => sum + content(page.items, page.tree), 0)
     // What the tags gave, counted the same way: the words alone, without the descriptions of
     // pictures (which are not on the page) and with each escaped character as the one it is.
     const covered = body
@@ -163,16 +163,31 @@ export async function readPdf(bytes: Uint8Array): Promise<ReadPdf> {
 
 const isText = (item: TextItem | Marker): item is TextItem => typeof (item as TextItem).str === 'string'
 
+/** The marked runs a tree gives to the labels of list items: their bullets and their numbers. */
+function labelRuns(tree: TreeNode | null): Set<string> {
+  const found = new Set<string>()
+  const pending: Array<[TreeNode, number, boolean]> = tree ? [[tree, 0, false]] : []
+  while (pending.length > 0) {
+    const [node, depth, label] = pending.pop()!
+    if (label && node.type === 'content' && node.id) found.add(node.id)
+    if (depth < MAX_DEPTH) for (const kid of node.children ?? []) pending.push([kid, depth + 1, label || kid.role === 'Lbl'])
+  }
+  return found
+}
+
 /** How many characters a page holds that are its content: not spaces, and not page furniture. */
-function content(items: Array<TextItem | Marker>): number {
+function content(items: Array<TextItem | Marker>, tree: TreeNode | null = null): number {
   let count = 0
-  // What a PDF marks as an artifact (a running head, a page number) is not content.
+  // What a PDF marks as an artifact (a running head, a page number) is not content. Nor is what
+  // its tags call the label of a list item: "2." and a dash are drawn by the list, and are not
+  // carried as words, so they are not counted as words the tags failed to give.
+  const labels = labelRuns(tree)
   const open: boolean[] = []
   for (const item of items) {
     if (isText(item)) {
       // A list's bullet is a mark, not a word.
       if (!open.includes(true) && !/^[\u2022\u25E6\u25AA\u25CF\u00B7]$/.test(item.str.trim())) count += item.str.replace(/\s+/g, '').length
-    } else if (item.type?.startsWith('begin')) open.push((item as Marker & { tag?: string }).tag === 'Artifact')
+    } else if (item.type?.startsWith('begin')) open.push((item as Marker & { tag?: string }).tag === 'Artifact' || labels.has(item.id ?? ''))
     else if (item.type === 'endMarkedContent') open.pop()
   }
   return count

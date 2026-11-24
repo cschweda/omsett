@@ -83,7 +83,7 @@ export const formats: Format[] = [
   // Subtitles and lyrics: text with times.
   srt, vtt, ass, ssa, ttml, lrc, sbv, smi, microdvd,
   // Writing: text with structure.
-  md, html, docx, pptx, pdf, doc,
+  md, html, docx, pdf, pptx, doc,
   // Screenplays.
   fountain, fdx, drafter,
   // Fonts: the same tables in four wrappings.
