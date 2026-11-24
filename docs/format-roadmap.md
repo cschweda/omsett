@@ -50,7 +50,8 @@ When a format ships, update its row here, in the same change.
 | FITS | yes | no | Browser | ImageMagick (WASM) | **Done** (0.34.0): the first picture in the file |
 | PSD | yes | no | Browser | ImageMagick (WASM) | Done (read, flattened). Layers are not kept |
 | PSB | yes | no | Browser | ImageMagick (WASM) | **Done** (0.34.0): the finished picture, layers merged |
-| Camera RAW (CR2, CR3, NEF, ARW, DNG, …) | yes | no | Browser | LibRaw (WASM) | Planned. Large files may be sent to the desktop app |
+| DNG | yes | no | Browser | ImageMagick (WASM), which carries LibRaw | **Reading done** (0.40.0): developed with standard settings and turned the right way up |
+| Camera makers' RAW (CR2, CR3, NEF, ARW, RAF, ORF, RW2, …) | yes | no | Browser | ImageMagick (WASM), which carries LibRaw | Planned. The decoder is already shipped; each format needs a sample that may be kept in the repository, and none can be written by script. Large files may be sent to the desktop app |
 | DICOM | yes | no | Browser | ImageMagick (WASM), shown only the picture | **Reading done** (0.39.0): the first picture of a scan. The patient's details are never read by the decoder and never carried across |
 | iPhone Live Photo (LIVP) | yes | no | Browser | unzip to HEIC + MOV | Planned |
 | PNG/JPEG to SVG (traced) | — | yes | Browser | a vectorizer (WASM) | Planned |
@@ -297,7 +298,7 @@ with [audit.icjia.app](https://audit.icjia.app).
 
 ## Suggested order
 
-1. Images are largely done: 30 formats. Left: camera RAW, carrying animation across, and the packed kinds of DDS.
+1. Images are largely done: 31 formats. Left: the camera makers' own RAW formats, carrying animation across, and the packed kinds of DDS.
 2. Data and subtitles are done: seven data formats, nine subtitle formats. The side-by-side view for text formats is done too, and Markdown ↔ HTML. Fonts are done as well, vCard and iCalendar, and the first archives. XLSX, DOCX, PPTX, the screenwriting formats and reading PDF are done. Details of a file before converting are done too. Next: the remaining image formats; then audio. All three are ZIPs of XML, and Omsett reads both itself. Then the screenwriting formats, Fountain, Final Draft (FDX) and Drafter. Small JavaScript libraries, no large downloads.
 3. Archives, then audio.
 4. Documents and e-books through Pandoc; then the PDF tools. A converted document must not score lower for accessibility than its original (see "Accessibility of converted documents").

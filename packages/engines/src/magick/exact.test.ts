@@ -95,3 +95,33 @@ describe('a scan', () => {
     expect(got.filter((_, i) => i % 4 === 1)).toEqual(held)
   })
 })
+
+describe('a raw file', () => {
+  const trap = (name: string) => new Blob([readFileSync(new URL(`../../../../fixtures/${name}`, import.meta.url)) as BlobPart])
+  const near = (a: number[], b: number[]) => a.every((value, i) => Math.abs(value - b[i]!) <= 12)
+  const at = (all: Uint8Array, width: number, x: number, y: number) => [...all.subarray((y * width + x) * 4, (y * width + x) * 4 + 3)]
+
+  it('comes out turned the way the camera was held', async () => {
+    // Upright, the pattern's top row runs from blue on the left to red on the right.
+    const upright = await pixels(await convert(trap('dng/sample.dng'), 'dng', 'png'), 320, 200)
+    const turned = await pixels(await convert(trap('_traps/camera-held-sideways.dng'), 'dng', 'png'), 200, 320)
+    // Turned a quarter to the right, that row runs down the right-hand side.
+    expect(at(turned, 200, 199, 0)).toEqual(at(upright, 320, 0, 0))
+    expect(at(turned, 200, 199, 319)).toEqual(at(upright, 320, 319, 0))
+    expect(at(turned, 200, 0, 0)).toEqual(at(upright, 320, 0, 199))
+  })
+
+  it('comes out as the real picture where a preview comes first', async () => {
+    const upright = await pixels(await convert(trap('dng/sample.dng'), 'dng', 'png'), 320, 200)
+    expect(await pixels(await convert(trap('_traps/preview-first.dng'), 'dng', 'png'), 320, 200)).toEqual(upright)
+  })
+
+  it('comes out much the same from what a sensor records as from the finished colours', async () => {
+    const upright = await pixels(await convert(trap('dng/sample.dng'), 'dng', 'png'), 320, 200)
+    const worked = await pixels(await convert(trap('_traps/as-a-sensor-records.dng'), 'dng', 'png'), 320, 200)
+    // Away from hard edges, where working colours out from the neighbours is exact enough.
+    for (const [x, y] of [[4, 4], [300, 10], [50, 50], [20, 190]] as const) {
+      expect(near(at(worked, 320, x, y), at(upright, 320, x, y)), `at ${x}, ${y}: ${at(worked, 320, x, y)} against ${at(upright, 320, x, y)}`).toBe(true)
+    }
+  })
+})

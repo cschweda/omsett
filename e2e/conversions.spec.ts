@@ -28,6 +28,7 @@ const samples: Record<string, string> = {
   dds: 'dds/sample.dds',
   fits: 'fits/sample.fits',
   dcm: 'dcm/sample.dcm',
+  dng: 'dng/sample.dng',
   jp2: 'jp2/sample.jp2',
   tga: 'tga/sample.tga',
   pnm: 'pnm/sample.ppm',

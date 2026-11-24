@@ -241,6 +241,11 @@ build by `apps/web/scripts/write-headers.ts`.
   An icon, a pointer or a Mac icon is written square, at the sizes in its capability's
   `iconSizes` (and, for a Mac icon, under the names in `iconNames`); `writtenSize` (`packages/registry`) says what size comes out, and the tests that
   compare sizes ask it. A second output at another size goes there too, not into a test.
+- **A picture is turned upright before its metadata is dropped** (`autoOrient` in the `magick`
+  engine). The note of which way is up is metadata; strip it first and a photo taken on its
+  side stays on its side. A size reader for such a format gives the size after turning.
+- **A raw photograph is developed, not copied.** DNG comes out with ImageMagick's standard
+  settings, so its tests compare sizes and nearby colours, never exact pixels against the file.
 - **A decoder is shown no more of a file than it needs.** A DICOM scan is walked by Omsett's own
   code (`packages/detect/src/dicom.ts`) and ImageMagick is handed the picture and the elements
   that describe it (`pictureOnly`), never the patient's details, the notes or the lists. The
