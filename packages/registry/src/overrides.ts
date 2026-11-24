@@ -29,6 +29,7 @@ const others = (id: string) => SUBTITLES.filter((other) => other !== id)
 // Documents. Every conversion of one carries the same caution, because the person who gets
 // the result may rely on a screen reader, and may not be the person who converted it.
 const CHECK_ACCESS = [{ id: 'accessibility-check', text: 'The converted document may have more accessibility problems than the original. Check its headings, picture descriptions and table headers before you publish it.' }]
+const FROM_OLD_WORD = [{ id: 'old-word-kept', text: 'Headings, lists, tables, links, bold and italic are kept. Pictures, fonts, colours, page layout, headers, footers, footnotes and comments are not.' }]
 const FROM_WORD = [{ id: 'word-kept', text: 'Headings, lists, tables, links and pictures with their descriptions are kept. Fonts, colours, page layout, headers, footers, footnotes and comments are not.' }]
 const TO_WORD = [{ id: 'word-written', text: 'Pictures inside the page go into the document. A picture kept on a website is not fetched: its description and address are written in its place.' }]
 
@@ -84,6 +85,7 @@ export const overrides: EdgeOverride[] = [
   { from: 'fountain', to: 'drafter', warnings: PACKAGE_NEW },
   { from: 'fdx', to: 'drafter', warnings: [...PACKAGE_NEW, ...SCRIPT_KEPT] },
   { from: 'docx', to: 'html', warnings: [...FROM_WORD, ...CHECK_ACCESS] },
+  { from: 'doc', to: 'html', warnings: [...FROM_OLD_WORD, ...CHECK_ACCESS] },
   { from: 'pptx', to: 'html', warnings: [...FROM_SLIDES, ...CHECK_ACCESS] },
   { from: 'pdf', to: 'html', warnings: [...FROM_PDF, ...CHECK_ACCESS] },
   { from: 'html', to: 'docx', warnings: [...TO_WORD, ...CHECK_ACCESS] },

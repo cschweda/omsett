@@ -102,3 +102,12 @@ dir mp3
 ff -i "$out/wav/sample.wav" -fflags +bitexact -c:a libmp3lame -q:a 4 -id3v2_version 3 -metadata title="Test pattern" -metadata artist=Omsett "$out/mp3/sample.mp3"
 ff -i "$out/wav/sample.wav" -fflags +bitexact -ar 44100 -c:a libmp3lame -b:a 128k -write_xing 0 -id3v2_version 0 -map_metadata -1 "$out/mp3/even-speed.mp3"
 ff -i "$out/wav/sample.wav" -fflags +bitexact -ar 22050 -ac 1 -c:a libmp3lame -q:a 6 -id3v2_version 4 -metadata title="Test pattern" "$out/mp3/one-channel.mp3"
+
+# --- old Word documents --------------------------------------------------------------------------
+# doc/sample.doc is written by doc.py, which can say exactly what kind each paragraph is. The
+# other is written by macOS itself (textutil), a program that knows nothing of Omsett, so that
+# the reader is tested against a file it had no hand in. It writes headings as bold lines and
+# lists as lines that begin with a bullet, which is how such files often are.
+python3 "$tools/doc.py" >/dev/null
+printf '%s' '<html><head><meta charset="utf-8"><title>Test pattern</title></head><body><h1>Heading one</h1><p>A paragraph with <b>bold</b> and <i>italic</i> words.</p><ul><li>First</li><li>Second</li></ul><table><tr><th>a</th><th>b</th></tr><tr><td>1</td><td>2</td></tr></table><p>Café 字幕</p></body></html>' > "$work/page.html"
+textutil -convert doc "$work/page.html" -output "$out/doc/from-macos.doc"

@@ -174,6 +174,8 @@ export const capabilities: Capability[] = [
   // steps, through the page.
   { engine: 'markup', tier: 'browser', reads: ['docx'], writes: [{ format: 'html', lossy: false }], priority: 20 },
   { engine: 'markup', tier: 'browser', reads: ['html'], writes: [{ format: 'docx', lossy: false }], priority: 20 },
+  // A Word document from before 2007 is read to a page as the newer kind is. It is never written.
+  { engine: 'markup', tier: 'browser', reads: ['doc'], writes: [{ format: 'html', lossy: false }], priority: 20 },
   // A PDF is read to a page, from its tags where it has them and from its layout where not.
   { engine: 'pdf', tier: 'browser', reads: ['pdf'], writes: [{ format: 'html', lossy: false }], priority: 20 },
   // A presentation is read to a page, a section to a slide.

@@ -111,7 +111,9 @@ When a format ships, update its row here, in the same change.
 | Choosing which sheet; every sheet at once | Browser | the same | Done |
 | XLSM (read, macros ignored), ODS | Browser | the same approach: a ZIP of XML | Planned |
 | XLS, XLT (the older binary form, from Excel 97 on) to XLSX and every data format; read only | Browser | `data` (Omsett's own reader, of the container and of the workbook) | **Done** (0.45.0) |
-| DOC and PPT (the older binary forms) to the newer formats; read only | Browser | Omsett's own readers, on the same container reader | Next: DOC, then PPT |
+| DOC (the older binary form, from Word 97 on) to DOCX, HTML and Markdown; read only | Browser | `markup` (Omsett's own reader, on the same container reader) | **Done** (0.46.0) |
+| PPT (the older binary form) to the newer formats; read only | Browser | Omsett's own reader, on the same container reader | Next |
+| **Writing PDF**, from pictures and from documents | Browser | To be chosen; a document written as PDF must be tagged, so that it is no less accessible than its source | **Next, and overdue** |
 | Workbooks from Excel 95 and earlier | Browser | — | Planned |
 | Numbers (read) | Browser | SheetJS | Planned |
 | OTS, FODS, ET | Desktop | LibreOffice | Planned |
