@@ -195,3 +195,57 @@ describe('hostile and broken input', () => {
     ).rejects.toThrow('not text in UTF-8')
   })
 })
+
+describe('a table set out as a page', () => {
+  const page = async (bytes: BlobPart, from: string, options: Record<string, unknown> = {}, name = `budget.${from}`) => {
+    const outputs = await engine.convert({ blob: new Blob([bytes]), name, from: formatById(registry, from)!, to: formatById(registry, 'html')!, options, signal: new AbortController().signal, onProgress: () => {} })
+    return { outputs, text: await outputs[0]!.blob.text() }
+  }
+
+  it('is a real table: the names of the columns marked as such, a row to a row, a title and a language', async () => {
+    const { outputs, text } = await page('name,born\nAda,1815\nGrace,1906\n', 'csv', { headerRow: true, language: 'en-GB' })
+    expect(outputs).toHaveLength(1)
+    expect(outputs[0]!.name).toBe('budget.html')
+    expect(text).toContain('<html lang="en-GB">')
+    expect(text).toContain('<title>budget</title>')
+    expect(text).toContain('<h1>budget</h1>')
+    expect(text).toContain('<thead><tr><th scope="col">name</th><th scope="col">born</th></tr></thead>')
+    expect(text).toContain('<tr><td>Ada</td><td>1815</td></tr>')
+    expect(text).toContain('<tr><td>Grace</td><td>1906</td></tr>')
+  })
+
+  it('writes every cell and every name as text, whatever it holds', async () => {
+    const hostile = '<script>alert(1)</script><img src=x onerror=alert(2)>"&'
+    const { text } = await page(JSON.stringify([{ [hostile]: hostile, nested: { a: [1, 2] } }]), 'json', {}, `${hostile}.json`)
+    expect(text).not.toMatch(/<script|<img/)
+    expect(text).toContain('<td>&lt;script&gt;alert(1)&lt;/script&gt;&lt;img src=x onerror=alert(2)&gt;&quot;&amp;</td>')
+    expect(text).toContain('<th scope="col">&lt;script&gt;alert(1)&lt;/script&gt;&lt;img src=x onerror=alert(2)&gt;&quot;&amp;</th>')
+    // What is nested inside a row is written out, not dropped.
+    expect(text).toContain('<td>{&quot;a&quot;:[1,2]}</td>')
+    expect(text.match(/<title>([^<]*)<\/title>/)![1]).not.toMatch(/[<>]/)
+  })
+
+  it('puts every sheet of a workbook on one page, each under its name', async () => {
+    const { readFile } = await import('node:fs/promises')
+    const workbook = await readFile(new URL('../../../../fixtures/xlsx/sample.xlsx', import.meta.url))
+    const all = await page(workbook, 'xlsx', { headerRow: true, sheet: 'all' }, 'sample.xlsx')
+    expect(all.outputs).toHaveLength(1)
+    expect(all.text).toContain('<h2>People</h2>')
+    expect(all.text).toContain('<h2>Totals</h2>')
+    expect(all.text.match(/<table>/g)).toHaveLength(2)
+    // The hidden sheet is on no page.
+    expect(all.text).not.toMatch(/Secret|not shown/)
+    const first = await page(workbook, 'xlsx', { headerRow: true, sheet: 'first' }, 'sample.xlsx')
+    expect(first.text.match(/<table>/g)).toHaveLength(1)
+    expect(first.text).not.toContain('<h2>')
+    expect(first.text).toContain('<td>Ada Lovelace</td>')
+    // And an old workbook the same.
+    const old = await page(await readFile(new URL('../../../../fixtures/xls/sample.xls', import.meta.url)), 'xls', { headerRow: true, sheet: 'all' }, 'sample.xls')
+    expect(old.text.replace('sample', 'x')).toBe(all.text.replace('sample', 'x'))
+  })
+
+  it('refuses a table too large to read as a page, and says what to choose', async () => {
+    const rows = Array.from({ length: 30_000 }, (_, i) => `${i},a,b,c,d,e,f,g,h`).join('\n')
+    await expect(page(`n,a,b,c,d,e,f,g,h\n${rows}\n`, 'csv', { headerRow: true })).rejects.toThrow('This table is too large to set out as a page. Choose CSV or XLSX, which hold a table of any size')
+  })
+})

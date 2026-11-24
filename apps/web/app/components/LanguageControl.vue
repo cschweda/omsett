@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { languages } from '~/utils/languages'
 
-// Shown only when the selected conversion writes a page that has to say what language it is in.
+// Shown only when the selected conversion writes a page that has to say what language it is in,
+// from a file that does not say: Markdown, or a table.
 const language = defineModel<string>({ required: true })
 </script>
 
@@ -12,7 +13,7 @@ const language = defineModel<string>({ required: true })
       <option v-for="option in languages" :key="option.tag" :value="option.tag">{{ option.name }}</option>
     </select>
     <p class="hint">
-      Markdown does not say what language it is written in. A web page should, so that it is read aloud in the
+      This file does not say what language it is written in. A web page should, so that it is read aloud in the
       right voice.
     </p>
   </div>

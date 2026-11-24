@@ -7,6 +7,39 @@ The paragraph that opens a version is its teaser: the home page shows its first 
 in the "What's new" banner, so keep it to two or three sentences on what a visitor will notice.
 A line beginning "Released" gives the date.
 
+## 0.50.0
+
+Released 24 November 2026.
+
+A spreadsheet can now become a PDF, a Word document, a web page or a Markdown table. So can a
+CSV file, and any other data Omsett reads. With this, everything Omsett reads that is a
+document, a table or a picture can be made into a PDF.
+
+### Added
+
+- **Tables as pages.** A workbook (XLSX or XLS), a CSV or TSV, or any data file can be set out
+  as a web page: a real table, with the row that names its columns marked as such. From
+  there it becomes a PDF, a Word document or Markdown.
+- **All the sheets of a workbook on one page**, each under its name, when "all sheets" is
+  chosen for a web page. Hidden sheets are on no page.
+- **A table of many columns is set on pages turned on their side** in a PDF, in smaller
+  letters, and its heading row is repeated at the top of each page.
+- The language of the page is a choice, since a table does not say what language it is in.
+
+### Changed
+
+- A data file is now offered the document formats after the data formats. A document is still
+  not offered data formats: a table can be set out as a page, and a page does not become a table.
+
+### Known
+
+- **Going straight from a workbook to a PDF, a Word document or Markdown takes the first
+  sheet**, with its first row as the names of its columns. To choose a sheet, or all of them,
+  convert to a web page first and then convert that.
+- A table of more than 250,000 cells is not set out as a page, and the refusal says to choose
+  CSV or XLSX.
+- A very wide table is squeezed to fit the page; nothing is cut off, but columns get narrow.
+
 ## 0.49.0
 
 Released 24 November 2026.

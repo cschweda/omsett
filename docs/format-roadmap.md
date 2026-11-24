@@ -118,6 +118,7 @@ When a format ships, update its row here, in the same change.
 | PDF in the remaining scripts (Bengali, Tamil and others of India, Armenian, Georgian, Ethiopic) and emoji | Browser | the same | Planned |
 | Reading Arabic and Hebrew back out of a PDF in the right order | Browser | `pdf` | Planned |
 | Pictures to PDF, one picture to a PDF | Browser | `typst` | **Done** (0.49.0) |
+| Spreadsheets and data (XLSX, XLS, CSV, TSV, JSON and the rest) to HTML, and through it to PDF, DOCX and Markdown | Browser | `data` writes the page; `typst` and `markup` take it on | **Done** (0.50.0) |
 | Several pictures into one PDF; combining, splitting and rearranging PDFs; a JPEG kept as a JPEG inside the PDF | Browser | to be decided | Planned |
 | Workbooks from Excel 95 and earlier | Browser | — | Planned |
 | Numbers (read) | Browser | SheetJS | Planned |

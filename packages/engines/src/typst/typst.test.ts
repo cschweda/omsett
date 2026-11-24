@@ -171,6 +171,35 @@ describe('a page written as a PDF', () => {
   })
 })
 
+describe('a table set out in a PDF', () => {
+  const sizes = (pdf: Uint8Array) => [...new TextDecoder('latin1').decode(pdf).matchAll(/\/MediaBox\s*\[\s*0\s+0\s+([\d.]+)\s+([\d.]+)\s*\]/g)].map((box) => [Number(box[1]), Number(box[2])])
+  const tablePage = async (columns: number) => {
+    const names = Array.from({ length: columns }, (_, i) => `column ${i + 1}`)
+    const csv = `${names.join(',')}\n${Array.from({ length: 5 }, (_, row) => names.map((_, i) => `value ${row}.${i}`).join(',')).join('\n')}\n`
+    const html = await through('data', csv, 'csv', 'html', 'figures.csv')
+    return through('typst', html.bytes, 'html', 'pdf', 'figures.html')
+  }
+
+  it('keeps its heading row and its cells in the tags, from a CSV by way of a page', async () => {
+    const pdf = await tablePage(4)
+    const back = await readBack(pdf.bytes)
+    expect(back).toMatch(/<th[^>]*>column 1<\/th>/)
+    expect(back).toMatch(/<td>value 4\.3<\/td>/)
+    expect(back).toContain('<h1>figures</h1>')
+  })
+
+  it('turns the page on its side for a table of many columns, and only for that', async () => {
+    const tall = sizes((await tablePage(4)).bytes)
+    const wide = sizes((await tablePage(12)).bytes)
+    // Where the sizes can be read from the file as it is: every page of the narrow table is taller than wide, and a page of the wide one is not.
+    if (tall.length && wide.length) {
+      expect(tall.every(([width, height]) => height! > width!)).toBe(true)
+      expect(wide.some(([width, height]) => width! > height!)).toBe(true)
+    }
+    expect(await readBack((await tablePage(12)).bytes)).toMatch(/<td>value 4\.11<\/td>/)
+  })
+})
+
 describe('a picture set on a page', () => {
   const page = async (bytes: Uint8Array, name = 'scan.png') => {
     const [output] = await engines.typst!.convert({ blob: new Blob([bytes as BlobPart]), name, from: formatById(registry, 'png')!, to: formatById(registry, 'pdf')!, options: { onPage: true }, signal: new AbortController().signal, onProgress: () => {} })

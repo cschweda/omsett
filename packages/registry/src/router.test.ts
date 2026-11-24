@@ -40,9 +40,11 @@ describe('router, real registry', () => {
       const engines = edge.candidates.map((c) => c.engine)
       if (edge.from !== 'png') expect(engines, `${edge.from} → ${edge.to}`).not.toContain('canvas')
       for (const engine of engines) expect(engine === 'canvas' || ['heif', 'resvg', 'magick', 'data', 'subtitle', 'markup', 'font', 'font-woff2', 'icon', 'archive', 'script', 'pdf', 'audio', 'audio-mp3', 'typst'].includes(engine) || engine.startsWith('vips')).toBe(true)
-      // The data engine reads and writes data and nothing else; no picture engine touches data.
+      // The data engine reads data and nothing else, and writes data or a page that sets a
+      // table out to be read; nothing but the data engine reads data, and no picture engine touches it.
       const data = [edge.from, edge.to].map((id) => ['data', 'spreadsheet'].includes(formatById(registry, id)!.category))
-      expect(data[0], `${edge.from} → ${edge.to}`).toBe(data[1])
+      expect(data[1] ? data[0] : true, `${edge.from} → ${edge.to}`).toBe(true)
+      if (data[0]) expect(data[1] || edge.to === 'html', `${edge.from} → ${edge.to}`).toBe(true)
       expect(engines.includes('data'), `${edge.from} → ${edge.to}`).toBe(data[0])
       // The same holds for subtitles and the engine that reads them.
       const subtitle = [edge.from, edge.to].map((id) => formatById(registry, id)!.category === 'subtitle')
@@ -81,7 +83,16 @@ describe('router, real registry', () => {
     }
     // Data formats convert to each other in one step, and a file is offered only its own kind.
     expect(all.route('csv', 'yaml')!.edges.map((e) => e.candidates[0]!.engine)).toEqual(['data'])
-    expect(all.targetsFor(['json']).map((t) => t.format.id)).toEqual(['json', 'yaml', 'csv', 'xlsx', 'xml', 'toml', 'jsonl', 'tsv', 'vcf', 'ics', 'xls'])
+    // A data file is offered data formats, and after them the ways of setting a table out to be read.
+    expect(all.targetsFor(['json']).map((t) => t.format.id)).toEqual(['json', 'yaml', 'csv', 'xlsx', 'xml', 'toml', 'jsonl', 'tsv', 'vcf', 'ics', 'xls', 'md', 'html', 'docx', 'pdf', 'doc'])
+    expect(all.route('csv', 'html')!.edges.map((e) => e.candidates[0]!.engine)).toEqual(['data'])
+    expect(all.route('xlsx', 'pdf')!.edges.map((e) => `${e.from}>${e.to}`)).toEqual(['xlsx>html', 'html>pdf'])
+    expect(all.route('xls', 'pdf')!.edges.map((e) => `${e.from}>${e.to}`)).toEqual(['xls>html', 'html>pdf'])
+    expect(all.route('csv', 'md')!.edges.map((e) => `${e.from}>${e.to}`)).toEqual(['csv>html', 'html>md'])
+    expect(all.route('xlsx', 'html')!.warnings.map((w) => w.id)).toEqual(expect.arrayContaining(['first-sheet', 'table-as-page']))
+    // One way only: a page does not become a table, and a document is offered no data formats.
+    expect(all.route('html', 'csv')).toBeNull()
+    expect(all.targetsFor(['docx']).some((t) => ['data', 'spreadsheet'].includes(t.format.category))).toBe(false)
     // A workbook from before 2007 is read, and becomes the newer kind in one step. It is never written.
     expect(all.route('xls', 'xlsx')!.edges.map((e) => e.candidates[0]!.engine)).toEqual(['data'])
     expect(all.route('xls', 'csv')!.edges[0]!.candidates[0]!.defaultOptions).toMatchObject({ sheet: 'first', headerRow: true })

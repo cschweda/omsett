@@ -77,6 +77,8 @@ const KEPT_WHOLE = ['wav', 'flac', 'aiff', 'au']
 const LEFT_OUT = [{ id: 'sound-left-out', text: 'MP3 leaves out sound to make the file small. It cannot be put back, so keep the original.' }]
 const NOT_RESTORED = [{ id: 'sound-not-restored', text: 'An MP3 has already left sound out. Converting it does not bring that back; the file only gets larger.' }]
 
+const TABLE_PAGE = [{ id: 'table-as-page', text: 'The rows are set out as one table on a page, to be read. The first row of the table names its columns. Lists and groups inside a row are written as text.' }]
+
 const TYPED = ['json', 'jsonl', 'yaml', 'toml']
 
 export const overrides: EdgeOverride[] = [
@@ -97,6 +99,7 @@ export const overrides: EdgeOverride[] = [
     { from: 'xlsx', to: other, warnings: WORKBOOK_READ },
     { from: other, to: 'xlsx', warnings: WORKBOOK_WRITTEN },
   ]),
+  ...[...DATA, 'xls'].map((from) => ({ from, to: 'html', warnings: ['xlsx', 'xls'].includes(from) ? [...WORKBOOK_READ, ...TABLE_PAGE] : TABLE_PAGE })),
   // A workbook from before 2007 is read as the newer kind is, and says the same of itself.
   { from: 'xls', to: 'vcf', warnings: CONTACT_COLUMNS },
   { from: 'xls', to: 'ics', warnings: EVENT_COLUMNS },
