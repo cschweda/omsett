@@ -222,6 +222,14 @@ build by `apps/web/scripts/write-headers.ts`.
 - **Details and the ZIP of results have a worker of their own** (`sideWorker` in
   `useEngines`). One worker does one thing at a time; asked of the converting worker, they
   would wait behind a long conversion, time out, and stop it.
+- **The preview before converting is the conversion itself, run quietly** (`makePreview` in
+  `useConversionQueue`): one picture, a picture target, under `PREVIEW_MAX_PIXELS`. It never
+  fetches an engine: one that is not loaded is offered with its size, and fetched on a press.
+  It waits for a conversion and a conversion waits for it, since one worker does one thing at a
+  time. It is hidden while converting and once there is a result, so that only one comparison
+  is ever on the page; the tests rely on that.
+- **The page goes to the result only for a conversion a person asked for** (`arrived`). A
+  re-conversion from moving a setting must not move the page.
 - **"Convert another" ends a session** (`sessions` in `useConversionQueue`). A batch checks
   after every wait whether its session is over, and writes nothing if it is.
 - **Word from the worker can arrive late.** A progress event may land after its file is

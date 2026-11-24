@@ -189,7 +189,7 @@ test('the comparison is there before converting: a preview of what the result wi
   await expect(page.getByTestId('download')).toHaveCount(0)
   await expect(page.locator('#results-heading')).toHaveCount(0)
   // The preview follows the quality, and says how large the result would be.
-  const label = () => preview.locator('.tag.right').innerText()
+  const label = () => preview.locator('.tag.right').textContent()
   const before = await label()
   await preview.getByTestId('compare-quality').fill('10')
   await expect.poll(label, { timeout: 15_000 }).not.toBe(before)
