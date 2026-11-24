@@ -1,6 +1,8 @@
+import { isCfb } from '@omsett/detect'
 import { readZip, writeZip } from '../archive/zip'
 import type { Entry } from '../archive/entries'
 import { cellOf, MAX_TABLE_CELLS, Refusal, tableTooLarge, withinTags } from '../util'
+import { openOldWorkbook } from './xls'
 import { text as escapeXml } from './xml'
 
 // Excel workbooks (XLSX). A workbook is a ZIP of XML files: one lists the sheets, one holds the
@@ -11,8 +13,8 @@ import { text as escapeXml } from './xml'
 // beside it, and that is what is read. Macros, links to other files and embedded objects are
 // never opened.
 
-type Cell = string | number | boolean | null
-type Row = Record<string, Cell>
+export type Cell = string | number | boolean | null
+export type Row = Record<string, Cell>
 type Xml = Record<string, unknown>
 
 /** The most XML in one part of a workbook that will be read. */
@@ -22,12 +24,12 @@ const MAX_ROWS = 1_048_576
 const MAX_COLUMNS = 16_384
 const MAX_CELL_CHARACTERS = 32_767
 /** More cells than this is not read in a browser tab. */
-const MAX_CELLS = 5_000_000
+export const MAX_CELLS = 5_000_000
 /** The most sheets one workbook is read for. */
-const MAX_SHEETS = 256
+export const MAX_SHEETS = 256
 
 const invalid = () => new Refusal('This file is not a valid XLSX workbook')
-const tooLarge = () => new Refusal('This workbook is too large to convert in a browser')
+export const tooLarge = () => new Refusal('This workbook is too large to convert in a browser')
 
 const list = <T>(value: T | T[] | undefined): T[] => (value === undefined ? [] : Array.isArray(value) ? value : [value])
 const record = (value: unknown): Xml => (typeof value === 'object' && value !== null && !Array.isArray(value) ? (value as Xml) : {})
@@ -74,17 +76,17 @@ function words(item: unknown): string {
 }
 
 /** Number formats that Excel defines itself and that show a date or a time. */
-const BUILT_IN_DATES = new Set([14, 15, 16, 17, 18, 19, 20, 21, 22, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 45, 46, 47, 50, 51, 52, 53, 54, 55, 56, 57, 58])
+export const BUILT_IN_DATES = new Set([14, 15, 16, 17, 18, 19, 20, 21, 22, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 45, 46, 47, 50, 51, 52, 53, 54, 55, 56, 57, 58])
 
 /** Whether a format someone wrote shows a date: it has a day, month, year, hour or second in it. */
-function isDateFormat(code: string): boolean {
+export function isDateFormat(code: string): boolean {
   // What is in quotes or square brackets is literal text or a colour, not part of the pattern.
   const pattern = code.replace(/"[^"]*"|\[[^\]]*\]|\\./g, '')
   return /[dmyhs]/i.test(pattern) && !/^general$/i.test(pattern.trim())
 }
 
 /** Excel counts days from the end of 1899, and wrongly believes 1900 was a leap year. */
-function dateOf(serial: number, from1904: boolean): string | null {
+export function dateOf(serial: number, from1904: boolean): string | null {
   if (!Number.isFinite(serial) || serial < 0 || serial > 2_958_465) return null
   const days = from1904 ? serial + 1462 : serial
   // Day 60 is 29 February 1900, which never happened; days after it are one too many.
@@ -96,7 +98,7 @@ function dateOf(serial: number, from1904: boolean): string | null {
 }
 
 /** A workbook opened: the sheets a person would see, in order, each read when it is asked for. */
-interface Opened {
+export interface Opened {
   /** Sheets that are not hidden, by the name on their tab. */
   shown: Array<{ name: string; path: string }>
   rows(path: string): Row[]
@@ -108,6 +110,8 @@ interface Opened {
  *              row is data and the columns are called column_A, column_B and so on.
  */
 async function openWorkbook(bytes: Uint8Array, named: boolean): Promise<Opened> {
+  // A workbook from before 2007 is not a ZIP at all. It is opened by its own reader, into the same shape.
+  if (isCfb(bytes)) return openOldWorkbook(bytes, named)
   let entries: Entry[]
   try {
     entries = await readZip(bytes)
@@ -254,6 +258,11 @@ function tableOf(worksheet: Xml, shared: string[], dated: boolean[], from1904: b
     if (cells > MAX_CELLS || grid.length >= MAX_ROWS) throw tooLarge()
     grid.push(Array.from(line, (value) => value ?? null))
   }
+  return rowsFrom(grid, named)
+}
+
+/** Rows of cells as rows of named values: the first row names the columns, where it is said to. */
+export function rowsFrom(grid: Cell[][], named: boolean): Row[] {
   if (grid.length === 0) return []
 
   // The first row names the columns. A name used twice, or missing, is given one of its own.

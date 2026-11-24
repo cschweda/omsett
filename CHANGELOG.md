@@ -7,6 +7,39 @@ The paragraph that opens a version is its teaser: the home page shows its first 
 in the "What's new" banner, so keep it to two or three sentences on what a visitor will notice.
 A line beginning "Released" gives the date.
 
+## 0.45.0
+
+Released 24 November 2026.
+
+Excel workbooks from before 2007, the ones ending in .xls, can now be converted: to XLSX, so
+that anything opens them, or to CSV, JSON and the rest. Word documents of the same age are
+next.
+
+### Added
+
+- **XLS**, the Excel workbook as it was until 2007, as a source. It converts to everything
+  XLSX does, XLSX itself included. It is read and never written: nobody needs a new one.
+- Read by Omsett's own code, in two layers: the small filing system old Office files are kept
+  in, and the workbook inside it. Text shared between cells, dates, numbers packed three ways,
+  and the value a formula last showed are all read, and the sheets can be chosen by name.
+- The same rules as for XLSX: hidden sheets are never converted, formulas are never worked
+  out, and macros are never run or carried over. A workbook locked with a password, or saved
+  by Excel 95 or earlier, is refused with the reason.
+- An old workbook's details: who wrote it and with what, its sheets, and whether it carries
+  macros.
+- 21 trap files for it (a trap file is one made on purpose to be broken, hostile or
+  dishonest): sectors that follow each other in a circle, a stream said to be two gigabytes,
+  ten million cells from half a megabyte, a macro set to run on opening.
+- The sample holds the same workbook as the XLSX sample, and a test holds the two readers to
+  the same answer, cell for cell.
+
+### Known
+
+- The samples are written by a script, and checked against a second, independent reader
+  (xlrd) by hand. No workbook saved by Excel itself is in the tests yet.
+- Workbooks from Excel 95 and earlier are not read. Nor is the look of a sheet: fonts,
+  colours, widths, charts and comments are left behind, as with XLSX.
+
 ## 0.44.1
 
 Released 24 November 2026.

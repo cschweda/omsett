@@ -73,7 +73,7 @@ const SUBTITLES = ['srt', 'vtt', 'ass', 'ssa', 'ttml', 'lrc', 'sbv', 'smi', 'mic
 const SUBTITLE_WRITES: WriteSpec[] = SUBTITLES.map((format) => ({ format, lossy: false, drops: ['styling'] }))
 
 const TABLES = ['csv', 'tsv', 'xlsx']
-const SHEETS = ['xlsx']
+const SHEETS = ['xlsx', 'xls']
 const SHAPED = ['json', 'yaml']
 const TABLE_WRITES: WriteSpec[] = DATA.map((format) => ({
   format,

@@ -29,7 +29,7 @@ Omsett is a free, open-source file converter. Every conversion runs in your brow
 <!-- facts:start -->
 <!-- Generated from the registry by `pnpm readme:facts`. Do not edit by hand. -->
 
-**69 formats, 285 conversions**, every one of them run in your browser, on your device, and tested against 604 files made on purpose to be broken, hostile or dishonest. How many tests there are today is on the site's [Trust](https://omsett.com/trust) page, counted at every build.
+**70 formats, 295 conversions**, every one of them run in your browser, on your device, and tested against 627 files made on purpose to be broken, hostile or dishonest. How many tests there are today is on the site's [Trust](https://omsett.com/trust) page, counted at every build.
 
 | Kind | Converts to and from | Reads only |
 | --- | --- | --- |
@@ -39,7 +39,7 @@ Omsett is a free, open-source file converter. Every conversion runs in your brow
 | Presentations | — | PPTX |
 | PDF | — | PDF |
 | Text and markup | Markdown, HTML | — |
-| Spreadsheets | XLSX | — |
+| Spreadsheets | XLSX | XLS |
 | Data | JSON, YAML, CSV, XML, TOML, JSON Lines, TSV, vCard, iCalendar | — |
 | Subtitles | SRT, WebVTT, ASS, SSA, TTML, LRC, SBV, SAMI, MicroDVD | — |
 | Screenplays | Fountain, Final Draft, Drafter | — |
@@ -65,6 +65,7 @@ A file is offered the formats of its own kind: a picture becomes another picture
 - **Try it without a file of your own**: a sample picture, PDF and Word document are in the drop zone.
 - **See the result before you convert**: choose a picture and a format, and the original and what it will become are shown side by side, with a divider to drag and the quality to move. Nothing is fetched or saved to do it.
 - **Before and after, side by side**, once converted too: a slider for pictures; the two texts for data and subtitles.
+- **Opens Excel workbooks from before 2007 (.xls)** and makes them XLSX, CSV or JSON, without running a macro or working out a formula.
 - **Choose which sheet of a workbook to convert**, by name, or all of them at once.
 - **Convert to several formats at once**, and download everything as one ZIP.
 - **Settings**: light or dark, your own words in the names of converted files, and whether your visit is counted.

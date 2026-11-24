@@ -21,7 +21,7 @@ import { describe, expect, it } from 'vitest'
 /** Formats that are text are attacked by the trap files, where what matters is what the text says. */
 const TEXT = new Set(['data', 'subtitle', 'text', 'screenplay'])
 /** Except the few in those kinds that are ZIPs underneath. */
-const BINARY_DATA = ['xlsx', 'drafter']
+const BINARY_DATA = ['xlsx', 'xls', 'drafter']
 /** A conversion that has not come back in this long is counted as never coming back. */
 const HANG_MS = 45_000
 

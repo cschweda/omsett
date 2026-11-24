@@ -131,13 +131,33 @@ const MAX_LOOKED_AT = 64 * 1024 * 1024
  */
 export async function officeKind(blob: Blob): Promise<'xls' | 'doc' | 'ppt' | null> {
   if (blob.size > MAX_LOOKED_AT) return null
+  let bytes: Uint8Array
   try {
-    const names = readCfb(new Uint8Array(await blob.arrayBuffer())).names.map((name) => name.toLowerCase())
+    bytes = new Uint8Array(await blob.arrayBuffer())
+    const names = readCfb(bytes).names.map((name) => name.toLowerCase())
     if (names.includes('workbook') || names.includes('book')) return 'xls'
     if (names.includes('worddocument')) return 'doc'
     if (names.includes('powerpoint document')) return 'ppt'
     return null
   } catch {
+    // A file too damaged to follow may still say what it was: the names of its streams are
+    // written out in it, two bytes to a letter. Found, the file is taken for that kind, so that
+    // it is refused as a damaged workbook and not passed over as something unknown.
+    const holds = (name: string) => {
+      const wanted = Uint8Array.from([...name].flatMap((letter) => [letter.charCodeAt(0), 0]))
+      outer: for (let at = bytes!.indexOf(wanted[0]!); at >= 0 && at + wanted.length <= bytes!.length; at = bytes!.indexOf(wanted[0]!, at + 1)) {
+        for (let i = 1; i < wanted.length; i++) if (bytes![at + i] !== wanted[i]) continue outer
+        return true
+      }
+      return false
+    }
+    try {
+      if (holds('Workbook')) return 'xls'
+      if (holds('WordDocument')) return 'doc'
+      if (holds('PowerPoint Document')) return 'ppt'
+    } catch {
+      // Not even that.
+    }
     return null
   }
 }

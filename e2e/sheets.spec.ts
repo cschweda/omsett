@@ -51,3 +51,20 @@ test('all sheets in one file, each under its name, where the format can hold tha
   const all = JSON.parse(await readFile(await download.path(), 'utf8')) as Record<string, unknown>
   expect(Object.keys(all)).toEqual(['People', 'Totals'])
 })
+
+test('a workbook from before 2007 lists its sheets and becomes an XLSX that holds the same rows', async ({ page }) => {
+  await open(page)
+  await page.locator('#file-input').setInputFiles(fixture('xls/sample.xls'))
+  await expect(page.locator('.file-card')).toContainText('XLS')
+  await page.locator('[role="radio"][data-format="xlsx"]').click()
+  const sheet = page.getByTestId('sheet')
+  await expect(sheet.locator('option')).toHaveText(['The first sheet with anything in it', '1. People', '2. Totals', 'All sheets (2)'])
+  await page.getByTestId('convert').click()
+  const link = page.getByTestId('download')
+  await expect(link).toBeVisible({ timeout: 30_000 })
+  await expect(link).toHaveAttribute('download', 'sample.xlsx')
+  // Who wrote it and with what is shown beforehand, and is left behind.
+  await page.getByTestId('details-toggle').click()
+  await expect(page.getByTestId('details')).toContainText('Omsett')
+  await expect(page.getByTestId('details')).toContainText('2 shown: People, Totals')
+})

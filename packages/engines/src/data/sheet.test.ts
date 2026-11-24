@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises'
 import { describe, expect, it } from 'vitest'
 import { readZip, writeZip } from '../archive/zip'
 import { Refusal } from '../util'
-import { readWorkbook, writeWorkbook } from './sheet'
+import { listSheets, readSheets, readWorkbook, writeWorkbook } from './sheet'
 
 const fixture = async (path: string) => new Uint8Array(await readFile(new URL(`../../../../fixtures/${path}`, import.meta.url)))
 const refusal = (work: Promise<unknown>) =>
@@ -250,5 +250,69 @@ describe('the sheets of a workbook, by choice', () => {
     expect(each).toBeLessThan(cells[0]! + cells[1]!)
     expect(await refusal(readSheets(book, true, 'all', each))).toBe('This workbook is too large to convert in a browser')
     expect(await readSheets(book, true, 'all', cells[0]! + cells[1]!)).toHaveLength(2)
+  })
+})
+
+describe('workbooks from before 2007 (XLS)', () => {
+  const refusal = (work: Promise<unknown>) => work.then(() => 'read', (error: Error) => `${error.name}: ${error.message}`)
+
+  it('reads what the newer kind reads, cell for cell: the two samples hold the same workbook', async () => {
+    const old = await fixture('xls/sample.xls')
+    const now = await fixture('xlsx/sample.xlsx')
+    expect(await listSheets(old)).toEqual(['People', 'Totals'])
+    expect(await readSheets(old, true, 'all')).toEqual(await readSheets(now, true, 'all'))
+    expect(await readWorkbook(old)).toEqual(await readWorkbook(now))
+    // And with the first row as data.
+    expect(await readWorkbook(old, false)).toEqual(await readWorkbook(now, false))
+    expect(await readSheets(await fixture('xls/events.xls'), true, 'all')).toEqual(await readSheets(await fixture('xlsx/events.xlsx'), true, 'all'))
+  })
+
+  it('reads dates as dates, text of mixed style whole, and what a formula last showed', async () => {
+    const [ada, grace, cafe] = await readWorkbook(await fixture('xls/sample.xls'))
+    expect(ada).toMatchObject({ id: 1, name: 'Ada Lovelace', born: '1815-12-10', joined: '2026-11-23', salary: 1234.5, postcode: '01234', active: true })
+    expect(grace).toMatchObject({ id: 2, name: 'Grace Hopper', born: '1906-12-06', joined: '2026-11-23T14:30:00', salary: 0.1, postcode: 10001, active: false })
+    expect(cafe).toMatchObject({ id: 3, name: 'Café 字幕', note: 'ab', active: '#DIV/0!' })
+  })
+
+  it('reads text broken across records, neighbours written as one, and days counted from 1904', async () => {
+    const sample = await readSheets(await fixture('xls/sample.xls'), true, 'all')
+    expect(await readSheets(await fixture('_traps/text-broken-across-records.xls'), true, 'all')).toEqual(sample)
+    expect(await readSheets(await fixture('_traps/larger-sectors.xls'), true, 'all')).toEqual(sample)
+    expect(await readWorkbook(await fixture('_traps/neighbours-in-one-record.xls'))).toEqual([
+      { a: 1, b: 2, c: 3 },
+      { a: -4, b: 5, c: 1073741 },
+      { a: 'written in the cell', b: null, c: null },
+    ])
+    // Four years and a day later than the same numbers mean when counted from 1900.
+    expect((await readWorkbook(await fixture('_traps/days-counted-from-1904.xls')))[0]).toMatchObject({ joined: '2030-11-24' })
+  })
+
+  it('never converts a hidden sheet, a chart, or a macro', async () => {
+    const text = JSON.stringify(await readSheets(await fixture('_traps/hidden-sheet-and-macros.xls'), true, 'all'))
+    expect(text).not.toMatch(/not shown|Auto_Open|Shell/)
+    expect(JSON.stringify(await readSheets(await fixture('_traps/chart-on-the-sheet.xls'), true, 'all'))).not.toContain('999')
+  })
+
+  it('refuses what it cannot follow, in words about workbooks', async () => {
+    const invalid = 'Refusal: This file is not a valid XLS workbook'
+    for (const name of ['truncated', 'sectors-in-a-circle', 'sector-past-the-end', 'directory-in-a-circle', 'stream-of-two-gigabytes', 'record-longer-than-the-workbook', 'sheet-somewhere-else', 'cell-in-column-sixty-thousand']) {
+      expect(await refusal(readWorkbook(await fixture(`_traps/${name}.xls`))), name).toBe(invalid)
+    }
+    expect(await refusal(readWorkbook(await fixture('_traps/locked-with-a-password.xls')))).toBe('Refusal: This workbook is locked with a password, and cannot be read without it')
+    expect(await refusal(readWorkbook(await fixture('_traps/from-excel-95.xls')))).toMatch(/^Refusal: This workbook was saved by Excel 95 or earlier/)
+    expect(await refusal(readWorkbook(await fixture('_traps/one-cell-at-the-end-of-every-row.xls')))).toBe('Refusal: This workbook is too large to convert in a browser')
+  })
+
+  it('never throws anything but a refusal, whatever byte is changed', async () => {
+    const bytes = await fixture('xls/sample.xls')
+    for (let at = 0; at < bytes.length; at += 3) {
+      for (const value of [0x00, 0xFF, bytes[at]! ^ 0x80]) {
+        if (value === bytes[at]) continue
+        const damaged = bytes.slice()
+        damaged[at] = value
+        const outcome = await refusal(readSheets(damaged, true, 'all'))
+        expect(outcome === 'read' || outcome.startsWith('Refusal: '), `byte ${at} = ${value}: ${outcome}`).toBe(true)
+      }
+    }
   })
 })
