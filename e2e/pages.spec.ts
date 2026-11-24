@@ -237,3 +237,13 @@ test('What\u2019s new says what a trap file is, for a reader who has never met t
   await page.getByTestId('trap-definition').getByRole('link', { name: 'See them all' }).click()
   await expect(page.getByRole('heading', { level: 1 })).toContainText('Trap files')
 })
+
+test('the mark that ends a page\'s title is the one in blue: a question mark where the title asks, a full stop otherwise', async ({ page }) => {
+  await page.goto('/trust')
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Can I trust this?')
+  await expect(page.getByTestId('title-mark')).toHaveText('?')
+  await page.goto('/about')
+  await expect(page.getByTestId('title-mark')).toHaveText('.')
+  const [mark, words] = await page.getByRole('heading', { level: 1 }).evaluate((heading) => [getComputedStyle(heading.querySelector('span')!).color, getComputedStyle(heading).color])
+  expect(mark).not.toBe(words)
+})

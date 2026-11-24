@@ -1,11 +1,15 @@
 <script setup lang="ts">
 // The head of an information page: one line of display type, one of explanation.
-defineProps<{ title: string; lead: string }>()
+// The mark that ends the title is always in the accent. A title that ends in a mark of its own
+// (a question) has that mark coloured; any other is given a full stop.
+const props = defineProps<{ title: string; lead: string }>()
+const ending = computed(() => (/[?!]$/.test(props.title) ? props.title.slice(-1) : '.'))
+const words = computed(() => (ending.value === '.' ? props.title : props.title.slice(0, -1)))
 </script>
 
 <template>
   <header class="head">
-    <h1 class="title">{{ title }}<span class="dot">.</span></h1>
+    <h1 class="title">{{ words }}<span class="dot" data-testid="title-mark">{{ ending }}</span></h1>
     <p class="lead">{{ lead }}</p>
   </header>
 </template>

@@ -58,6 +58,7 @@ A file is offered the formats of its own kind: a picture becomes another picture
 - **Refuses a damaged or hostile file with a reason**, instead of returning half of one or freezing the tab. Every conversion runs against a clock.
 - **Writes PDF, tagged for screen readers**: a Word document, a web page or Markdown becomes a PDF whose headings, lists, tables and picture descriptions are marked as what they are. In Latin, Greek, Cyrillic, Chinese, Japanese, Korean, Arabic, Hebrew, Hindi and Thai. And reads PDF back to a web page, Markdown or DOCX.
 - **Never carries across what an author hid or deleted**: tracked deletions, hidden text and slides, comments, speaker notes.
+- **Names what it makes so it is not mistaken for the original**: “report-converted.pdf”, or words of your own, set in Settings.
 - **Makes an EPUB of a Kindle book** (AZW3 or MOBI, without copy protection): pages, pictures, links and contents, read on anything.
 - **Makes a PDF, a Word document or a web page of a spreadsheet**: a workbook or a CSV is set out as a real table, with its column names marked, on pages turned sideways if it is wide.
 - **Makes a PDF of a picture**: a scan or a photograph becomes a page, without the photograph's location and other metadata.

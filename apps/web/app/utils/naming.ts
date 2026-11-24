@@ -1,7 +1,8 @@
-// What a converted file is called. By itself, the name it had with its new ending:
-// "report.docx" becomes "report.html". A person may ask for words before the name, after it, or
-// both ("converted-report.html", "report-final.html"), in Settings. The words are theirs and
-// are kept on their device.
+// What a converted file is called: the name it had, "-converted", and its new ending, so that
+// "report.docx" becomes "report-converted.html" and is never mistaken for the file it was made
+// from (a JPEG made smaller is still a JPEG, and would otherwise have the very same name). A
+// person may ask for other words before the name, after it, or both, or for none, in Settings.
+// The words are theirs and are kept on their device.
 
 /** Where the choice is kept on the visitor's device. */
 export const NAMING_SETTING = 'omsett:file-names'
@@ -13,6 +14,8 @@ export interface Naming {
   suffix: string
 }
 export const NO_NAMING: Naming = { prefix: '', suffix: '' }
+/** What a converted file is called until a person says otherwise. */
+export const DEFAULT_NAMING: Naming = { prefix: '', suffix: '-converted' }
 
 /** Characters a file name cannot hold: folders and what a file system refuses. */
 const REFUSED = new Set([...'\\/<>:"|?*'].map((char) => char.codePointAt(0)!))
@@ -39,16 +42,20 @@ export function cleanAffix(text: string): string {
   return kept.replace(/^\.+/, '')
 }
 
-/** What was stored, read back as a choice. Anything that is not one is no choice. */
+/**
+ * What was stored, read back as a choice. Nothing stored, or anything that is not a choice, is
+ * the default. A choice of no words at all is a choice, and is stored as one.
+ */
 export function readNaming(stored: string | null): Naming {
   try {
     const value = JSON.parse(stored ?? 'null') as { prefix?: unknown; suffix?: unknown } | null
+    if (value === null || typeof value !== 'object' || Array.isArray(value) || !(Object.hasOwn(value, 'prefix') || Object.hasOwn(value, 'suffix'))) return { ...DEFAULT_NAMING }
     return {
       prefix: typeof value?.prefix === 'string' ? cleanAffix(value.prefix) : '',
       suffix: typeof value?.suffix === 'string' ? cleanAffix(value.suffix) : '',
     }
   } catch {
-    return { ...NO_NAMING }
+    return { ...DEFAULT_NAMING }
   }
 }
 
