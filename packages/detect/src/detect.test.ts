@@ -40,8 +40,10 @@ describe('detect', () => {
   })
 
   it('reports a real format with no registry entry as unregistered', async () => {
-    const icns = await readFile(new URL('../../../fixtures/icns/sample.icns', import.meta.url))
-    await expect(detect(new Blob([icns]), formats)).resolves.toMatchObject({ kind: 'unregistered', ext: 'icns' })
+    // A program for Linux: a real format, with a signature, that Omsett will never convert.
+    const program = new Uint8Array(64)
+    program.set([0x7F, 0x45, 0x4C, 0x46, 2, 1, 1])
+    await expect(detect(new Blob([program]), formats)).resolves.toMatchObject({ kind: 'unregistered', ext: 'elf' })
   })
 
   it('recognises an SVG by its root element, whatever comes before it', async () => {
@@ -89,6 +91,7 @@ describe('detect', () => {
       ['jp2/sample.jp2', { width: 320, height: 200 }],
       ['psb/sample.psb', { width: 320, height: 200 }],
       ['cur/sample.cur', { width: 64, height: 64 }],
+      ['icns/sample.icns', { width: 256, height: 256 }],
       ['dds/sample.dds', { width: 320, height: 200 }],
       ['fits/sample.fits', { width: 320, height: 200 }],
     ] as const) {

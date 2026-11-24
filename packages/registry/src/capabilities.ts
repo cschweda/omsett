@@ -97,6 +97,9 @@ export const capabilities: Capability[] = [
   // from there. It is given Omsett's own typeface, since a browser tab has no fonts to offer.
   { engine: 'resvg', tier: 'browser', reads: ['svg', 'svgz'], writes: [png], priority: 30 },
 
+  // Mac icons, by Omsett's own code: the largest picture in the file, handed on as a PNG.
+  { engine: 'icon', tier: 'browser', reads: ['icns'], writes: [png], priority: 30 },
+
   // ImageMagick, for the long tail of formats nothing else here reads. It is large, so it is
   // the last resort: it reads these to PNG and writes them from PNG, and every other pair goes
   // through that step. Each file is read as the one format it was identified as, never guessed.

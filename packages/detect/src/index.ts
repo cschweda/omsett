@@ -2,6 +2,7 @@ import type { Format } from '@omsett/registry'
 import { fileTypeFromBuffer } from 'file-type'
 import { HEADER_BYTES, readDimensions, type Dimensions } from './dimensions'
 import { gunzip } from './gzip'
+import { readIcns } from './icns'
 import { sniff } from './signatures'
 import { svgDimensions, svgRoot } from './svg'
 import { isTarHeader } from './tar'
@@ -10,8 +11,9 @@ import { sniffText } from './text'
 export { readDimensions, type Dimensions } from './dimensions'
 export { MAX_BYTES, MAX_PIXELS, MAX_WORKING_BYTES, TOO_LARGE, pixelCount, sizeProblem, workingBytes } from './guard'
 export { layoutProblem, structureProblem } from './structure'
-export { crc32 } from './png-structure'
+export { crc32, pngStructureProblem } from './png-structure'
 export { gunzip } from './gzip'
+export { ICNS_PACKED, readIcns, type Icns, type IcnsPicture } from './icns'
 export { isTarHeader } from './tar'
 
 const DRAFTER = 'application/vnd.drafter.package+zip'
@@ -106,6 +108,13 @@ export async function detect(blob: Blob, formats: Format[], name?: string): Prom
         found = text
         dimensions = null
       }
+    }
+    // A Mac icon is a list of pictures, and its list can run far past the first part of the
+    // file. It is followed to the end, a few bytes at each stop, to learn the size of the picture
+    // that would be converted.
+    if (found?.ext === 'icns') {
+      const { best } = await readIcns(blob)
+      dimensions = best ? { width: best.width, height: best.height } : null
     }
     if (!found) return { kind: 'unknown' }
     const format = formats.find((f) => f.detect.includes(found.ext))

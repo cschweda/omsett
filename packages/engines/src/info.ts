@@ -136,6 +136,16 @@ export const archiveInfo: EngineInfo = {
   sourceUrl: 'https://github.com/cschweda/omsett/tree/main/packages/engines/src/archive',
 }
 
+// Mac icons. The list of pictures in an ICNS file is read by Omsett's own code, and the largest
+// handed on as a PNG.
+export const iconInfo: EngineInfo = {
+  id: 'icon',
+  sizeBytes: 0,
+  runtimes: ['browser', 'node'],
+  license: 'MIT',
+  sourceUrl: 'https://github.com/cschweda/omsett/tree/main/packages/engines/src/icon',
+}
+
 // Fonts. TTF, OTF and WOFF are read and written by Omsett's own code, with the compression
 // every browser has built in.
 export const fontInfo: EngineInfo = {
@@ -182,5 +192,6 @@ export const engineInfo: Record<string, EngineInfo> = {
   [scriptInfo.id]: scriptInfo,
   [pdfInfo.id]: pdfInfo,
   [fontInfo.id]: fontInfo,
+  [iconInfo.id]: iconInfo,
   [fontWoff2Info.id]: fontWoff2Info,
 }

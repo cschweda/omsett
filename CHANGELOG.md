@@ -7,6 +7,28 @@ The paragraph that opens a version is its teaser: the home page shows its first 
 in the "What's new" banner, so keep it to two or three sentences on what a visitor will notice.
 A line beginning "Released" gives the date.
 
+## 0.35.0
+
+Released 24 November 2026.
+
+Mac icons (ICNS) can now be converted: drop one in and Omsett takes out the largest picture
+it holds. Icons from before 2007, packed the old way, are read as well.
+
+### Added
+
+- **ICNS**, the Mac icon format, read by code of Omsett's own with nothing to download. The
+  largest picture in the file is converted. Where that picture is a PNG it is checked from end
+  to end and passed on without its comments; where it is in the old packing it is unpacked.
+- Fifteen trap files for it: an icon cut short, a damaged picture inside, a picture of 40,000
+  pixels named for 1,024, entries that claim to be longer than the file or no length at all,
+  ten thousand empty entries, old icons whose packing overruns or stops early, and code
+  planted in the icon's notes and its picture's comments.
+
+### Known
+
+- An icon that keeps its pictures as JPEG 2000, as some from 2007 to 2012 do, is refused with
+  that reason unless it also holds a picture of another kind.
+
 ## 0.34.0
 
 Released 24 November 2026.

@@ -3984,6 +3984,82 @@ _block += b"8BIM" + struct.pack(">HHI", 0x03EC, 0, len(CB)) + CB + bytes(len(CB)
 code("code.psb", PSB[:_at] + struct.pack(">I", _had + len(_block)) + _block + PSB[_at + 4:],
      WHY % "in the description and the notes a Photoshop file keeps beside its picture", "psb", node="succeeds", absent="omsett_canary")
 
+
+# --- Mac icons, read by Omsett's own code -----------------------------------------------------
+ICNS = read("icns", "sample.icns")
+
+
+def icns_of(entries, said=None):
+    """A Mac icon: (type, bytes) pairs. `said` replaces the length an entry gives for itself."""
+    body = b"".join(kind + struct.pack(">I", (said or {}).get(kind, len(data) + 8)) + data for kind, data in entries)
+    return b"icns" + struct.pack(">I", len(body) + 8) + body
+
+
+def packed(side, colour=(40, 120, 200), runs=True):
+    """The old packing of a flat square: each channel as runs of one value, or spelled out."""
+    out = b"\0\0\0\0" if side == 128 else b""
+    for value in colour:
+        left = side * side
+        while left:
+            n = min(left, 130 if runs else 128)
+            if runs and n >= 3:
+                out += bytes([n + 125, value])
+            else:
+                n = min(n, 128)
+                out += bytes([n - 1]) + bytes([value]) * n
+            left -= n
+    return out
+
+
+SMALL_PNG = SIGNATURE + ihdr(SMALL_W, SMALL_H) + idat(SMALL) + IEND
+trap("truncated.icns", ICNS[: len(ICNS) // 2],
+     "A sound Mac icon cut off halfway through. Its one picture says it runs past the end of the file, so there is no picture to read.",
+     "icns", node="fails", group="damage", note="No picture could be found in this icon")
+_png = bytearray(SMALL_PNG)
+_png[-20] ^= 0xFF
+trap("picture-inside-is-damaged.icns", icns_of([(b"ic07", bytes(_png))]),
+     "A Mac icon whose list is sound and whose one picture has a byte changed. The picture is handed on as it is, so it is checked from end to end first.",
+     "icns", node="fails", group="damage", note="The picture inside this icon is damaged")
+trap("picture-inside-is-huge.icns", icns_of([(b"ic10", big_png(40000, 40000))]),
+     "A Mac icon whose largest picture is named for 1,024 pixels and is in fact 40,000 by 40,000. The size checked is the one the picture itself gives.",
+     "icns", guard="refused", group="size")
+trap("named-for-one-size-holds-another.icns", icns_of([(b"ic10", SMALL_PNG)]),
+     "An entry named for a picture of 1,024 pixels that holds one of 64 by 40. The name is a label; the picture is what is read, at the size it really is.",
+     "icns", node="succeeds", group="unusual")
+trap("entry-longer-than-the-file.icns", icns_of([(b"ic08", SMALL_PNG)], said={b"ic08": 0x7FFFFFF0}),
+     "A Mac icon whose one entry says it is two gigabytes long. The list ends where an entry does not fit.",
+     "icns", node="fails", group="damage", note="No picture could be found in this icon")
+trap("entry-of-no-length.icns", icns_of([(b"TOC ", b""), (b"ic08", SMALL_PNG)], said={b"TOC ": 0}),
+     "An entry that gives its length as nothing, less than the eight bytes of its own label. A reader that stepped forward by that length would never move.",
+     "icns", node="fails", group="damage", note="No picture could be found in this icon")
+trap("ten-thousand-entries.icns", icns_of([(b"info", b"")] * 10000 + [(b"ic07", SMALL_PNG)]),
+     "Ten thousand empty entries, and a picture after them. A real icon has a dozen or two; past 256 the list is not followed.",
+     "icns", node="fails", group="size", note="No picture could be found in this icon")
+trap("the-old-kind.icns", icns_of([(b"il32", packed(32)), (b"l8mk", bytes([200]) * 1024), (b"it32", packed(128)), (b"t8mk", bytes(range(256)) * 64)]),
+     "A Mac icon from before 2007, with its colours packed the old way and its transparency kept apart. The larger of its two pictures is unpacked and converted.",
+     "icns", node="succeeds", group="unusual")
+trap("old-kind-without-transparency.icns", icns_of([(b"ih32", packed(48, runs=False))]),
+     "An old Mac icon with no entry for its transparency. It is read as a picture with none.",
+     "icns", node="succeeds", group="unusual")
+trap("old-kind-overruns.icns", icns_of([(b"il32", bytes([255, 7]) * 400)]),
+     "An old Mac icon whose packed colours say to repeat a value more times than the picture has pixels. Every count is checked against the room left.",
+     "icns", node="fails", group="damage", note="The picture inside this icon is damaged")
+trap("old-kind-stops-early.icns", icns_of([(b"il32", packed(32)[:20])]),
+     "An old Mac icon whose packed colours stop a third of the way through the first of them.",
+     "icns", node="fails", group="damage", note="The picture inside this icon is damaged")
+trap("transparency-of-the-wrong-size.icns", icns_of([(b"il32", packed(32)), (b"l8mk", bytes(7))]),
+     "An old Mac icon of 32 by 32 whose transparency covers seven pixels. The two must agree.",
+     "icns", node="fails", group="damage", note="The picture inside this icon is damaged")
+trap("jpeg-2000-inside.icns", icns_of([(b"ic08", read("jp2", "sample.jp2"))]),
+     "A Mac icon from the years when its pictures were kept as JPEG 2000. Omsett does not read those out of an icon yet, and says so.",
+     "icns", node="fails", group="unusual", note="This icon keeps its pictures as JPEG 2000, which Omsett cannot yet read out of an icon")
+trap("icon-named-png.png", ICNS,
+     "A Mac icon with a .png name. It holds a PNG, but it is not one, and the contents say which this is.",
+     "icns", group="identity", mismatch=True, node="succeeds")
+code("code.icns", icns_of([(b"info", b'<?xml version="1.0"?><plist><dict><key>note</key><string>' + XML_CANARY + b"</string></dict></plist>"), (b"name", CB),
+                           (b"ic07", SIGNATURE + ihdr(SMALL_W, SMALL_H) + chunk(b"tEXt", b"Comment\x00" + CB) + chunk(b"iTXt", b"XML:com.adobe.xmp\x00\x00\x00\x00\x00" + CB) + idat(SMALL) + IEND)]),
+     WHY % "in the notes a Mac icon carries and in the comments of the picture inside it", "icns", node="succeeds", absent="omsett_canary")
+
 with open(os.path.join(OUT, "manifest.json"), "w") as out:
     json.dump(manifest, out, indent=2)
     out.write("\n")

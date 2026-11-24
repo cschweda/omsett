@@ -242,6 +242,10 @@ build by `apps/web/scripts/write-headers.ts`.
   lengths such a file gives for its own parts, and the `magick` engine refuses what does not fit
   before ImageMagick reads it. When a new format's `truncated` trap converts, write its check
   there; do not change the trap to "succeeds".
+- **A picture taken out of a container is checked as if it had been dropped by itself.** The
+  `icon` engine hands a Mac icon's PNG on as it found it, so it runs `pngStructureProblem` on
+  it first and drops every chunk that is not the picture. The size checked is the one the
+  picture states (`readIcns` in `packages/detect`), never the one its entry is named for.
 - **libvips forgives damaged files unless told not to.** The engine loads with
   `fail_on: 'error'`. Do not remove it.
 - **`mv` onto a link to a directory moves into it.** `scripts/publish-static.sh` uses `mv -T`

@@ -24,6 +24,7 @@ const samples: Record<string, string> = {
   ico: 'ico/sample.ico',
   psb: 'psb/sample.psb',
   cur: 'cur/sample.cur',
+  icns: 'icns/sample.icns',
   dds: 'dds/sample.dds',
   fits: 'fits/sample.fits',
   jp2: 'jp2/sample.jp2',

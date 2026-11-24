@@ -38,7 +38,7 @@ describe('router, real registry', () => {
     for (const edge of deriveEdges(registry).edges) {
       const engines = edge.candidates.map((c) => c.engine)
       if (edge.from !== 'png') expect(engines, `${edge.from} → ${edge.to}`).not.toContain('canvas')
-      for (const engine of engines) expect(engine === 'canvas' || ['heif', 'resvg', 'magick', 'data', 'subtitle', 'markup', 'font', 'font-woff2', 'archive', 'script', 'pdf'].includes(engine) || engine.startsWith('vips')).toBe(true)
+      for (const engine of engines) expect(engine === 'canvas' || ['heif', 'resvg', 'magick', 'data', 'subtitle', 'markup', 'font', 'font-woff2', 'icon', 'archive', 'script', 'pdf'].includes(engine) || engine.startsWith('vips')).toBe(true)
       // The data engine reads and writes data and nothing else; no picture engine touches data.
       const data = [edge.from, edge.to].map((id) => ['data', 'spreadsheet'].includes(formatById(registry, id)!.category))
       expect(data[0], `${edge.from} → ${edge.to}`).toBe(data[1])
@@ -55,7 +55,7 @@ describe('router, real registry', () => {
     const ids = everything.formats.map((f) => f.id)
     expect(ids).toEqual([
       'webp', 'jpeg', 'png', 'avif', 'gif', 'tiff', 'jxl', 'bmp', 'tga', 'qoi', 'pnm',
-      'heic', 'apng', 'svg', 'svgz', 'psd', 'psb', 'ico', 'cur', 'jp2', 'exr', 'hdr', 'dds', 'fits', 'pcx', 'sgi', 'ras',
+      'heic', 'apng', 'svg', 'svgz', 'psd', 'psb', 'ico', 'icns', 'cur', 'jp2', 'exr', 'hdr', 'dds', 'fits', 'pcx', 'sgi', 'ras',
       'json', 'yaml', 'csv', 'xlsx', 'xml', 'toml', 'jsonl', 'tsv', 'vcf', 'ics',
       'srt', 'vtt', 'ass', 'ssa', 'ttml', 'lrc', 'sbv', 'smi', 'microdvd',
       'md', 'html', 'docx', 'pptx', 'pdf',
@@ -64,7 +64,7 @@ describe('router, real registry', () => {
       'zip', 'tgz', 'tar',
     ])
     const readOnly = new Set(everything.formats.filter((f) => f.readOnly).map((f) => f.id))
-    expect([...readOnly].sort()).toEqual(['apng', 'cur', 'dds', 'exr', 'fits', 'hdr', 'heic', 'ico', 'jp2', 'pcx', 'pdf', 'pptx', 'psb', 'psd', 'ras', 'sgi', 'svg', 'svgz'])
+    expect([...readOnly].sort()).toEqual(['apng', 'cur', 'dds', 'exr', 'fits', 'hdr', 'heic', 'icns', 'ico', 'jp2', 'pcx', 'pdf', 'pptx', 'psb', 'psd', 'ras', 'sgi', 'svg', 'svgz'])
     // Every pair of the same kind converts, directly or through a step in between; nothing is
     // written as HEIC. A picture never becomes data, nor data a picture.
     const kind = (id: string) => formatById(everything, id)!.category
