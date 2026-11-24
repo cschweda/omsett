@@ -25,15 +25,16 @@ A finding is **Fixed** when a test shows it, **Open** when it is not yet dealt w
 Newest first. The latest is expanded; earlier ones open when clicked.
 
 <details open>
-<summary><strong>23 November 2026: Follow-up: three findings left open that morning</strong> (3 findings: 1 medium, 2 low; 1 fixed, 1 open, 1 accepted)</summary>
+<summary><strong>23 November 2026: Follow-up: four findings left open that morning</strong> (4 findings: 2 medium, 2 low; 2 fixed, 1 open, 1 accepted)</summary>
 
-The audit of 23 November left four findings open and one fixed with a gap. This pass dealt with what was the project's to deal with: the gap in the drawing limits, two of the three supply-chain settings, and one of the two missing warnings. Two findings remain the owner's to close on the server and the repository.
+The audit of 23 November left four findings open and one fixed with a gap. This pass dealt with the gap in the drawing limits, the supply-chain settings, one of the two missing warnings, and the live site's missing header, which closed when the deploy script began reloading the server itself. One finding remains the owner's to close on the repository.
 
 **Scope**
 
 - OMS-121: patterns nested in patterns, which no stated limit stopped.
 - OMS-132: the waiting period for new dependency releases, and releases published without their checks.
 - OMS-133: the warning lost when a conversion takes two steps.
+- OMS-130: the live site's missing header, and the forwarding rules that were accepted and did not work.
 
 **Method**
 
@@ -41,7 +42,7 @@ The audit of 23 November left four findings open and one fixed with a gap. This 
 
 **What held**
 
-- OMS-130 (the live site's missing header) and OMS-131 (the main branch not protected by its checks) are unchanged and still open: one needs nginx reloading on the server, the other a setting on the repository.
+- OMS-131 (the main branch not protected by its checks) is unchanged and still open: it is a setting on the repository, and the owner's to make.
 
 **Findings**
 
@@ -50,6 +51,7 @@ The audit of 23 November left four findings open and one fixed with a gap. This 
 | OMS-121 | Medium | A drawing of 275 bytes could ask for work that never finishes | Fixed |
 | OMS-132 | Low | Supply-chain settings looser than the rest of the project | Accepted |
 | OMS-133 | Low | Two warnings the picker does not give | Open |
+| OMS-130 | Medium | The live site was not sending a security header added a day earlier | Fixed |
 
 #### OMS-121: A drawing of 275 bytes could ask for work that never finishes
 
@@ -98,6 +100,24 @@ The warning is now given for a route as a whole: from a format that always loses
 Animated PNG is not changed here.
 
 **Verification:** packages/registry/src/router.test.ts: HEIC to JPEG carries the warning once, and HEIC to PNG does not. The animated PNG warning keeps this finding open.
+
+#### OMS-130: The live site was not sending a security header added a day earlier
+
+**Severity:** Medium · **Status:** Fixed · **Area:** Deployment
+
+**Identification**
+
+Left open that morning: the live site was not sending Strict-Transport-Security, because nginx reads its header file when it starts and nothing reloaded it after a deploy changed the file.
+
+The first deploy to rely on a reload showed a second fault of the same kind. The rules that pass a visit count and an accessibility check on to their servers were accepted by nginx and refused every request, because the certificate of the far server was checked one step short of its full chain. A configuration can be valid and still not work.
+
+**Mitigation**
+
+The publish script reloads nginx whenever the header file changes; on the next deploy it did, and the header has been sent since. The forwarding rules now follow the whole certificate chain.
+
+The tests no longer stop at asking nginx whether it accepts the rules. They start nginx with them and send a real question through, which must come back answered.
+
+**Verification:** scripts/check-live-headers.sh https://omsett.com reported every header present on 23 November 2026, after the deploy. In CI, the "Served by nginx" job asks the checker's health through the generated rules and requires an answer, and requires a GET to the counting rule to be refused. On the live site the same day, an accessibility check of the sample document returned a score and a report, and the visit report was accepted.
 
 </details>
 

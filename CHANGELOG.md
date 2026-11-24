@@ -20,6 +20,8 @@ fixed.
   told to check the certificate of the server it forwards to, and was following the chain of
   certificates one step short, so every request was refused. The tests now send a real
   question through the same rules before a change can be published.
+- The live site now sends every security header it should. The one that was missing, noted as
+  open in the audit, has been sent since the server began reloading itself on deploy.
 
 ## 0.32.0
 

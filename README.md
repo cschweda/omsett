@@ -143,7 +143,7 @@ Every audit is recorded in full, with how each problem was found and what was do
 
 | Date | Audit | Findings | Fixed | Open | Accepted |
 | --- | --- | --- | --- | --- | --- |
-| 23 November 2026 | Follow-up: three findings left open that morning | 3 (1 medium, 2 low) | 1 | 1 | 1 |
+| 23 November 2026 | Follow-up: four findings left open that morning | 4 (2 medium, 2 low) | 2 | 1 | 1 |
 | 23 November 2026 | Red and blue: every reader, every engine, the page and its deployment | 29 (4 high, 14 medium, 11 low) | 24 | 4 | 1 |
 | 22 November 2026 | Follow-up: closing two open findings | 3 (1 medium, 1 low, 1 info) | 2 | 1 | 0 |
 | 22 November 2026 | Red/blue audit of the converter and its hosting | 10 (3 medium, 5 low, 2 info) | 6 | 3 | 1 |
@@ -156,6 +156,7 @@ Every audit is recorded in full, with how each problem was found and what was do
 | OMS-121 | Medium | A drawing of 275 bytes could ask for work that never finishes | Fixed |
 | OMS-132 | Low | Supply-chain settings looser than the rest of the project | Accepted |
 | OMS-133 | Low | Two warnings the picker does not give | Open |
+| OMS-130 | Medium | The live site was not sending a security header added a day earlier | Fixed |
 
 To report a vulnerability, use the **Security** tab of this repository (“Report a vulnerability”), not a public issue.
 
