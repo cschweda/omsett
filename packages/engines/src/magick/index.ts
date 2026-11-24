@@ -1,4 +1,4 @@
-import { layoutProblem } from '@omsett/detect'
+import { layoutProblem, pictureOnly } from '@omsett/detect'
 import { dimensionProblem, iconSidesFor, iconSizes } from '@omsett/registry'
 import { magickInfo } from '../info'
 import type { ConvertInput, ConvertOutput, Engine } from '../types'
@@ -182,6 +182,8 @@ export function createMagickEngine(host: MagickHost): Engine {
       // before ImageMagick sees it.
       const damage = layoutProblem(from, bytes)
       if (damage) throw new Refusal(`This file is damaged: ${damage}`)
+      // And where a file holds much beside its picture, ImageMagick is shown the picture alone.
+      const shown = pictureOnly(from, bytes)
 
       const plan = iconPlan(input.options)
       const settings = writerSettings(input.options)
@@ -201,7 +203,7 @@ export function createMagickEngine(host: MagickHost): Engine {
         magick.ResourceLimits.memory = BigInt(MAX_MEMORY)
         // Nothing is ever put on a disk: there is none, and what stands in for one is memory.
         magick.ResourceLimits.disk = 0n
-        out = magick.ImageMagick.readCollection(bytes, coder(magick, from.id), (images) => {
+        out = magick.ImageMagick.readCollection(shown, coder(magick, from.id), (images) => {
           // A file may hold several pictures. A layered file (Photoshop's) holds the finished
           // picture first and then each layer, some of them hidden and some larger than the
           // picture: the finished picture is the one to convert. An icon holds one picture at

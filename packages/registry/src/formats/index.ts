@@ -56,6 +56,7 @@ import { cur } from './cur'
 import { icns } from './icns'
 import { dds } from './dds'
 import { fits } from './fits'
+import { dcm } from './dcm'
 import { qoi } from './qoi'
 import { svg } from './svg'
 import { apng } from './apng'
@@ -68,7 +69,7 @@ import { webp } from './webp'
  */
 export const formats: Format[] = [
   webp, jpeg, png, avif, gif, tiff, jxl, bmp, tga, qoi, pnm,
-  heic, apng, svg, svgz, psd, psb, ico, icns, cur, jp2, exr, hdr, dds, fits, pcx, sgi, ras,
+  heic, apng, svg, svgz, psd, psb, ico, icns, cur, jp2, exr, hdr, dds, fits, dcm, pcx, sgi, ras,
   // Data. A picture never becomes one of these, nor the other way round.
   json, yaml, csv, xlsx, xml, toml, jsonl, tsv, vcf, ics,
   // Subtitles and lyrics: text with times.

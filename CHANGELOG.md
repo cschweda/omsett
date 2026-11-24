@@ -7,6 +7,41 @@ The paragraph that opens a version is its teaser: the home page shows its first 
 in the "What's new" banner, so keep it to two or three sentences on what a visitor will notice.
 A line beginning "Released" gives the date.
 
+## 0.39.0
+
+Released 24 November 2026.
+
+Medical scans (DICOM) can now be converted to ordinary pictures. Only the picture is
+converted: the patient's name, date of birth and everything else the file says about them are
+left behind, and never leave your device.
+
+### Added
+
+- **DICOM**, the format of X-rays, ultrasound, CT and MRI, as a source. In colour or in grey,
+  and written either of the two usual ways. A file that holds a series converts as its first
+  picture.
+- **The decoder is shown the picture and nothing else.** A scan carries the patient, the
+  hospital, notes, lists inside lists, and whatever its maker chose to add. Omsett walks the
+  file itself, takes out the picture and the few numbers that describe it, and hands only
+  those on. This began as a trap file: given the whole scan, the decoder took a size from a
+  list inside it for the size of the scan's own picture.
+- A check of the file's own sums before anything is decoded: a picture that stops partway, one
+  shorter than the size it gives, a part longer than the file, and no picture at all are each
+  refused in those words.
+- Fourteen trap files for it (a trap file is one made on purpose to be broken, hostile or
+  dishonest): scans cut short, a picture of 60,000 pixels a side in a few hundred bytes, a
+  note two gigabytes long, forty lists opened and none closed, a second huge picture described
+  in a list, a series of two hundred thousand, and code written as the patient's name.
+- The sample scan is written by a script from the same test pattern as every other sample.
+  Nothing in the repository came from a scanner or a person.
+
+### Known
+
+- DICOM is read and not written.
+- Scans written with the largest end of each number first, or packed whole, are left to the
+  decoder as they are, which may refuse them. Both are rare.
+- The details panel does not yet list what a scan says about its patient.
+
 ## 0.38.0
 
 Released 24 November 2026.

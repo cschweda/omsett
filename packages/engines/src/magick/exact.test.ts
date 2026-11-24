@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { formatById, registry } from '@omsett/registry'
 import { createNodeEngines } from '../node'
@@ -37,14 +38,15 @@ function noise(width: number, height: number, clearSome: boolean): Uint8Array {
 async function pixels(png: Blob, width: number, height: number): Promise<Uint8Array> {
   const tga = new Uint8Array(await (await convert(png, 'png', 'tga')).arrayBuffer())
   // An unpacked TGA is a header of 18 bytes and then the pixels, blue first.
-  expect(tga[2], 'the TGA is unpacked').toBe(2)
+  // Kind 2 is colour and kind 3 is grey, one byte to a pixel; neither is packed.
+  expect([2, 3], 'the TGA is unpacked').toContain(tga[2])
   const depth = tga[16]! / 8
   const fromTop = (tga[17]! & 0x20) !== 0
   const out = new Uint8Array(width * height * 4)
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
       const at = 18 + tga[0]! + ((fromTop ? y : height - 1 - y) * width + x) * depth
-      out.set([tga[at + 2]!, tga[at + 1]!, tga[at]!, depth === 4 ? tga[at + 3]! : 255], (y * width + x) * 4)
+      out.set(depth === 1 ? [tga[at]!, tga[at]!, tga[at]!, 255] : [tga[at + 2]!, tga[at + 1]!, tga[at]!, depth === 4 ? tga[at + 3]! : 255], (y * width + x) * 4)
     }
   }
   return out
@@ -64,4 +66,32 @@ describe('formats written without loss', () => {
       })
     }
   }
+})
+
+describe('a scan', () => {
+  const trap = (name: string) => new Blob([readFileSync(new URL(`../../../../fixtures/${name}`, import.meta.url)) as BlobPart])
+  const [width, height] = [320, 200]
+
+  it('comes out as the pixels the file holds, in colour', async () => {
+    const scan = trap('dcm/sample.dcm')
+    const held = new Uint8Array(await scan.arrayBuffer()).subarray(-width * height * 3)
+    const got = await pixels(await convert(scan, 'dcm', 'png'), width, height)
+    expect(got.filter((_, i) => i % 4 !== 3)).toEqual(held)
+  })
+
+  for (const [name, why] of [['_traps/kinds-left-out.dcm', 'written the older way'], ['_traps/a-huge-picture-inside-a-list.dcm', 'with another picture described in a list inside it'], ['_traps/code.dcm', 'with code for a patient']] as const) {
+    it(`comes out the same ${why}`, async () => {
+      const held = new Uint8Array(await trap('dcm/sample.dcm').arrayBuffer()).subarray(-width * height * 3)
+      const got = await pixels(await convert(trap(name), 'dcm', 'png'), width, height)
+      expect(got.filter((_, i) => i % 4 !== 3)).toEqual(held)
+    })
+  }
+
+  it('comes out as the pixels the file holds, in grey', async () => {
+    const scan = trap('_traps/grey.dcm')
+    const held = new Uint8Array(await scan.arrayBuffer()).subarray(-width * height)
+    const got = await pixels(await convert(scan, 'dcm', 'png'), width, height)
+    expect(got.filter((_, i) => i % 4 === 0)).toEqual(held)
+    expect(got.filter((_, i) => i % 4 === 1)).toEqual(held)
+  })
 })

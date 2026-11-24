@@ -4060,6 +4060,65 @@ code("code.icns", icns_of([(b"info", b'<?xml version="1.0"?><plist><dict><key>no
                            (b"ic07", SIGNATURE + ihdr(SMALL_W, SMALL_H) + chunk(b"tEXt", b"Comment\x00" + CB) + chunk(b"iTXt", b"XML:com.adobe.xmp\x00\x00\x00\x00\x00" + CB) + idat(SMALL) + IEND)]),
      WHY % "in the notes a Mac icon carries and in the comments of the picture inside it", "icns", node="succeeds", absent="omsett_canary")
 
+
+# --- DICOM, the format of medical scans, read by ImageMagick ----------------------------------
+# None of these came from a scanner or a person. dicom.py writes each from the test pattern.
+from dicom import about, dicom, element, opening, pattern, picture  # noqa: E402
+
+DCM = read("dcm", "sample.dcm")
+DCM_W, DCM_H = 320, 200
+DCM_PIXELS = pattern(DCM_W, DCM_H)
+DAMAGED = "This file is damaged: %s"
+# A list that does not give its length: where it begins, where an entry of it begins, and where it ends.
+LIST_OPEN = lambda group, number: struct.pack("<HH", group, number) + b"SQ\x00\x00" + struct.pack("<I", 0xFFFFFFFF)
+ENTRY = struct.pack("<HHI", 0xFFFE, 0xE000, 0xFFFFFFFF)
+ENTRY_END = struct.pack("<HHI", 0xFFFE, 0xE00D, 0)
+LIST_END = struct.pack("<HHI", 0xFFFE, 0xE0DD, 0)
+
+trap("truncated.dcm", DCM[: len(DCM) // 2],
+     "A sound scan cut off halfway through. The picture says how long it is, and the file ends before that.",
+     "dcm", node="fails", group="damage", note=DAMAGED % "the picture stops partway")
+trap("huge-declared.dcm", opening() + about() + picture(60000, 60000, bytes(64)),
+     "A scan of a few hundred bytes that says its picture is 60,000 by 60,000.",
+     "dcm", guard="refused", group="size")
+trap("picture-shorter-than-it-says.dcm", dicom(DCM_W, DCM_H, DCM_PIXELS[:1000]),
+     "A scan that says 320 by 200 and holds a thousand bytes of picture, all of them present. A decoder fills in the rest; the sum is done first.",
+     "dcm", node="fails", group="damage", note=DAMAGED % "the picture is shorter than the size it gives")
+trap("picture-two-gigabytes-long.dcm", opening() + about() + picture(DCM_W, DCM_H, DCM_PIXELS, said=0x7FFFFFF0),
+     "A sound scan whose picture says it is two gigabytes long.",
+     "dcm", node="fails", group="damage", note=DAMAGED % "the picture stops partway")
+trap("no-picture.dcm", (opening() + about() + picture(DCM_W, DCM_H, b""))[:-12],
+     "Everything a scan says about its picture, and no picture. Reports and measurements are kept in files like this.",
+     "dcm", node="fails", group="unusual", note=DAMAGED % "the file holds no picture")
+trap("note-longer-than-the-file.dcm", opening() + about(extra=struct.pack("<HH", 8, 0x2111) + b"UT\x00\x00" + struct.pack("<I", 0x7FFFFFF0)) + picture(DCM_W, DCM_H, DCM_PIXELS),
+     "A scan with a note that says it is two gigabytes long, before the picture.",
+     "dcm", node="fails", group="damage", note=DAMAGED % "a part of the file is longer than the file")
+trap("lists-forty-deep.dcm", opening() + about() + (LIST_OPEN(8, 0x1115) + ENTRY) * 40 + picture(DCM_W, DCM_H, DCM_PIXELS),
+     "A scan with forty lists opened one inside the other and none closed. Real files go three or four deep; past 32 the file is turned away.",
+     "dcm", node="fails", group="damage", note=DAMAGED % "its lists sit deeper inside one another than any real file needs")
+trap("a-huge-picture-inside-a-list.dcm",
+     opening() + about(extra=LIST_OPEN(8, 0x1115) + ENTRY + element(0x28, 0x10, "US", 60000) + element(0x28, 0x11, "US", 60000) + element(0x7FE0, 0x10, "OW", bytes(64)) + ENTRY_END + LIST_END)
+     + picture(DCM_W, DCM_H, DCM_PIXELS),
+     "A sound scan that carries, in a list beside it, the description of a picture 60,000 by 60,000. A scan may hold a small copy of itself this way. The size and the picture are taken from the scan itself, never from a list inside it.",
+     "dcm", node="succeeds", group="unusual")
+trap("two-hundred-thousand-pictures.dcm", opening() + about() + picture(1, 1, bytes(600000), frames=200000),
+     "A scan that says it is a series of two hundred thousand pictures of one pixel each, and is. The converter is told how many pictures a file may hold and stops there.",
+     "dcm", node="fails", group="size")
+trap("grey.dcm", dicom(DCM_W, DCM_H, bytes(DCM_PIXELS[1::3]), colour=False),
+     "A sound scan in shades of grey, as nearly all real ones are.",
+     "dcm", node="succeeds", group="unusual")
+trap("kinds-left-out.dcm", opening("1.2.840.10008.1.2") + about(implicit=True) + picture(DCM_W, DCM_H, DCM_PIXELS, implicit=True),
+     "A sound scan written the older way, in which no value says what kind it is. Many scanners still write this.",
+     "dcm", node="succeeds", group="unusual")
+trap("scan-named-png.png", DCM,
+     "A scan with a .png name. The contents say what it is.",
+     "dcm", group="identity", mismatch=True, node="succeeds")
+trap("letters-without-a-scan.dcm", b"\x00" * 128 + b"DICM",
+     "The 132 bytes every scan opens with, and nothing after them.",
+     "dcm", node="fails", group="damage", note=DAMAGED % "the file does not say how large its picture is")
+code("code.dcm", opening() + about(patient=MARK, extra=element(8, 0x80, "LO", CB) + element(8, 0x1030, "LO", CB) + element(8, 0x2111, "ST", CB)) + picture(DCM_W, DCM_H, DCM_PIXELS),
+     WHY % "as the patient's name, the hospital's, and the description of the examination", "dcm", node="succeeds", absent="omsett_canary")
+
 with open(os.path.join(OUT, "manifest.json"), "w") as out:
     json.dump(manifest, out, indent=2)
     out.write("\n")
