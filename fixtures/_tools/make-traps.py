@@ -4180,6 +4180,151 @@ code("code.dng", D.dng(DNG_W, DNG_H, DNG_PIXELS, change=lambda e: e.update({
     D.XMP: (D.BYTE, b'<x:xmpmeta xmlns:x="adobe:ns:meta/"><rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"><rdf:Description>' + XML_CANARY + b"</rdf:Description></rdf:RDF></x:xmpmeta>")})),
      WHY % "as the camera's maker and model, the picture's description, and its notes", "dng", node="succeeds", absent="omsett_canary")
 
+# --- sound: WAV, AIFF, AU -------------------------------------------------------------------------
+# Sound stored unpacked is a label and then numbers. The label gives lengths, and a reader that
+# believes them reads past the end of the file, or sets aside room for hours of sound that are
+# not there. So here are labels that lie about how much sound follows, how many channels it has
+# and how fast it runs; files cut short; sound that is packed after all; and parts in an order
+# nobody expects. Each is converted to WAV (an AIFF if it is a WAV already).
+import sound as S  # noqa: E402
+
+G = "sound"
+WAV, AIFF, AU = read("wav", "sample.wav"), read("aiff", "sample.aiff"), read("au", "sample.au")
+PCM = S.whole(S.PAIRS, 2, True)
+PCM_BIG = S.whole(S.PAIRS, 2, False)
+CUT = "This %s says it holds more sound than the file has. It may have been cut short"
+NOT_SOUND = "This file is not a valid %s file"
+SILENT = "This %s has no sound in it"
+PACKED_AS = "This %s holds its sound as %s, which Omsett cannot read yet. It reads sound that is stored unpacked"
+PACKED = "This %s holds its sound packed, which Omsett cannot read yet. It reads sound that is stored unpacked"
+
+
+def sound(name, data, why, detect, **more):
+    trap(name, data, why, detect, **{"group": G, **more})
+
+
+sound("truncated.wav", WAV[: len(WAV) // 2],
+      "A WAV cut off half-way, as a download cut short is. Its label promises twice the sound the file holds.",
+      "wav", node="fails", note=CUT % "WAV")
+sound("truncated.aiff", AIFF[: len(AIFF) // 2],
+      "An AIFF cut off half-way.",
+      "aiff", node="fails", note=CUT % "AIFF")
+sound("truncated.au", AU[: len(AU) // 2],
+      "An AU cut off half-way.",
+      "au", node="fails", note=CUT % "AU")
+sound("says-four-gigabytes.wav", S.wav(PCM, said=0xFFFFFFF0),
+      "A quarter of a second of sound that says it is four gigabytes long. Nothing is set aside for sound that is not there: the length is compared with the file first.",
+      "wav", node="fails", note=CUT % "WAV")
+sound("two-billion-moments.aiff", S.aiff(PCM_BIG, frames=0x7FFFFFFF),
+      "An AIFF whose label counts two billion moments of sound, in a file of eleven thousand bytes.",
+      "aiff", node="fails", note=CUT % "AIFF")
+sound("four-billion-channels.au", S.au(PCM_BIG, channels=4_000_000_000),
+      "An AU that says it has four billion channels.",
+      "au", node="fails", note="This AU says it has 4,000,000,000 channels of sound. Omsett reads up to 64")
+sound("no-channels.wav", S.wav(PCM, channels=0, block=4),
+      "A WAV that says it has no channels at all. Dividing by that number would be dividing by nothing.",
+      "wav", node="fails", note=NOT_SOUND % "WAV")
+sound("fewer-than-no-channels.aiff", S.aiff(PCM_BIG, common=struct.pack(">hIh", -2, S.FRAMES, 16) + S.extended(S.RATE)),
+      "An AIFF that says it has minus two channels.",
+      "aiff", node="fails", note=NOT_SOUND % "AIFF")
+sound("no-rate.wav", S.wav(PCM, rate=0),
+      "A WAV that plays at nothing a second: no length of time could be worked out for it.",
+      "wav", node="fails", note=NOT_SOUND % "WAV")
+sound("endless-rate.aiff", S.aiff(PCM_BIG, common=struct.pack(">hIh", 2, S.FRAMES, 16) + b"\x7F\xFF" + b"\x80" + b"\0" * 7),
+      "An AIFF whose rate is written as infinity, which the ten bytes AIFF uses for a rate are able to say.",
+      "aiff", node="fails", note=NOT_SOUND % "AIFF")
+sound("moment-of-the-wrong-size.wav", S.wav(PCM, block=3),
+      "A WAV that says each moment of sound is three bytes, where two channels of two bytes make four.",
+      "wav", node="fails", note=NOT_SOUND % "WAV")
+sound("no-sound.wav", S.wav(b""),
+      "A WAV with a sound label and no sound after it.",
+      "wav", node="fails", note=SILENT % "WAV")
+sound("no-sound-part.aiff", b"FORM" + struct.pack(">I", 30) + b"AIFF" + S.part(b"COMM", struct.pack(">hIh", 2, 0, 16) + S.extended(S.RATE), little=False),
+      "An AIFF that says it holds no moments of sound and leaves the part for sound out, which the format allows.",
+      "aiff", node="fails", note=SILENT % "AIFF")
+sound("label-missing.wav", b"RIFF" + struct.pack("<I", 4 + 8 + len(PCM)) + b"WAVE" + S.part(b"data", PCM),
+      "A WAV with its sound and without the part that says how the sound is stored. Numbers with no label cannot be read as anything.",
+      "wav", node="fails", note=NOT_SOUND % "WAV")
+sound("mp3-inside.wav", S.wav(PCM, kind=0x55),
+      "A WAV whose label says the sound inside is MP3. A WAV may hold packed sound; Omsett reads the unpacked kinds, and says which kind this is.",
+      "wav", node="fails", note=PACKED_AS % ("WAV", "MP3"))
+sound("packing-unnamed.wav", S.wav(PCM, extensible=True).replace(S.ORDINARY, b"\x11" * 14),
+      "A WAV with the longer label, whose kind is given as one that belongs to somebody's own program.",
+      "wav", node="fails", note=PACKED % "WAV")
+sound("adpcm.aifc", S.aiff(PCM_BIG, how=b"ima4", name=b"IMA 4:1"),
+      "An AIFF-C whose four letters say its sound is packed as ADPCM.",
+      "aiff", node="fails", note=PACKED_AS % ("AIFF", "ADPCM"))
+sound("adpcm.au", S.au(PCM_BIG, how=23),
+      "An AU whose sound is packed as ADPCM.",
+      "au", node="fails", note=PACKED_AS % ("AU", "ADPCM"))
+sound("sound-starts-in-the-label.au", S.au(PCM_BIG, start=8),
+      "An AU that says its sound starts eight bytes in, which is inside its own six numbers.",
+      "au", node="fails", note=NOT_SOUND % "AU")
+sound("sound-starts-past-the-end.au", S.au(PCM_BIG, start=0x7FFFFFFF),
+      "An AU that says its sound starts two gigabytes into a file of eleven thousand bytes.",
+      "au", node="fails", note=CUT % "AU")
+sound("sound-set-in-past-its-end.aiff", S.aiff(PCM_BIG).replace(b"SSND" + struct.pack(">II", 8 + len(PCM_BIG), 0), b"SSND" + struct.pack(">II", 8 + len(PCM_BIG), 0x7FFFFFFF)),
+      "An AIFF may set its sound a little way into its part. This one sets it two gigabytes in.",
+      "aiff", node="fails", note=NOT_SOUND % "AIFF")
+sound("five-thousand-empty-parts.wav", b"RIFF" + struct.pack("<I", 4 + 8 * 5000) + b"WAVE" + S.part(b"JUNK", b"") * 5000 + S.wav(PCM)[12:],
+      "Five thousand empty parts before the label. A WAV has a handful; past four thousand, Omsett stops looking.",
+      "wav", node="fails", note=NOT_SOUND % "WAV")
+sound("part-runs-past-the-end.wav", b"RIFF" + struct.pack("<I", 100) + b"WAVE" + S.part(b"LIST", b"INFO", size=0x7FFFFFF0) + S.wav(PCM)[12:],
+      "A part before the label that says it is two gigabytes long. Followed, it leads nowhere, and the label is never reached.",
+      "wav", node="fails", note=NOT_SOUND % "WAV")
+
+sound("length-not-given.wav", S.wav(PCM, said=0xFFFFFFFF, riff=0xFFFFFFFF),
+      "A WAV written as it was recorded, by a program that did not yet know how long it would be: its lengths are all ones. Everything after the label is the sound.",
+      "wav", node="succeeds", group="unusual")
+sound("length-not-given.au", S.au(PCM_BIG, said=0xFFFFFFFF),
+      "The same in an AU, where a length of all ones is the stated way of saying it was not known.",
+      "au", node="succeeds", group="unusual")
+sound("label-after-the-sound.aiff", S.aiff(PCM_BIG, sound_first=True),
+      "An AIFF with its sound first and the part that describes it after. The format allows any order.",
+      "aiff", node="succeeds", group="unusual")
+sound("sound-set-in.aiff", S.aiff(PCM_BIG, skip=16),
+      "An AIFF whose sound is set sixteen bytes into its part, as was once done to line it up for a disk.",
+      "aiff", node="succeeds", group="unusual")
+sound("two-labels.wav", S.wav(PCM, before=S.part(b"fmt ", struct.pack("<HHIIHH", 1, 1, 1, 1, 1, 8))),
+      "A WAV with two labels that disagree. The first is the one a reader meets, and the one that is used.",
+      "wav", node="succeeds", group="unusual")
+sound("ends-mid-moment.wav", S.wav(PCM + b"\x01\x02\x03"),
+      "A WAV with three bytes more than a whole number of moments. The stray bytes are not sound and are left off.",
+      "wav", node="succeeds", group="unusual")
+sound("notes-run-past-their-end.wav", S.wav(PCM, after=S.part(b"LIST", b"INFO" + b"INAM" + struct.pack("<I", 0x7FFFFFFF) + b"Title")),
+      "A sound WAV whose list of notes holds one that says it is two gigabytes long. The notes are not followed past their end, and the sound converts.",
+      "wav", node="succeeds", group="unusual")
+sound("old-mac.aiff", read("aiff", "old-mac.aiff"),
+      "A sound as an early Macintosh recorded it: one byte to a number, and 22,254.545 of them a second. WAV cannot state the fraction, and the result says what was written instead.",
+      "aiff", node="succeeds", group="unusual")
+sound("telephone.au", read("au", "telephone.au"),
+      "Sound in µ-law, the code telephone lines use: eight bits standing for sixteen. It is unpacked to the sixteen.",
+      "au", node="succeeds", group="unusual")
+
+sound("sound-named-as-music.mp3", WAV,
+      "A WAV with an MP3's name.",
+      "wav", node="succeeds", mismatch=True, group="identity")
+sound("words-named-as-sound.wav", b"RIFFs and WAVEs: notes on a guitar part.\n",
+      "Text that opens with the four letters a WAV opens with.",
+      "unknown", group="identity")
+sound("film-named-as-sound.wav", b"RIFF" + struct.pack("<I", 4 + len(WAV) - 12) + b"AVI " + WAV[12:],
+      "A file that opens as a WAV does and then says it is a film.",
+      "unregistered", group="identity")
+sound("larger-than-wav-allows.wav", b"RF64" + b"\xFF\xFF\xFF\xFF" + WAV[8:],
+      "The form of WAV made for recordings past four gigabytes, which says so in its first four letters. Omsett does not read it yet.",
+      "unknown", group="identity")
+
+G = "code"
+LIST_OF_NOTES = S.info(INAM=CB, IART=CB, ICMT=CB, ISFT=MARK.encode())
+BROADCAST = S.part(b"bext", (CB + b"\0" * 256)[:256] + (CB + b"\0" * 32)[:32] + b"\0" * 32 + b"2026-11-24" + b"\0" * 300)
+code("code.wav", S.wav(PCM, before=BROADCAST, after=LIST_OF_NOTES + S.part(b"id3 ", b"ID3\x03\0\0\0\0\0\x7fTIT2" + CB)),
+     WHY % "as the title, the artist and the comment, in a broadcaster's description, and in a block of tags", "wav", node="succeeds", absent="omsett_canary")
+code("code.aiff", S.aiff(PCM_BIG, before=b"".join(S.part(name, CB, little=False) for name in (b"NAME", b"AUTH", b"(c) ", b"ANNO")), after=S.part(b"ID3 ", b"ID3\x03\0\0\0\0\0\x7fTIT2" + CB, little=False)),
+     WHY % "as the title, the artist, the copyright line and a comment, and in a block of tags", "aiff", node="succeeds", absent="omsett_canary")
+code("code.au", S.au(PCM_BIG, note=CB + b"\0"),
+     WHY % "as the note an AU carries between its label and its sound", "au", node="succeeds", absent="omsett_canary")
+
+
 with open(os.path.join(OUT, "manifest.json"), "w") as out:
     json.dump(manifest, out, indent=2)
     out.write("\n")

@@ -14,7 +14,7 @@
 
 **Drop a file. Pick a format. Nothing leaves your device.**
 
-Omsett is a free, open-source file converter. Every conversion runs in your browser, on your own device, so your files are never uploaded: there is no server for them to go to. Pictures, documents, spreadsheets, data, subtitles, screenplays, fonts and archives convert today; audio, video and a desktop app are ahead.
+Omsett is a free, open-source file converter. Every conversion runs in your browser, on your own device, so your files are never uploaded: there is no server for them to go to. Pictures, documents, spreadsheets, data, subtitles, screenplays, fonts, archives and unpacked sound convert today; MP3 and FLAC, video and a desktop app are ahead.
 
 *Omsett* is Norwegian: to translate; to convert.
 
@@ -29,7 +29,7 @@ Omsett is a free, open-source file converter. Every conversion runs in your brow
 <!-- facts:start -->
 <!-- Generated from the registry by `pnpm readme:facts`. Do not edit by hand. -->
 
-**64 formats, 265 conversions**, every one of them run in your browser, on your device, and tested against 528 files made on purpose to be broken, hostile or dishonest. How many tests there are today is on the site's [Trust](https://omsett.com/trust) page, counted at every build.
+**67 formats, 271 conversions**, every one of them run in your browser, on your device, and tested against 567 files made on purpose to be broken, hostile or dishonest. How many tests there are today is on the site's [Trust](https://omsett.com/trust) page, counted at every build.
 
 | Kind | Converts to and from | Reads only |
 | --- | --- | --- |
@@ -44,6 +44,7 @@ Omsett is a free, open-source file converter. Every conversion runs in your brow
 | Subtitles | SRT, WebVTT, ASS, SSA, TTML, LRC, SBV, SAMI, MicroDVD | — |
 | Screenplays | Fountain, Final Draft, Drafter | — |
 | Fonts | WOFF2, WOFF, TTF, OTF | — |
+| Sound | WAV, AIFF, AU | — |
 | Archives | ZIP, TAR.GZ, TAR | — |
 
 A file is offered the formats of its own kind: a picture becomes another picture, a workbook becomes data, a Word document becomes a web page or Markdown.
@@ -58,6 +59,7 @@ A file is offered the formats of its own kind: a picture becomes another picture
 - **Makes icons**: any picture to a Windows icon, a Mac icon or a mouse pointer, at the sizes each expects.
 - **Develops a raw photograph (DNG)** with standard settings, the right way up.
 - **Converts a medical scan (DICOM) to a picture without the patient**: only the picture is read; the name, date of birth and notes never reach the converter.
+- **Converts sound exactly**: WAV, AIFF and AU to one another, with not one number of the sound changed, and says how long a recording runs and how it is stored before you start.
 - **Try it without a file of your own**: a sample picture, PDF and Word document are in the drop zone.
 - **Before and after, side by side**: a slider for pictures, with the quality adjustable in view; the two texts for data and subtitles.
 - **Choose which sheet of a workbook to convert**, by name, or all of them at once.
@@ -103,7 +105,7 @@ A self-hostable image (Docker) serves the same site on your own network. There i
 
 ## Stack
 
-Nuxt 4 + Nuxt UI (a static site, served by nginx) · TypeScript · pnpm · Web Workers + WebAssembly (libvips, ImageMagick, libheif, resvg, pdf.js) and Omsett's own readers and writers for data, documents, subtitles, screenplays, fonts and archives · Docker for self-hosting. Every engine and its license is in [`THIRD-PARTY-NOTICES.md`](THIRD-PARTY-NOTICES.md).
+Nuxt 4 + Nuxt UI (a static site, served by nginx) · TypeScript · pnpm · Web Workers + WebAssembly (libvips, ImageMagick, libheif, resvg, pdf.js) and Omsett's own readers and writers for data, documents, subtitles, screenplays, fonts, archives and sound · Docker for self-hosting. Every engine and its license is in [`THIRD-PARTY-NOTICES.md`](THIRD-PARTY-NOTICES.md).
 
 ## Run it locally
 

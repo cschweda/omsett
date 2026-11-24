@@ -23,3 +23,6 @@ apps/web/public/fonts/
 /live.next
 # the last unit run, which scripts/count-tests.ts counts the tests from
 .vitest-report/
+
+# Python leaves these beside the fixture tools.
+__pycache__/

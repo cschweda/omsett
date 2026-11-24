@@ -151,9 +151,15 @@ function fits(bytes: Uint8Array): Sniffed | null {
   return { ext: 'fits', mime: 'image/fits', dimensions }
 }
 
+/** Sun and NeXT sound: ".snd", then six numbers. A sound has no width or height. */
+function au(bytes: Uint8Array): Sniffed | null {
+  if (bytes.length < 24 || !starts(bytes, 0x2E, 0x73, 0x6E, 0x64)) return null
+  return { ext: 'au', mime: 'audio/basic', dimensions: null }
+}
+
 /** Strongest signatures first; TGA, which has none, last. */
 export function sniff(bytes: Uint8Array): Sniffed | null {
-  for (const test of [qoi, exr, ras, dds, fits, hdr, sgi, pnm, pcx, tga]) {
+  for (const test of [qoi, exr, ras, dds, fits, au, hdr, sgi, pnm, pcx, tga]) {
     const found = test(bytes)
     if (found) return found
   }

@@ -1,0 +1,73 @@
+// Sound, in the page: what a file says about itself, and that what is written is the same sound.
+import { readFileSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
+import { expect, test } from '@playwright/test'
+import { describeDownload, open } from './helpers'
+
+const fixture = (path: string) => fileURLToPath(new URL(`../fixtures/${path}`, import.meta.url))
+const row = (page: import('@playwright/test').Page, label: string) => page.getByTestId('details').locator('dl > div').filter({ has: page.locator('dt', { hasText: new RegExp(`^${label}$`) }) })
+
+async function convert(page: import('@playwright/test').Page, path: string, to: string) {
+  await open(page)
+  await page.locator('#file-input').setInputFiles(fixture(path))
+  await page.locator(`[role="radio"][data-format="${to}"]`).click()
+  await page.getByTestId('convert').click()
+  const link = page.getByTestId('download')
+  await expect(link).toBeVisible({ timeout: 30_000 })
+  return describeDownload(page, () => link.click())
+}
+
+test('a WAV becomes an AIFF holding the very same numbers, each with its bytes turned round', async ({ page }) => {
+  const output = await convert(page, 'wav/sample.wav', 'aiff')
+  expect(output.name).toBe('sample.aiff')
+  expect(output.found.kind === 'known' && output.found.format.id).toBe('aiff')
+  // The sample's sound starts 44 bytes in and runs to its notes; the AIFF's starts 54 bytes in.
+  const wav = readFileSync(fixture('wav/sample.wav'))
+  const sound = wav.subarray(44, 44 + wav.readUInt32LE(40))
+  const made = output.bytes.subarray(54)
+  expect(made.length).toBe(sound.length)
+  expect(Buffer.from(made).swap16().equals(sound), 'every number is the one the WAV held').toBe(true)
+  // What the WAV said about itself is not in the result.
+  expect(output.bytes.toString('latin1')).not.toMatch(/Test pattern|Omsett/)
+  await expect(page.locator('.result-card')).toHaveAttribute('data-engine', 'audio')
+})
+
+test('a sound file is offered sound formats and nothing else', async ({ page }) => {
+  await open(page)
+  await page.locator('#file-input').setInputFiles(fixture('au/sample.au'))
+  await expect(page.locator('.file-card')).toContainText('AU')
+  await expect(page.locator('[role="radio"][data-format="wav"]')).toBeVisible()
+  await expect(page.locator('[role="radio"][data-format="aiff"]')).toBeVisible()
+  await expect(page.locator('[role="radio"][data-format="webp"]')).toHaveCount(0)
+  await expect(page.locator('[role="radio"][data-format="zip"]')).toHaveCount(0)
+})
+
+test('telephone sound is unpacked to 16 bits, and the result says so', async ({ page }) => {
+  const output = await convert(page, 'au/telephone.au', 'wav')
+  await expect(page.locator('.result-card')).toContainText('The sound was stored in µ-law, a telephone code of eight bits.')
+  // One channel, 8,000 a second, sixteen bits: twice the bytes the AU held.
+  expect([output.bytes.readUInt16LE(20), output.bytes.readUInt16LE(22), output.bytes.readUInt32LE(24), output.bytes.readUInt16LE(34)]).toEqual([1, 1, 8000, 16])
+  expect(output.bytes.readUInt32LE(40)).toBe((readFileSync(fixture('au/telephone.au')).length - 24 - 4) * 2)
+})
+
+test('a sound file shows how long it runs and how it is stored, and that its title is left behind', async ({ page }) => {
+  await open(page)
+  await page.locator('#file-input').setInputFiles(fixture('wav/sample.wav'))
+  await page.getByTestId('details-toggle').click()
+  await expect(row(page, 'Kind').locator('dd')).toHaveText('WAV')
+  await expect(row(page, 'Length').locator('dd')).toContainText('0.25 seconds')
+  await expect(row(page, 'Rate').locator('dd')).toContainText('11,025 samples a second')
+  await expect(row(page, 'Channels').locator('dd')).toContainText('2 (stereo)')
+  await expect(row(page, 'Stored as').locator('dd')).toContainText('16-bit whole numbers')
+  await expect(row(page, 'Title').locator('dd')).toContainText('Test pattern')
+  await expect(row(page, 'Title').locator('.fate')).toHaveText('removed when converted')
+  await expect(page.locator('.fate[data-fate="removed"]')).toHaveCount(3)
+})
+
+test('a WAV holding MP3 is refused, with the name of what is inside', async ({ page }) => {
+  await open(page)
+  await page.locator('#file-input').setInputFiles(fixture('_traps/mp3-inside.wav'))
+  await page.locator('[role="radio"][data-format="aiff"]').click()
+  await page.getByTestId('convert').click()
+  await expect(page.locator('.file-card')).toContainText('This WAV holds its sound as MP3, which Omsett cannot read yet. It reads sound that is stored unpacked')
+})

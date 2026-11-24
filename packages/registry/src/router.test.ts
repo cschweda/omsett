@@ -38,7 +38,7 @@ describe('router, real registry', () => {
     for (const edge of deriveEdges(registry).edges) {
       const engines = edge.candidates.map((c) => c.engine)
       if (edge.from !== 'png') expect(engines, `${edge.from} → ${edge.to}`).not.toContain('canvas')
-      for (const engine of engines) expect(engine === 'canvas' || ['heif', 'resvg', 'magick', 'data', 'subtitle', 'markup', 'font', 'font-woff2', 'icon', 'archive', 'script', 'pdf'].includes(engine) || engine.startsWith('vips')).toBe(true)
+      for (const engine of engines) expect(engine === 'canvas' || ['heif', 'resvg', 'magick', 'data', 'subtitle', 'markup', 'font', 'font-woff2', 'icon', 'archive', 'script', 'pdf', 'audio'].includes(engine) || engine.startsWith('vips')).toBe(true)
       // The data engine reads and writes data and nothing else; no picture engine touches data.
       const data = [edge.from, edge.to].map((id) => ['data', 'spreadsheet'].includes(formatById(registry, id)!.category))
       expect(data[0], `${edge.from} → ${edge.to}`).toBe(data[1])
@@ -62,6 +62,7 @@ describe('router, real registry', () => {
       'fountain', 'fdx', 'drafter',
       'woff2', 'woff', 'ttf', 'otf',
       'zip', 'tgz', 'tar',
+      'wav', 'aiff', 'au',
     ])
     const readOnly = new Set(everything.formats.filter((f) => f.readOnly).map((f) => f.id))
     expect([...readOnly].sort()).toEqual(['apng', 'dcm', 'dng', 'exr', 'fits', 'hdr', 'heic', 'pcx', 'pdf', 'pptx', 'psb', 'psd', 'ras', 'sgi', 'svg', 'svgz'])
@@ -110,6 +111,11 @@ describe('router, real registry', () => {
     expect(all.route('ass', 'srt')!.warnings.map((w) => w.id)).toEqual(['styling-lost'])
     expect(all.route('sbv', 'lrc')!.warnings.map((w) => w.id)).toEqual(['lyrics-one-line'])
     expect(all.route('lrc', 'microdvd')!.warnings.map((w) => w.id).sort()).toEqual(['ends-guessed', 'frames-assumed'])
+    // Sound stored unpacked: one step, its own kind only, and what the file says about itself left behind.
+    expect(all.route('wav', 'aiff')!.edges.map((e) => e.candidates[0]!.engine)).toEqual(['audio'])
+    expect(all.targetsFor(['au']).map((t) => t.format.id)).toEqual(['wav', 'aiff', 'au'])
+    expect(all.route('aiff', 'wav')!.lossy).toBe(false)
+    expect(all.route('aiff', 'wav')!.warnings.map((w) => w.id)).toEqual(['metadata-lost'])
     // HEIC is decoded to PNG first, without loss, and goes on from there.
     expect(all.route('heic', 'png')!.edges.map((e) => e.candidates[0]!.engine)).toEqual(['heif'])
     expect(all.route('heic', 'jpeg')!.edges.map((e) => e.to)).toEqual(['png', 'jpeg'])

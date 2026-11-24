@@ -12,6 +12,7 @@ import {
   listSheets,
   zipFiles,
   createFontEngine,
+  createAudioEngine,
   createIconEngine,
   createFontWoff2Engine,
   createHeifEngine,
@@ -133,6 +134,7 @@ const engines: Record<string, Engine> = Object.fromEntries(
     createIconEngine(),
     createFontEngine(),
     createFontWoff2Engine(),
+    createAudioEngine(),
   ].map((engine) => [engine.id, engine]),
 )
 

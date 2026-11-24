@@ -106,6 +106,8 @@ for (const trap of traps) {
                     ? ['html', 'md']
                     : category === 'screenplay'
                       ? ['fdx', 'fountain']
+                    : category === 'audio'
+                      ? ['wav', 'aiff']
                     : ['webp', 'png']
       const target = trap.detect === usual ? otherwise : usual
       if (trap.mismatch) await expect(note).toContainText('the contents are')

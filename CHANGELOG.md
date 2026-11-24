@@ -7,6 +7,43 @@ The paragraph that opens a version is its teaser: the home page shows its first 
 in the "What's new" banner, so keep it to two or three sentences on what a visitor will notice.
 A line beginning "Released" gives the date.
 
+## 0.41.0
+
+Released 24 November 2026.
+
+Sound arrives: WAV, AIFF and AU files now convert to one another. Not one number of the sound
+is changed on the way, so what comes out is exactly what went in, under a different label.
+MP3 and FLAC are next.
+
+### Added
+
+- **Sound**, a new kind of file: **WAV**, **AIFF** (and AIFF-C) and **AU**, each to the
+  others. These three store sound unpacked, as plain numbers, and differ only in the label on
+  the front and the order of the bytes. Omsett's own code reads and writes them; nothing is
+  downloaded.
+- Whole numbers of one to four bytes and fractions of four and eight are all carried as they
+  are. Sound in µ-law or A-law, the eight-bit codes of telephone lines, is unpacked to the
+  16-bit sound it stands for, and the result says so.
+- **A sound file's details**, before converting: how long it runs, its rate, its channels and
+  how it is stored, and the title, artist and comment it carries, which a conversion leaves
+  behind. A long recording is described from its first part alone.
+- The result says what could not be kept as it was: a rate with a fraction (early Macs
+  recorded at 22,254.545 a second) written to a format that states whole numbers, and channels
+  beyond two, which are kept in order but which formats name differently.
+- 39 trap files for sound (a trap file is one made on purpose to be broken, hostile or
+  dishonest): files cut short, a quarter of a second that says it is four gigabytes, four
+  billion channels, a rate of infinity, MP3 inside a WAV, parts in an unexpected order, and
+  code written as the title and artist.
+- The samples are written by a script (`fixtures/_tools/sound.py`): a rising note and a fading
+  one. Nobody's recording is in the repository.
+
+### Known
+
+- Sound that is packed (MP3, FLAC, AAC, ADPCM) is not read yet. A WAV or AIFF holding packed
+  sound is refused with the name of the packing.
+- A WAV past four gigabytes (RF64) is not read. Nor is any file over 500 MB, as for every kind.
+- Nothing about the sound can be changed yet: not its rate, its channels or its bit depth.
+
 ## 0.40.0
 
 Released 24 November 2026.

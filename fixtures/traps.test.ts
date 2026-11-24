@@ -26,6 +26,8 @@ const ttf = formatById(registry, 'ttf')!
 const zip = formatById(registry, 'zip')!
 const tar = formatById(registry, 'tar')!
 const fdx = formatById(registry, 'fdx')!
+const wav = formatById(registry, 'wav')!
+const aiff = formatById(registry, 'aiff')!
 const fountain = formatById(registry, 'fountain')!
 
 const load = async (file: string) => new File([await readFile(new URL(`./_traps/${file}`, import.meta.url))], file)
@@ -129,6 +131,8 @@ describe('trap files', () => {
                     ? [html, md]
                     : from.category === 'screenplay'
                       ? [fdx, fountain]
+                    : from.category === 'audio'
+                      ? [wav, aiff]
                     : [webp, png]
       const to = from.id === usual.id ? otherwise : usual
       if (!router.route(from.id, to.id)) {
@@ -158,7 +162,7 @@ describe('trap files', () => {
         expect(error, 'a failure is an ordinary error').toBeInstanceOf(Error)
         outcome = 'fails'
         // Where the app must give a particular reason, the engine is where it comes from.
-        if (trap.note && ['data', 'spreadsheet', 'subtitle', 'text', 'font', 'archive', 'document', 'presentation', 'screenplay', 'pdf'].includes(from.category)) expect((error as Error).message).toBe(trap.note)
+        if (trap.note && ['data', 'spreadsheet', 'subtitle', 'text', 'font', 'archive', 'document', 'presentation', 'screenplay', 'pdf', 'audio'].includes(from.category)) expect((error as Error).message).toBe(trap.note)
       }
       expect(outcome, 'the engine').toBe(trap.node)
 
