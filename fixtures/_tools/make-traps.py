@@ -3010,8 +3010,8 @@ docu(
 docu(
     "older-word.doc",
     b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1" + b"\0" * 16 + b"\x3e\x00\x03\x00\xfe\xff\x09\x00" + b"\0" * 480 + b"W\0o\0r\0d\0D\0o\0c\0u\0m\0e\0n\0t\0" + b"\0" * 480,
-    "The older kind of Word document, from before 2007, which is not a ZIP at all.",
-    "unregistered",
+    "The opening bytes of the older kind of Word document, from before 2007, and its name, and nothing else. Omsett reads such documents now, and this is not one that can be followed.",
+    "doc", node="fails", note="This file is not a valid DOC document",
 )
 
 # --- presentations: PPTX --------------------------------------------------------------------------
@@ -4280,6 +4280,91 @@ trap("some-other-old-file.xls", X.container([("Contents", b"Not a workbook, a do
      "The container old Office files are kept in, holding something that is none of them.",
      "unregistered", group="identity")
 
+# --- Word documents from before 2007: DOC ---------------------------------------------------------
+# The same container as an old workbook, and inside it a document that is mostly directions:
+# which stretches of the file are the text and in what order, and pages that say how each run
+# of it is set. Every direction is a number that can point anywhere. And an old document keeps
+# what its author took out, as a new one does: text struck through, text hidden.
+import doc as W  # noqa: E402
+
+G = "documents"
+DOC = read("doc", "sample.doc")
+NOT_DOC = "This file is not a valid DOC document"
+TOO_LONG = "This document is too long to convert in a browser"
+PLAIN = [W.para("A heading", style=1), W.para("One paragraph of an old document."), W.para("And another.")]
+
+
+def text_past_the_end(parts):
+    """The list of stretches says the text starts two gigabytes into the file."""
+    at, size = parts["places"][33]
+    struct.pack_into("<I", parts["table"], at + size - 6, 0x7FFFFFF0)
+
+
+def two_billion_characters(parts):
+    struct.pack_into("<I", parts["word"], 0x4C, 0x7FFFFFFF)
+
+
+def settings_past_the_end(parts):
+    """The list of pages of settings names page four million."""
+    at, size = parts["places"][13]
+    struct.pack_into("<I", parts["table"], at + size - 4, 0x003FFFFF)
+
+
+def list_longer_than_its_stream(parts):
+    at, _ = parts["places"][33]
+    struct.pack_into("<I", parts["word"], 0x9A + 33 * 8 + 4, 0x7FFFFFFF)
+
+
+trap("truncated.doc", DOC[:-512],
+     "An old Word document that lost its last few hundred bytes. They held the table that says which part of the file follows which, so nothing in it can be followed; its name is still written in what is left, and it is refused as a damaged document.",
+     "doc", node="fails", note=NOT_DOC, group=G)
+trap("locked-with-a-password.doc", W.document(PLAIN, locked=True),
+     "An old Word document locked with a password. Its text is scrambled, and is not guessed at.",
+     "doc", node="fails", note="This document is locked with a password, and cannot be read without it", group=G)
+trap("from-word-95.doc", W.document(PLAIN, version=0x0065),
+     "A document in the form Word used before 1997, which keeps its text and its tables another way.",
+     "doc", node="fails", note="This document was saved by Word 95 or earlier, in a form Omsett cannot read yet. Opening it in a word processor and saving it again will bring it up to date", group=G)
+trap("text-two-gigabytes-in.doc", W.document(PLAIN, change=text_past_the_end),
+     "The list of where the text is says it starts two gigabytes into a file of a few thousand bytes.",
+     "doc", node="fails", note=NOT_DOC, group=G)
+trap("two-billion-characters.doc", W.document(PLAIN, change=two_billion_characters),
+     "A document that says it is two billion characters long. Nothing is set aside for them: the count is refused as it stands.",
+     "doc", node="fails", note=TOO_LONG, group=G)
+trap("settings-on-page-four-million.doc", W.document(PLAIN, change=settings_past_the_end),
+     "How each paragraph is set is kept on numbered pages of the file. This document sends the reader to page four million.",
+     "doc", node="fails", note=NOT_DOC, group=G)
+trap("list-longer-than-its-stream.doc", W.document(PLAIN, change=list_longer_than_its_stream),
+     "The list of where the text is says that it is itself two gigabytes long.",
+     "doc", node="fails", note=NOT_DOC, group=G)
+trap("instruction-that-never-ends.doc", W.document([W.para("\x13 INCLUDETEXT \"C:\\\\secrets.txt\" and then everything else in the document"), W.para("is taken for part of the instruction.")]),
+     "Word keeps instructions in the text, between a mark that opens one and a mark that closes it. This one is never closed, so all that follows is instruction and none of it is text.",
+     "doc", node="fails", note="This document has no text in it", group=G)
+trap("a-hundred-instructions-deep.doc", W.document([W.para("\x13" * 100 + "x" + "\x15" * 100), W.para("After them.")]),
+     "A hundred instructions, each inside the last. Sixty-four is deeper than any document goes.",
+     "doc", node="fails", note=NOT_DOC, group=G)
+
+trap("text-in-two-places.doc", W.document(W.SAMPLE, split=120),
+     "A document saved quickly, as Word once did to save time: the end of the text is stored before the beginning, and a list says which comes first. Read in the order of the list, it is the document; read in the order of the file, it is nonsense.",
+     "doc", node="succeeds", group="unusual")
+trap("two-bytes-to-every-letter.doc", W.document(PLAIN, wide=True),
+     "A document in plain English stored two bytes to a letter, as Word stores any text once it holds a letter that needs it.",
+     "doc", node="succeeds", group="unusual")
+trap("what-the-author-struck-out.doc", W.document([W.para("The offer is ", W.run("one million", W.STRUCK), "two million.")]),
+     "A document with changes tracked. The figure that was struck out is still in the file, and is not carried across.",
+     "doc", node="succeeds", group=G, absent="one million")
+trap("what-the-author-hid.doc", W.document([W.para("Minutes of the meeting.", W.run(" Do not circulate the paragraph about pay.", W.HIDDEN))]),
+     "A document with hidden text, which Word does not show or print unless asked. It is not carried across.",
+     "doc", node="succeeds", group=G, absent="circulate")
+trap("link-that-is-code.doc", W.document([W.para("Please ", W.link("read the report", "javascript:" + MARK), " today.")]),
+     "A link whose address is a line of code. The words of the link are kept; the address is not.",
+     "doc", node="succeeds", group=G, absent="javascript:")
+trap("macro-in-an-old-document.doc", W.document(PLAIN, extra=[("_VBA_PROJECT", b"Sub AutoOpen(): Shell \"" + SHELL.encode() + b"\": End Sub" + b"\0" * 64)]),
+     "An old Word document with a macro set to run when it is opened, which is how such documents were used to attack people for twenty years. The macro is neither run nor carried anywhere.",
+     "doc", node="succeeds", group=G, absent="AutoOpen")
+trap("old-document-named-as-new.docx", DOC,
+     "A Word document from before 2007 with the name of a newer one. It is read as what it is.",
+     "doc", node="succeeds", mismatch=True, group="identity")
+
 # --- sound: WAV, AIFF, AU -------------------------------------------------------------------------
 # Sound stored unpacked is a label and then numbers. The label gives lengths, and a reader that
 # believes them reads past the end of the file, or sets aside room for hours of sound that are
@@ -4582,6 +4667,8 @@ sound("an-older-layer.mp3", bytes([0xFF, 0xFD, 0x90, 0x04]) + b"\0" * 414 + byte
 G = "code"
 LIST_OF_NOTES = S.info(INAM=CB, IART=CB, ICMT=CB, ISFT=MARK.encode())
 BROADCAST = S.part(b"bext", (CB + b"\0" * 256)[:256] + (CB + b"\0" * 32)[:32] + b"\0" * 32 + b"2026-11-24" + b"\0" * 300)
+code("code.doc", W.document([W.para(CANARY, style=1), W.para(CANARY, " ", W.link(CANARY, "javascript:" + MARK), " ", W.run(CANARY, W.BOLD)), *W.row(CANARY, "__proto__")], title=CB[:200], author=CB[:200], extra=[("_VBA_PROJECT", b"Sub AutoOpen(): Shell \"" + SHELL.encode() + b"\": End Sub")]),
+     WHY % "as a heading, as text, as the words and the address of a link, in a table, as the title and the author, and beside a macro set to run on opening", "doc", node="succeeds")
 code("code.xls", X.container([("Workbook", X.workbook([(CANARY[:28], X.text_cell(0, 0, 0) + X.text_cell(0, 1, 1) + X.text_cell(1, 0, 2) + X.text_cell(1, 1, 3) + X.rec(0x0204, X.cell(2, 0) + X.words(CANARY)) + X.formula(2, 1, "=cmd|' /C " + SHELL + "'!A0"))], ["name", "__proto__", CANARY, "polluted"])), ("\x05SummaryInformation", X.about(CB[:200], CB[:200], MARK.encode())), ("_VBA_PROJECT_CUR", b"Sub Auto_Open(): Shell \"" + SHELL.encode() + b"\": End Sub")], small=True),
      WHY % "in cells, as the name of a sheet, as the title and the author, in a formula that asks to run a command, and in a macro set to run on opening", "xls", node="succeeds")
 code("code.wav", S.wav(PCM, before=BROADCAST, after=LIST_OF_NOTES + S.part(b"id3 ", b"ID3\x03\0\0\0\0\0\x7fTIT2" + CB)),

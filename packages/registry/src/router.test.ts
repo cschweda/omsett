@@ -58,14 +58,14 @@ describe('router, real registry', () => {
       'heic', 'apng', 'svg', 'svgz', 'psd', 'psb', 'ico', 'icns', 'cur', 'jp2', 'exr', 'hdr', 'dds', 'fits', 'dcm', 'dng', 'pcx', 'sgi', 'ras',
       'json', 'yaml', 'csv', 'xlsx', 'xml', 'toml', 'jsonl', 'tsv', 'vcf', 'ics', 'xls',
       'srt', 'vtt', 'ass', 'ssa', 'ttml', 'lrc', 'sbv', 'smi', 'microdvd',
-      'md', 'html', 'docx', 'pptx', 'pdf',
+      'md', 'html', 'docx', 'pptx', 'pdf', 'doc',
       'fountain', 'fdx', 'drafter',
       'woff2', 'woff', 'ttf', 'otf',
       'zip', 'tgz', 'tar',
       'mp3', 'wav', 'flac', 'aiff', 'au',
     ])
     const readOnly = new Set(everything.formats.filter((f) => f.readOnly).map((f) => f.id))
-    expect([...readOnly].sort()).toEqual(['apng', 'dcm', 'dng', 'exr', 'fits', 'hdr', 'heic', 'pcx', 'pdf', 'pptx', 'psb', 'psd', 'ras', 'sgi', 'svg', 'svgz', 'xls'])
+    expect([...readOnly].sort()).toEqual(['apng', 'dcm', 'dng', 'doc', 'exr', 'fits', 'hdr', 'heic', 'pcx', 'pdf', 'pptx', 'psb', 'psd', 'ras', 'sgi', 'svg', 'svgz', 'xls'])
     // Every pair of the same kind converts, directly or through a step in between; nothing is
     // written as HEIC. A picture never becomes data, nor data a picture.
     const kind = (id: string) => formatById(everything, id)!.category
@@ -104,7 +104,11 @@ describe('router, real registry', () => {
     expect(all.route('otf', 'woff2')!.warnings.map((w) => w.id)).toEqual(['font-licence'])
     // Markdown and HTML become each other and nothing else.
     expect(all.route('md', 'html')!.edges.map((e) => e.candidates[0]!.engine)).toEqual(['markup'])
-    expect(all.targetsFor(['html']).map((t) => t.format.id)).toEqual(['md', 'html', 'docx', 'pptx', 'pdf'])
+    expect(all.targetsFor(['html']).map((t) => t.format.id)).toEqual(['md', 'html', 'docx', 'pptx', 'pdf', 'doc'])
+    // A Word document from before 2007 becomes the newer kind by way of a page, and says what to check.
+    expect(all.route('doc', 'docx')!.edges.map((e) => `${e.from}>${e.to}`)).toEqual(['doc>html', 'html>docx'])
+    expect(all.route('doc', 'md')!.warnings.map((w) => w.id)).toEqual(expect.arrayContaining(['old-word-kept', 'accessibility-check']))
+    expect(all.targetsFor(['docx']).find((t) => t.format.id === 'doc')!.reason).toMatch(/can be read but not written/)
     // A Word document reaches Markdown through a page, and says what to check on the way.
     expect(all.route('docx', 'md')!.edges.map((e) => `${e.from}>${e.to}`)).toEqual(['docx>html', 'html>md'])
     expect(all.route('md', 'docx')!.warnings.map((w) => w.id)).toContain('accessibility-check')

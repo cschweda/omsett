@@ -148,6 +148,13 @@ Microsoft's published descriptions of the container ([MS-CFB]) and of the workbo
 No library is used. The sample workbooks in `fixtures/xls` are written by
 `fixtures/_tools/xls.py`.
 
+### markup (old Word documents)
+
+DOC, the Word document from before 2007, is read by Omsett's own code, written from
+Microsoft's published description of the format ([MS-DOC]). No library is used. Of the two
+samples in `fixtures/doc`, one is written by `fixtures/_tools/doc.py` and one by macOS's
+`textutil`.
+
 ### icon
 
 Omsett's own reader for Mac icons (ICNS), using the compression built into every browser.

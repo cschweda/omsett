@@ -7,6 +7,47 @@ The paragraph that opens a version is its teaser: the home page shows its first 
 in the "What's new" banner, so keep it to two or three sentences on what a visitor will notice.
 A line beginning "Released" gives the date.
 
+## 0.46.0
+
+Released 24 November 2026.
+
+Word documents from before 2007, the ones ending in .doc, can now be converted: to DOCX, to a
+web page or to Markdown. Headings, lists, tables and links come across; what the author
+struck out or hid does not.
+
+### Added
+
+- **DOC**, the Word document as it was until 2007, as a source. It is read and never written.
+- **What a reader finds their way by is kept**: headings at their levels, lists with bullets
+  or numbers and at their depths, tables with the row that heads them, links, bold and italic,
+  the document's title and its language.
+- **What the author took out stays out**, as with DOCX: text struck through under tracked
+  changes, hidden text, comments, and the instructions Word keeps behind a link or a field.
+  Macros are never run or carried over.
+- Read by Omsett's own code, through the same container reader as old Excel workbooks. A
+  document saved quickly, with its text stored out of order, is put back in order.
+- 17 trap files for it (a trap file is one made on purpose to be broken, hostile or
+  dishonest): text said to start two gigabytes in, two billion characters, an instruction that
+  never ends, a link whose address is code, a macro set to run on opening.
+- Two samples: one written by a script that says exactly what each paragraph is, and one
+  written by macOS's own converter, which knows nothing of Omsett.
+
+### Changed
+
+- **The picture a link to Omsett shows** (its social card) listed "DOCX → PDF" among its
+  examples, which Omsett cannot do: it reads PDF and does not write it. The example is now
+  "PDF → DOCX", which it can. Writing PDF is to be built next.
+
+### Known
+
+- **Omsett cannot write a PDF.** Nothing converts to PDF yet.
+- From a DOC, pictures are left out, and so are footnotes, headers and footers. A list whose
+  bullets come from a style and not from the paragraph is written as plain paragraphs.
+- Documents from Word 95 and earlier, and documents locked with a password, are refused with
+  the reason.
+- No document saved by Word itself is in the tests: the structured sample is written by a
+  script, and the other by macOS.
+
 ## 0.45.0
 
 Released 24 November 2026.

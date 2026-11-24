@@ -162,7 +162,13 @@ build by `apps/web/scripts/write-headers.ts`.
   of the file, and a chain is followed no further than the file has sectors. Inside, for a
   workbook, a row of records (`packages/engines/src/data/xls.ts`), each checked to lie within
   its stream. Which of Word, Excel or PowerPoint a file is, is said by its streams, never its
-  name. DOC and PPT are to be read through the same container reader, and read only.
+  name. DOC is read through the same container reader (`packages/engines/src/markup/doc-read.ts`),
+  and PPT is to be. All are read only.
+- **An old Word document is mostly directions, and each is checked before it is followed**: the
+  list of which stretches of the file are the text, the numbered pages that say how each run is
+  set, the count of characters. Text is taken in the order of the list, never the order of the
+  file. What is struck out (`sprmCFRMarkDel`) or hidden (`sprmCFVanish`) is dropped as it is
+  read, and so is everything between a field's opening mark and its separator.
 - **The two workbook readers give the same shape and are held to the same answer.** XLS is
   opened into the `Opened` that XLSX is, so sheets, limits, dates and the column names are one
   piece of code. `xls/sample.xls` holds what `xlsx/sample.xlsx` holds; a change to either
@@ -355,6 +361,8 @@ build by `apps/web/scripts/write-headers.ts`.
 - **No placeholder content in the UI.** No tiles for formats that are not registered.
 - **`explain` is real copy**, written for a non-technical reader.
 - **README:** the og:image is the first thing in the file, with any badges directly under it.
+  Every conversion named on that image must be one the app does; `brand/og-source.html` is its
+  source, and `brand/og.png`, `brand/og@2x.png` and `apps/web/public/og.png` are rendered from it.
 - **Design.** Swiss: one typeface (Helvetica Neue, else Inter), the twelve-column grid in
   `tokens.css`, rules instead of boxes, square corners, no shadows, no second typeface. The one
   exception is `--font-file`, the system's fixed-width typeface, for the contents of a file in

@@ -160,7 +160,7 @@ test('a document shows the check before converting and again on what it becomes'
   await checker(page)
   await open(page, SET_UP)
   await page.locator('#file-input').setInputFiles(fixture('md/sample.md'))
-  await page.getByRole('radio', { name: /DOCX/ }).click()
+  await page.locator('[role="radio"][data-format="docx"]').click()
   await page.getByTestId('convert').click()
   await expect(page.locator('.result-card')).toHaveCount(1, { timeout: 30_000 })
   await expect(page.getByTestId('result-check-toggle')).toHaveCount(1)
