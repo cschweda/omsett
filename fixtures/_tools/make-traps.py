@@ -4119,6 +4119,67 @@ trap("letters-without-a-scan.dcm", b"\x00" * 128 + b"DICM",
 code("code.dcm", opening() + about(patient=MARK, extra=element(8, 0x80, "LO", CB) + element(8, 0x1030, "LO", CB) + element(8, 0x2111, "ST", CB)) + picture(DCM_W, DCM_H, DCM_PIXELS),
      WHY % "as the patient's name, the hospital's, and the description of the examination", "dcm", node="succeeds", absent="omsett_canary")
 
+
+# --- DNG, the open camera RAW format, read by ImageMagick -------------------------------------
+# No camera made any of these. dng.py writes each from the test pattern.
+import dng as D  # noqa: E402
+
+DNG = read("dng", "sample.dng")
+DNG_W, DNG_H = 320, 200
+DNG_RGB = pattern(DNG_W, DNG_H)
+DNG_PIXELS = D.sixteen(DNG_RGB)
+
+
+def dng_with_preview(sub_lists=None, preview=(32, 20)):
+    """A DNG laid out as a camera lays it out: a small preview first, and the real picture in a list the first one names."""
+    tw, th = preview
+    small = bytes(pattern(tw, th))
+
+    def build(sub_at, small_at, raw_at):
+        first = {**D.colour(), D.SUBFILE: (D.LONG, 1), D.WIDTH: (D.LONG, tw), D.HEIGHT: (D.LONG, th), D.BITS: (D.SHORT, [8, 8, 8]),
+                 D.PACKING: (D.SHORT, 1), D.KIND: (D.SHORT, D.RGB), D.STRIPS: (D.LONG, small_at), D.SAMPLES: (D.SHORT, 3), D.ROWS: (D.LONG, th),
+                 D.COUNTS: (D.LONG, len(small)), D.PLANES: (D.SHORT, 1), D.SUB_LISTS: (D.LONG, sub_lists(sub_at) if sub_lists else sub_at)}
+        a = D.ifd(first, 8)
+        return a, D.ifd(D.image(DNG_W, DNG_H, raw_at, len(DNG_PIXELS)), 8 + len(a))
+
+    a, b = build(0, 0, 0)
+    sub_at = 8 + len(a)
+    a, b = build(sub_at, sub_at + len(b), sub_at + len(b) + len(small))
+    return b"II*\0" + struct.pack("<I", 8) + a + b + small + DNG_PIXELS
+
+
+trap("truncated.dng", DNG[: len(DNG) // 2],
+     "A sound raw file cut off halfway through its picture.",
+     "dng", node="fails", group="damage")
+trap("huge-declared.dng", D.dng(DNG_W, DNG_H, bytes(64), said=(60000, 60000)),
+     "A raw file of a few hundred bytes that says its picture is 60,000 by 60,000.",
+     "dng", guard="refused", group="size")
+trap("picture-shorter-than-it-says.dng", D.dng(DNG_W, DNG_H, DNG_PIXELS[:5000]),
+     "A raw file that says 320 by 200 and holds five thousand bytes of picture.",
+     "dng", node="fails", group="damage")
+trap("as-a-sensor-records.dng", D.dng(DNG_W, DNG_H, D.as_mosaic(DNG_W, DNG_H, DNG_RGB), mosaic=True),
+     "A raw file as a camera really writes one: a single value to a pixel, behind a grid of red, green and blue. The colours are worked out from the neighbours.",
+     "dng", node="succeeds", group="unusual")
+trap("preview-first.dng", dng_with_preview(),
+     "A raw file laid out as a camera lays it out: a preview of 32 by 20 first, and the real picture in a list the first one names. It is the real picture that is sized and converted.",
+     "dng", node="succeeds", group="unusual")
+trap("camera-held-sideways.dng", D.dng(DNG_W, DNG_H, DNG_PIXELS, change=lambda e: e.update({D.TURNED: (D.SHORT, 6)})),
+     "A raw file from a camera held on its side: the picture as the sensor lay, 320 by 200, and a note of which way is up. It comes out turned, 200 by 320.",
+     "dng", node="succeeds", group="unusual")
+trap("list-names-itself.dng", dng_with_preview(sub_lists=lambda at: 8),
+     "A raw file whose first list names itself as the list of the real picture. Followed without care, that is a circle with no end. It is followed once, comes to nothing, and the file is turned away.",
+     "dng", node="fails", group="damage")
+trap("picture-says-two-gigabytes.dng", D.dng(DNG_W, DNG_H, DNG_PIXELS, change=lambda e: e.update({D.COUNTS: (D.LONG, 0x7FFFFFF0)})),
+     "A sound raw file whose picture says it is two gigabytes long. The picture is all there, and is read at the size the file gives for it.",
+     "dng", node="succeeds", group="unusual")
+trap("raw-named-tiff.tif", DNG,
+     "A raw file with a TIFF's name. Every DNG is also a TIFF, and what it holds is not a finished picture. The contents say which this is.",
+     "dng", group="identity", mismatch=True, node="succeeds")
+code("code.dng", D.dng(DNG_W, DNG_H, DNG_PIXELS, change=lambda e: e.update({
+    D.MAKE: (D.ASCII, MARK), D.MODEL: (D.ASCII, CANARY), D.DESCRIPTION: (D.ASCII, CANARY), D.CAMERA: (D.ASCII, CANARY),
+    D.XMP: (D.BYTE, b'<x:xmpmeta xmlns:x="adobe:ns:meta/"><rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"><rdf:Description>' + XML_CANARY + b"</rdf:Description></rdf:RDF></x:xmpmeta>")})),
+     WHY % "as the camera's maker and model, the picture's description, and its notes", "dng", node="succeeds", absent="omsett_canary")
+
 with open(os.path.join(OUT, "manifest.json"), "w") as out:
     json.dump(manifest, out, indent=2)
     out.write("\n")

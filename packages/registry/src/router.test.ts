@@ -55,7 +55,7 @@ describe('router, real registry', () => {
     const ids = everything.formats.map((f) => f.id)
     expect(ids).toEqual([
       'webp', 'jpeg', 'png', 'avif', 'gif', 'tiff', 'jxl', 'bmp', 'tga', 'qoi', 'pnm',
-      'heic', 'apng', 'svg', 'svgz', 'psd', 'psb', 'ico', 'icns', 'cur', 'jp2', 'exr', 'hdr', 'dds', 'fits', 'dcm', 'pcx', 'sgi', 'ras',
+      'heic', 'apng', 'svg', 'svgz', 'psd', 'psb', 'ico', 'icns', 'cur', 'jp2', 'exr', 'hdr', 'dds', 'fits', 'dcm', 'dng', 'pcx', 'sgi', 'ras',
       'json', 'yaml', 'csv', 'xlsx', 'xml', 'toml', 'jsonl', 'tsv', 'vcf', 'ics',
       'srt', 'vtt', 'ass', 'ssa', 'ttml', 'lrc', 'sbv', 'smi', 'microdvd',
       'md', 'html', 'docx', 'pptx', 'pdf',
@@ -64,7 +64,7 @@ describe('router, real registry', () => {
       'zip', 'tgz', 'tar',
     ])
     const readOnly = new Set(everything.formats.filter((f) => f.readOnly).map((f) => f.id))
-    expect([...readOnly].sort()).toEqual(['apng', 'dcm', 'exr', 'fits', 'hdr', 'heic', 'pcx', 'pdf', 'pptx', 'psb', 'psd', 'ras', 'sgi', 'svg', 'svgz'])
+    expect([...readOnly].sort()).toEqual(['apng', 'dcm', 'dng', 'exr', 'fits', 'hdr', 'heic', 'pcx', 'pdf', 'pptx', 'psb', 'psd', 'ras', 'sgi', 'svg', 'svgz'])
     // Every pair of the same kind converts, directly or through a step in between; nothing is
     // written as HEIC. A picture never becomes data, nor data a picture.
     const kind = (id: string) => formatById(everything, id)!.category

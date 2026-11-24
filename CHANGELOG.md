@@ -7,6 +7,39 @@ The paragraph that opens a version is its teaser: the home page shows its first 
 in the "What's new" banner, so keep it to two or three sentences on what a visitor will notice.
 A line beginning "Released" gives the date.
 
+## 0.40.0
+
+Released 24 November 2026.
+
+Raw photographs in the DNG format can now be converted. Omsett develops them with standard
+settings and turns them the right way up, so a photo taken with the camera on its side comes
+out standing.
+
+### Added
+
+- **DNG**, the open camera RAW format, as a source. Both kinds are read: what a sensor
+  records, one value to a pixel behind a grid of red, green and blue, and finished colours.
+  Where a camera puts a small preview first, it is the real picture that is converted.
+- Ten trap files for it (a trap file is one made on purpose to be broken, hostile or
+  dishonest): files cut short, a picture of 60,000 pixels a side in a few hundred bytes, a
+  list that names itself, a camera held sideways, and code written as the camera's maker.
+- The sample is written by a script from the usual test pattern. No camera made it.
+
+### Changed
+
+- **Pictures are turned upright before their notes are removed.** A file can hold a picture
+  as the sensor lay and a note of which way is up. That note was being dropped with the rest
+  of the metadata, which would have left such a picture on its side. This applies to every
+  format ImageMagick reads.
+
+### Known
+
+- A raw file has no finished colours of its own. Omsett's will be close to, and not the same
+  as, what the camera or a photo editor shows.
+- Canon, Nikon, Sony and other makers' own raw formats are not offered yet. The decoder for
+  them is already part of Omsett; what is missing is a sample of each that may be kept in the
+  repository to test against.
+
 ## 0.39.0
 
 Released 24 November 2026.

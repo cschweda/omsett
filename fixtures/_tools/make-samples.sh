@@ -48,6 +48,7 @@ dir icns;  sips -s format icns "$work/square256.png" --out "$out/icns/sample.icn
 # What neither sips nor ffmpeg writes, from the ImageMagick build the app ships.
 python3 "$tools/pattern.py" 64 64 "$work/small.png"
 node "$tools/magick-samples.mjs" "$work/pattern.png" "$work/opaque.png" "$work/small.png" "$out"
+dir dng;   python3 "$tools/dng.py" "$out/dng/sample.dng"                         # written by hand: no camera
 dir dcm;   python3 "$tools/dicom.py" "$out/dcm/sample.dcm"                       # written by hand: no patient, no scanner
 
 # The Netpbm family: colour, grey, bitmap, with-alpha, floating point.

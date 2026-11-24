@@ -29,11 +29,11 @@ Omsett is a free, open-source file converter. Every conversion runs in your brow
 <!-- facts:start -->
 <!-- Generated from the registry by `pnpm readme:facts`. Do not edit by hand. -->
 
-**63 formats, 264 conversions**, every one of them run in your browser, on your device, and tested against 518 files made on purpose to be broken, hostile or dishonest. How many tests there are today is on the site's [Trust](https://omsett.com/trust) page, counted at every build.
+**64 formats, 265 conversions**, every one of them run in your browser, on your device, and tested against 528 files made on purpose to be broken, hostile or dishonest. How many tests there are today is on the site's [Trust](https://omsett.com/trust) page, counted at every build.
 
 | Kind | Converts to and from | Reads only |
 | --- | --- | --- |
-| Pictures | WebP, JPEG, PNG, AVIF, GIF, TIFF, JPEG XL, BMP, TGA, QOI, Netpbm, ICO, ICNS, CUR, JPEG 2000, DDS | HEIC, Animated PNG, PSD, PSB, OpenEXR, Radiance HDR, FITS, DICOM, PCX, SGI, Sun Raster |
+| Pictures | WebP, JPEG, PNG, AVIF, GIF, TIFF, JPEG XL, BMP, TGA, QOI, Netpbm, ICO, ICNS, CUR, JPEG 2000, DDS | HEIC, Animated PNG, PSD, PSB, OpenEXR, Radiance HDR, FITS, DICOM, DNG, PCX, SGI, Sun Raster |
 | Drawings | — | SVG, SVGZ |
 | Documents | DOCX | — |
 | Presentations | — | PPTX |
@@ -56,6 +56,7 @@ A file is offered the formats of its own kind: a picture becomes another picture
 - **Refuses a damaged or hostile file with a reason**, instead of returning half of one or freezing the tab. Every conversion runs against a clock.
 - **Never carries across what an author hid or deleted**: tracked deletions, hidden text and slides, comments, speaker notes.
 - **Makes icons**: any picture to a Windows icon, a Mac icon or a mouse pointer, at the sizes each expects.
+- **Develops a raw photograph (DNG)** with standard settings, the right way up.
 - **Converts a medical scan (DICOM) to a picture without the patient**: only the picture is read; the name, date of birth and notes never reach the converter.
 - **Try it without a file of your own**: a sample picture, PDF and Word document are in the drop zone.
 - **Before and after, side by side**: a slider for pictures, with the quality adjustable in view; the two texts for data and subtitles.

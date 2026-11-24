@@ -12,6 +12,7 @@ export interface MagickImage {
   backgroundColor: unknown
   alpha(action: unknown): void
   strip(): void
+  autoOrient(): void
   clone<T>(use: (copy: MagickImage) => T): T
   extent(width: number, height: number, gravity: unknown): void
   resize(width: number, height: number): void
@@ -216,6 +217,10 @@ export function createMagickEngine(host: MagickHost): Engine {
           if (input.maxPixels !== undefined && image.width * image.height > input.maxPixels) {
             throw new RangeError('The picture is too large')
           }
+          // A camera held on its side writes the picture as the sensor lay and a note of which
+          // way is up. The note is about to be left out with the rest, so the picture is turned
+          // first.
+          image.autoOrient()
           const icon = plan && asIcon(magick, image, plan)
           note = icon?.note
           const tooLarge = dimensionProblem(to, image.width, image.height)
