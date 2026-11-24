@@ -41,9 +41,9 @@ When a format ships, update its row here, in the same change.
 | ICO | yes | yes | Browser | ImageMagick (WASM) | Done. Reads the largest size in the file; writes 16, 32, 48 and 256, square, never larger than the source |
 | PCX, SGI, Sun Raster | yes | no | Browser | ImageMagick (WASM) | Done (read). No demand for writing them |
 | CUR | yes | yes | Browser | ImageMagick (WASM) | Done. Reads the largest picture in the file; writes 32, 48 and 64, clicking with the top left corner (0.37.0) |
-| DDS | yes | no | Browser | ImageMagick (WASM) | **Reading done** (0.34.0): the largest picture in the file. Writing is planned |
+| DDS | yes | yes | Browser | ImageMagick (WASM) | Done. Reads the largest picture in the file; writes it unpacked, with no smaller copies (0.38.0) |
 | ICNS | yes | yes | Browser | Omsett's own reader; ImageMagick (WASM) to write | Done. Reads the largest picture, PNG or the old packing; writes each named size up to 1,024 as PNG (0.37.0). JPEG 2000 inside an icon is not read yet |
-| JPEG 2000 | yes | no | Browser | ImageMagick (WASM) | Done (read). Writing is planned |
+| JPEG 2000 | yes | yes | Browser | ImageMagick (WASM) | Done. Written without loss (0.38.0) |
 | APNG (first picture) | yes | no | Browser | libvips (WASM) | Done |
 | APNG with its animation, MNG | yes | yes | Browser | ImageMagick (WASM) | Planned |
 | OpenEXR, Radiance HDR | yes | no | Browser | ImageMagick (WASM) | Done (read). Brightness beyond what a screen shows is cut off, and the picker says so |
@@ -297,7 +297,7 @@ with [audit.icjia.app](https://audit.icjia.app).
 
 ## Suggested order
 
-1. Images are largely done: 29 formats. Left: camera RAW, DICOM, carrying animation across, and writing DDS and JPEG 2000.
+1. Images are largely done: 29 formats. Left: camera RAW, DICOM, carrying animation across, and the packed kinds of DDS.
 2. Data and subtitles are done: seven data formats, nine subtitle formats. The side-by-side view for text formats is done too, and Markdown ↔ HTML. Fonts are done as well, vCard and iCalendar, and the first archives. XLSX, DOCX, PPTX, the screenwriting formats and reading PDF are done. Details of a file before converting are done too. Next: the remaining image formats; then audio. All three are ZIPs of XML, and Omsett reads both itself. Then the screenwriting formats, Fountain, Final Draft (FDX) and Drafter. Small JavaScript libraries, no large downloads.
 3. Archives, then audio.
 4. Documents and e-books through Pandoc; then the PDF tools. A converted document must not score lower for accessibility than its original (see "Accessibility of converted documents").
