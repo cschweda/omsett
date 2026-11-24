@@ -7,6 +7,21 @@ The paragraph that opens a version is its teaser: the home page shows its first 
 in the "What's new" banner, so keep it to two or three sentences on what a visitor will notice.
 A line beginning "Released" gives the date.
 
+## 0.44.1
+
+Released 24 November 2026.
+
+Two accessibility faults found by an automated check of every page are fixed. A table that
+scrolls sideways on a phone can now be reached and scrolled with the keyboard, and the links
+in the footer are large enough to press without catching the one beside them.
+
+### Fixed
+
+- **Tables that scroll sideways are named regions a keyboard can reach** (WCAG 2.1.1), on the
+  Technical details, Security, Status and Trap files pages. The fault showed at phone width.
+- **Footer links are at least 24 pixels high and wide** (WCAG 2.2, 2.5.8).
+- Checked again with axe-core at WCAG AA, every page at desktop and phone width: no failures.
+
 ## 0.44.0
 
 Released 24 November 2026.

@@ -89,7 +89,7 @@ const engineRows = Object.values(engines.info).map((info) => ({
           </p>
         </div>
         <MermaidDiagram :code="engineChoice" caption="Choosing an engine. Safari cannot write WebP from a canvas and answers with a PNG, which is why the output is checked." />
-        <div class="table-wrap">
+        <div class="table-wrap" tabindex="0" role="region" aria-labelledby="tech-engines">
           <table class="table">
             <thead>
               <tr>
@@ -117,7 +117,7 @@ const engineRows = Object.values(engines.info).map((info) => ({
             the routes, and the warnings about what a conversion loses, are worked out from that.
           </p>
         </div>
-        <div class="table-wrap">
+        <div class="table-wrap" tabindex="0" role="region" aria-labelledby="tech-formats">
           <table class="table">
             <thead>
               <tr><th scope="col">Format</th><th scope="col">Read</th><th scope="col">Written</th><th scope="col">Largest side</th></tr>
@@ -132,7 +132,7 @@ const engineRows = Object.values(engines.info).map((info) => ({
             </tbody>
           </table>
         </div>
-        <div class="table-wrap">
+        <div class="table-wrap" tabindex="0" role="region" aria-labelledby="tech-formats">
           <table class="table">
             <thead>
               <tr><th scope="col">From</th><th scope="col">To</th><th scope="col">Engines, in order</th><th scope="col">Loses</th></tr>
@@ -163,7 +163,7 @@ const engineRows = Object.values(engines.info).map((info) => ({
             <NuxtLink to="/traps" data-testid="all-traps">See every trap file</NuxtLink>, with what each is and what must happen to it.
           </p>
         </div>
-        <div class="table-wrap">
+        <div class="table-wrap" tabindex="0" role="region" aria-labelledby="tech-testing">
           <table class="table">
             <thead>
               <tr><th scope="col">Kind of trap</th><th scope="col" class="num">Files</th></tr>

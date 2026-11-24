@@ -79,10 +79,17 @@ const status = computed(() => {
 .links ul {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
   margin: 0;
   padding: 0;
   list-style: none;
+}
+/* Each link is a target at least 24 pixels high and wide, with nothing of its neighbour's
+   inside that: the room is the link's own, not a gap between links. */
+.links a {
+  display: inline-block;
+  min-width: 1.5rem;
+  min-height: 1.5rem;
+  padding: 0.2rem 0;
 }
 .version {
   color: var(--ink);

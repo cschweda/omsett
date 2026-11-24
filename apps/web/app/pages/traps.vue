@@ -88,7 +88,7 @@ const count = (word: ReturnType<typeof verdict>) => traps.filter((trap) => verdi
       </StepSection>
 
       <StepSection v-for="group in groups" :key="group.id" :title="group.label" :heading-id="`traps-${group.id}`">
-        <div class="table-wrap">
+        <div class="table-wrap" tabindex="0" role="region" :aria-labelledby="`traps-${group.id}`">
           <table class="table trap-table" :data-testid="`trap-group-${group.id}`">
             <thead>
               <tr>
