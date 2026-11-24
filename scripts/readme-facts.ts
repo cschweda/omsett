@@ -1,5 +1,5 @@
-// Writes the "What it does today" figures and format table in README.md from the registry, the
-// trap list and the test count, so the README says what the code does and cannot fall behind.
+// Writes the "What it does today" figures and format table in README.md from the registry and the
+// trap list, so the README says what the code does and cannot fall behind.
 // scripts/readme-facts.test.ts fails when it is out of date.
 //
 //     pnpm readme:facts
@@ -30,7 +30,6 @@ const KINDS: Array<[Category, string]> = [
 export function renderFacts(): string {
   const edges = deriveEdges(registry).edges
   const traps = (JSON.parse(readFileSync(join(root, 'fixtures', '_traps', 'manifest.json'), 'utf8')) as unknown[]).length
-  const tests = JSON.parse(readFileSync(join(root, 'test-count.json'), 'utf8')) as { unit: number; browser: number }
   const written = new Set(registry.capabilities.flatMap((capability) => capability.writes.map((write) => write.format)))
   const number = (value: number) => value.toLocaleString('en-GB')
   const rows = KINDS.flatMap(([category, label]) => {
@@ -46,9 +45,9 @@ export function renderFacts(): string {
     FACTS_START,
     '<!-- Generated from the registry by `pnpm readme:facts`. Do not edit by hand. -->',
     '',
-    `**${registry.formats.length} formats, ${edges.length} conversions**, every one of them run in your browser, on your device. ` +
-      `Tested by ${number(tests.unit)} tests of the code and ${number(tests.browser)} in real browsers (Chromium, Firefox and WebKit), ` +
-      `and against ${number(traps)} files made on purpose to be broken, hostile or dishonest.`,
+    `**${registry.formats.length} formats, ${edges.length} conversions**, every one of them run in your browser, on your device, ` +
+      `and tested against ${number(traps)} files made on purpose to be broken, hostile or dishonest. ` +
+      'How many tests there are today is on the site\'s [Trust](https://omsett.com/trust) page, counted at every build.',
     '',
     '| Kind | Converts to and from | Reads only |',
     '| --- | --- | --- |',

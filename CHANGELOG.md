@@ -7,6 +7,26 @@ The paragraph that opens a version is its teaser: the home page shows its first 
 in the "What's new" banner, so keep it to two or three sentences on what a visitor will notice.
 A line beginning "Released" gives the date.
 
+## 0.33.0
+
+Released 24 November 2026.
+
+Omsett now knows an animated PNG when it sees one. It converts the first picture, as before,
+and now tells you so before you convert, instead of quietly dropping the rest.
+
+### Added
+
+- **Animated PNG** as a format of its own, recognised by what is in the file: most are simply
+  named .png. It converts to every picture format, with the warning that only the first
+  picture is kept.
+- Six trap files for it: an animation cut short, one that claims four billion pictures, one
+  whose second picture claims to be vast, one named .gif, one with its pictures out of order,
+  and one with code planted in its comments.
+
+### Fixed
+
+- The last warning the audit found missing is now given, which closes that finding.
+
 ## 0.32.1
 
 Released 23 November 2026.

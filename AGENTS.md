@@ -104,8 +104,8 @@ build by `apps/web/scripts/write-headers.ts`.
 - **GitHub Actions are pinned to commit SHAs**, with the release in a trailing comment. Keep it
   that way when adding or updating one; look the SHA up, do not guess it.
 - **The README's figures and format table are generated** (`pnpm readme:facts`, from the
-  registry, the trap list and `test-count.json`), and a test fails when they are stale. After a
-  change that adds a format, a trap or a test: `pnpm test && pnpm tests:count && pnpm readme:facts`.
+  registry and the trap list), and a test fails when they are stale. After a change that adds a
+  format or a trap: `pnpm readme:facts`, then `pnpm test && pnpm tests:count`.
   Its prose and its screenshots (`docs/screenshots/`, made by `e2e/readme-screenshots.spec.ts`)
   are kept current by hand, in the same change that alters what they show.
 - **The Trust page's figures are counted, never typed.** Tests are counted from a real run:

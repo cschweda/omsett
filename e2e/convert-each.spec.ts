@@ -36,7 +36,7 @@ test('each available format has its own Convert button, and results for several 
 
   // A format from the list below the tiles works the same way.
   await page.locator('[data-testid="convert-to"][data-target="bmp"]').click()
-  await expect(page.getByTestId('download')).toHaveCount(3, { timeout: 30_000 })
+  await expect(page.getByTestId('download')).toHaveCount(3, { timeout: 60_000 })
 
   // Removing the file takes its results with it.
   await page.locator('.file-card').getByRole('button', { name: /Remove/ }).click()

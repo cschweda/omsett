@@ -68,7 +68,7 @@ test('OMS-119: a picture that does not state its size up front is not handed to 
   await page.waitForTimeout(1500)
   await expect(cards.nth(1).locator('canvas')).toBeHidden()
 
-  await page.getByRole('radio', { name: /PNG/ }).click()
+  await page.getByRole('radio', { name: /^PNG/ }).click()
   await page.getByTestId('convert').click()
   await expect(page.locator('.file-card[data-status="done"]')).toHaveCount(2, { timeout: 30_000 })
 })

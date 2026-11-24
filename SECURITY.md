@@ -25,9 +25,9 @@ A finding is **Fixed** when a test shows it, **Open** when it is not yet dealt w
 Newest first. The latest is expanded; earlier ones open when clicked.
 
 <details open>
-<summary><strong>23 November 2026: Follow-up: four findings left open that morning</strong> (4 findings: 2 medium, 2 low; 2 fixed, 1 open, 1 accepted)</summary>
+<summary><strong>23 November 2026: Follow-up: four findings left open that morning</strong> (4 findings: 2 medium, 2 low; 3 fixed, 0 open, 1 accepted)</summary>
 
-The audit of 23 November left four findings open and one fixed with a gap. This pass dealt with the gap in the drawing limits, the supply-chain settings, one of the two missing warnings, and the live site's missing header, which closed when the deploy script began reloading the server itself. One finding remains the owner's to close on the repository.
+The audit of 23 November left four findings open and one fixed with a gap. This pass dealt with all but one: the gap in the drawing limits, the supply-chain settings, both missing warnings, and the live site's missing header, which closed when the deploy script began reloading the server itself. One finding remains the owner's to close on the repository.
 
 **Scope**
 
@@ -50,7 +50,7 @@ The audit of 23 November left four findings open and one fixed with a gap. This 
 | --- | --- | --- | --- |
 | OMS-121 | Medium | A drawing of 275 bytes could ask for work that never finishes | Fixed |
 | OMS-132 | Low | Supply-chain settings looser than the rest of the project | Accepted |
-| OMS-133 | Low | Two warnings the picker does not give | Open |
+| OMS-133 | Low | Two warnings the picker does not give | Fixed |
 | OMS-130 | Medium | The live site was not sending a security header added a day earlier | Fixed |
 
 #### OMS-121: A drawing of 275 bytes could ask for work that never finishes
@@ -85,21 +85,21 @@ The self-host example still names the image by its tag. That is accepted: the ex
 
 #### OMS-133: Two warnings the picker does not give
 
-**Severity:** Low · **Status:** Open · **Area:** Honest description
+**Severity:** Low · **Status:** Fixed · **Area:** Honest description
 
 **Identification**
 
-Of the two missing warnings, one is closed here: a HEIC photo converted to JPEG goes by way of PNG, and the warning about converting one lossy format to another was lost on the way, because it was worked out for each step and neither step is such a conversion by itself.
+Two warnings the picker did not give. A HEIC photo converted to JPEG goes by way of PNG, and the warning about converting one lossy format to another was lost on the way, because it was worked out for each step and neither step is such a conversion by itself.
 
-The other stays open: an animated PNG becomes its first frame with no warning that the rest are dropped. Saying so properly means registering animated PNG as a format of its own, which changes the registry's shape.
+An animated PNG became its first picture with no warning that the rest were dropped, because it was read as an ordinary PNG, which has no animation to lose.
 
 **Mitigation**
 
-The warning is now given for a route as a whole: from a format that always loses detail to a last step that loses detail, by whatever road.
+The lossy warning is given for a route as a whole: from a format that always loses detail to a last step that loses detail, by whatever road.
 
-Animated PNG is not changed here.
+Animated PNG is registered as a format of its own, recognised by its contents whatever it is named. Every conversion from it carries the warning that only the first picture is kept.
 
-**Verification:** packages/registry/src/router.test.ts: HEIC to JPEG carries the warning once, and HEIC to PNG does not. The animated PNG warning keeps this finding open.
+**Verification:** packages/registry/src/router.test.ts: HEIC to JPEG carries the lossy warning once and HEIC to PNG does not; an animated PNG to each of six formats carries the animation warning and a plain PNG does not. Six trap files for animated PNG run in both suites.
 
 #### OMS-130: The live site was not sending a security header added a day earlier
 

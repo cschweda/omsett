@@ -9,6 +9,7 @@ import { describeDownload, open } from './helpers'
 
 const samples: Record<string, string> = {
   png: 'png/sample.png',
+  apng: 'apng/sample.png',
   jpeg: 'jpeg/sample.jpg',
   webp: 'webp/sample.webp',
   gif: 'gif/sample.gif',

@@ -36,6 +36,7 @@ const MAGICK_READS = ['bmp', 'tga', 'qoi', 'pnm', 'psd', 'ico', 'jp2', 'exr', 'h
 /** What plain libvips reads and writes. Its two optional modules add to this, never replace it. */
 const CORE = ['png', 'jpeg', 'webp', 'gif', 'tiff']
 const CORE_WRITES = [webp, jpeg, png, gif, tiff]
+const ANIMATED_PNG = ['apng']
 
 // Data formats are all read into the same plain values and written back out, so every one
 // converts to every other in a single step. Comments have nowhere to live in between.
@@ -74,6 +75,9 @@ export const capabilities: Capability[] = [
     priority: 10,
   },
   { engine: 'vips', tier: 'browser', reads: CORE, writes: CORE_WRITES, priority: 20 },
+  // An animated PNG is read as the PNG it also is: its first picture. Never by the canvas,
+  // which is given plain PNG only.
+  { engine: 'vips', tier: 'browser', reads: ANIMATED_PNG, writes: CORE_WRITES, priority: 20 },
 
   // libvips with its HEIF module, which reads and writes AVIF. Loaded only when AVIF is
   // involved, so nobody converting a PNG to a JPEG pays for it. An engine may have more than
@@ -81,7 +85,7 @@ export const capabilities: Capability[] = [
   //
   // The module can open a HEIC file's header but cannot decode its pixels: this build of
   // libvips has no HEVC decoder. HEIC needs a decoder of its own (see docs/format-roadmap.md).
-  { engine: 'vips-heif', tier: 'browser', reads: CORE, writes: [avif], priority: 30 },
+  { engine: 'vips-heif', tier: 'browser', reads: [...CORE, ...ANIMATED_PNG], writes: [avif], priority: 30 },
   { engine: 'vips-heif', tier: 'browser', reads: ['avif'], writes: CORE_WRITES, priority: 30 },
 
   // libheif with libde265, which decodes HEIC. It hands back plain pixels, written out as a PNG;
