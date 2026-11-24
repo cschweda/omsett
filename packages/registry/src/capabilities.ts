@@ -75,12 +75,18 @@ const SUBTITLE_WRITES: WriteSpec[] = SUBTITLES.map((format) => ({ format, lossy:
 const TABLES = ['csv', 'tsv', 'xlsx']
 const SHEETS = ['xlsx', 'xls']
 const SHAPED = ['json', 'yaml']
-const TABLE_WRITES: WriteSpec[] = DATA.map((format) => ({
-  format,
-  lossy: false,
-  drops: ['comments'],
-  defaultOptions: { headerRow: true, ...(SHAPED.includes(format) ? { shape: 'records' } : {}) },
-}))
+// Any of these can also be set out as a web page: a real table, to read. A page says what
+// language it is in, and the file does not, so that is a choice.
+const PAGE: WriteSpec = { format: 'html', lossy: false, drops: ['comments'], defaultOptions: { language: 'en' } }
+const TABLE_WRITES: WriteSpec[] = [
+  ...DATA.map((format) => ({
+    format,
+    lossy: false,
+    drops: ['comments'] as Trait[],
+    defaultOptions: { headerRow: true, ...(SHAPED.includes(format) ? { shape: 'records' } : {}) },
+  })),
+  { ...PAGE, defaultOptions: { headerRow: true, language: 'en' } },
+]
 // A workbook has sheets, and which of them is converted is a choice: the first with anything
 // in it, one by its position, or all of them.
 const SHEET_WRITES: WriteSpec[] = TABLE_WRITES.map((write) => ({ ...write, defaultOptions: { ...write.defaultOptions, sheet: 'first' } }))
@@ -138,7 +144,7 @@ export const capabilities: Capability[] = [
   // first row is the names of its columns, and, for a format that can nest, what shape to take.
   { engine: 'data', tier: 'browser', reads: TABLES.filter((format) => !SHEETS.includes(format)), writes: TABLE_WRITES, priority: 20 },
   { engine: 'data', tier: 'browser', reads: SHEETS, writes: SHEET_WRITES, priority: 20 },
-  { engine: 'data', tier: 'browser', reads: DATA.filter((format) => !TABLES.includes(format)), writes: DATA_WRITES, priority: 20 },
+  { engine: 'data', tier: 'browser', reads: DATA.filter((format) => !TABLES.includes(format)), writes: [...DATA_WRITES, PAGE], priority: 20 },
   // Screenplays are read into their elements and written from them, in Omsett's own code.
   { engine: 'script', tier: 'browser', reads: SCRIPTS, writes: SCRIPTS.map((format) => ({ format, lossy: false })), priority: 20 },
 

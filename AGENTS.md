@@ -138,7 +138,8 @@ build by `apps/web/scripts/write-headers.ts`.
 - **A few things can become something of another kind, one way only** (`ALSO` and `canBecome` in
   `kinds.ts`): a picture can become a PDF. The router ends no road at a kind the file cannot
   become, so a picture does not go on through a PDF to a Word document, and a PDF is not
-  offered picture formats. Add a pair there; do not merge two kinds to get one conversion.
+  offered picture formats. A table can be set out as a page, and so become a document or a PDF;
+  a page does not become a table. Add a pair there; do not merge two kinds to get one conversion.
 - **Only PNG is set on a PDF page** (`picturePage` in the `typst` engine). Every other picture is
   made a PNG first, by the engines that drop its metadata; Typst would embed a JPEG as it is,
   location and all. The PNG's structure is checked before Typst decodes it.
@@ -224,6 +225,11 @@ build by `apps/web/scripts/write-headers.ts`.
   the fallback exists because real PDFs are tagged for their pictures alone.
 - **An engine tells the person what it found by reading the file through `ConvertOutput.note`**,
   which the result card shows. Use it for what could not be known before converting.
+- **The data engine writes one thing that is not data: a page** (`writeTablePage`). It is how a
+  spreadsheet reaches PDF, DOCX and Markdown. Every cell and every column name is written as
+  escaped text; the page is plain enough that the markup engine and Typst need no special case.
+  Options belong to the last step of a route, so a workbook going straight to PDF takes its
+  first sheet; that is said in the changelog, and is the thing to fix if a choice is wanted there.
 - **A value written into a line-based format is escaped, always** (`escaped` in
   `packages/engines/src/data/cards.ts`). Anything written as a parameter or an unescaped value
   (a time zone, a repeat rule, a status) is held to a pattern first, and left out if it fails.

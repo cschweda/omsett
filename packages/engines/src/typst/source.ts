@@ -38,6 +38,8 @@ const MAX_PICTURES = 500
 const MAX_PICTURE_BYTES = 48 * 1024 * 1024
 /** The widest a picture is set, in points: the width of the text on the narrower of the two papers. */
 const MAX_PICTURE_WIDTH = 450
+/** More columns than this, and a table is set on pages turned on their side. */
+const WIDE_TABLE = 7
 const TYPES: Record<string, string> = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/gif': 'gif', 'image/webp': 'webp' }
 const BLOCKS = new Set(['p', 'div', 'section', 'article', 'main', 'header', 'footer', 'aside', 'nav', 'figure', 'figcaption', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'table', 'blockquote', 'pre', 'hr', 'dl', 'dt', 'dd', 'details', 'summary', 'address', 'body', 'html'])
 
@@ -168,7 +170,7 @@ export function writeTypst(tree: Hast, title: string, language: string): Written
     return `${node.tagName === 'ol' ? 'enum' : 'list'}(${made.join(', ')})`
   }
 
-  function table(node: Hast, depth: number): string {
+  function table(node: Hast, depth: number, top = false): string {
     const rows: Array<{ head: boolean; cells: string[] }> = []
     const visit = (parent: Hast, inHead: boolean) => {
       for (const kid of parent.children ?? []) {
@@ -190,11 +192,15 @@ export function writeTypst(tree: Hast, title: string, language: string): Written
     const filled = (row: { cells: string[] }) => Array.from({ length: width }, (_, i) => `[#${row.cells[i] ?? '""'}]`).join(', ')
     const head = rows.filter((row, i) => row.head && rows.slice(0, i).every((before) => before.head))
     const rest = rows.slice(head.length)
-    return `table(columns: ${width}, ${head.length ? `table.header(${head.map(filled).join(', ')}), ` : ''}${rest.map(filled).join(', ')})`
+    const made = `table(columns: ${width}, ${head.length ? `table.header(${head.map(filled).join(', ')}), ` : ''}${rest.map(filled).join(', ')})`
+    // A table of many columns is given pages turned on their side, and smaller letters. Only
+    // where it stands by itself on the page: Typst turns a page, not part of one.
+    if (width > WIDE_TABLE) return top ? `page(flipped: true, text(size: 8.5pt, ${made}))` : `text(size: 8.5pt, ${made})`
+    return made
   }
 
   /** What stands by itself on the page: headings, paragraphs, lists, tables. */
-  function blocks(nodes: Hast[], depth: number): string[] {
+  function blocks(nodes: Hast[], depth: number, top = false): string[] {
     if (depth > MAX_DEPTH) return []
     const out: string[] = []
     const line: Hast[] = []
@@ -217,17 +223,18 @@ export function writeTypst(tree: Hast, title: string, language: string): Written
         const content = inline(node.children ?? [], depth + 1)
         if (content.length) out.push(tag === 'dt' ? `par(strong(${join(content)}))` : `par(${join(content)})`)
       } else if (tag === 'ul' || tag === 'ol') out.push(list(node, depth + 1))
-      else if (tag === 'table') out.push(table(node, depth + 1))
+      else if (tag === 'table') out.push(table(node, depth + 1, top))
       else if (tag === 'blockquote') out.push(`quote(block: true, ${join(blocks(node.children ?? [], depth + 1))})`)
       else if (tag === 'pre') out.push(`raw(${text(words(node))}, block: true)`)
       else if (tag === 'hr') out.push('line(length: 100%, stroke: 0.5pt)')
-      else out.push(...blocks(node.children ?? [], depth + 1))
+      // A part of the page that only holds other parts: what is inside stands on the page as it does.
+      else out.push(...blocks(node.children ?? [], depth + 1, top && !['li', 'dd', 'figure', 'details'].includes(tag)))
     }
     flush()
     return out
   }
 
-  const body = blocks(tree.children ?? [], 0)
+  const body = blocks(tree.children ?? [], 0, true)
   // "en-US" is a language and a region; Typst takes them apart.
   const [tongue, region] = language.toLowerCase().split('-')
   const letter = /^(?:us|ca|mx|ph|co|cl|ve|gt|cr|pa|do)$/.test(region ?? '')

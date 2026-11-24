@@ -106,3 +106,37 @@ test('a PDF is not offered picture formats: the road goes one way', async ({ pag
   await expect(page.locator('[role="radio"][data-format="png"]')).toHaveCount(0)
   await expect(page.locator('[role="radio"][data-format="webp"]')).toHaveCount(0)
 })
+
+test('a workbook becomes a PDF with its table tagged, and a CSV becomes a Markdown table', async ({ page }) => {
+  const pdf = await toPdf(page, 'xlsx/sample.xlsx')
+  expect(pdf.name).toBe('sample.pdf')
+  expect(pdf.bytes.toString('latin1')).toContain('/StructTreeRoot')
+
+  await open(page)
+  await page.locator('#file-input').setInputFiles(fixture('csv/sample.csv'))
+  await page.locator('[role="radio"][data-format="md"]').click()
+  await page.getByTestId('convert').click()
+  const link = page.getByTestId('download')
+  await expect(link).toBeVisible({ timeout: 30_000 })
+  const output = await describeDownload(page, () => link.click())
+  expect(output.name).toBe('sample.md')
+  // A table in Markdown: a row of names, a row of dashes, the rows.
+  expect(output.bytes.toString('utf8')).toMatch(/\| id \| name[^\n]*\|\n\| -{2,} \| -{2,}/)
+})
+
+test('a workbook set out as a page puts all its sheets on it, when asked', async ({ page }) => {
+  await open(page)
+  await page.locator('#file-input').setInputFiles(fixture('xlsx/sample.xlsx'))
+  await page.locator('[role="radio"][data-format="html"]').click()
+  await expect(page.getByTestId('language')).toBeVisible()
+  await page.getByTestId('sheet').selectOption({ label: 'All sheets (2)' })
+  await page.getByTestId('convert').click()
+  const link = page.getByTestId('download')
+  await expect(link).toBeVisible({ timeout: 30_000 })
+  await expect(page.getByTestId('download')).toHaveCount(1)
+  const output = await describeDownload(page, () => link.click())
+  const text = output.bytes.toString('utf8')
+  expect(text).toContain('<h2>People</h2>')
+  expect(text).toContain('<h2>Totals</h2>')
+  expect(text).not.toContain('Secret')
+})

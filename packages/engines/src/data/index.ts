@@ -3,7 +3,7 @@ import type { ConvertInput, ConvertOutput, Engine } from '../types'
 import { cellOf, MAX_TABLE_CELLS, outputName, Refusal, safeBaseName, tableTooLarge, throwIfAborted } from '../util'
 import { readContacts, readEvents, writeContacts, writeEvents } from './cards'
 import { readSheets, readWorkbook, writeWorkbook } from './sheet'
-import { readTable, rowsOf, writeTable } from './table'
+import { readTable, rowsOf, writeTable, writeTablePage } from './table'
 import { writeXml } from './xml'
 
 // Data formats: JSON, JSON Lines, YAML, TOML, XML, CSV and TSV, and two kinds of record that
@@ -189,8 +189,12 @@ export function createDataEngine(): Engine {
       const bytes = new Uint8Array(await input.blob.arrayBuffer())
       input.onProgress(0.2)
 
+      // A page holds every table it is given, each under its name, so all the sheets of a
+      // workbook go into one. Anything else is one table to a file.
+      const asPage = input.to.id === 'html'
       // What is to be written, and under what name: one thing, or one for each sheet of a workbook.
       let found: Array<{ value: unknown; sheet: string | null }>
+      let choiceIsAll = false
       try {
         // Where the file is a table, whether its first row is the names of its columns.
         const named = input.options.headerRow !== false
@@ -198,6 +202,7 @@ export function createDataEngine(): Engine {
         // A workbook is not text: it is a ZIP of XML, read for its rows. Which of its sheets is
         // the person's choice: the first with anything in it, one by its position, or all.
         const choice = input.options.sheet
+        choiceIsAll = choice === 'all' && BINARY.has(input.from.id)
         if (!BINARY.has(input.from.id)) found = [{ value: shaped(await read(input.from.id, decode(bytes), named)), sheet: null }]
         else if (choice === undefined || choice === 'first') found = [{ value: shaped(await readWorkbook(bytes, named)), sheet: null }]
         else {
@@ -205,6 +210,7 @@ export function createDataEngine(): Engine {
           if (choice !== 'all') found = [{ value: shaped(sheets[0]!.rows), sheet: null }]
           // A format that takes a shape can hold several tables in one file, each under its
           // sheet's name. Any other holds one table, and gets a file for each sheet.
+          else if (asPage) found = [{ value: sheets.map((sheet) => ({ name: sheet.name, value: shaped(sheet.rows) })), sheet: null }]
           else if ('shape' in input.options) found = [{ value: Object.fromEntries(sheets.map((sheet) => [sheet.name, shaped(sheet.rows)])), sheet: null }]
           else found = sheets.map((sheet) => ({ value: shaped(sheet.rows), sheet: sheet.name }))
         }
@@ -220,7 +226,13 @@ export function createDataEngine(): Engine {
       const taken = new Set<string>()
       const outputs: ConvertOutput[] = []
       for (const { value, sheet } of found) {
-        const written = BINARY.has(input.to.id) ? await writeWorkbook(rowsOf(value)) : await write(input.to.id, value)
+        const language = typeof input.options.language === 'string' ? input.options.language : 'en'
+        const tables = Array.isArray(value) && value.every((entry) => isRecord(entry) && 'name' in entry && 'value' in entry && Object.keys(entry).length === 2 && choiceIsAll) ? (value as Array<{ name: string; value: unknown }>) : [{ name: null, value }]
+        const written = asPage
+          ? writeTablePage(tables, safeBaseName(input.name), language)
+          : BINARY.has(input.to.id)
+            ? await writeWorkbook(rowsOf(value))
+            : await write(input.to.id, value)
         // "budget.xlsx", sheet "2026" → "budget - 2026.csv". Two sheets whose names come to the same file name are told apart.
         let name = whole
         if (sheet !== null) {

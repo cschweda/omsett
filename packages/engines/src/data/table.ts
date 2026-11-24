@@ -138,3 +138,46 @@ export function writeTable(value: unknown, tab: boolean): string {
   for (const row of rows) lines.push(columns.map((column) => quote(cellText(cellOf(row, column)))).join(delimiter))
   return `${lines.join('\r\n')}\r\n`
 }
+
+/** The most cells set out as a page. A page is for reading; past this, a table is for a program. */
+const MAX_PAGE_CELLS = 250_000
+
+const escaped = (text: string) => text.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;')
+
+/**
+ * Tables as a web page: each a real table, its first row marked as the names of its columns,
+ * under a heading where there is more than one. Every cell is written as text, escaped; nothing
+ * in a file is ever written as markup.
+ */
+export function writeTablePage(tables: Array<{ name: string | null; value: unknown }>, title: string, language: string): string {
+  let cells = 0
+  const body: string[] = []
+  for (const { name, value } of tables) {
+    const rows = rowsOf(value).map((row) => (isRecord(row) ? row : { value: row }))
+    const columns: string[] = []
+    const known = new Set<string>()
+    for (const row of rows) {
+      for (const key of Object.keys(row)) {
+        if (!known.has(key)) {
+          known.add(key)
+          columns.push(key)
+        }
+      }
+    }
+    if (columns.length === 0) continue
+    cells += columns.length * (rows.length + 1)
+    if (cells > MAX_PAGE_CELLS) throw new Refusal('This table is too large to set out as a page. Choose CSV or XLSX, which hold a table of any size')
+    if (name !== null) body.push(`<h2>${escaped(name)}</h2>`)
+    body.push(
+      '<table>',
+      `<thead><tr>${columns.map((column) => `<th scope="col">${escaped(column)}</th>`).join('')}</tr></thead>`,
+      '<tbody>',
+      ...rows.map((row) => `<tr>${columns.map((column) => `<td>${escaped(cellText(cellOf(row, column)))}</td>`).join('')}</tr>`),
+      '</tbody>',
+      '</table>',
+    )
+  }
+  if (body.length === 0) throw new Refusal('There is nothing here to put in a table')
+  const tongue = /^[a-z]{2,3}(?:-[a-z0-9]{2,8}){0,3}$/i.test(language) ? language : 'en'
+  return `<!doctype html>\n<html lang="${escaped(tongue)}">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1">\n<title>${escaped(title)}</title>\n</head>\n<body>\n<h1>${escaped(title)}</h1>\n${body.join('\n')}\n</body>\n</html>\n`
+}

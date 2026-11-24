@@ -29,7 +29,7 @@ Omsett is a free, open-source file converter. Every conversion runs in your brow
 <!-- facts:start -->
 <!-- Generated from the registry by `pnpm readme:facts`. Do not edit by hand. -->
 
-**71 formats, 298 conversions**, every one of them run in your browser, on your device, and tested against 645 files made on purpose to be broken, hostile or dishonest. How many tests there are today is on the site's [Trust](https://omsett.com/trust) page, counted at every build.
+**71 formats, 309 conversions**, every one of them run in your browser, on your device, and tested against 645 files made on purpose to be broken, hostile or dishonest. How many tests there are today is on the site's [Trust](https://omsett.com/trust) page, counted at every build.
 
 | Kind | Converts to and from | Reads only |
 | --- | --- | --- |
@@ -57,6 +57,7 @@ A file is offered the formats of its own kind: a picture becomes another picture
 - **Refuses a damaged or hostile file with a reason**, instead of returning half of one or freezing the tab. Every conversion runs against a clock.
 - **Writes PDF, tagged for screen readers**: a Word document, a web page or Markdown becomes a PDF whose headings, lists, tables and picture descriptions are marked as what they are. In Latin, Greek, Cyrillic, Chinese, Japanese, Korean, Arabic, Hebrew, Hindi and Thai. And reads PDF back to a web page, Markdown or DOCX.
 - **Never carries across what an author hid or deleted**: tracked deletions, hidden text and slides, comments, speaker notes.
+- **Makes a PDF, a Word document or a web page of a spreadsheet**: a workbook or a CSV is set out as a real table, with its column names marked, on pages turned sideways if it is wide.
 - **Makes a PDF of a picture**: a scan or a photograph becomes a page, without the photograph's location and other metadata.
 - **Makes icons**: any picture to a Windows icon, a Mac icon or a mouse pointer, at the sizes each expects.
 - **Develops a raw photograph (DNG)** with standard settings, the right way up.
