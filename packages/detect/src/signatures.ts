@@ -123,9 +123,37 @@ function qoi(bytes: Uint8Array): Sniffed | null {
   return { ext: 'qoi', mime: 'image/qoi', dimensions: { width: v.getUint32(4), height: v.getUint32(8) } }
 }
 
+/** DirectDraw Surface: "DDS " and a header that says it is 124 bytes long; height, then width. */
+function dds(bytes: Uint8Array): Sniffed | null {
+  if (bytes.length < 20 || !starts(bytes, 0x44, 0x44, 0x53, 0x20)) return null
+  const v = view(bytes)
+  if (v.getUint32(4, true) !== 124) return null
+  return { ext: 'dds', mime: 'image/vnd.ms-dds', dimensions: { width: v.getUint32(16, true), height: v.getUint32(12, true) } }
+}
+
+/**
+ * FITS: lines of exactly eighty characters, the first saying "SIMPLE = T". The size is given
+ * as NAXIS1 and NAXIS2, somewhere before the line that says END. A file with no picture in its
+ * first part (NAXIS of 0 or 1) has no size to give here.
+ */
+function fits(bytes: Uint8Array): Sniffed | null {
+  if (bytes.length < 80 || !/^SIMPLE {2}= {20}T(?: |\/)/.test(ascii(bytes, 0, 32))) return null
+  const size: Record<string, number> = {}
+  // A header is a few dozen lines. Past a thousand without an END, the size stays unknown.
+  for (let line = 1; line < 1000 && (line + 1) * 80 <= bytes.length; line++) {
+    const card = ascii(bytes, line * 80, line * 80 + 80)
+    if (card.startsWith('END ')) break
+    const axis = /^NAXIS([12]) {2}= {1,20}(\d{1,9}) *(?:\/|$)/.exec(card.slice(0, 31).trimEnd())
+    // A size given twice is the last one given.
+    if (axis) size[axis[1]!] = Number(axis[2])
+  }
+  const dimensions = size['1'] !== undefined && size['2'] !== undefined ? { width: size['1'], height: size['2'] } : null
+  return { ext: 'fits', mime: 'image/fits', dimensions }
+}
+
 /** Strongest signatures first; TGA, which has none, last. */
 export function sniff(bytes: Uint8Array): Sniffed | null {
-  for (const test of [qoi, exr, ras, hdr, sgi, pnm, pcx, tga]) {
+  for (const test of [qoi, exr, ras, dds, fits, hdr, sgi, pnm, pcx, tga]) {
     const found = test(bytes)
     if (found) return found
   }

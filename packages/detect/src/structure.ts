@@ -1,5 +1,6 @@
 import type { Format } from '@omsett/registry'
 import { MAX_PIXELS } from './guard'
+import { photoshopProblem } from './photoshop'
 import { pngStructureProblem } from './png-structure'
 
 type Checker = (blob: Blob, maxPixels: number) => Promise<string | null>
@@ -20,4 +21,16 @@ export async function structureProblem(format: Format, blob: Blob): Promise<stri
   const checker = format.detect.map((ext) => checkers[ext]).find(Boolean)
   if (!checker) return 'unverified'
   return checker(blob, MAX_PIXELS)
+}
+
+/**
+ * Checks of a file's own arithmetic, for formats a decoder is known to read too kindly. Unlike
+ * a structure check this vouches for nothing: it only refuses what plainly does not add up,
+ * before a decoder is asked. Keyed by `file-type` ext value.
+ */
+const layouts: Record<string, (bytes: Uint8Array) => string | null> = { psd: photoshopProblem, psb: photoshopProblem }
+
+/** Why a file's parts do not fit inside it, or null where they do or nothing here can say. */
+export function layoutProblem(format: Format, bytes: Uint8Array): string | null {
+  return format.detect.map((ext) => layouts[ext]).find(Boolean)?.(bytes) ?? null
 }

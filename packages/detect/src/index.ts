@@ -9,7 +9,7 @@ import { sniffText } from './text'
 
 export { readDimensions, type Dimensions } from './dimensions'
 export { MAX_BYTES, MAX_PIXELS, MAX_WORKING_BYTES, TOO_LARGE, pixelCount, sizeProblem, workingBytes } from './guard'
-export { structureProblem } from './structure'
+export { layoutProblem, structureProblem } from './structure'
 export { crc32 } from './png-structure'
 export { gunzip } from './gzip'
 export { isTarHeader } from './tar'
@@ -67,6 +67,9 @@ export async function detect(blob: Blob, formats: Format[], name?: string): Prom
     // it holds, and that is never none; where it says none, the file is not an icon.
     const emptyIcon = (found?.ext === 'ico' || found?.ext === 'cur') && head[4] === 0 && head[5] === 0
     if (emptyIcon) found = undefined
+    // Photoshop's large-document format opens with the same four letters as a PSD; the number
+    // after them is 2 where a PSD's is 1.
+    if (found?.ext === 'psd' && head[4] === 0 && head[5] === 2) found = { ext: 'psb', mime: 'image/vnd.adobe.photoshop' }
     const sniffed = found ? null : sniff(head)
     if (sniffed && !(plain && !WRITTEN_AS_TEXT.has(sniffed.ext))) {
       found = sniffed

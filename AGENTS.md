@@ -237,6 +237,11 @@ build by `apps/web/scripts/write-headers.ts`.
 - **Settings in the address bar are for tests and work on localhost only** (`testHook`).
 - **Trap files** (`fixtures/_traps/`, listed in `manifest.json`) run in both test suites. A new
   failure mode gets a trap; add it in `fixtures/_tools/make-traps.py`.
+- **ImageMagick forgives some damaged files too.** Of a Photoshop file that stopped halfway it
+  returned the half it found. `layoutProblem` (`packages/detect/src/structure.ts`) adds up the
+  lengths such a file gives for its own parts, and the `magick` engine refuses what does not fit
+  before ImageMagick reads it. When a new format's `truncated` trap converts, write its check
+  there; do not change the trap to "succeeds".
 - **libvips forgives damaged files unless told not to.** The engine loads with
   `fail_on: 'error'`. Do not remove it.
 - **`mv` onto a link to a directory moves into it.** `scripts/publish-static.sh` uses `mv -T`
