@@ -22,6 +22,14 @@ from. The sample Word file scored an A and its PDF a B; both now score an A.
   audit.icjia.app. It is added to the end of the file Typst writes; nothing Typst wrote is
   changed.
 
+### Added
+
+- **A way for a server to keep logs without addresses**: an nginx log format that records
+  when a request came, for what, and how it was answered, and leaves out who asked and with
+  what browser. It is set up by hand on the server (`docs/deploy-digitalocean.md`); nothing
+  in the app changes, and a conversion still never reaches a log, since the server is never
+  told of one.
+
 ### Known
 
 - Checked by hand, with a copy of the checker on this machine and nothing sent anywhere: the

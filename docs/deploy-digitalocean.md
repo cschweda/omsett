@@ -188,6 +188,59 @@ and no cost per deploy.
 | A `.wasm` file downloads but will not start | nginx is not sending `Content-Type: application/wasm`. Current nginx does by default; on an old one, add `application/wasm wasm;` to `mime.types` |
 | 404 on every page | `live` does not exist yet (no deploy has finished), or the web directory is not `/live/public` |
 
+## Logs without addresses (optional)
+
+Converting happens in the visitor's browser, so the server never learns what was converted and
+cannot log it. What it can log is each request made of it: a page opened, an engine fetched, a
+document passed on to the accessibility checker. Out of the box nginx also writes down the
+address each request came from and the browser that made it. This replaces that with a line
+that has neither. No database is involved: these are plain files that nginx writes and
+`logrotate` deletes.
+
+1. Put the format on the server, where nginx reads it for every site:
+
+   ```
+   sudo cp apps/web/nginx/omsett-logging.conf /etc/nginx/conf.d/omsett-logging.conf   # run from the repository on the server
+   ```
+
+   The path to the repository differs by setup; the file is `apps/web/nginx/omsett-logging.conf`,
+   and it can as well be pasted in by hand. It is one `log_format` line.
+
+2. In the site's nginx configuration in Forge, inside the `server { }` block, replace the
+   `access_log` line (or add one) with:
+
+   ```
+   access_log /var/log/nginx/omsett.com-access.log omsett;
+   ```
+
+   Do the same in any other `server { }` block for the site (the one that redirects port 80).
+
+3. nginx's **error log cannot be given a format**, and every line in it has the client's
+   address. Keep it to what matters:
+
+   ```
+   error_log /var/log/nginx/omsett.com-error.log crit;
+   ```
+
+4. Decide how long logs are kept. Forge's servers rotate `/var/log/nginx/*.log` daily and keep
+   fourteen; to change that, edit `rotate 14` in `/etc/logrotate.d/nginx`.
+
+5. Save, and check: `sudo nginx -t`, then open the site and
+
+   ```
+   sudo tail -3 /var/log/nginx/omsett.com-access.log
+   ```
+
+   A line reads `2026-11-24T18:02:11+00:00 GET /_nuxt/workers/engine.worker-abc.js 200 48213 0.004`.
+   If it has an address in it, the `access_log` line is not naming the `omsett` format.
+
+6. The old logs still hold addresses until they are rotated away. To be rid of them now:
+   `sudo truncate -s 0 /var/log/nginx/omsett.com-access.log.1` and so on, or wait a fortnight.
+
+What to read from it: `grep -c ' /engines/typst' …` is how often the PDF writer was fetched;
+`grep -c 'POST /api/accessibility/analyze'` is how many documents were sent to be checked;
+`awk '$4 >= 500'` is what went wrong.
+
 ## Counting visits, and checking accessibility (both optional)
 
 A copy of Omsett does neither unless you set it up to. Both are set up the same way, and
