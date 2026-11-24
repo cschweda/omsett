@@ -30,6 +30,11 @@ from. The sample Word file scored an A and its PDF a B; both now score an A.
   in the app changes, and a conversion still never reaches a log, since the server is never
   told of one.
 
+### Changed
+
+- The links under "Drop files here" each say what they are: "Try a sample PDF" and "Try a
+  sample DOCX", as "Try a sample PNG" already did.
+
 ### Known
 
 - Checked by hand, with a copy of the checker on this machine and nothing sent anywhere: the
