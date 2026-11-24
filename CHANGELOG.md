@@ -33,6 +33,11 @@ next.
 - The sample holds the same workbook as the XLSX sample, and a test holds the two readers to
   the same answer, cell for cell.
 
+### Fixed
+
+- **The page now jumps to the result instead of gliding to it.** While it glided, a press on
+  Download or on the next Convert could land on nothing, because the button had moved.
+
 ### Known
 
 - The samples in the tests are written by a script. By hand, and outside the tests, sixty

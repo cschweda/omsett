@@ -241,7 +241,8 @@ build by `apps/web/scripts/write-headers.ts`.
   time. It is hidden while converting and once there is a result, so that only one comparison
   is ever on the page; the tests rely on that.
 - **The page goes to the result only for a conversion a person asked for** (`arrived`). A
-  re-conversion from moving a setting must not move the page.
+  re-conversion from moving a setting must not move the page. It goes at once, never as a
+  glide: a click made while the page is moving misses, in a browser and in the tests.
 - **"Convert another" ends a session** (`sessions` in `useConversionQueue`). A batch checks
   after every wait whether its session is over, and writes nothing if it is.
 - **Word from the worker can arrive late.** A progress event may land after its file is

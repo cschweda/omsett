@@ -36,9 +36,10 @@ useHead({
 
 // The list of formats is long, and the result comes after it. When a conversion a person asked
 // for is done, the result is brought to the top of the window, where the comparison can be seen.
+// At once, not as a glide: a page that is still moving when Download is pressed can carry the
+// button out from under the pointer.
 function showResult() {
-  const calm = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-  document.getElementById('results-heading')?.scrollIntoView({ block: 'start', behavior: calm ? 'auto' : 'smooth' })
+  document.getElementById('results-heading')?.scrollIntoView({ block: 'start', behavior: 'auto' })
 }
 watch(queue.arrived, async () => {
   await nextTick()
