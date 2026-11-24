@@ -171,6 +171,54 @@ describe('a page written as a PDF', () => {
   })
 })
 
+describe('a picture set on a page', () => {
+  const page = async (bytes: Uint8Array, name = 'scan.png') => {
+    const [output] = await engines.typst!.convert({ blob: new Blob([bytes as BlobPart]), name, from: formatById(registry, 'png')!, to: formatById(registry, 'pdf')!, options: { onPage: true }, signal: new AbortController().signal, onProgress: () => {} })
+    return new Uint8Array(await output!.blob.arrayBuffer())
+  }
+  const sizeOf = (pdf: Uint8Array) => {
+    const info = /\/MediaBox\s*\[\s*0\s+0\s+([\d.]+)\s+([\d.]+)\s*\]/.exec(new TextDecoder('latin1').decode(pdf))
+    return info ? [Number(info[1]), Number(info[2])] : null
+  }
+
+  it('is one page the shape of the picture, with the picture on it', async () => {
+    const png = await fixture('png/sample.png')
+    const pdf = await page(png)
+    expect(new TextDecoder('latin1').decode(pdf.subarray(0, 5))).toBe('%PDF-')
+    // 1200 by 630 pixels, set no wider than a sheet of A4: the same shape.
+    const size = sizeOf(pdf)
+    if (size) expect(size[0]! / size[1]!).toBeCloseTo(1200 / 630, 1)
+    expect(pdf.length).toBeGreaterThan(5000)
+  })
+
+  it('leaves behind what the picture said about itself', async () => {
+    const source = await fixture('_traps/script-in-metadata.png')
+    expect(new TextDecoder('latin1').decode(source)).toContain('OMSETT-TRAP-PAYLOAD')
+    const pdf = await page(source)
+    // A PDF packs what it holds, so each packed part is unpacked before it is searched.
+    const { inflateSync } = await import('node:zlib')
+    const text = new TextDecoder('latin1').decode(pdf)
+    let unpacked = text
+    for (const part of text.matchAll(/stream\r?\n/g)) {
+      const from = part.index + part[0].length
+      const to = text.indexOf('endstream', from)
+      try {
+        unpacked += inflateSync(Buffer.from(pdf.subarray(from, to))).toString('latin1')
+      } catch {
+        // Not packed that way: it was searched as it is.
+      }
+    }
+    expect(unpacked.length).toBeGreaterThan(text.length)
+    expect(unpacked).not.toMatch(/OMSETT-TRAP-PAYLOAD|alert\(/)
+  })
+
+  it('refuses a damaged picture before any decoder sees it, and one too large', async () => {
+    const png = await fixture('png/sample.png')
+    await expect(page(png.slice(0, png.length >> 1))).rejects.toThrow('This picture is damaged, and cannot be set on a page')
+    await expect(page(await fixture('_traps/truncated.png'))).rejects.toThrow('This picture is damaged')
+  })
+})
+
 describe('the program written for Typst', () => {
   const written = async (html: string) => {
     const page = await readPage(html, 'page.html')

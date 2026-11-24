@@ -179,6 +179,9 @@ export const capabilities: Capability[] = [
   // A page is laid out as a PDF by Typst, which is large and is fetched only for this. Every
   // other document reaches PDF through a page: a Word document in two steps, Markdown in two.
   { engine: 'typst', tier: 'browser', reads: ['html'], writes: [{ format: 'pdf', lossy: false }], priority: 30 },
+  // A picture is set on a page of its own, the shape of the picture. Only PNG is read here:
+  // every other picture is made a PNG first, by the engines that leave its metadata behind.
+  { engine: 'typst', tier: 'browser', reads: ['png'], writes: [{ format: 'pdf', lossy: false, defaultOptions: { onPage: true }, drops: ['metadata'] }], priority: 30 },
   // A PDF is read to a page, from its tags where it has them and from its layout where not.
   { engine: 'pdf', tier: 'browser', reads: ['pdf'], writes: [{ format: 'html', lossy: false }], priority: 20 },
   // A presentation is read to a page, a section to a slide.

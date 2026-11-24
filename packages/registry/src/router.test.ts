@@ -8,6 +8,7 @@ import {
   everything,
   formatById,
   registry,
+  canBecome,
   sameKind,
   traitWarnings,
 } from './index'
@@ -74,7 +75,7 @@ describe('router, real registry', () => {
         // TTF and OTF hold different kinds of outline, and neither becomes the other.
         // Nor does an address book become a calendar.
         const redrawn = ['otf>ttf', 'ics>vcf'].includes([from, to].sort().join('>'))
-        const impossible = from === to || readOnly.has(to) || !sameKind(kind(from), kind(to)) || redrawn
+        const impossible = from === to || readOnly.has(to) || !canBecome(kind(from), kind(to)) || redrawn
         expect(all.route(from, to) === null, `${from} → ${to}`).toBe(impossible)
       }
     }
@@ -111,6 +112,18 @@ describe('router, real registry', () => {
     expect(all.route('md', 'pdf')!.edges.map((e) => `${e.from}>${e.to}`)).toEqual(['md>html', 'html>pdf'])
     expect(all.route('doc', 'pdf')!.edges.map((e) => `${e.from}>${e.to}`)).toEqual(['doc>html', 'html>pdf'])
     expect(all.route('pptx', 'pdf')).not.toBeNull()
+    // A picture can be set on a page of a PDF, by way of PNG; that is one way only, and a
+    // picture does not go on from there to become a document.
+    expect(all.route('png', 'pdf')!.edges.map((e) => e.candidates[0]!.engine)).toEqual(['typst'])
+    expect(all.route('jpeg', 'pdf')!.edges.map((e) => `${e.from}>${e.to}`)).toEqual(['jpeg>png', 'png>pdf'])
+    expect(all.route('heic', 'pdf')).not.toBeNull()
+    expect(all.route('png', 'pdf')!.warnings.map((w) => w.id)).toEqual(expect.arrayContaining(['pdf-of-a-picture']))
+    expect(all.route('pdf', 'png')).toBeNull()
+    expect(all.route('png', 'html')).toBeNull()
+    expect(all.route('png', 'docx')).toBeNull()
+    expect(all.targetsFor(['png']).some((t) => t.format.id === 'pdf' && t.route)).toBe(true)
+    expect(all.targetsFor(['pdf']).some((t) => t.format.category === 'image')).toBe(false)
+    expect(sameKind('image', 'pdf')).toBe(false)
     expect(all.route('docx', 'pdf')!.warnings.map((w) => w.id)).toEqual(expect.arrayContaining(['pdf-written', 'accessibility-check']))
     // A Word document from before 2007 becomes the newer kind by way of a page, and says what to check.
     expect(all.route('doc', 'docx')!.edges.map((e) => `${e.from}>${e.to}`)).toEqual(['doc>html', 'html>docx'])

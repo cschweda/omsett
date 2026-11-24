@@ -7,6 +7,40 @@ The paragraph that opens a version is its teaser: the home page shows its first 
 in the "What's new" banner, so keep it to two or three sentences on what a visitor will notice.
 A line beginning "Released" gives the date.
 
+## 0.49.0
+
+Released 24 November 2026.
+
+A picture can now be made into a PDF: a scan, a photograph or a screenshot becomes one page,
+the shape of the picture. Any picture Omsett reads will do, from a phone's HEIC to a camera's
+raw file.
+
+### Added
+
+- **Pictures to PDF.** The page is the shape of the picture and no wider than a sheet of A4,
+  so a scan comes out as a page and not as a poster.
+- The picture's metadata is left behind, as in every picture conversion: where and when a
+  photograph was taken does not reach the PDF. A test unpacks the PDF to check.
+- The conversion says plainly what such a PDF is: a picture of a page, with no text in it
+  that can be searched, copied or read aloud.
+
+### Changed
+
+- **What a file can become is no longer only "its own kind".** A picture can become a PDF;
+  a PDF is not offered picture formats, and a picture does not go on through a PDF to become a
+  Word document. The registry states such one-way pairs (`canBecome`).
+
+### Fixed
+
+- **A press on Convert while another conversion is running is no longer lost.** It waits its
+  turn. Converting one file to several formats in quick succession could skip one.
+
+### Known
+
+- One picture makes one PDF. Several pictures cannot be put into one PDF yet.
+- A photograph goes into the PDF without loss, so the PDF of a JPEG is larger than the JPEG.
+- The text in a scan is not read (no OCR), so the PDF of a scanned letter is not accessible.
+
 ## 0.48.0
 
 Released 24 November 2026.

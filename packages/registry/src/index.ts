@@ -8,7 +8,7 @@ import type { Format, Registry } from './types'
 export * from './types'
 export { createRouter, MAX_HOPS } from './router'
 export { deriveEdges } from './derive'
-export { isReadable, sameKind } from './kinds'
+export { canBecome, isReadable, sameKind } from './kinds'
 export { lossyToLossy, traitWarnings } from './trait-warnings'
 
 export { applySwitches, switches, type Switch } from './switches'
@@ -92,10 +92,13 @@ export function iconSidesFor(sizes: number[], width: number, height: number, exa
 }
 
 /**
- * The size a picture comes out at. Every conversion keeps the size it was given but one that
- * makes an icon, which is square and no larger than that icon can be.
+ * The size a picture comes out at. Every conversion keeps the size it was given but two: one
+ * that makes an icon, which is square and no larger than that icon can be, and one that sets
+ * the picture on a page, which is no longer a picture with a size.
  */
 export function writtenSize(options: Record<string, unknown>, size: { width: number; height: number } | null): { width: number; height: number } | null {
+  // A picture set on a page of a PDF is a document, and a document states no size.
+  if (options.onPage === true) return null
   const sizes = iconSizes(options)
   if (!size || !sizes) return size
   const side = iconSidesFor(sizes, size.width, size.height, options.iconExact === true)[0]!
