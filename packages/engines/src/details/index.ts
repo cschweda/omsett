@@ -6,7 +6,10 @@ import { readSound } from '../audio'
 import { readSfnt, readWoff } from '../font/sfnt'
 import { readFountain } from '../script/fountain'
 import { readCues } from '../subtitle/read'
+import { readCfb } from '@omsett/detect'
+import { listSheets } from '../data/sheet'
 import { readExif } from './exif'
+import { hasMacros, writtenBy } from './ole'
 
 // What a file carries besides what it shows: who made it, when, with what, and where. Shown
 // before a conversion, so that a person knows what they hold, and what a conversion will keep
@@ -96,6 +99,19 @@ async function office(blob: Blob, format: string): Promise<Detail[]> {
     if (notes) add('Speaker notes', `On ${count(notes, 'slide')}`, 'removed')
   }
   if (names.some((name) => name.endsWith('vbaproject.bin'))) add('Macros', 'Yes. They are never run and never carried over', 'removed')
+  return details
+}
+
+/** An Office file from before 2007: who wrote it and with what, and what it holds that a conversion leaves behind. */
+async function oldOffice(blob: Blob, format: string): Promise<Detail[]> {
+  const bytes = new Uint8Array(await blob.arrayBuffer())
+  const file = readCfb(bytes)
+  const details: Detail[] = writtenBy(file).map((found) => ({ ...found, fate: 'removed' as const }))
+  if (format === 'xls') {
+    const sheets = await listSheets(bytes)
+    if (sheets.length) details.push({ label: 'Sheets', value: `${sheets.length} shown: ${sheets.slice(0, 12).join(', ')}. The first is converted, unless you choose another. Hidden sheets never are` })
+  }
+  if (hasMacros(file)) details.push({ label: 'Macros', value: 'Yes. They are never run and never carried over', fate: 'removed' })
   return details
 }
 
@@ -229,6 +245,7 @@ export async function describeFile(blob: Blob, format: Format): Promise<Detail[]
     if (format.category === 'audio') return await sound(blob, format.id)
     if (blob.size > MAX_WHOLE_BYTES) return []
     if (['docx', 'xlsx', 'pptx'].includes(format.id)) return await office(blob, format.id)
+    if (['xls', 'doc', 'ppt'].includes(format.id)) return await oldOffice(blob, format.id)
     if (format.id === 'pdf') return await pdf(blob)
     if (['ttf', 'otf', 'woff'].includes(format.id)) return await font(blob, format.id)
     if (format.category === 'archive') return await archive(blob, format.id)

@@ -1,6 +1,7 @@
 import type { Format } from '@omsett/registry'
 import { fileTypeFromBuffer } from 'file-type'
 import { HEADER_BYTES, readDimensions, type Dimensions } from './dimensions'
+import { officeKind } from './cfb'
 import { gunzip } from './gzip'
 import { readIcns } from './icns'
 import { sniff } from './signatures'
@@ -14,6 +15,7 @@ export { layoutProblem, pictureOnly, structureProblem } from './structure'
 export { readDicom, type Dicom } from './dicom'
 export { crc32, pngStructureProblem } from './png-structure'
 export { gunzip } from './gzip'
+export { isCfb, readCfb, type Cfb } from './cfb'
 export { ICNS_PACKED, readIcns, type Icns, type IcnsPicture } from './icns'
 export { isTarHeader } from './tar'
 
@@ -90,6 +92,14 @@ export async function detect(blob: Blob, formats: Format[], name?: string): Prom
         found = { ext: 'tgz', mime: 'application/gzip' }
         dimensions = null
       }
+    }
+    // Word, Excel and PowerPoint before 2007 all kept their files in the same container, which
+    // is all the library can say. Which of them this is, is said by the streams inside.
+    if (found?.ext === 'cfb') {
+      const kind = await officeKind(blob)
+      if (kind === 'xls') found = { ext: 'xls', mime: 'application/vnd.ms-excel' }
+      else if (kind === 'doc') found = { ext: 'doc', mime: 'application/msword' }
+      else if (kind === 'ppt') found = { ext: 'ppt', mime: 'application/vnd.ms-powerpoint' }
     }
     // A Drafter package is a ZIP that says what it is in its first entry, as an EPUB does:
     // a file called "mimetype", stored as it is, holding the package's media type.

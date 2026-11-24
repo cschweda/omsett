@@ -157,6 +157,16 @@ build by `apps/web/scripts/write-headers.ts`.
   through `readZip`, so the archive limits hold, and with any part that declares a DOCTYPE
   refused. Formulas are never worked out and never written; macros and linked files are never
   opened. DOCX and PPTX should be read the same way.
+- **An old Office file is two things to check, one inside the other.** Outside, the container
+  (`packages/detect/src/cfb.ts`): every sector number, chain and length is held against the size
+  of the file, and a chain is followed no further than the file has sectors. Inside, for a
+  workbook, a row of records (`packages/engines/src/data/xls.ts`), each checked to lie within
+  its stream. Which of Word, Excel or PowerPoint a file is, is said by its streams, never its
+  name. DOC and PPT are to be read through the same container reader, and read only.
+- **The two workbook readers give the same shape and are held to the same answer.** XLS is
+  opened into the `Opened` that XLSX is, so sheets, limits, dates and the column names are one
+  piece of code. `xls/sample.xls` holds what `xlsx/sample.xlsx` holds; a change to either
+  sample is made to both.
 - **A document conversion keeps what a screen reader relies on, and says what to check.**
   Headings as headings, lists as lists, table headers marked, language and title stated,
   picture descriptions carried (`packages/engines/src/markup/docx-*.ts`). Every document pair
@@ -231,7 +241,8 @@ build by `apps/web/scripts/write-headers.ts`.
   time. It is hidden while converting and once there is a result, so that only one comparison
   is ever on the page; the tests rely on that.
 - **The page goes to the result only for a conversion a person asked for** (`arrived`). A
-  re-conversion from moving a setting must not move the page.
+  re-conversion from moving a setting must not move the page. It goes at once, never as a
+  glide: a click made while the page is moving misses, in a browser and in the tests.
 - **"Convert another" ends a session** (`sessions` in `useConversionQueue`). A batch checks
   after every wait whether its session is over, and writes nothing if it is.
 - **Word from the worker can arrive late.** A progress event may land after its file is

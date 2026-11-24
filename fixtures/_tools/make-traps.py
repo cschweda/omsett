@@ -4180,6 +4180,106 @@ code("code.dng", D.dng(DNG_W, DNG_H, DNG_PIXELS, change=lambda e: e.update({
     D.XMP: (D.BYTE, b'<x:xmpmeta xmlns:x="adobe:ns:meta/"><rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"><rdf:Description>' + XML_CANARY + b"</rdf:Description></rdf:RDF></x:xmpmeta>")})),
      WHY % "as the camera's maker and model, the picture's description, and its notes", "dng", node="succeeds", absent="omsett_canary")
 
+# --- workbooks from before 2007: XLS -------------------------------------------------------------
+# An old workbook is two things to lie about, one inside the other. Outside, a small filing
+# system: sectors, a table of which follows which, a directory of streams, every one of them a
+# number that can point in a circle or past the end. Inside, a row of records that give lengths,
+# counts and places of their own. Each of these is sound but for the one thing said.
+import xls as X  # noqa: E402
+
+G = "workbooks"
+XLS = read("xls", "sample.xls")
+NOT_XLS = "This file is not a valid XLS workbook"
+BOOK = lambda **more: X.workbook(X.SHEETS, X.TEXTS, X.FORMATS, X.STYLES, **{"hidden": ("Secret",), **more})
+filed = lambda book, **more: X.container([("Workbook", book)], **more)
+
+
+def circle(parts):
+    """The table says the first sector of the workbook is followed by itself."""
+    parts["table"][0] = 0
+
+
+def past_the_end(parts):
+    parts["table"][1] = 0x00FFFFFF
+
+
+def directory_in_a_circle(parts):
+    parts["table"][parts["directory_first"]] = parts["directory_first"]
+
+
+def stream_of_two_gigabytes(parts):
+    at = parts["directory_first"] * parts["sector"] + 128 + 120
+    parts["body"] = parts["body"][:at] + struct.pack("<I", 0x7FFFFFFF) + parts["body"][at + 4 :]
+
+
+trap("truncated.xls", XLS[:-512],
+     "An old workbook that lost its last few hundred bytes, as a download cut short does. They held the table that says which part of the file follows which, so nothing in it can be followed. Its name is still written in what is left, and it is refused as a damaged workbook.",
+     "xls", node="fails", note=NOT_XLS, group=G)
+trap("half-an-old-file.xls", XLS[: len(XLS) // 2],
+     "The first half of an old workbook. The half that is gone held everything that said what the file was, and what is left is only the container any old Office file is kept in.",
+     "unregistered", group="identity")
+trap("sectors-in-a-circle.xls", filed(BOOK(), change=circle),
+     "The table that says which sector follows which says the first is followed by itself. Followed without counting, that never ends.",
+     "xls", node="fails", note=NOT_XLS, group=G)
+trap("sector-past-the-end.xls", filed(BOOK(), change=past_the_end),
+     "The table sends the workbook on to sector sixteen million, in a file of eleven.",
+     "xls", node="fails", note=NOT_XLS, group=G)
+trap("directory-in-a-circle.xls", filed(BOOK(), change=directory_in_a_circle),
+     "The directory of streams is said to follow itself.",
+     "xls", node="fails", note=NOT_XLS, group=G)
+trap("stream-of-two-gigabytes.xls", filed(BOOK(), change=stream_of_two_gigabytes),
+     "The directory says the workbook is two gigabytes long, in a file of a few thousand bytes. Nothing is set aside for it.",
+     "xls", node="fails", note=NOT_XLS, group=G)
+trap("locked-with-a-password.xls", filed(BOOK(before=X.rec(0x002F, struct.pack("<HHH", 1, 1, 1) + b"\0" * 48))),
+     "An old workbook locked with a password. What follows the lock is scrambled, and is not guessed at.",
+     "xls", node="fails", note="This workbook is locked with a password, and cannot be read without it", group=G)
+trap("from-excel-95.xls", filed(BOOK(version=0x0500)),
+     "A workbook in the form Excel used before 1997, which writes its text another way. It is told apart by the first thing it says.",
+     "xls", node="fails", note="This workbook was saved by Excel 95 or earlier, in a form Omsett cannot read yet. Opening it in a spreadsheet program and saving it again will bring it up to date", group=G)
+trap("record-longer-than-the-workbook.xls", filed(BOOK().replace(X.text_cell(0, 0, 0), b"\xfd\x00\xff\xff" + X.text_cell(0, 0, 0)[4:], 1)),
+     "The first cell of the sheet gives its own length as sixty-five thousand bytes, which is more than the rest of the workbook.",
+     "xls", node="fails", note=NOT_XLS, group=G)
+trap("sheet-somewhere-else.xls", filed(BOOK(moved={"People": 0x7FFFFFF0})),
+     "The list of sheets says the first sheet shown starts two gigabytes into a workbook of a few thousand bytes.",
+     "xls", node="fails", note=NOT_XLS, group=G)
+trap("cell-in-column-sixty-thousand.xls", filed(X.workbook([("People", X.PEOPLE + X.number(4, 60000, 1.0))], X.TEXTS)),
+     "A cell in column sixty thousand, where a sheet of this kind has two hundred and fifty-six.",
+     "xls", node="fails", note=NOT_XLS, group=G)
+trap("one-cell-at-the-end-of-every-row.xls", filed(X.workbook([("Wide", b"".join(X.packed(row, 255, row) for row in range(40000)))], ["x"])),
+     "Forty thousand rows with one cell each, in the last column. As a table every row is two hundred and fifty-six cells wide: ten million cells from half a megabyte.",
+     "xls", node="fails", note=BOOK_TOO_BIG, group=G)
+
+trap("text-broken-across-records.xls", filed(X.workbook(X.SHEETS, X.TEXTS, X.FORMATS, X.STYLES, hidden=("Secret",), share=X.shared(X.TEXTS, split_inside=(11, 3)))),
+     "The text cells share is a list that may be broken anywhere to fit, even inside a word. This one breaks inside a word of two-byte letters, which is where a careless reader garbles it.",
+     "xls", node="succeeds", group="unusual")
+trap("more-text-than-there-is.xls", filed(X.workbook(X.SHEETS, X.TEXTS, X.FORMATS, X.STYLES, hidden=("Secret",), share=X.shared(X.TEXTS).replace(struct.pack("<II", len(X.TEXTS), len(X.TEXTS)), struct.pack("<II", 0xFFFFFFFF, 0xFFFFFFFF), 1))),
+     "The list of shared text says it holds four billion pieces. It is read as far as there are bytes to bear that out, which is sixteen.",
+     "xls", node="succeeds", group="unusual")
+trap("chart-on-the-sheet.xls", filed(X.workbook([("People", X.bof(0x0020) + X.number(0, 0, 999.0) + X.rec(0x000A) + X.PEOPLE)], X.TEXTS, X.FORMATS, X.STYLES)),
+     "A sheet with a chart drawn on it, which is a list of records inside the sheet's own. What is in the chart is not taken for cells.",
+     "xls", node="succeeds", group="unusual", absent="999")
+trap("neighbours-in-one-record.xls", filed(X.workbook([("Grid", X.text_cell(0, 0, 0) + X.text_cell(0, 1, 1) + X.text_cell(0, 2, 2) + X.several(1, 0, [1, 2, 3]) + X.several(2, 0, [-4, 5, 1073741]) + X.rec(0x0204, X.cell(3, 0) + X.words("written in the cell")))], ["a", "b", "c"])),
+     "Numbers that sit side by side written as one record, as Excel writes them, and a piece of text written in its cell where it would usually be shared.",
+     "xls", node="succeeds", group="unusual")
+trap("days-counted-from-1904.xls", filed(BOOK(from1904=True)),
+     "A workbook from an early Macintosh, which counts its days from 1904 and not from 1900. Its dates are four years and a day on from what the same numbers mean elsewhere.",
+     "xls", node="succeeds", group="unusual")
+trap("larger-sectors.xls", filed(BOOK(), sector=4096),
+     "The same container cut into sectors of 4,096 bytes, as it may be, and as Excel never does.",
+     "xls", node="succeeds", group="unusual")
+trap("hidden-sheet-and-macros.xls", X.container([("Workbook", BOOK()), ("_VBA_PROJECT_CUR", b"Sub Auto_Open(): Shell \"" + SHELL.encode() + b"\": End Sub" + b"\0" * 64)], small=True),
+     "An old workbook with a hidden sheet and a macro set to run when it is opened. The hidden sheet is not converted, and the macro is neither run nor carried anywhere.",
+     "xls", node="succeeds", group=G, absent="not shown")
+trap("old-workbook-named-as-new.xlsx", XLS,
+     "A workbook from before 2007 with the name of a newer one. The two are nothing alike inside; it is read as what it is.",
+     "xls", node="succeeds", mismatch=True, group="identity")
+trap("words-named-as-a-workbook.xls", b"Workbook: the figures for March are in the other file.\n",
+     "A sentence with an old workbook's name.",
+     "unknown", group="identity")
+trap("some-other-old-file.xls", X.container([("Contents", b"Not a workbook, a document or a presentation." + b"\0" * 64)]),
+     "The container old Office files are kept in, holding something that is none of them.",
+     "unregistered", group="identity")
+
 # --- sound: WAV, AIFF, AU -------------------------------------------------------------------------
 # Sound stored unpacked is a label and then numbers. The label gives lengths, and a reader that
 # believes them reads past the end of the file, or sets aside room for hours of sound that are
@@ -4482,6 +4582,8 @@ sound("an-older-layer.mp3", bytes([0xFF, 0xFD, 0x90, 0x04]) + b"\0" * 414 + byte
 G = "code"
 LIST_OF_NOTES = S.info(INAM=CB, IART=CB, ICMT=CB, ISFT=MARK.encode())
 BROADCAST = S.part(b"bext", (CB + b"\0" * 256)[:256] + (CB + b"\0" * 32)[:32] + b"\0" * 32 + b"2026-11-24" + b"\0" * 300)
+code("code.xls", X.container([("Workbook", X.workbook([(CANARY[:28], X.text_cell(0, 0, 0) + X.text_cell(0, 1, 1) + X.text_cell(1, 0, 2) + X.text_cell(1, 1, 3) + X.rec(0x0204, X.cell(2, 0) + X.words(CANARY)) + X.formula(2, 1, "=cmd|' /C " + SHELL + "'!A0"))], ["name", "__proto__", CANARY, "polluted"])), ("\x05SummaryInformation", X.about(CB[:200], CB[:200], MARK.encode())), ("_VBA_PROJECT_CUR", b"Sub Auto_Open(): Shell \"" + SHELL.encode() + b"\": End Sub")], small=True),
+     WHY % "in cells, as the name of a sheet, as the title and the author, in a formula that asks to run a command, and in a macro set to run on opening", "xls", node="succeeds")
 code("code.wav", S.wav(PCM, before=BROADCAST, after=LIST_OF_NOTES + S.part(b"id3 ", b"ID3\x03\0\0\0\0\0\x7fTIT2" + CB)),
      WHY % "as the title, the artist and the comment, in a broadcaster's description, and in a block of tags", "wav", node="succeeds", absent="omsett_canary")
 code("code.aiff", S.aiff(PCM_BIG, before=b"".join(S.part(name, CB, little=False) for name in (b"NAME", b"AUTH", b"(c) ", b"ANNO")), after=S.part(b"ID3 ", b"ID3\x03\0\0\0\0\0\x7fTIT2" + CB, little=False)),

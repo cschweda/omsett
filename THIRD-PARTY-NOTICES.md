@@ -141,6 +141,13 @@ specified by the Drafter project and dedicated to the public domain (CC0 1.0).
 Omsett's own reader and writer for ZIP, TAR and TAR.GZ, using the compression built into every
 browser. Nothing is downloaded.
 
+### data (old workbooks)
+
+XLS, the Excel workbook from before 2007, is read by Omsett's own code, written from
+Microsoft's published descriptions of the container ([MS-CFB]) and of the workbook ([MS-XLS]).
+No library is used. The sample workbooks in `fixtures/xls` are written by
+`fixtures/_tools/xls.py`.
+
 ### icon
 
 Omsett's own reader for Mac icons (ICNS), using the compression built into every browser.

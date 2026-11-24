@@ -133,7 +133,7 @@ test('a converted file can be checked too, asked the same way, and a new convers
   await page.locator('#file-input').setInputFiles(fixture('json/sample.json'))
   // Data is not a kind a checker reads, so the file as added has no check; the workbook made from it has.
   await expect(page.getByTestId('check-toggle')).toHaveCount(0)
-  await page.getByRole('radio', { name: /XLSX/ }).click()
+  await page.locator('[role="radio"][data-format="xlsx"]').click()
   await page.getByTestId('convert').click()
   const result = page.locator('.result-card')
   await expect(result).toHaveCount(1, { timeout: 30_000 })

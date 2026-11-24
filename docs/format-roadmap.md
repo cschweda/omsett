@@ -110,7 +110,9 @@ When a format ships, update its row here, in the same change.
 | Whether the first row names the columns; the shape of the result (records, rows, columns) | Browser | the same | **Shipped** (0.20.0) |
 | Choosing which sheet; every sheet at once | Browser | the same | Done |
 | XLSM (read, macros ignored), ODS | Browser | the same approach: a ZIP of XML | Planned |
-| XLS, XLT (the older binary form) | Browser | SheetJS, or the desktop app | Planned |
+| XLS, XLT (the older binary form, from Excel 97 on) to XLSX and every data format; read only | Browser | `data` (Omsett's own reader, of the container and of the workbook) | **Done** (0.45.0) |
+| DOC and PPT (the older binary forms) to the newer formats; read only | Browser | Omsett's own readers, on the same container reader | Next: DOC, then PPT |
+| Workbooks from Excel 95 and earlier | Browser | — | Planned |
 | Numbers (read) | Browser | SheetJS | Planned |
 | OTS, FODS, ET | Desktop | LibreOffice | Planned |
 | Any spreadsheet to PDF | Desktop | LibreOffice | Planned |

@@ -167,7 +167,7 @@ function reshape(value: unknown, shape: unknown, named: boolean): unknown {
 }
 
 /** The formats here that are not text. */
-const BINARY = new Set(['xlsx'])
+const BINARY = new Set(['xlsx', 'xls'])
 
 function decode(bytes: Uint8Array): string {
   try {
