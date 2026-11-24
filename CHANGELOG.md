@@ -31,8 +31,10 @@ of contents. Only books without copy protection: a locked book is refused, with 
 - **A book's stylesheets are cleaned strictly.** CSS lets any letter be written as an escape
   and has several ways of naming an address, so patterns alone miss some. Escapes and comments
   are removed first, and an address is kept only if it names a picture that is in the book. A
-  review found the first version of this too trusting before release; it has a test of two
-  dozen ways of hiding an address.
+  sheet is cleaned until cleaning changes nothing, so a rule cannot be hidden in the two halves
+  of itself; any rule beginning with "@" that is not one of the few that only style is taken
+  out. Two reviews found earlier versions of this too trusting before release; it has a test
+  of three dozen ways of hiding an address.
 - **A book's details before converting**: its title and author, how many parts and pictures
   it has, and whether it is copy-protected.
 - 19 trap files for it (a trap file is one made on purpose to be broken, hostile or

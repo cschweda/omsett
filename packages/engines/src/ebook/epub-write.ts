@@ -75,6 +75,22 @@ function written(nodes: Hast[], depth = 0): string {
  * `inBook` says whether a path, relative to the stylesheet, is a picture in the book.
  */
 export function cleanStyle(css: string, inBook: (path: string) => boolean = () => false): string {
+  // Taking something out can leave its two sides to join into the very thing that was taken out
+  // ("@imp@import x;ort"). So the sheet is cleaned until cleaning changes nothing; a sheet that
+  // has not settled after a few rounds was written to do this, and none of it is kept.
+  let sheet = css
+  for (let round = 0; round < 6; round++) {
+    const cleaned = cleanedOnce(sheet, inBook)
+    if (cleaned === sheet) return cleaned
+    sheet = cleaned
+  }
+  return ''
+}
+
+/** The rules that begin with "@" which only style a page. Every other one is taken out. */
+const AT_RULES = 'media|page|supports|keyframes|-webkit-keyframes'
+
+function cleanedOnce(css: string, inBook: (path: string) => boolean): string {
   const plain = css
     .replace(NOT_XML, '')
     .replace(/\/\*[\s\S]*?\*\//g, ' ')
@@ -87,6 +103,8 @@ export function cleanStyle(css: string, inBook: (path: string) => boolean = () =
       .replace(/@import\b[^;{}]*;?/gi, '')
       .replace(/@font-face\b[^{}]*\{[^{}]*\}?/gi, '')
       .replace(/@(?:charset|namespace)\b[^;{}]*;?/gi, '')
+      // Any other rule that begins with "@" and is not one of the few that only style: it loses its "@".
+      .replace(new RegExp(`@(?!(?:${AT_RULES})(?![\\w-]))`, 'gi'), '')
       // url( … ): kept where it names a picture in the book, and nowhere else.
       .replace(/\burl\s*\(([^()]*)\)?/gi, (_, inside: string | undefined) => {
         const path = (inside ?? '').trim().replace(/^(['"])([\s\S]*)\1$/, '$2').trim()
@@ -96,8 +114,8 @@ export function cleanStyle(css: string, inBook: (path: string) => boolean = () =
       .replace(/(?:-webkit-|-moz-)?(?:image-set|cross-fade|element|image|src|expression|paint|attr)\s*\(/gi, 'x-removed(')
       .replace(/\b(?:behavior|-moz-binding)\s*:/gi, 'x-removed:')
       .replace(/(?:java|vb)script\s*:/gi, 'x-removed:')
-      // And whatever is left that reads as an address on the web is left unable to be one.
-      .replace(/:\/\//g, ':')
+      // And nothing is left that reads as an address on another site: no "//", with or without a scheme before it.
+      .replace(/\/{2,}/g, '/')
   )
 }
 

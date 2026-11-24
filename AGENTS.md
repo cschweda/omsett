@@ -200,8 +200,9 @@ build by `apps/web/scripts/write-headers.ts`.
 - **A stylesheet is cleaned by allowing, not by forbidding** (`cleanStyle`). CSS lets any letter
   be an escape and has many ways to name an address, so a list of bad patterns always misses
   one. Escapes and comments are removed first; `url()` is kept only for a picture in the book;
-  every other function that takes an address is renamed. Add a new case to its test, and never
-  a new pattern that keeps something.
+  every other function that takes an address is renamed; and it is cleaned until cleaning
+  changes nothing, because taking a thing out can join its two sides into the thing taken out.
+  Add a new case to its test, and never a new pattern that keeps something.
 - **Copy protection is never worked round.** A locked book is refused in words that say so.
 - **Books lent for testing live in `docs/ebooks`, which git ignores.** They are other people's
   work: never commit one, never quote from one, and print only counts when testing with them.

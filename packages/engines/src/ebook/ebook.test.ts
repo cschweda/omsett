@@ -162,7 +162,7 @@ describe('a Kindle book as an EPUB', () => {
 describe('a stylesheet, cleaned', () => {
   const inBook = (path: string) => path === '../images/image0001.png'
   /** Whether anything is left that a reader would take for an address, or for something to run. */
-  const fetches = (css: string) => /:\/\/|url\s*\(\s*["']?\/\/|@import|@font-face|\bimage\s*\(|cross-fade\s*\(|\burl\s*\((?!"\.\.\/images\/image0001\.png"\))|image-set\s*\(|\bsrc\s*\(|expression\s*\(|javascript:/i.test(css)
+  const fetches = (css: string) => /\/\/|@(?!media|page|supports|keyframes|-webkit-keyframes)|url\s*\(\s*["']?\/\/|@import|@font-face|\bimage\s*\(|cross-fade\s*\(|\burl\s*\((?!"\.\.\/images\/image0001\.png"\))|image-set\s*\(|\bsrc\s*\(|expression\s*\(|javascript:/i.test(css)
 
   it('keeps what styles a page, and an address only for a picture that is in the book', () => {
     const css = 'h1 { font-size: 1.6em; color: #333 }\n.note { font-style: italic }\ndiv.cover { background: url("../images/image0001.png") no-repeat }\n@media (max-width: 30em) { p { margin: 0 } }'
@@ -199,13 +199,37 @@ describe('a stylesheet, cleaned', () => {
       'a { color: red } /* a { background: url(http://canary.invalid/a.png) }',
       // An address that is never closed.
       'a { background: url(http://canary.invalid/a.png',
+      // A rule hidden in the two halves of itself, which taking out the middle would put together.
+      '@imp@import x;ort "//canary.invalid/a.css";',
+      '@im@charset "x";port url(//canary.invalid/a.css);',
+      '@font-@import x;face { font-family: x; src: url(//canary.invalid/f.woff) }',
+      '@imp@imp@import x;ort y;ort "//canary.invalid/a.css";',
+      'a { background: ur@import x;l(//canary.invalid/a.png) }',
+      'a { background: u@charset "x";rl(http:/@import x;/canary.invalid/a.png) }',
+      // An address with no scheme, which is still an address on another site.
+      '@import "//canary.invalid/a.css";',
+      "@import '//canary.invalid/a.css' print;",
+      'a { background: url(//canary.invalid/a.png) }',
+      'a { background: image-set("//canary.invalid/a.png" 1x) }',
+      // A rule Omsett has no name for.
+      '@unknown-rule "//canary.invalid/a.css";',
+      '@document url(http://canary.invalid/) { a { color: red } }',
       // Things that ran, in browsers that are gone, and are still not written.
       'a { width: expression(alert(1)); behavior: url(x.htc); -moz-binding: url(x.xml#y) }',
       'a { background: url("javascript:alert(1)") }',
     ]) {
       const cleaned = cleanStyle(css, inBook)
       expect(fetches(cleaned), `${css}\n  → ${cleaned}`).toBe(false)
+      // Cleaning what has been cleaned changes nothing: there is no second sheet inside the first.
+      expect(cleanStyle(cleaned, inBook), css).toBe(cleaned)
     }
+  })
+
+  it('keeps none of a sheet that will not settle, and keeps the rules that only style', () => {
+    const nested = `${'@imp'.repeat(40)}@import x;${'ort y;'.repeat(40)} "//canary.invalid/a.css";`
+    expect(fetches(cleanStyle(nested, inBook))).toBe(false)
+    const styled = '@media print { p { margin: 0 } }\n@page { margin: 2cm }\n@supports (display: grid) { div { display: grid } }\n@keyframes fade { from { opacity: 0 } to { opacity: 1 } }'
+    expect(cleanStyle(styled, inBook)).toBe(styled)
   })
 
   it('is quick on a stylesheet written to make it slow', () => {
