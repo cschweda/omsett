@@ -140,3 +140,81 @@ test('phone width: the comparison fits', async ({ page }) => {
   await convert(page)
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(375)
 })
+
+test('the result is brought into view when a conversion is done, and stays put while the quality is moved', async ({ page }) => {
+  await open(page)
+  await page.locator('#file-input').setInputFiles(ALPHA)
+  await page.getByRole('radio', { name: /WebP/ }).click()
+  // The list of formats is longer than the window, so the result starts out of sight below it.
+  expect(await page.evaluate(() => document.documentElement.scrollHeight > window.innerHeight * 1.5)).toBe(true)
+  await page.getByTestId('convert').click()
+  await expect(page.locator('[data-testid="compare"][data-ready="true"]')).toBeVisible({ timeout: 15_000 })
+  await expect(page.locator('#results-heading')).toBeInViewport()
+  await expect(page.getByTestId('compare')).toBeInViewport()
+  await expect(page.getByTestId('compare-title')).toHaveText('Before and after')
+  // From anywhere in the list of formats, the bar at the foot of the window goes to the result.
+  await page.locator('[role="radio"][data-format="webp"]').scrollIntoViewIfNeeded()
+  await page.getByTestId('to-result').click()
+  await expect(page.locator('#results-heading')).toBeInViewport()
+  // Moving the quality beside the comparison converts again; the page does not jump for that.
+  // Wait for the glide to finish: the same place twice running.
+  let before = -1
+  await expect.poll(async () => {
+    const now = await page.evaluate(() => window.scrollY)
+    const still = now === before
+    before = now
+    return still
+  }, { intervals: [300], timeout: 10_000 }).toBe(true)
+  const size = await outputBytes(page)
+  await page.getByTestId('compare-quality').fill('30')
+  await expect.poll(() => outputBytes(page), { timeout: 15_000 }).toBeLessThan(size)
+  // A browser may nudge the page to show the control being used; it does not go back to the heading.
+  expect(Math.abs((await page.evaluate(() => window.scrollY)) - before)).toBeLessThan(60)
+  await expect(page.getByTestId('compare')).toBeInViewport()
+})
+
+test('the comparison is there before converting: a preview of what the result will be', async ({ page, browserName }) => {
+  await open(page)
+  await page.locator('#file-input').setInputFiles(ALPHA)
+  await expect(page.getByTestId('preview')).toHaveCount(0)
+  await page.locator('[role="radio"][data-format="jpeg"]').click()
+  // Chromium and Firefox write a JPEG with what the browser has. Where a converter would
+  // have to be fetched first, the page asks, and fetches nothing until told to.
+  if (browserName === 'webkit' && (await page.getByTestId('preview-fetch').count())) await page.getByTestId('preview-fetch').click()
+  const preview = page.locator('[data-testid="preview-compare"][data-ready="true"]')
+  await expect(preview).toBeVisible({ timeout: 30_000 })
+  await expect(preview.getByTestId('compare-title')).toHaveText('Preview: before and after')
+  await expect(preview).toContainText('Nothing is saved until you press Convert.')
+  // Nothing has been converted as far as the page is concerned: no result, nothing to download.
+  await expect(page.getByTestId('download')).toHaveCount(0)
+  await expect(page.locator('#results-heading')).toHaveCount(0)
+  // The preview follows the quality, and says how large the result would be.
+  const label = () => preview.locator('.tag.right').textContent()
+  const before = await label()
+  await preview.getByTestId('compare-quality').fill('10')
+  await expect.poll(label, { timeout: 15_000 }).not.toBe(before)
+  await expect(page.getByTestId('quality')).toHaveValue('10')
+  // Converting gives the real result, with the same setting, and the preview makes way for it.
+  await page.getByTestId('convert').click()
+  await expect(page.locator('[data-testid="compare"][data-ready="true"]')).toBeVisible({ timeout: 15_000 })
+  await expect(page.getByTestId('preview')).toHaveCount(0)
+  await expect(page.getByTestId('compare-quality')).toHaveValue('10')
+})
+
+test('a preview never fetches a converter unasked', async ({ page }) => {
+  const fetched: string[] = []
+  page.on('request', (request) => {
+    if (/\.wasm(?:$|\?)/.test(request.url())) fetched.push(request.url())
+  })
+  await open(page)
+  await page.locator('#file-input').setInputFiles(ALPHA)
+  // AVIF is written by a converter of several megabytes, which nobody has asked for yet.
+  await page.locator('[role="radio"][data-format="avif"]').click()
+  await expect(page.getByTestId('preview')).toHaveAttribute('data-state', 'needs')
+  await expect(page.getByTestId('preview')).toContainText('means fetching its converter first')
+  await page.waitForTimeout(800)
+  expect(fetched).toEqual([])
+  await page.getByTestId('preview-fetch').click()
+  await expect(page.locator('[data-testid="preview-compare"][data-ready="true"]')).toBeVisible({ timeout: 60_000 })
+  expect(fetched.length).toBeGreaterThan(0)
+})

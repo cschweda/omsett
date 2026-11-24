@@ -7,6 +7,41 @@ The paragraph that opens a version is its teaser: the home page shows its first 
 in the "What's new" banner, so keep it to two or three sentences on what a visitor will notice.
 A line beginning "Released" gives the date.
 
+## 0.44.0
+
+Released 24 November 2026.
+
+Choose a picture and a format, and the before-and-after comparison now appears straight away,
+before anything is converted, so the format and the quality can be chosen by looking. After
+converting, the page goes to the result by itself.
+
+### Added
+
+- **A preview before converting.** With one picture and a picture format chosen, the original
+  and what the result will be are shown side by side, with the divider to drag, the zoom, the
+  size the file would be, and the quality to move. Nothing is saved until Convert is pressed.
+- A preview never fetches a converter by itself. Where a format needs one that has not been
+  downloaded, the page says how large it is and offers a button; nothing is fetched until it
+  is pressed.
+- **A "See the result" button** in the bar at the foot of the window, once there is a result.
+
+### Changed
+
+- **The page goes to the result when a conversion is done.** The list of formats had grown
+  longer than the window, so the result, and the comparison in it, appeared out of sight
+  below. Moving the quality beside a result does not move the page.
+- **The comparison has a name and a rule above it**, "Before and after", and says in a
+  sentence what it is for.
+
+- The README records an automated accessibility check of every page (axe-core, WCAG AA):
+  one failure against WCAG 2.1, on the Technical details page at phone width, and one more
+  against WCAG 2.2, in the footer. Neither is fixed yet.
+
+### Known
+
+- The preview is for one picture at a time, of up to 40 megapixels. With several files added,
+  there is none.
+
 ## 0.43.0
 
 Released 24 November 2026.
