@@ -60,13 +60,13 @@ onMounted(async () => {
   window.addEventListener('paste', onPaste)
   // Name each sample by what it really is, from its bytes and the registry.
   await Promise.all(
-    samples.value.map(async (sample, index) => {
+    samples.value.map(async (sample) => {
       try {
         const found = await detect(await sampleBlob(sample.url), registry.formats)
         const format = found.kind === 'known' ? formatForDetected(registry, found.ext) : undefined
         if (!format) return
         sample.id = format.id
-        sample.label = index === 0 ? `Try a sample ${format.name}` : `Try a ${format.name}`
+        sample.label = `Try a sample ${format.name}`
       } catch {
         // The first keeps its plain label; the others are not offered.
       }
