@@ -58,7 +58,7 @@ const conversions = computed(() =>
     <main>
       <StepSection title="This device" heading-id="status-device">
         <p class="lead-text" data-testid="readiness">{{ readiness.label.value }}.</p>
-        <div class="table-wrap">
+        <div class="table-wrap" tabindex="0" role="region" aria-labelledby="status-device">
           <table class="table">
             <thead>
               <tr><th scope="col">Check</th><th scope="col">Result</th><th scope="col">What it means</th></tr>
@@ -85,7 +85,7 @@ const conversions = computed(() =>
       </StepSection>
 
       <StepSection title="Conversions" heading-id="status-conversions">
-        <div class="table-wrap">
+        <div class="table-wrap" tabindex="0" role="region" aria-labelledby="status-conversions">
           <table class="table">
             <thead>
               <tr><th scope="col">From</th><th scope="col">To</th><th scope="col">In this browser</th></tr>
@@ -137,7 +137,7 @@ const conversions = computed(() =>
       </StepSection>
 
       <StepSection title="This build" heading-id="status-build">
-        <div class="table-wrap">
+        <div class="table-wrap" tabindex="0" role="region" aria-labelledby="status-build">
           <table class="table">
             <tbody>
               <tr><th scope="row">Version</th><td class="figures">{{ facts.version }}</td></tr>

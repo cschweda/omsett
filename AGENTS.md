@@ -60,7 +60,9 @@ These are invariants. A change that breaks one is wrong even if it works.
    screen reader testing, and no changes made for accessibility's sake. What already exists (the
    real file input, the radio-group picker, the live region) stays as it is; do not remove it and
    do not extend it. The axe and keyboard-order tests in `e2e/gate.spec.ts` are parked behind
-   `ACCESSIBILITY_DEFERRED`.
+   `ACCESSIBILITY_DEFERRED`. One exception, asked for on 24 November 2026: an automated check
+   of every page, recorded in the README, and its two findings fixed. A table wrapped in
+   `.table-wrap` is given `tabindex="0"`, `role="region"` and a label, so a keyboard can scroll it.
 9. **The converter is one screen.** `pages/index.vue` is the whole tool: no steps across pages,
    no modals on the happy path. The information pages (About, Trust, Technical details, What's new, Security, Settings, Trap files,
    Status) sit beside it and never stand between a person and a conversion.

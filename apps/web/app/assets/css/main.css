@@ -208,8 +208,15 @@ body {
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
+/* A table wider than its column scrolls sideways inside this, which is a named region that a
+   keyboard can reach and scroll (the pages give it tabindex and a label). */
 .table-wrap {
+  max-width: 100%;
   overflow-x: auto;
+}
+.table-wrap:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 /* A fact as a figure: the number large, what it counts beneath. */

@@ -92,20 +92,20 @@ That is a page on the site: [omsett.com/trust](https://omsett.com/trust). It say
 
 ## Accessibility of the site itself
 
-Every page was checked on 24 November 2026 with [axecap](https://github.com/ICJIA/axecap-mcp) 0.3.3 (axe-core 4.14.1) at WCAG level AA, at desktop and at phone width, in the dark theme, against version 0.44.0 as built. The pages: the converter, About, Trust, Technical details, What's new, Security, Settings, Trap files and Status.
+Every page was checked on 24 November 2026 with [axecap](https://github.com/ICJIA/axecap-mcp) 0.3.3 (axe-core 4.14.1) at WCAG level AA, at desktop and at phone width, in the dark theme: first version 0.44.0 as built, which had two faults, and then 0.44.1, which fixes them and has none. The pages: the converter, About, Trust, Technical details, What's new, Security, Settings, Trap files and Status.
 
 | Finding | Rule | Where | WCAG | Status |
 | --- | --- | --- | --- | --- |
-| A table that scrolls sideways cannot be reached with the keyboard | `scrollable-region-focusable` | Technical details, the formats table, at phone width only | 2.1.1 Keyboard (level A, in WCAG 2.1) | Open |
-| Three links are smaller than 24 by 24 pixels: About, Trust and Trap files, in the footer | `target-size` | Every page, at both widths | 2.5.8 Target Size (level AA, new in WCAG 2.2; not part of 2.1) | Open |
+| A table that scrolls sideways cannot be reached with the keyboard | `scrollable-region-focusable` | Technical details, the formats table, at phone width only | 2.1.1 Keyboard (level A, in WCAG 2.1) | Fixed in 0.44.1: every such table is a named region the keyboard can reach and scroll |
+| Three links are smaller than 24 by 24 pixels: About, Trust and Trap files, in the footer | `target-size` | Every page, at both widths | 2.5.8 Target Size (level AA, new in WCAG 2.2; not part of 2.1) | Fixed in 0.44.1 |
 
-Against WCAG 2.1 A and AA, that is one failure, on one page at one width; every other page passed every automated rule. Against WCAG 2.2 AA there is one more, in the footer of every page.
+Against WCAG 2.1 A and AA, that was one failure, on one page at one width; against WCAG 2.2 AA, one more, in the footer of every page. Checked again after the fixes, all nine pages pass every automated rule at both widths.
 
 What this does not cover, so that the table is not read as more than it is:
 
 - **An automated check finds a part of what can be wrong**, usually put at a third to a half. Nothing here was tested with a screen reader or by keyboard alone.
 - **Pages were checked as they load.** The converter with a file added, a format chosen, a preview or a result on screen was not checked this way, nor was the light theme.
-- The full audit of the interface, with NVDA and VoiceOver, is the last phase of the roadmap. These two findings are recorded here and not yet fixed.
+- The full audit of the interface, with NVDA and VoiceOver, is the last phase of the roadmap.
 
 ## Where it is going
 
