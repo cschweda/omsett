@@ -117,7 +117,7 @@ export function useConversionQueue() {
    * from the capability's default options, so no format is named here; a conversion that
    * offers none leaves this empty.
    */
-  const OFFERED = ['language', 'headerRow', 'shape', 'sheet']
+  const OFFERED = ['language', 'headerRow', 'shape', 'sheet', 'soundQuality']
   const choices = ref<Record<string, unknown>>({})
   const defaults = computed(() => {
     const options = selected.value?.route?.edges.at(-1)?.candidates[0]?.defaultOptions ?? {}

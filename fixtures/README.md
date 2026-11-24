@@ -88,7 +88,7 @@ Sound files that exercise one specific path.
 
 ## Traps
 
-`_traps/` holds 591 files (listed on the site's Trap files page) that are broken, hostile, or lying, each in one deliberate way.
+`_traps/` holds 604 files (listed on the site's Trap files page) that are broken, hostile, or lying, each in one deliberate way.
 `_traps/manifest.json` says what each is and what must happen to it, and both test suites read
 it: `traps.test.ts` runs every trap through identification, the size guard, and libvips in Node;
 `e2e/traps.spec.ts` drops every trap into the app in Chromium, Firefox, and WebKit.
@@ -156,6 +156,6 @@ the format's structure itself, or only libvips reads it.
   DICOM, MIFF, MNG, JPEG XR, XPM, DDS, Photo CD, PSB, Live Photo. These need real files from
   real devices and applications.
 - **Only images, and only five of them convert so far.** PNG, JPEG, WebP, GIF, and TIFF. The other samples wait for their formats.
-- **Sound is four formats so far.** WAV, AIFF and AU, written by `_tools/sound.py`, and FLAC,
-  packed from those by the reference `flac` program and by ffmpeg. Samples of MP3 and of video
-  belong with the phases that add those formats.
+- **Sound is five formats so far.** WAV, AIFF and AU, written by `_tools/sound.py`; FLAC,
+  packed from those by the reference `flac` program and by ffmpeg; and MP3, packed by ffmpeg.
+  Samples of video belong with the phase that adds it.

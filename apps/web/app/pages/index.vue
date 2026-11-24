@@ -204,6 +204,7 @@ onBeforeUnmount(() => {
           v-model:named="choices.headerRow"
           v-model:shape="choices.shape as string | undefined"
         />
+        <SoundQuality v-if="typeof choices.soundQuality === 'string'" v-model="choices.soundQuality" />
         <SheetControl
           v-if="typeof choices.sheet === 'string'"
           v-model="choices.sheet"

@@ -8,7 +8,7 @@ import { createArchiveEngine } from './archive'
 import { createIconEngine } from './icon'
 import { createScriptEngine } from './script'
 import { createPdfEngine } from './pdf'
-import { createAudioEngine } from './audio'
+import { createAudioEngine, createAudioMp3Engine, type Mp3Decoder, type Mp3Encoder } from './audio'
 import { createHeifEngine, type HeifModule } from './heif'
 import { engineInfo, resvgFonts, vipsModules } from './info'
 import { createResvgEngine, type ResvgHost } from './resvg'
@@ -68,6 +68,13 @@ export function createNodeEngines(): Record<string, Engine> {
   engines.icon = createIconEngine()
   engines.font = createFontEngine()
   engines.audio = createAudioEngine()
+  engines['audio-mp3'] = createAudioMp3Engine({
+    decoder: async () => new (await import('mpg123-decoder')).MPEGDecoder() as unknown as Mp3Decoder,
+    async encoder() {
+      const { createEncoder } = await import('wasm-media-encoders')
+      return (await createEncoder('audio/mpeg', await readFile(require.resolve('wasm-media-encoders/wasm/mp3')))) as unknown as Mp3Encoder
+    },
+  })
   engines['font-woff2'] = createFontWoff2Engine()
   return engines
 }
