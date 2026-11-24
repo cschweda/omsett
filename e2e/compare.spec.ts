@@ -140,3 +140,30 @@ test('phone width: the comparison fits', async ({ page }) => {
   await convert(page)
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(375)
 })
+
+test('the result is brought into view when a conversion is done, and stays put while the quality is moved', async ({ page }) => {
+  await open(page)
+  await page.locator('#file-input').setInputFiles(ALPHA)
+  await page.getByRole('radio', { name: /WebP/ }).click()
+  // The list of formats is longer than the window, so the result starts out of sight below it.
+  expect(await page.evaluate(() => document.documentElement.scrollHeight > window.innerHeight * 1.5)).toBe(true)
+  await page.getByTestId('convert').click()
+  await expect(page.locator('[data-testid="compare"][data-ready="true"]')).toBeVisible({ timeout: 15_000 })
+  await expect(page.locator('#results-heading')).toBeInViewport()
+  await expect(page.getByTestId('compare')).toBeInViewport()
+  // Moving the quality beside the comparison converts again; the page does not jump for that.
+  // Wait for the glide to finish: the same place twice running.
+  let before = -1
+  await expect.poll(async () => {
+    const now = await page.evaluate(() => window.scrollY)
+    const still = now === before
+    before = now
+    return still
+  }, { intervals: [300], timeout: 10_000 }).toBe(true)
+  const size = await outputBytes(page)
+  await page.getByTestId('compare-quality').fill('30')
+  await expect.poll(() => outputBytes(page), { timeout: 15_000 }).toBeLessThan(size)
+  // A browser may nudge the page to show the control being used; it does not go back to the heading.
+  expect(Math.abs((await page.evaluate(() => window.scrollY)) - before)).toBeLessThan(60)
+  await expect(page.getByTestId('compare')).toBeInViewport()
+})

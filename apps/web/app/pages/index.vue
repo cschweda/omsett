@@ -34,6 +34,14 @@ useHead({
   title: computed(() => (queue.converting.value ? `${percent.value}% — Omsett` : 'Omsett')),
 })
 
+// The list of formats is long, and the result comes after it. When a conversion a person asked
+// for is done, the result is brought to the top of the window, where the comparison can be seen.
+watch(queue.arrived, async () => {
+  await nextTick()
+  const calm = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  document.getElementById('results-heading')?.scrollIntoView({ block: 'start', behavior: calm ? 'auto' : 'smooth' })
+})
+
 function onKeydown(event: KeyboardEvent) {
   if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) {
     event.preventDefault()

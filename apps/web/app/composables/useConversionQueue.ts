@@ -56,6 +56,8 @@ export function useConversionQueue() {
   const results = ref<QueueResult[]>([])
   const targetId = ref<string | null>(null)
   const converting = ref(false)
+  /** Counts the conversions a person asked for that produced something, so the page can bring the result into view. */
+  const arrived = ref(0)
   /** The user's quality setting, 1–100. Null when the selected target has no such setting. */
   const quality = ref<number | null>(null)
   /** Said to the user when something was left out: too many files, for one. */
@@ -397,6 +399,8 @@ export function useConversionQueue() {
       .map((result) => replacement.get(result.id) ?? result)
     results.value = [...kept, ...fresh.filter((result) => !kept.some((other) => other.id === result.id))]
     converting.value = false
+    // Asked for by pressing Convert, not by moving a setting beside a result already in view.
+    if (!quiet && fresh.length > 0) arrived.value++
     const failed = queue.length - done
     const count = `${done} ${done === 1 ? 'file' : 'files'} converted.`
     if (!quiet || failed > 0) {
@@ -444,6 +448,7 @@ export function useConversionQueue() {
     targetId,
     selected,
     converting,
+    arrived,
     quality,
     choices,
     defaultQuality,
