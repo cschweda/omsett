@@ -87,6 +87,10 @@ describe('detect', () => {
       ['qoi/sample.qoi', { width: 320, height: 200 }],
       ['psd/sample.psd', { width: 320, height: 200 }],
       ['jp2/sample.jp2', { width: 320, height: 200 }],
+      ['psb/sample.psb', { width: 320, height: 200 }],
+      ['cur/sample.cur', { width: 64, height: 64 }],
+      ['dds/sample.dds', { width: 320, height: 200 }],
+      ['fits/sample.fits', { width: 320, height: 200 }],
     ] as const) {
       const bytes = await readFile(new URL(`../../../fixtures/${file}`, import.meta.url))
       expect(await detect(new Blob([bytes]), formats), file).toMatchObject({ kind: 'known', dimensions: size })

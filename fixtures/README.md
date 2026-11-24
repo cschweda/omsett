@@ -48,6 +48,10 @@ flattened onto white because the format, or the tool that wrote it, has no trans
 | `psd` | Photoshop | yes | sips | yes |
 | `ico` | Windows icon (256 × 256) | no | sips | yes |
 | `icns` | Mac icon (256 × 256) | no | sips | yes |
+| `cur` | Windows cursor (64 × 64) | yes | ImageMagick | yes |
+| `psb` | Photoshop, large document | yes | ImageMagick | as PSD |
+| `dds` | DirectDraw surface | yes | ImageMagick | **no** |
+| `fits` | FITS (three grey planes) | no | ImageMagick | **no** |
 | `tga` | Targa | yes | ffmpeg | **no** |
 | `qoi` | QOI | yes | ffmpeg | **no** |
 | `sgi` | SGI | yes | ffmpeg | **no** |
@@ -82,7 +86,7 @@ Sound files that exercise one specific path.
 
 ## Traps
 
-`_traps/` holds 463 files (listed on the site's Trap files page) that are broken, hostile, or lying, each in one deliberate way.
+`_traps/` holds 489 files (listed on the site's Trap files page) that are broken, hostile, or lying, each in one deliberate way.
 `_traps/manifest.json` says what each is and what must happen to it, and both test suites read
 it: `traps.test.ts` runs every trap through identification, the size guard, and libvips in Node;
 `e2e/traps.spec.ts` drops every trap into the app in Chromium, Firefox, and WebKit.

@@ -7,6 +7,30 @@ The paragraph that opens a version is its teaser: the home page shows its first 
 in the "What's new" banner, so keep it to two or three sentences on what a visitor will notice.
 A line beginning "Released" gives the date.
 
+## 0.34.0
+
+Released 24 November 2026.
+
+Four more kinds of picture can be converted: Windows mouse pointers (CUR), the DDS pictures
+games use, the FITS pictures astronomers use, and Photoshop's large-document format (PSB). A
+Photoshop file that stops partway is now refused instead of coming out half blank.
+
+### Added
+
+- **CUR, DDS, FITS and PSB** can be read and converted to every picture format Omsett writes.
+  Each is recognised by what is in the file. From a cursor or a DDS file the largest picture is
+  taken; from a FITS file the first; from a PSB the finished picture, layers merged.
+- Twenty-six trap files for them: each cut short, each stating an impossible size, a cursor
+  with an icon's name, a FITS header that gives its size twice, one that never ends, one that
+  holds a thousand pictures, plain text that opens like a FITS file, and code planted wherever
+  each format has room for it.
+
+### Fixed
+
+- A Photoshop file (PSD or PSB) whose finished picture stops partway was, in one case,
+  converted: the half that was there, and blank below it. The lengths a Photoshop file gives
+  for its own parts are now added up first, and a file they do not fit inside is refused.
+
 ## 0.33.0
 
 Released 24 November 2026.

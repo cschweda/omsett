@@ -1,7 +1,8 @@
+import { layoutProblem } from '@omsett/detect'
 import { dimensionProblem } from '@omsett/registry'
 import { magickInfo } from '../info'
 import type { ConvertInput, ConvertOutput, Engine } from '../types'
-import { outputName, throwIfAborted } from '../util'
+import { outputName, Refusal, throwIfAborted } from '../util'
 
 /** The slice of the magick-wasm API this engine uses. */
 export interface MagickImage {
@@ -74,6 +75,11 @@ export function createMagickEngine(host: MagickHost): Engine {
       onProgress(0.2)
       const bytes = new Uint8Array(await blob.arrayBuffer())
       throwIfAborted(signal)
+      // ImageMagick reads some damaged files kindly: of a Photoshop file that stops halfway it
+      // returns the half it found. Where a file's own lengths do not fit inside it, it is refused
+      // before ImageMagick sees it.
+      const damage = layoutProblem(from, bytes)
+      if (damage) throw new Refusal(`This file is damaged: ${damage}`)
 
       let out: Uint8Array
       try {

@@ -40,15 +40,15 @@ When a format ships, update its row here, in the same change.
 | BMP, QOI, TGA, Netpbm (PPM, PGM, PBM, PAM) | yes | yes | Browser | ImageMagick (WASM), the `magick` engine | Done |
 | ICO | yes | no | Browser | ImageMagick (WASM) | Done (read, the largest size in the file). Writing waits for a "favicon" preset that resizes |
 | PCX, SGI, Sun Raster | yes | no | Browser | ImageMagick (WASM) | Done (read). No demand for writing them |
-| CUR, DDS | yes | yes | Browser | ImageMagick (WASM) | Planned. Each needs a sample, detection by content and trap files |
+| CUR, DDS | yes | no | Browser | ImageMagick (WASM) | **Reading done** (0.34.0): the largest picture in the file. Writing is planned |
 | ICNS | yes | yes | Browser | to be found | Planned. This ImageMagick build cannot read it |
 | JPEG 2000 | yes | no | Browser | ImageMagick (WASM) | Done (read). Writing is planned |
 | APNG (first picture) | yes | no | Browser | libvips (WASM) | Done |
 | APNG with its animation, MNG | yes | yes | Browser | ImageMagick (WASM) | Planned |
 | OpenEXR, Radiance HDR | yes | no | Browser | ImageMagick (WASM) | Done (read). Brightness beyond what a screen shows is cut off, and the picker says so |
-| FITS | yes | no | Browser | ImageMagick (WASM) | Planned |
+| FITS | yes | no | Browser | ImageMagick (WASM) | **Done** (0.34.0): the first picture in the file |
 | PSD | yes | no | Browser | ImageMagick (WASM) | Done (read, flattened). Layers are not kept |
-| PSB | yes | no | Browser | ImageMagick (WASM) | Planned |
+| PSB | yes | no | Browser | ImageMagick (WASM) | **Done** (0.34.0): the finished picture, layers merged |
 | Camera RAW (CR2, CR3, NEF, ARW, DNG, …) | yes | no | Browser | LibRaw (WASM) | Planned. Large files may be sent to the desktop app |
 | DICOM | yes | no | Browser | ImageMagick or dicom.ts | Planned |
 | iPhone Live Photo (LIVP) | yes | no | Browser | unzip to HEIC + MOV | Planned |
@@ -296,7 +296,7 @@ with [audit.icjia.app](https://audit.icjia.app).
 
 ## Suggested order
 
-1. Images are largely done: 23 formats. Left: CUR, DDS, ICNS, FITS, PSB, camera RAW, DICOM, carrying animation across, and writing ICO and JPEG 2000.
+1. Images are largely done: 28 formats. Left: ICNS, camera RAW, DICOM, carrying animation across, and writing ICO, CUR, DDS and JPEG 2000.
 2. Data and subtitles are done: seven data formats, nine subtitle formats. The side-by-side view for text formats is done too, and Markdown ↔ HTML. Fonts are done as well, vCard and iCalendar, and the first archives. XLSX, DOCX, PPTX, the screenwriting formats and reading PDF are done. Details of a file before converting are done too. Next: the remaining image formats; then audio. All three are ZIPs of XML, and Omsett reads both itself. Then the screenwriting formats, Fountain, Final Draft (FDX) and Drafter. Small JavaScript libraries, no large downloads.
 3. Archives, then audio.
 4. Documents and e-books through Pandoc; then the PDF tools. A converted document must not score lower for accessibility than its original (see "Accessibility of converted documents").

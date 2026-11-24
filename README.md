@@ -29,11 +29,11 @@ Omsett is a free, open-source file converter. Every conversion runs in your brow
 <!-- facts:start -->
 <!-- Generated from the registry by `pnpm readme:facts`. Do not edit by hand. -->
 
-**57 formats, 253 conversions**, every one of them run in your browser, on your device, and tested against 463 files made on purpose to be broken, hostile or dishonest. How many tests there are today is on the site's [Trust](https://omsett.com/trust) page, counted at every build.
+**61 formats, 257 conversions**, every one of them run in your browser, on your device, and tested against 489 files made on purpose to be broken, hostile or dishonest. How many tests there are today is on the site's [Trust](https://omsett.com/trust) page, counted at every build.
 
 | Kind | Converts to and from | Reads only |
 | --- | --- | --- |
-| Pictures | WebP, JPEG, PNG, AVIF, GIF, TIFF, JPEG XL, BMP, TGA, QOI, Netpbm | HEIC, Animated PNG, PSD, ICO, JPEG 2000, OpenEXR, Radiance HDR, PCX, SGI, Sun Raster |
+| Pictures | WebP, JPEG, PNG, AVIF, GIF, TIFF, JPEG XL, BMP, TGA, QOI, Netpbm | HEIC, Animated PNG, PSD, PSB, ICO, CUR, JPEG 2000, OpenEXR, Radiance HDR, DDS, FITS, PCX, SGI, Sun Raster |
 | Drawings | — | SVG, SVGZ |
 | Documents | DOCX | — |
 | Presentations | — | PPTX |

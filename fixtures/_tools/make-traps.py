@@ -445,6 +445,7 @@ for folder, ext, label in (
         ext,
         node="fails",
         group=G,
+        note="This file is damaged: a part of the file is longer than the file" if ext == "psd" else None,
     )
 for folder, name, ext, label in (
     ("tga", "sample.tga", "tga", "TGA"),
@@ -3790,11 +3791,11 @@ trap("drawing-in-a-drawing-25-deep.svg", _inner,
      "svg", group="damage", node="fails", note=COSTLY)
 
 
-def ico_of(pictures, shared=False):
+def ico_of(pictures, shared=False, kind=1, size=(16, 16)):
     at = 6 + 16 * len(pictures)
-    out = struct.pack("<HHH", 0, 1, len(pictures))
+    out = struct.pack("<HHH", 0, kind, len(pictures))
     for data in pictures:
-        out += bytes([16, 16, 0, 0, 1, 0, 32, 0]) + struct.pack("<II", len(data), at)
+        out += bytes([size[0], size[1], 0, 0, 1, 0, 32, 0]) + struct.pack("<II", len(data), at)
         if not shared:
             at += len(data)
     return out + (pictures[0] if shared else b"".join(pictures))
@@ -3868,6 +3869,120 @@ trap("frames-out-of-order.png", SIGNATURE + ihdr(SMALL_W, SMALL_H) + chunk(b"acT
      "apng", group="unusual", node="succeeds")
 trap("code.apng", apng_of(2, text=chunk(b"tEXt", b"Comment\x00" + CB) + chunk(b"iTXt", b"XML:com.adobe.xmp\x00\x00\x00\x00\x00" + CB)),
      WHY % "in the comments an animated PNG may carry", "apng", group="code", node="succeeds", absent="omsett_canary")
+
+
+# --- Cursors, DirectDraw surfaces, FITS and large Photoshop files, all read by ImageMagick ----
+for _ext, _label in (("cur", "cursor"), ("dds", "DirectDraw"), ("fits", "FITS"), ("psb", "large Photoshop")):
+    _sound = read(_ext, f"sample.{_ext}")
+    trap(f"truncated.{_ext}", _sound[: len(_sound) // 2], f"A sound {_label} file cut off halfway through.",
+         _ext, node="fails", group="damage", note="This file is damaged: the picture stops partway" if _ext == "psb" else None)
+
+CUR = read("cur", "sample.cur")
+_cur = bytearray(CUR)
+_cur[18:22] = struct.pack("<I", 0x7FFFFFF0)
+trap("bad-offset.cur", bytes(_cur),
+     "A cursor whose list points two gigabytes past the end of the file for its picture.",
+     "cur", node="fails", group="damage")
+trap("picture-inside-is-huge.cur", ico_of([big_png(20000, 20000)], kind=2),
+     "A cursor whose list says 16 by 16 and whose one picture is 20,000 by 20,000. The converter is told the limit and stops before making room for it.",
+     "cur", group="size", node="fails")
+_cur = bytearray(CUR)
+_cur[10:14] = struct.pack("<HH", 60000, 60000)
+trap("clicks-far-outside.cur", bytes(_cur),
+     "A cursor that says the point which does the clicking is sixty thousand pixels away from a picture of 64. That point is never used, so the picture converts.",
+     "cur", group="unusual", node="succeeds")
+trap("cursor-named-icon.ico", CUR,
+     "A cursor with an icon's name. The two differ by one number near the start, and it is that number which says which this is.",
+     "cur", group="identity", mismatch=True, node="succeeds")
+code("code.cur", ico_of([SIGNATURE + ihdr(SMALL_W, SMALL_H) + chunk(b"tEXt", b"Comment\x00" + CB) + idat(SMALL) + IEND], kind=2, size=(SMALL_W, SMALL_H)),
+     WHY % "in the comment of the picture inside a cursor", "cur", node="succeeds", absent="omsett_canary")
+
+DDS = read("dds", "sample.dds")
+_dds = bytearray(DDS)
+_dds[12:20] = struct.pack("<II", 60000, 60000)
+trap("huge-declared.dds", bytes(_dds),
+     "A DirectDraw file whose header states 60,000 pixels a side. Refused from the header.",
+     "dds", guard="refused", group="size")
+_dds = bytearray(DDS)
+_dds[28:32] = struct.pack("<I", 0xFFFFFFFF)
+trap("four-billion-smaller-copies.dds", bytes(_dds),
+     "A DirectDraw file may hold smaller copies of its picture, and says how many. This one says four billion and holds what the sample holds.",
+     "dds", group="size", node="succeeds")
+_dds = bytearray(DDS)
+_dds[4:8] = struct.pack("<I", 4)
+trap("header-of-four-bytes.dds", bytes(_dds),
+     "A DirectDraw file that says its header is four bytes long. It is always 124, and a file that says otherwise is not taken for one.",
+     "unknown", group="identity")
+_dds = bytearray(DDS)
+_dds[32:76] = (MARK.encode() + bytes(44))[:44]
+code("code.dds", bytes(_dds),
+     "A DirectDraw file has no place for words, only forty-four spare bytes in its header. Code is written there. Nothing in it may run, and none of it is carried across.",
+     "dds", node="succeeds", absent="omsett_canary")
+
+
+def fits_of(cards, data=b"", end=True):
+    """A FITS file: lines of eighty characters, padded to 2880 bytes, then the picture."""
+    lines = [("%-8s= %20s" % (key, value)) if key not in ("COMMENT", "HISTORY") else "%-8s%s" % (key, value) for key, value in cards]
+    head = "".join(line.ljust(80)[:80] for line in lines + (["END"] if end else [])).encode("latin-1")
+    head += b" " * (-len(head) % 2880)
+    return head + data + bytes(-len(data) % 2880)
+
+
+def fits_grey(width, height, extra=(), bits=8, said=None):
+    cards = [("SIMPLE", "T"), ("BITPIX", bits), ("NAXIS", 2), ("NAXIS1", (said or (width, height))[0]), ("NAXIS2", (said or (width, height))[1])]
+    return fits_of(cards + list(extra), bytes(range(256)) * (width * height * abs(bits) // 8 // 256 + 1))[: None]
+
+
+trap("huge-declared.fits", fits_grey(16, 16, said=(300000, 300000)),
+     "A FITS file whose header states 300,000 pixels a side and holds 256. Refused from the header.",
+     "fits", guard="refused", group="size")
+trap("size-given-twice.fits", fits_grey(16, 16, extra=[("NAXIS1", 60000), ("NAXIS2", 60000)]),
+     "A FITS header that gives its size as 16 by 16 and then, further down, as 60,000 by 60,000. The last one given is the one a reader ends up with, and it is the one checked.",
+     "fits", guard="refused", group="size")
+trap("header-never-ends.fits", fits_of([("SIMPLE", "T"), ("BITPIX", 8), ("NAXIS", 2), ("NAXIS1", 16), ("NAXIS2", 16)] + [("COMMENT", " still the header")] * 4000, bytes(range(256)), end=False),
+     "A FITS header is a list of lines that stops at one saying END. This has four thousand lines and no END.",
+     "fits", group="damage", node="fails")
+trap("no-picture.fits", fits_of([("SIMPLE", "T"), ("BITPIX", 8), ("NAXIS", 0)]),
+     "A FITS file that is sound and holds no picture at all: only a header. That makes it text from its first letter to its last, and a file that is all text is not taken for a picture.",
+     "unknown", group="unusual")
+trap("a-thousand-pictures.fits", fits_of([("SIMPLE", "T"), ("BITPIX", 8), ("NAXIS", 3), ("NAXIS1", 4), ("NAXIS2", 4), ("NAXIS3", 1000)], bytes(16000)),
+     "A FITS file holding a thousand pictures of four pixels each. A file may hold several; past 256 the converter stops counting and refuses.",
+     "fits", group="size", node="fails")
+trap("bits-that-are-not.fits", fits_grey(16, 16, bits=7),
+     "A FITS file that says each pixel takes seven bits. The format allows 8, 16, 32 and 64, and nothing between.",
+     "fits", group="damage", node="fails")
+trap("words-that-begin-like-fits.fits", ("SIMPLE  =                    T / only somebody's notes\n" + "A line of plain text.\n" * 20).encode(),
+     "Plain text whose first line is the one a FITS file opens with. A file that is text all the way through is not a picture, whatever its first line says.",
+     "unknown", group="identity")
+code("code.fits", fits_grey(16, 16, extra=[("COMMENT", " " + CANARY[:70]), ("HISTORY", " " + MARK), ("COMMENT", " " + SHELL), ("OBJECT", "'%s'" % MARK[:18])]),
+     WHY % "in the notes a FITS header carries, cut to the eighty characters a line holds", "fits", node="succeeds", absent="omsett_canary")
+
+PSB = read("psb", "sample.psb")
+_psb = bytearray(PSB)
+_psb[14:22] = struct.pack(">II", 300000, 300000)
+trap("huge-declared.psb", bytes(_psb),
+     "A large Photoshop file whose header states 300,000 pixels a side. The format allows it; no browser tab has ninety billion pixels of room. Refused from the header.",
+     "psb", guard="refused", group="size")
+trap("large-file-named-psd.psd", PSB,
+     "A large-document Photoshop file with the ordinary format's name. The two open with the same four letters, and the number after them says which this is.",
+     "psb", group="identity", mismatch=True, node="succeeds")
+_psb = bytearray(PSB)
+_psb[4:6] = struct.pack(">H", 3)
+trap("version-three.psd", bytes(_psb),
+     "A Photoshop file that says it is version 3. There are only two: 1 is a PSD and 2 is the large format. It is read as neither.",
+     "psd", group="damage", node="fails", note="This file is damaged: the file gives a version that does not exist")
+_psb = bytearray(PSB)
+_psb[30:34] = struct.pack(">I", 0x7FFFFFFF)
+trap("notes-longer-than-the-file.psb", bytes(_psb),
+     "A large Photoshop file whose section of notes and settings says it is two gigabytes long, in a file of 130 KB. The lengths are added up before the file is read, and this one does not fit.",
+     "psb", group="damage", node="fails", note="This file is damaged: a part of the file is longer than the file")
+_at = 26 + 4 + struct.unpack(">I", PSB[26:30])[0]
+_had = struct.unpack(">I", PSB[_at:_at + 4])[0]
+_xmp = b'<x:xmpmeta xmlns:x="adobe:ns:meta/"><dc:description>' + XML_CANARY + b"</dc:description></x:xmpmeta>"
+_block = b"8BIM" + struct.pack(">HHI", 0x0424, 0, len(_xmp)) + _xmp + bytes(len(_xmp) % 2)
+_block += b"8BIM" + struct.pack(">HHI", 0x03EC, 0, len(CB)) + CB + bytes(len(CB) % 2)
+code("code.psb", PSB[:_at] + struct.pack(">I", _had + len(_block)) + _block + PSB[_at + 4:],
+     WHY % "in the description and the notes a Photoshop file keeps beside its picture", "psb", node="succeeds", absent="omsett_canary")
 
 with open(os.path.join(OUT, "manifest.json"), "w") as out:
     json.dump(manifest, out, indent=2)
