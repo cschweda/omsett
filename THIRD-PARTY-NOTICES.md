@@ -141,6 +141,11 @@ specified by the Drafter project and dedicated to the public domain (CC0 1.0).
 Omsett's own reader and writer for ZIP, TAR and TAR.GZ, using the compression built into every
 browser. Nothing is downloaded.
 
+### icon
+
+Omsett's own reader for Mac icons (ICNS), using the compression built into every browser.
+Nothing is downloaded.
+
 ### font
 
 Omsett's own reader and writer for TTF, OTF and WOFF, using the compression built into every

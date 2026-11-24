@@ -5,6 +5,7 @@ import { createSubtitleEngine } from './subtitle'
 import { createMarkupEngine } from './markup'
 import { createFontEngine, createFontWoff2Engine } from './font'
 import { createArchiveEngine } from './archive'
+import { createIconEngine } from './icon'
 import { createScriptEngine } from './script'
 import { createPdfEngine } from './pdf'
 import { createHeifEngine, type HeifModule } from './heif'
@@ -63,6 +64,7 @@ export function createNodeEngines(): Record<string, Engine> {
   engines.archive = createArchiveEngine()
   engines.script = createScriptEngine()
   engines.pdf = createPdfEngine()
+  engines.icon = createIconEngine()
   engines.font = createFontEngine()
   engines['font-woff2'] = createFontWoff2Engine()
   return engines
