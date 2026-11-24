@@ -213,7 +213,10 @@ that has neither. No database is involved: these are plain files that nginx writ
    access_log /var/log/nginx/omsett.com-access.log omsett;
    ```
 
-   Do the same in any other `server { }` block for the site (the one that redirects port 80).
+   Keep whatever name Forge already gives the site's logs (it numbers them, as in
+   `3514825-error.log`); the name here is an example. Forge shows the inside of the `server { }`
+   block, and may have `access_log off;` there: that is the line to replace. Put the format
+   file of step 1 in place first, or saving fails with `unknown log format "omsett"`.
 
 3. nginx's **error log cannot be given a format**, and every line in it has the client's
    address. Keep it to what matters:
