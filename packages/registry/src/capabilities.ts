@@ -34,6 +34,11 @@ const pnm: WriteSpec = { format: 'pnm', lossy: false, drops: DROPPED }
 // An icon is one picture at several sizes. These are the ones Windows and browsers ask for; a
 // picture smaller than one of them is not made larger to fill it.
 const ico: WriteSpec = { format: 'ico', lossy: false, defaultOptions: { iconSizes: [16, 32, 48, 256] }, drops: DROPPED }
+// JPEG 2000 is written whole: every pixel comes back as it went in.
+const jp2: WriteSpec = { format: 'jp2', lossy: false, drops: DROPPED }
+// A game's texture, written plainly: the pixels as they are, and no smaller copies beside
+// them. The packed kinds a graphics card reads directly lose detail, and are a choice for later.
+const dds: WriteSpec = { format: 'dds', lossy: false, defaultOptions: { defines: { 'dds:compression': 'none', 'dds:mipmaps': '0' } }, drops: DROPPED }
 // A pointer is an icon with a note of which point of it does the clicking: the top left corner,
 // where the tip of an arrow is.
 const cur: WriteSpec = { format: 'cur', lossy: false, defaultOptions: { iconSizes: [32, 48, 64], iconHotspot: [0, 0] }, drops: DROPPED }
@@ -121,7 +126,7 @@ export const capabilities: Capability[] = [
   // the last resort: it reads these to PNG and writes them from PNG, and every other pair goes
   // through that step. An icon is the one thing it writes at another size than it was given. Each file is read as the one format it was identified as, never guessed.
   { engine: 'magick', tier: 'browser', reads: MAGICK_READS, writes: [png], priority: 40 },
-  { engine: 'magick', tier: 'browser', reads: ['png'], writes: [bmp, qoi, tga, pnm, ico, cur, icns], priority: 40 },
+  { engine: 'magick', tier: 'browser', reads: ['png'], writes: [bmp, qoi, tga, pnm, ico, cur, icns, jp2, dds], priority: 40 },
 
   // libvips with its JPEG XL module, on the same terms.
   { engine: 'vips-jxl', tier: 'browser', reads: CORE, writes: [jxl], priority: 30 },

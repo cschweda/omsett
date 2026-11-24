@@ -64,7 +64,7 @@ describe('router, real registry', () => {
       'zip', 'tgz', 'tar',
     ])
     const readOnly = new Set(everything.formats.filter((f) => f.readOnly).map((f) => f.id))
-    expect([...readOnly].sort()).toEqual(['apng', 'dds', 'exr', 'fits', 'hdr', 'heic', 'jp2', 'pcx', 'pdf', 'pptx', 'psb', 'psd', 'ras', 'sgi', 'svg', 'svgz'])
+    expect([...readOnly].sort()).toEqual(['apng', 'exr', 'fits', 'hdr', 'heic', 'pcx', 'pdf', 'pptx', 'psb', 'psd', 'ras', 'sgi', 'svg', 'svgz'])
     // Every pair of the same kind converts, directly or through a step in between; nothing is
     // written as HEIC. A picture never becomes data, nor data a picture.
     const kind = (id: string) => formatById(everything, id)!.category

@@ -7,6 +7,25 @@ The paragraph that opens a version is its teaser: the home page shows its first 
 in the "What's new" banner, so keep it to two or three sentences on what a visitor will notice.
 A line beginning "Released" gives the date.
 
+## 0.38.0
+
+Released 24 November 2026.
+
+Pictures can now be written as JPEG 2000 and as DDS, the format games use for textures. Both
+are written without losing anything: every pixel comes back as it went in.
+
+### Added
+
+- **Writing JPEG 2000**, whole, with transparency where the picture has it.
+- **Writing DDS**, plainly: the pixels as they are, with no smaller copies beside them.
+- A test that sends a picture of noise to each and back and compares every pixel, with and
+  without transparency.
+
+### Known
+
+- DDS is not yet written in the packed kinds a graphics card reads directly, nor with the
+  smaller copies a game expects; those lose detail and will be a choice.
+
 ## 0.37.0
 
 Released 24 November 2026.

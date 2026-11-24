@@ -43,6 +43,20 @@ const MAX_MEMORY = 3 * 1024 * 1024 * 1024
 
 const listed = (sizes: number[]) => (sizes.length > 1 ? `${sizes.slice(0, -1).join(', ')} and ${sizes.at(-1)}` : `${sizes[0]}`)
 
+/**
+ * Settings for ImageMagick's writer of one format, as the registry gives them: "dds:mipmaps" to
+ * "0". Each is held to the shape of such a setting, and anything else is an error in the registry.
+ */
+function writerSettings(options: Record<string, unknown>): [string, string][] {
+  const given = options.defines
+  if (given === undefined) return []
+  if (!given || typeof given !== 'object') throw new Error('Writer settings are not a list')
+  return Object.entries(given).map(([name, value]) => {
+    if (!/^[a-z0-9]+:[a-z-]+$/.test(name) || typeof value !== 'string' || !/^[a-z0-9]+$/.test(value)) throw new Error(`Not a writer setting: ${name}`)
+    return [name, value]
+  })
+}
+
 /** What a conversion's options say about the icon to make. Null where it makes none. */
 interface IconPlan {
   sizes: number[]
@@ -170,6 +184,7 @@ export function createMagickEngine(host: MagickHost): Engine {
       if (damage) throw new Refusal(`This file is damaged: ${damage}`)
 
       const plan = iconPlan(input.options)
+      const settings = writerSettings(input.options)
       let out: Uint8Array
       let note: string | undefined
       try {
@@ -224,6 +239,7 @@ export function createMagickEngine(host: MagickHost): Engine {
               })),
             )
           }
+          for (const [name, value] of settings) image.settings.setDefine(name, value)
           if (icon && icon.held.length > 1) image.settings.setDefine('icon:auto-resize', icon.held.join(','))
           const written = image.write(coder(magick, to.id), (data) => data.slice())
           return icon && plan.hotspot ? asPointer(written, plan.hotspot) : written

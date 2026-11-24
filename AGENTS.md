@@ -241,6 +241,10 @@ build by `apps/web/scripts/write-headers.ts`.
   An icon, a pointer or a Mac icon is written square, at the sizes in its capability's
   `iconSizes` (and, for a Mac icon, under the names in `iconNames`); `writtenSize` (`packages/registry`) says what size comes out, and the tests that
   compare sizes ask it. A second output at another size goes there too, not into a test.
+- **A setting for ImageMagick's writer is data in the registry** (`defines` in a capability's
+  `defaultOptions`, as DDS has), held to a pattern by the engine. A format the registry calls
+  lossless is sent there and back in `magick/exact.test.ts` and every pixel compared; add a new
+  one to that test.
 - **ImageMagick forgives some damaged files too.** Of a Photoshop file that stopped halfway it
   returned the half it found. `layoutProblem` (`packages/detect/src/structure.ts`) adds up the
   lengths such a file gives for its own parts, and the `magick` engine refuses what does not fit
