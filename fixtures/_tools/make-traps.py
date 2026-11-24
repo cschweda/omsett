@@ -4410,6 +4410,75 @@ sound("packed-sound-named-as-wav.wav", FLAC,
       "A FLAC with a WAV's name.",
       "flac", node="succeeds", mismatch=True, group="identity")
 
+# MP3 says very little about itself: no length, no checksum, only a row of stretches that each
+# say how long they are. A decoder plays whatever it can find, so a file with half its sound
+# missing, or rubbish in the middle, plays as if nothing were wrong. Omsett walks the row first.
+MP3 = read("mp3", "sample.mp3")
+EVEN = read("mp3", "even-speed.mp3")
+MP3_DAMAGED = "This MP3 is damaged: part-way through, it stops being MP3"
+
+
+def stretches_of(data: bytes):
+    """Where each stretch of an MP3 starts, by following the length each one gives."""
+    at = 0
+    if data[:3] == b"ID3":
+        at = 10 + ((data[6] & 0x7F) << 21 | (data[7] & 0x7F) << 14 | (data[8] & 0x7F) << 7 | (data[9] & 0x7F))
+    while data[at] == 0:
+        at += 1
+    found = []
+    while at + 4 <= len(data) and data[at] == 0xFF and data[at + 1] & 0xE0 == 0xE0:
+        first = (data[at + 1] >> 3) & 3 == 3
+        kbps = ([0, 32, 40, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320] if first else [0, 8, 16, 24, 32, 40, 48, 56, 64, 80, 96, 112, 128, 144, 160])[data[at + 2] >> 4]
+        rate = {3: [44100, 48000, 32000], 2: [22050, 24000, 16000], 0: [11025, 12000, 8000]}[(data[at + 1] >> 3) & 3][(data[at + 2] >> 2) & 3]
+        size = (144000 if first else 72000) * kbps // rate + ((data[at + 2] >> 1) & 1)
+        found.append((at, size))
+        at += size
+    return found
+
+
+EVEN_AT = stretches_of(EVEN)
+MP3_AT = stretches_of(MP3)
+tagged = lambda body: b"ID3\x03\0\0" + bytes([(len(body) >> 21) & 0x7F, (len(body) >> 14) & 0x7F, (len(body) >> 7) & 0x7F, len(body) & 0x7F]) + body
+words_of = lambda name, text: name + struct.pack(">IH", len(text) + 1, 0) + b"\0" + text
+
+sound("truncated.mp3", MP3[: len(MP3) // 2],
+      "An MP3 cut off half-way. Its first stretch counts the stretches that should follow, and they are not all there. A player would play the half without a word.",
+      "mp3", node="fails", note=CUT % "MP3")
+sound("stops-inside-a-stretch.mp3", EVEN[: EVEN_AT[6][0] + 100],
+      "An MP3 with no count of its stretches, which stops a hundred bytes into one. Each stretch says how long it is, and this one is not.",
+      "mp3", node="fails", note=CUT % "MP3")
+sound("rubbish-in-the-middle.mp3", EVEN[: EVEN_AT[4][0]] + bytes(random.Random(7).randrange(1, 255) for _ in range(900)) + EVEN[EVEN_AT[6][0] :],
+      "An MP3 with nine hundred bytes of rubbish where two of its stretches were. A player skips to the next stretch it can find, and nobody is told that sound is missing.",
+      "mp3", node="fails", note=MP3_DAMAGED)
+sound("says-a-million-stretches.mp3", patched(MP3, MP3.find(b"Xing") + 8, struct.pack(">I", 1_000_000)),
+      "An MP3 whose first stretch says a million more follow, in a file of two thousand bytes.",
+      "mp3", node="fails", note=CUT % "MP3")
+sound("rate-changes-part-way.mp3", EVEN + read("mp3", "one-channel.mp3")[stretches_of(read("mp3", "one-channel.mp3"))[1][0] :],
+      "Two MP3s end to end, the second at half the rate of the first and with one channel. Played as one, the second half would run at double speed.",
+      "mp3", node="fails", note=MP3_DAMAGED)
+sound("speed-not-stated.mp3", patched(EVEN, 2, bytes([EVEN[2] & 0x0F])),
+      "An MP3 whose first stretch leaves out how fast it is packed, which the format allows and which means nothing says how long the stretch is.",
+      "mp3", node="fails", note="This MP3 does not say how fast its sound is packed, which Omsett cannot read yet")
+sound("tags-and-no-sound.mp3", tagged(words_of(b"TIT2", b"Nothing follows")) + b"\0" * 64,
+      "A block of tags, of the kind an MP3 opens with, and no MP3 after it.",
+      "unknown", group="identity")
+sound("tags-longer-than-the-file.mp3", b"ID3\x03\0\0\x7f\x7f\x7f\x7f" + MP3[10:],
+      "An MP3 whose block of tags says it is 256 megabytes long. The sound would be somewhere past the end of the file.",
+      "mp3", node="fails", note=NOT_SOUND % "MP3")
+
+sound("tags-at-the-end.mp3", EVEN + b"TAG" + b"Test pattern".ljust(30, b"\0") + b"Omsett".ljust(30, b"\0") + b"\0" * 65,
+      "An MP3 with the older kind of tags, a hundred and twenty-eight bytes after the sound. They are not sound, and are not taken for damage.",
+      "mp3", node="succeeds", group="unusual")
+sound("even-speed-no-count.mp3", EVEN,
+      "An MP3 with nothing in front of its sound: no tags and no count of its stretches. Its length is whatever the walk finds.",
+      "mp3", node="succeeds", group="unusual")
+sound("music-named-as-sound.wav", MP3,
+      "An MP3 with a WAV's name.",
+      "mp3", node="succeeds", mismatch=True, group="identity")
+sound("an-older-layer.mp3", bytes([0xFF, 0xFD, 0x90, 0x04]) + b"\0" * 414 + bytes([0xFF, 0xFD, 0x90, 0x04]) + b"\0" * 414,
+      "MPEG sound of the second layer, MP3's forerunner, with an MP3's name. It is a different format, and is not read as MP3.",
+      "unregistered", group="identity")
+
 G = "code"
 LIST_OF_NOTES = S.info(INAM=CB, IART=CB, ICMT=CB, ISFT=MARK.encode())
 BROADCAST = S.part(b"bext", (CB + b"\0" * 256)[:256] + (CB + b"\0" * 32)[:32] + b"\0" * 32 + b"2026-11-24" + b"\0" * 300)
@@ -4419,6 +4488,8 @@ code("code.aiff", S.aiff(PCM_BIG, before=b"".join(S.part(name, CB, little=False)
      WHY % "as the title, the artist, the copyright line and a comment, and in a block of tags", "aiff", node="succeeds", absent="omsett_canary")
 code("code.flac", F.flac(S.PAIRS, extra=F.part(4, F.comments(vendor=MARK.encode(), TITLE=CB, ARTIST=CB, COMMENT=CB, ENCODER=CB)) + F.part(6, F.picture(CB, CB), last=True)),
      WHY % "as the title, the artist and a comment, as the name of the program that made the file, and as the description of its cover picture", "flac", node="succeeds", absent="omsett_canary")
+code("code.mp3", tagged(b"".join(words_of(name, CB) for name in (b"TIT2", b"TPE1", b"TALB", b"TSSE")) + b"COMM" + struct.pack(">IH", len(CB) + 5, 0) + b"\0eng\0" + CB + b"APIC" + struct.pack(">IH", len(CB) + 14, 0) + b"\0image/png\0\x03" + CB + b"\0") + MP3[MP3_AT[0][0] :],
+     WHY % "as the title, the artist, the album and a comment, as the name of the program that made the file, and as the description of its cover picture", "mp3", node="succeeds", absent="omsett_canary")
 code("code.au", S.au(PCM_BIG, note=CB + b"\0"),
      WHY % "as the note an AU carries between its label and its sound", "au", node="succeeds", absent="omsett_canary")
 

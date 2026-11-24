@@ -156,6 +156,18 @@ export const audioInfo: EngineInfo = {
   sourceUrl: 'https://github.com/cschweda/omsett/tree/main/packages/engines/src/audio',
 }
 
+// MP3. Unpacked by mpg123 and packed by LAME, both built to WebAssembly. A separate engine, so
+// that only MP3 work fetches them. The size is the two together.
+export const audioMp3Info: EngineInfo = {
+  id: 'audio-mp3',
+  // LAME's binary and its loader as shipped, and mpg123's script, which carries its own binary.
+  sizeBytes: 132_999 + 5_281 + 78_603,
+  runtimes: ['browser', 'node'],
+  // The two wrappers are MIT; mpg123 is LGPL-2.1 and LAME is LGPL-2.0-or-later.
+  license: 'MIT AND LGPL-2.1-only AND LGPL-2.0-or-later',
+  sourceUrl: 'https://github.com/eshaz/wasm-audio-decoders',
+}
+
 // Fonts. TTF, OTF and WOFF are read and written by Omsett's own code, with the compression
 // every browser has built in.
 export const fontInfo: EngineInfo = {
@@ -205,4 +217,5 @@ export const engineInfo: Record<string, EngineInfo> = {
   [iconInfo.id]: iconInfo,
   [fontWoff2Info.id]: fontWoff2Info,
   [audioInfo.id]: audioInfo,
+  [audioMp3Info.id]: audioMp3Info,
 }

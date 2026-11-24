@@ -7,6 +7,44 @@ The paragraph that opens a version is its teaser: the home page shows its first 
 in the "What's new" banner, so keep it to two or three sentences on what a visitor will notice.
 A line beginning "Released" gives the date.
 
+## 0.43.0
+
+Released 24 November 2026.
+
+MP3 arrives, both ways. A WAV, FLAC, AIFF or AU can be packed as MP3 at one of three
+qualities, and an MP3 unpacks to any of them. An MP3 with part of its sound missing is refused,
+where a player would skip the gap and say nothing.
+
+### Added
+
+- **MP3**, to and from WAV, FLAC, AIFF and AU. Unpacking is done by mpg123 and packing by
+  LAME, the two programs most MP3s in the world have passed through, each built to
+  WebAssembly. Together they are about 217 KB, fetched only when an MP3 is involved.
+- **A choice of quality when packing as MP3**: Smaller (about 130 kbps), Standard (about
+  190 kbps, the default) and Best (320 kbps). The choice appears only when MP3 is the target.
+- **Two warnings**: packing as MP3 leaves sound out for good, so keep the original; and
+  unpacking an MP3 does not bring back what was left out.
+- **An MP3 is walked from its first stretch to its last before it is unpacked.** One that
+  stops inside a stretch, has fewer stretches than it counts, changes rate part-way, or has
+  rubbish in the middle is refused with the reason.
+- **The MP3s Omsett writes open with a list of contents**, as LAME's own do: how many
+  stretches follow and how much padding is at each end. Players show the right length, and
+  the sound unpacks to exactly as many moments as were packed.
+- An MP3's details from its start alone: length, rate, channels, its speed in kbps, and the
+  title, artist and cover picture that a conversion leaves behind.
+- 13 trap files for MP3 (a trap file is one made on purpose to be broken, hostile or
+  dishonest), and samples packed by ffmpeg.
+
+### Known
+
+- MP3 holds one or two channels and nine rates. Sound with more channels is refused; sound
+  at another rate (96,000 a second, say) is written at the nearest rate below, and the result
+  says so.
+- An MP3 is unpacked to 16-bit sound.
+- An MP3 with nothing in front of its sound cannot say how much padding its packer added, so
+  it unpacks a few hundredths of a second longer than the sound that was packed.
+- Nothing else about a sound can be changed yet: not its rate, its channels or its length.
+
 ## 0.42.0
 
 Released 24 November 2026.

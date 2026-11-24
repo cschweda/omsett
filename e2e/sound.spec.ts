@@ -95,3 +95,49 @@ test('a WAV holding MP3 is refused, with the name of what is inside', async ({ p
   await page.getByTestId('convert').click()
   await expect(page.locator('.file-card')).toContainText('This WAV holds its sound as MP3, which Omsett cannot read yet. It reads sound that is stored unpacked')
 })
+
+test('packing as MP3 offers how much to leave out, and the choice changes the file', async ({ page }) => {
+  await open(page)
+  await page.locator('#file-input').setInputFiles(fixture('flac/sample.flac'))
+  // The choice is for MP3 alone: a format that keeps everything has nothing to ask.
+  await page.locator('[role="radio"][data-format="wav"]').click()
+  await expect(page.getByTestId('sound-quality')).toHaveCount(0)
+  await page.locator('[role="radio"][data-format="mp3"]').click()
+  await expect(page.getByTestId('sound-quality-standard')).toBeChecked()
+  await expect(page.locator('main')).toContainText('MP3 leaves out sound to make the file small. It cannot be put back, so keep the original.')
+
+  const sizes: number[] = []
+  for (const setting of ['smaller', 'best']) {
+    await page.getByTestId(`sound-quality-${setting}`).check()
+    await page.getByTestId('convert').click()
+    const link = page.getByTestId('download')
+    await expect(link).toBeVisible({ timeout: 30_000 })
+    const output = await describeDownload(page, () => link.click())
+    expect(output.name).toBe('sample.mp3')
+    expect(output.found.kind === 'known' && output.found.format.id).toBe('mp3')
+    await expect(page.locator('.result-card')).toHaveAttribute('data-engine', 'audio-mp3')
+    sizes.push(output.bytes.length)
+  }
+  expect(sizes[0]!).toBeLessThan(sizes[1]!)
+})
+
+test('an MP3 unpacks to a WAV of the same length, with a warning that nothing is brought back', async ({ page }) => {
+  await open(page)
+  await page.locator('#file-input').setInputFiles(fixture('mp3/sample.mp3'))
+  await page.locator('[role="radio"][data-format="wav"]').click()
+  await expect(page.locator('main')).toContainText('An MP3 has already left sound out. Converting it does not bring that back; the file only gets larger.')
+  await page.getByTestId('convert').click()
+  const link = page.getByTestId('download')
+  await expect(link).toBeVisible({ timeout: 30_000 })
+  const output = await describeDownload(page, () => link.click())
+  // The same quarter of a second the MP3 was packed from: 2,756 moments, two channels, sixteen bits.
+  expect([output.bytes.readUInt16LE(22), output.bytes.readUInt32LE(24), output.bytes.readUInt16LE(34), output.bytes.readUInt32LE(40)]).toEqual([2, 11025, 16, 2756 * 4])
+})
+
+test('rubbish in the middle of an MP3 is refused, where a player would skip it', async ({ page }) => {
+  await open(page)
+  await page.locator('#file-input').setInputFiles(fixture('_traps/rubbish-in-the-middle.mp3'))
+  await page.locator('[role="radio"][data-format="wav"]').click()
+  await page.getByTestId('convert').click()
+  await expect(page.locator('.file-card')).toContainText('This MP3 is damaged: part-way through, it stops being MP3')
+})

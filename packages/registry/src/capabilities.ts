@@ -154,6 +154,10 @@ export const capabilities: Capability[] = [
   // Sound stored unpacked, in Omsett's own code: a new label, and the same numbers. A title, an
   // artist and whatever else the file says about itself are left behind, as a picture's are.
   { engine: 'audio', tier: 'browser', reads: SOUNDS, writes: SOUNDS.map((format) => ({ format, lossy: false, drops: ['metadata'] as Trait[] })), priority: 20 },
+  // MP3, through mpg123 and LAME, which are fetched only for this. How much sound is left out
+  // to make the file small is the person's choice.
+  { engine: 'audio-mp3', tier: 'browser', reads: SOUNDS, writes: [{ format: 'mp3', lossy: true, drops: ['metadata'], defaultOptions: { soundQuality: 'standard' } }], priority: 30 },
+  { engine: 'audio-mp3', tier: 'browser', reads: ['mp3'], writes: SOUNDS.map((format) => ({ format, lossy: false, drops: ['metadata'] as Trait[] })), priority: 30 },
 
   // Markdown and HTML, each to the other, through a tree that is cleaned on the way.
   {

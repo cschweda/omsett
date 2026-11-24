@@ -56,6 +56,10 @@ const manifest = {
   magick: {
     wasm: await hashed(fromEngines.resolve('@imagemagick/magick-wasm/magick.wasm'), 'magick', 'wasm'),
   },
+  // LAME, which packs MP3. The decoder, mpg123, is carried inside its own script.
+  mp3: {
+    wasm: await hashed(fromEngines.resolve('wasm-media-encoders/wasm/mp3'), 'lame', 'wasm'),
+  },
   resvg: {
     wasm: await hashed(fromEngines.resolve('@resvg/resvg-wasm/index_bg.wasm'), 'resvg', 'wasm'),
     fonts: await Promise.all(
