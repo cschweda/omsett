@@ -146,7 +146,7 @@ test('a photograph becomes an icon in two steps, square, and the result says wha
   await page.getByTestId('convert').click()
   const link = page.getByTestId('download')
   await expect(link).toBeVisible({ timeout: 30_000 })
-  await expect(page.locator('.result-card')).toContainText('This icon holds the picture at')
+  await expect(page.locator('.result-card')).toContainText('The file holds the picture at')
   const output = await describeDownload(page, () => link.click())
   expect(output.found.kind === 'known' && output.found.format.id).toBe('ico')
   // The largest picture in it is square, and no larger than the photograph was.

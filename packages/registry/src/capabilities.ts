@@ -34,6 +34,20 @@ const pnm: WriteSpec = { format: 'pnm', lossy: false, drops: DROPPED }
 // An icon is one picture at several sizes. These are the ones Windows and browsers ask for; a
 // picture smaller than one of them is not made larger to fill it.
 const ico: WriteSpec = { format: 'ico', lossy: false, defaultOptions: { iconSizes: [16, 32, 48, 256] }, drops: DROPPED }
+// A pointer is an icon with a note of which point of it does the clicking: the top left corner,
+// where the tip of an arrow is.
+const cur: WriteSpec = { format: 'cur', lossy: false, defaultOptions: { iconSizes: [32, 48, 64], iconHotspot: [0, 0] }, drops: DROPPED }
+// A Mac icon holds only the sizes it has names for, each as a PNG under that name.
+const icns: WriteSpec = {
+  format: 'icns',
+  lossy: false,
+  defaultOptions: {
+    iconSizes: [16, 32, 64, 128, 256, 512, 1024],
+    iconExact: true,
+    iconNames: { 16: 'icp4', 32: 'icp5', 64: 'ic12', 128: 'ic07', 256: 'ic08', 512: 'ic09', 1024: 'ic10' },
+  },
+  drops: DROPPED,
+}
 const MAGICK_READS = ['bmp', 'tga', 'qoi', 'pnm', 'psd', 'psb', 'ico', 'cur', 'jp2', 'exr', 'hdr', 'dds', 'fits', 'pcx', 'sgi', 'ras']
 
 /** What plain libvips reads and writes. Its two optional modules add to this, never replace it. */
@@ -107,7 +121,7 @@ export const capabilities: Capability[] = [
   // the last resort: it reads these to PNG and writes them from PNG, and every other pair goes
   // through that step. An icon is the one thing it writes at another size than it was given. Each file is read as the one format it was identified as, never guessed.
   { engine: 'magick', tier: 'browser', reads: MAGICK_READS, writes: [png], priority: 40 },
-  { engine: 'magick', tier: 'browser', reads: ['png'], writes: [bmp, qoi, tga, pnm, ico], priority: 40 },
+  { engine: 'magick', tier: 'browser', reads: ['png'], writes: [bmp, qoi, tga, pnm, ico, cur, icns], priority: 40 },
 
   // libvips with its JPEG XL module, on the same terms.
   { engine: 'vips-jxl', tier: 'browser', reads: CORE, writes: [jxl], priority: 30 },

@@ -12,6 +12,7 @@ export interface MagickImage {
   backgroundColor: unknown
   alpha(action: unknown): void
   strip(): void
+  clone<T>(use: (copy: MagickImage) => T): T
   extent(width: number, height: number, gravity: unknown): void
   resize(width: number, height: number): void
   settings: { setDefine(name: string, value: string): void }
@@ -42,27 +43,85 @@ const MAX_MEMORY = 3 * 1024 * 1024 * 1024
 
 const listed = (sizes: number[]) => (sizes.length > 1 ? `${sizes.slice(0, -1).join(', ')} and ${sizes.at(-1)}` : `${sizes[0]}`)
 
+/** What a conversion's options say about the icon to make. Null where it makes none. */
+interface IconPlan {
+  sizes: number[]
+  /** The format holds only the sizes it names. */
+  exact: boolean
+  /** A pointer: the point of the picture that does the clicking. */
+  hotspot: [number, number] | null
+  /** A Mac icon: the four-letter name each size is kept under. */
+  names: Map<number, string> | null
+}
+
+function iconPlan(options: Record<string, unknown>): IconPlan | null {
+  const sizes = iconSizes(options)
+  if (!sizes) return null
+  const spot = options.iconHotspot
+  const hotspot = Array.isArray(spot) && spot.length === 2 && spot.every((n) => Number.isInteger(n) && n >= 0 && n < 16) ? (spot as [number, number]) : null
+  const given = options.iconNames
+  const names = new Map<number, string>()
+  if (given && typeof given === 'object') {
+    for (const [size, name] of Object.entries(given)) if (typeof name === 'string' && /^[a-z0-9]{4}$/.test(name)) names.set(Number(size), name)
+  }
+  if (names.size && !sizes.every((size) => names.has(size))) throw new Error('An icon size has no name')
+  return { sizes, exact: options.iconExact === true, hotspot, names: names.size ? names : null }
+}
+
 /**
- * Make a picture into an icon: square, no larger than the largest size asked for, and held at
- * each of the sizes below its own. A picture is never made larger than it was. Returns what to
- * tell the person about it.
+ * Make a picture into an icon's largest size: square, with clear margins where it was not.
+ * Returns the sizes the icon is to hold, largest first, and what to tell the person.
  */
-function asIcon(magick: MagickApi, image: MagickImage, sizes: number[]): string {
+function asIcon(magick: MagickApi, image: MagickImage, plan: IconPlan): { held: number[]; note: string } {
   const longest = Math.max(image.width, image.height)
   const square = image.width === image.height
+  const held = iconSidesFor(plan.sizes, image.width, image.height, plan.exact)
   if (!square) {
-    // Clear margins on the short side, the picture in the middle.
-    // The ground is set on the picture and not handed to `extent`, which paints the margins
-    // white when given the colour itself. A test reads the margins back.
+    // Clear margins on the short side, the picture in the middle. The ground is set on the
+    // picture and not handed to `extent`, which paints the margins white when given the colour
+    // itself. A test reads the margins back.
     image.alpha(magick.AlphaAction.Set)
     image.backgroundColor = magick.MagickColors.Transparent
     image.extent(longest, longest, magick.Gravity.Center)
   }
-  const held = iconSidesFor(sizes, image.width, image.height)
-  if (held[0]! < longest) image.resize(held[0]!, held[0]!)
-  if (held.length > 1) image.settings.setDefine('icon:auto-resize', held.join(','))
+  if (held[0] !== longest) image.resize(held[0]!, held[0]!)
   const margins = square ? '' : ' The picture was not square, so it has been given clear margins.'
-  return `This icon holds the picture at ${listed(held)} pixels.${margins}`
+  const enlarged = held[0]! > longest ? ' The picture was smaller than this format can hold, so it has been made larger.' : ''
+  return { held, note: `The file holds the picture at ${listed(held)} pixels.${margins}${enlarged}` }
+}
+
+/**
+ * Windows keeps a pointer as an icon with two things changed: the number that says which it
+ * is, and the clicking point, written where an icon's list gives its depth. ImageMagick writes
+ * the icon; the two are set here.
+ */
+function asPointer(icon: Uint8Array, [x, y]: [number, number]): Uint8Array {
+  const view = new DataView(icon.buffer, icon.byteOffset, icon.byteLength)
+  view.setUint16(2, 2, true)
+  for (let entry = 0; entry < view.getUint16(4, true); entry++) {
+    view.setUint16(6 + entry * 16 + 4, x, true)
+    view.setUint16(6 + entry * 16 + 6, y, true)
+  }
+  return icon
+}
+
+/** A Mac icon: its name, its whole length, and then each picture under its own name and length. */
+function macIcon(pictures: { name: string; png: Uint8Array }[]): Uint8Array {
+  const out = new Uint8Array(8 + pictures.reduce((total, picture) => total + 8 + picture.png.length, 0))
+  const view = new DataView(out.buffer)
+  const label = (at: number, name: string) => {
+    for (let i = 0; i < 4; i++) out[at + i] = name.charCodeAt(i)
+  }
+  label(0, 'icns')
+  view.setUint32(4, out.length)
+  let at = 8
+  for (const { name, png } of pictures) {
+    label(at, name)
+    view.setUint32(at + 4, 8 + png.length)
+    out.set(png, at + 8)
+    at += 8 + png.length
+  }
+  return out
 }
 
 /**
@@ -110,7 +169,7 @@ export function createMagickEngine(host: MagickHost): Engine {
       const damage = layoutProblem(from, bytes)
       if (damage) throw new Refusal(`This file is damaged: ${damage}`)
 
-      const sizes = iconSizes(input.options)
+      const plan = iconPlan(input.options)
       let out: Uint8Array
       let note: string | undefined
       try {
@@ -140,7 +199,8 @@ export function createMagickEngine(host: MagickHost): Engine {
           if (input.maxPixels !== undefined && image.width * image.height > input.maxPixels) {
             throw new RangeError('The picture is too large')
           }
-          if (sizes) note = asIcon(magick, image, sizes)
+          const icon = plan && asIcon(magick, image, plan)
+          note = icon?.note
           const tooLarge = dimensionProblem(to, image.width, image.height)
           if (tooLarge) throw new RangeError(tooLarge)
           onProgress(0.6)
@@ -151,7 +211,22 @@ export function createMagickEngine(host: MagickHost): Engine {
             image.backgroundColor = magick.MagickColors.White
             image.alpha(magick.AlphaAction.Remove)
           }
-          return image.write(coder(magick, to.id), (data) => data.slice())
+          if (icon && plan.names) {
+            // Each size as a PNG of its own, from the largest, which the picture now is.
+            const whole = image
+            return macIcon(
+              icon.held.map((size) => ({
+                name: plan.names!.get(size)!,
+                png: whole.clone((copy) => {
+                  if (copy.width !== size) copy.resize(size, size)
+                  return copy.write(coder(magick, 'png'), (data) => data.slice())
+                }),
+              })),
+            )
+          }
+          if (icon && icon.held.length > 1) image.settings.setDefine('icon:auto-resize', icon.held.join(','))
+          const written = image.write(coder(magick, to.id), (data) => data.slice())
+          return icon && plan.hotspot ? asPointer(written, plan.hotspot) : written
         })
       } catch (error) {
         // Our own refusals keep their wording; ImageMagick's are wrapped in one that names the file.
