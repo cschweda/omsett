@@ -156,11 +156,13 @@ The sample fonts in `fixtures/` are a typeface drawn for the tests by
 
 ### audio
 
-Omsett's own reader and writer for WAV, AIFF and AU. Nothing is downloaded. The two telephone
-codes, µ-law and A-law, are unpacked by the tables of the G.711 standard.
+Omsett's own reader and writer for WAV, AIFF, AU and FLAC. Nothing is downloaded. The two
+telephone codes, µ-law and A-law, are unpacked by the tables of the G.711 standard. FLAC is
+read and written from its published format (RFC 9639); no code of the reference library is used.
 
 The sample sounds in `fixtures/` are two notes written by `fixtures/_tools/sound.py`; no one
-else's recording is in the repository.
+else's recording is in the repository. The FLAC samples are those notes, packed by the
+reference `flac` program and by ffmpeg.
 
 ### font-woff2
 

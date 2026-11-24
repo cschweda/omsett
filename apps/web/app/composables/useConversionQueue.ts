@@ -278,7 +278,7 @@ export function useConversionQueue() {
               if (entry.stage === 'loading') entry.stage = 'working'
               if (entry.status === 'converting') entry.progress = (hop + fraction) / route.edges.length
             },
-            forcedBudgetMs ?? conversionBudgetMs(pixels),
+            forcedBudgetMs ?? conversionBudgetMs(pixels, blob.size),
           )
           // What a step learned by reading the file is kept, whichever step it was.
           for (const output of outputs) if (output.note && !notes.includes(output.note)) notes.push(output.note)

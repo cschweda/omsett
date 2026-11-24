@@ -204,16 +204,17 @@ const lasting = (seconds: number) => {
 // a program wrote after the sound are then out of reach, and are simply not listed.
 async function sound(blob: Blob, format: string): Promise<Detail[]> {
   const head = new Uint8Array(await blob.slice(0, blob.size <= MAX_WHOLE_BYTES ? blob.size : HEAD_BYTES).arrayBuffer())
-  const { sound: found, tags } = readSound(format, head, blob.size)
+  const { sound: found, tags, packing, bits } = readSound(format, head, blob.size) as ReturnType<typeof readSound> & { bits?: number }
   const stored =
     found.coding === 'float'
       ? `${found.bytes * 8}-bit fractions`
       : found.coding === 'ulaw' || found.coding === 'alaw'
         ? `${found.coding === 'ulaw' ? 'µ-law' : 'A-law'}, a telephone code of 8 bits. It is unpacked to 16-bit numbers`
-        : `${found.bytes * 8}-bit whole numbers`
+        : `${bits ?? found.bytes * 8}-bit whole numbers${packing ? `, ${packing}` : ''}`
   const channels = found.channels === 1 ? '1 (mono)' : found.channels === 2 ? '2 (stereo)' : String(found.channels)
   return [
-    { label: 'Length', value: lasting(found.frames / found.rate), fate: 'kept' },
+    // A recording sent as it was made may not say how long it is.
+    ...(found.frames > 0 ? [{ label: 'Length', value: lasting(found.frames / found.rate), fate: 'kept' as const }] : []),
     { label: 'Rate', value: `${found.rate.toLocaleString('en', { maximumFractionDigits: 3 })} samples a second`, fate: 'kept' },
     { label: 'Channels', value: channels, fate: 'kept' },
     { label: 'Stored as', value: stored, fate: 'kept' },

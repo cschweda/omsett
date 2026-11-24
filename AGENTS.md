@@ -258,7 +258,20 @@ build by `apps/web/scripts/write-headers.ts`.
   it; a new layout or format goes into that test. The readers take the start of a file and the
   length of the whole (`readSound(format, head, length)`), so details come from the label alone.
 - **A length a sound file gives is compared with the file before anything is set aside for it.**
-  What a conversion holds is the file and one copy, never a buffer sized by a header.
+  What a conversion holds is the file and one copy, never a buffer sized by a header. FLAC is
+  the exception that needs a limit instead, because a packed file really can hold far more than
+  its size: 1 GB where the label says how much, 256 MB where it does not (`flac.ts`).
+- **A FLAC is believed only when all three of its checksums agree** (`unpackFlac`): one on the
+  start of each stretch, one on each whole stretch, and the file's own on all the sound. Do not
+  hand on sound that failed one, and do not make a check optional to read a file some other
+  program accepts. Every number unpacked is also held to the bits the file promised.
+- **Omsett's FLAC packer is checked by Omsett's unpacker and by nothing else in CI**, so
+  `audio.test.ts` packs every kind of sound a packer finds hard (noise, clicks, the loudest
+  and quietest numbers by turns) at every width and reads every number back. When changing the
+  packer, also run a file through the reference tool by hand: `flac -t` must accept it. The
+  samples in `fixtures/flac` come from that tool and from ffmpeg, never from Omsett.
+- **The time a conversion is given grows with pixels and with bytes** (`conversionBudgetMs`).
+  Sound has no pixels; without the bytes a long recording would be stopped half-way.
 - **A setting for ImageMagick's writer is data in the registry** (`defines` in a capability's
   `defaultOptions`, as DDS has), held to a pattern by the engine. A format the registry calls
   lossless is sent there and back in `magick/exact.test.ts` and every pixel compared; add a new

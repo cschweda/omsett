@@ -34,12 +34,14 @@ export function withTimeout<T>(work: Promise<T>, ms: number, onTimeout: () => vo
 
 const SECOND = 1000
 /**
- * How long one conversion step may run: 30 seconds, plus 3 for every megapixel, and never more
- * than 10 minutes. Generous on purpose. A 169-megapixel image converts in about 5 seconds, so
- * anything that reaches this limit is stuck, not slow.
+ * How long one conversion step may run: 30 seconds, plus 3 for every megapixel and 1 for every
+ * two megabytes, and never more than 10 minutes. Generous on purpose. A 169-megapixel image
+ * converts in about 5 seconds, and an hour of sound unpacks in about 15, so anything that
+ * reaches this limit is stuck, not slow. The megabytes are for what has no pixels: a long
+ * recording is worked through from end to end, and how long that takes goes by its size.
  */
-export function conversionBudgetMs(pixels: number): number {
-  return Math.min(10 * 60 * SECOND, 30 * SECOND + Math.ceil(pixels / 1_000_000) * 3 * SECOND)
+export function conversionBudgetMs(pixels: number, bytes = 0): number {
+  return Math.min(10 * 60 * SECOND, 30 * SECOND + Math.ceil(pixels / 1_000_000) * 3 * SECOND + Math.ceil(bytes / 2_000_000) * SECOND)
 }
 
 /** How long decoding a picture for its preview may take. */

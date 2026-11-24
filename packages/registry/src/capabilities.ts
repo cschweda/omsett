@@ -87,7 +87,7 @@ const SHEET_WRITES: WriteSpec[] = TABLE_WRITES.map((write) => ({ ...write, defau
 const SCRIPTS = ['fountain', 'fdx', 'drafter']
 const ARCHIVES = ['zip', 'tgz', 'tar']
 const SFNT = ['ttf', 'otf', 'woff']
-const SOUNDS = ['wav', 'aiff', 'au']
+const SOUNDS = ['wav', 'flac', 'aiff', 'au']
 
 export const capabilities: Capability[] = [
   {

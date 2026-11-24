@@ -4314,6 +4314,102 @@ sound("larger-than-wav-allows.wav", b"RF64" + b"\xFF\xFF\xFF\xFF" + WAV[8:],
       "The form of WAV made for recordings past four gigabytes, which says so in its first four letters. Omsett does not read it yet.",
       "unknown", group="identity")
 
+# FLAC packs the same numbers without loss, and says a great deal more about itself: a checksum
+# on the start of every stretch of sound, another on the whole of each stretch, and one on all
+# the sound there is. So there is more to lie about, and a packed file can claim to hold far
+# more than its size. These are built bit by bit (flac.py) so that each is wrong in one way only.
+import flac as F  # noqa: E402
+
+FLAC = read("flac", "sample.flac")
+DAMAGED = "This FLAC is damaged: part of it does not match its own checksum"
+WRONG_SOUND = "This FLAC is damaged: the sound it unpacks to is not the sound its checksum was made from"
+TOO_MUCH = "This FLAC unpacks to more sound than Omsett can hold in a browser (1 GB)"
+ON_TRUST = "This FLAC does not say how much sound it holds, and unpacks to more than Omsett will take on trust (256 MB)"
+PLAINLY = F.flac(S.PAIRS)
+QUIET = [(0,)] * 65535
+
+
+def one_stretch(writers, count=1024, channels=2, total=None, depth=16, **more):
+    """A FLAC of one stretch, for a stretch that is wrong in some way."""
+    return b"fLaC" + F.part(0, F.label(S.RATE, channels, depth, count if total is None else total, block=count), last=True) + F.stretch(0, count, writers, depth, **more)
+
+
+def left_and_right(make, frames=None):
+    frames = S.PAIRS[:1024] if frames is None else frames
+    return [make([frame[c] for frame in frames]) for c in range(2)]
+
+
+sound("truncated.flac", FLAC[: len(FLAC) // 2],
+      "A FLAC cut off half-way. The bits run out in the middle of a stretch of sound.",
+      "flac", node="fails", note=CUT % "FLAC")
+sound("one-byte-changed.flac", patched(PLAINLY, len(PLAINLY) - 300, bytes([PLAINLY[len(PLAINLY) - 300] ^ 0xFF])),
+      "A sound FLAC with one byte of its sound changed. Every stretch carries a checksum of itself, and this one no longer matches.",
+      "flac", node="fails", note=DAMAGED)
+sound("first-checksum-wrong.flac", one_stretch(left_and_right(lambda column: F.plain(column, 16)), check=0x5A),
+      "A FLAC whose first stretch opens with the wrong checksum for its own first few bytes: the bytes that say how long it is and how it is stored.",
+      "flac", node="fails", note=DAMAGED)
+sound("checksum-of-other-sound.flac", F.flac(S.PAIRS, md5=F.checksum(S.PAIRS[::-1], 16)),
+      "A FLAC in which every stretch checks out, and the checksum of all the sound is for some other sound. What was unpacked is not what was packed, and it is not handed on.",
+      "flac", node="fails", note=WRONG_SOUND)
+sound("eight-days-of-sound.flac", b"fLaC" + F.part(0, F.label(S.RATE, 8, 32, (1 << 36) - 1), last=True) + F.stretch(0, 4096, [F.constant(0, 32)] * 8, 32),
+      "A FLAC of a few dozen bytes whose label says it holds 68 billion moments of sound in eight channels. It is turned away on what the label says, before any room is made.",
+      "flac", node="fails", note=TOO_MUCH)
+sound("silence-without-end.flac", b"fLaC" + F.part(0, F.label(S.RATE, 8, 24, 0, b"\0" * 16, block=65535), last=True) + b"".join(F.stretch(i, 65535, [F.constant(0, 24)] * 8, 24) for i in range(220)),
+      "The same trick without the warning: the label says nothing of how much sound there is, and each stretch of thirty bytes unpacks to a megabyte and a half of silence. Unpacking stops at 256 MB.",
+      "flac", node="fails", note=ON_TRUST)
+sound("says-less-than-it-holds.flac", F.flac(S.PAIRS, total=1000),
+      "A FLAC whose label counts a thousand moments of sound, with more than that in its first stretch alone.",
+      "flac", node="fails", note=NOT_SOUND % "FLAC")
+sound("says-more-than-it-holds.flac", F.flac(S.PAIRS, total=50_000),
+      "A FLAC whose label counts fifty thousand moments of sound and which holds under three thousand.",
+      "flac", node="fails", note=CUT % "FLAC")
+sound("stretch-of-one-channel.flac", one_stretch([F.plain([frame[0] for frame in S.PAIRS[:1024]], 16)]),
+      "A FLAC whose label says two channels and whose first stretch says it has one.",
+      "flac", node="fails", note=NOT_SOUND % "FLAC")
+sound("guess-from-numbers-not-there.flac", one_stretch(left_and_right(lambda column: F.guessed(column, 16, order=4), S.PAIRS[:8]), count=2),
+      "A stretch of two moments that is to be guessed from the four before each. A reader that did not check would read numbers from before the start of its own table.",
+      "flac", node="fails", note=NOT_SOUND % "FLAC")
+sound("nothing-but-zeros.flac", PLAINLY[:42] + bytes([0xFF, 0xF8, 0xA0, 0x18, 0x00, F.crc8(bytes([0xFF, 0xF8, 0xA0, 0x18, 0x00])), 0x10, 0x00]) + b"\0" * 4096,
+      "A stretch whose differences are written in the code that counts zeros, followed by nothing but zeros. The count is followed to the end of the file and no further.",
+      "flac", node="fails", note=CUT % "FLAC")
+sound("difference-wider-than-a-number.flac", one_stretch(left_and_right(lambda column: F.guessed(column, 16, order=0, k=30, long=True), [(20 << 30, 0)] * 16), count=16),
+      "A difference written as twenty times a billion, where no number in a FLAC is wider than thirty-two bits.",
+      "flac", node="fails", note=NOT_SOUND % "FLAC")
+sound("louder-than-its-bits.flac", one_stretch(left_and_right(lambda column: F.guessed(column, 16, order=1, k=13), [(30000 + 20 * i, 0) for i in range(1024)])),
+      "Sixteen-bit sound whose differences add up to numbers that sixteen bits cannot hold. Written out, they would wrap round into noise.",
+      "flac", node="fails", note=NOT_SOUND % "FLAC")
+sound("packed-in-a-way-not-yet-invented.flac", one_stretch(left_and_right(lambda column: F.guessed(column, 16, order=2, kind=5))),
+      "A stretch packed in a way FLAC sets aside for the future and has never defined.",
+      "flac", node="fails", note=NOT_SOUND % "FLAC")
+sound("label-of-the-wrong-size.flac", b"fLaC" + F.part(0, F.label(S.RATE, 2, 16, 1024)[:20], last=True) + PLAINLY[42:],
+      "A FLAC whose first part, which is always thirty-four bytes, is twenty.",
+      "flac", node="fails", note=NOT_SOUND % "FLAC")
+sound("two-thousand-empty-parts.flac", PLAINLY[:4] + F.part(0, PLAINLY[8:42]) + F.part(1, b"") * 2000 + PLAINLY[42:],
+      "Two thousand empty parts between the label and the sound, none of them saying it is the last.",
+      "flac", node="fails", note=NOT_SOUND % "FLAC")
+
+sound("differences-written-plainly.flac", F.flac(S.PAIRS, make=lambda column, depth: F.guessed(column, depth, order=1, escape=17)),
+      "A FLAC that guesses each number and then writes how far off it was plainly, in seventeen bits, where the usual code would do. Allowed, and almost never seen.",
+      "flac", node="succeeds", group="unusual")
+sound("low-bits-left-out.flac", F.flac([(left & ~0xFF, right & ~0xFF) for left, right in S.PAIRS], make=lambda column, depth: F.plain(column, depth, spare=8)),
+      "Sound whose numbers all end in eight zeros, which the file leaves out and counts instead. They are put back.",
+      "flac", node="succeeds", group="unusual")
+sound("ten-minutes-of-silence.flac", b"fLaC" + F.part(0, F.label(S.RATE, 1, 16, 65535 * 101, F.checksum(QUIET * 101, 16), block=65535), last=True) + b"".join(F.stretch(i, 65535, [F.constant(0, 16)], 16) for i in range(101)),
+      "Ten minutes of silence in fifteen hundred bytes. A small file that unpacks to a large one is not a lie when it says so: the label gives the length, it is within what a browser can hold, and it unpacks.",
+      "flac", node="succeeds", group="unusual")
+sound("length-not-given.flac", F.flac(S.PAIRS, total=0, md5=b"\0" * 16),
+      "A FLAC sent as it was made, by a program that could not go back to fill in how much sound there was or the checksum of it. It is unpacked to its end.",
+      "flac", node="succeeds", group="unusual")
+sound("tags-in-front.flac", b"ID3\x03\0\0\0\0\0\x0c" + b"TIT2" + b"\0" * 8 + FLAC,
+      "A FLAC with a block of an MP3's tags in front of it, as some programs write. The block says how long it is, and the FLAC is found after it.",
+      "flac", node="succeeds", group="unusual")
+sound("comments-run-past-their-end.flac", F.flac(S.PAIRS, extra=F.part(4, struct.pack("<I", 4) + b"test" + struct.pack("<II", 0xFFFFFFFF, 0x7FFFFFFF) + b"TITLE=x", last=True)),
+      "A sound FLAC with four billion comments, the first of them two gigabytes long, in a part of twenty-three bytes. The comments are not followed past their end, and the sound converts.",
+      "flac", node="succeeds", group="unusual")
+sound("packed-sound-named-as-wav.wav", FLAC,
+      "A FLAC with a WAV's name.",
+      "flac", node="succeeds", mismatch=True, group="identity")
+
 G = "code"
 LIST_OF_NOTES = S.info(INAM=CB, IART=CB, ICMT=CB, ISFT=MARK.encode())
 BROADCAST = S.part(b"bext", (CB + b"\0" * 256)[:256] + (CB + b"\0" * 32)[:32] + b"\0" * 32 + b"2026-11-24" + b"\0" * 300)
@@ -4321,6 +4417,8 @@ code("code.wav", S.wav(PCM, before=BROADCAST, after=LIST_OF_NOTES + S.part(b"id3
      WHY % "as the title, the artist and the comment, in a broadcaster's description, and in a block of tags", "wav", node="succeeds", absent="omsett_canary")
 code("code.aiff", S.aiff(PCM_BIG, before=b"".join(S.part(name, CB, little=False) for name in (b"NAME", b"AUTH", b"(c) ", b"ANNO")), after=S.part(b"ID3 ", b"ID3\x03\0\0\0\0\0\x7fTIT2" + CB, little=False)),
      WHY % "as the title, the artist, the copyright line and a comment, and in a block of tags", "aiff", node="succeeds", absent="omsett_canary")
+code("code.flac", F.flac(S.PAIRS, extra=F.part(4, F.comments(vendor=MARK.encode(), TITLE=CB, ARTIST=CB, COMMENT=CB, ENCODER=CB)) + F.part(6, F.picture(CB, CB), last=True)),
+     WHY % "as the title, the artist and a comment, as the name of the program that made the file, and as the description of its cover picture", "flac", node="succeeds", absent="omsett_canary")
 code("code.au", S.au(PCM_BIG, note=CB + b"\0"),
      WHY % "as the note an AU carries between its label and its sound", "au", node="succeeds", absent="omsett_canary")
 

@@ -62,7 +62,7 @@ describe('router, real registry', () => {
       'fountain', 'fdx', 'drafter',
       'woff2', 'woff', 'ttf', 'otf',
       'zip', 'tgz', 'tar',
-      'wav', 'aiff', 'au',
+      'wav', 'flac', 'aiff', 'au',
     ])
     const readOnly = new Set(everything.formats.filter((f) => f.readOnly).map((f) => f.id))
     expect([...readOnly].sort()).toEqual(['apng', 'dcm', 'dng', 'exr', 'fits', 'hdr', 'heic', 'pcx', 'pdf', 'pptx', 'psb', 'psd', 'ras', 'sgi', 'svg', 'svgz'])
@@ -111,9 +111,11 @@ describe('router, real registry', () => {
     expect(all.route('ass', 'srt')!.warnings.map((w) => w.id)).toEqual(['styling-lost'])
     expect(all.route('sbv', 'lrc')!.warnings.map((w) => w.id)).toEqual(['lyrics-one-line'])
     expect(all.route('lrc', 'microdvd')!.warnings.map((w) => w.id).sort()).toEqual(['ends-guessed', 'frames-assumed'])
-    // Sound stored unpacked: one step, its own kind only, and what the file says about itself left behind.
+    // Sound: one step, its own kind only, nothing lost, and what the file says about itself left behind.
     expect(all.route('wav', 'aiff')!.edges.map((e) => e.candidates[0]!.engine)).toEqual(['audio'])
-    expect(all.targetsFor(['au']).map((t) => t.format.id)).toEqual(['wav', 'aiff', 'au'])
+    expect(all.targetsFor(['au']).map((t) => t.format.id)).toEqual(['wav', 'flac', 'aiff', 'au'])
+    expect(all.route('flac', 'wav')!.edges.map((e) => e.candidates[0]!.engine)).toEqual(['audio'])
+    expect(all.route('wav', 'flac')!.lossy).toBe(false)
     expect(all.route('aiff', 'wav')!.lossy).toBe(false)
     expect(all.route('aiff', 'wav')!.warnings.map((w) => w.id)).toEqual(['metadata-lost'])
     // HEIC is decoded to PNG first, without loss, and goes on from there.

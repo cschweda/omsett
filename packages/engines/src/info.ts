@@ -146,7 +146,8 @@ export const iconInfo: EngineInfo = {
   sourceUrl: 'https://github.com/cschweda/omsett/tree/main/packages/engines/src/icon',
 }
 
-// Sound stored unpacked: WAV, AIFF and AU. Omsett's own readers and writers.
+// Sound, kept exactly: WAV, AIFF and AU, which store it unpacked, and FLAC, which packs it
+// without loss. Omsett's own readers and writers, the FLAC packer and unpacker included.
 export const audioInfo: EngineInfo = {
   id: 'audio',
   sizeBytes: 0,
