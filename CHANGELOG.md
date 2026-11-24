@@ -7,6 +7,31 @@ The paragraph that opens a version is its teaser: the home page shows its first 
 in the "What's new" banner, so keep it to two or three sentences on what a visitor will notice.
 A line beginning "Released" gives the date.
 
+## 0.52.1
+
+Released 24 November 2026.
+
+A PDF Omsett writes no longer scores lower for accessibility than the document it was made
+from. The sample Word file scored an A and its PDF a B; both now score an A.
+
+### Fixed
+
+- **A PDF now asks for its title to be shown.** It carried a title, but a viewer showed, and a
+  screen reader announced, the file's name, because the PDF did not ask otherwise. That one
+  setting (`DisplayDocTitle`, which W3C's technique PDF18 calls for) cost the PDF a grade on
+  audit.icjia.app. It is added to the end of the file Typst writes; nothing Typst wrote is
+  changed.
+
+### Known
+
+- Checked by hand, with a copy of the checker on this machine and nothing sent anywhere: the
+  sample Word document, presentation, workbook, Markdown and web page each become a PDF that
+  scores 100, and none scores below its original. The checker is not part of Omsett's tests;
+  what it looks for (the title shown, the language, tags, picture descriptions, table
+  headers) is.
+- A picture made into a PDF scores poorly, and should: it is a picture on a page, with no
+  text and no description. Nothing was lost; there was nothing to lose.
+
 ## 0.52.0
 
 Released 24 November 2026.

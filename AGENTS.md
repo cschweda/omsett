@@ -233,6 +233,10 @@ build by `apps/web/scripts/write-headers.ts`.
   `loadFonts(..., { assets: false })`: without that the library fetches fonts from another
   site. No package registry and no access to files is set. A browser test asserts that writing
   a PDF asks nothing of any other origin.
+- **A PDF is finished by adding to it, never by rewriting it** (`typst/finish.ts`). `titleShown`
+  appends the catalog again, asking for the title to be shown (`DisplayDocTitle`), with a table
+  that points back to Typst's. Without it the PDF scores a grade lower than the document it
+  came from. Anything else a checker wants and Typst does not write goes there, the same way.
 - **A PDF Omsett writes must be tagged, and is read back to prove it.** `typst.test.ts` gives the
   PDF to Omsett's own reader and requires headings, lists, the table's head and links from the
   tags. In Typst a picture must be set in a `box`: put any other way inside a paragraph it is
