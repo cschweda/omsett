@@ -13,6 +13,9 @@ import {
   zipFiles,
   createFontEngine,
   createAudioEngine,
+  createAudioMp3Engine,
+  type Mp3Decoder,
+  type Mp3Encoder,
   createIconEngine,
   createFontWoff2Engine,
   createHeifEngine,
@@ -135,6 +138,15 @@ const engines: Record<string, Engine> = Object.fromEntries(
     createFontEngine(),
     createFontWoff2Engine(),
     createAudioEngine(),
+    // MP3: mpg123 unpacks and LAME packs. LAME is started from its verified binary; its small
+    // loader, and mpg123 whole, are part of this worker's own code.
+    createAudioMp3Engine({
+      decoder: async () => new (await import('mpg123-decoder')).MPEGDecoder() as unknown as Mp3Decoder,
+      async encoder() {
+        const [{ createEncoder }, wasm] = await Promise.all([import('./lame'), verified(assets.mp3.wasm)])
+        return (await createEncoder('audio/mpeg', wasm)) as unknown as Mp3Encoder
+      },
+    }),
   ].map((engine) => [engine.id, engine]),
 )
 

@@ -16,6 +16,8 @@ const UNWRAPS_TO_THE_OTHER = [
   // A table of people is not a calendar, and a table of events is not an address book.
   'No events found. An event needs a column called summary (or title) and one called start',
   'No contacts found. A contact needs a column called name, email or phone',
+  // MP3 holds one or two channels, and one sample of sound has six.
+  'MP3 holds one or two channels of sound, and this file has 6. Choose FLAC or WAV',
 ]
 const derived = deriveEdges(registry)
 

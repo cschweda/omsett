@@ -67,6 +67,7 @@ import { wav } from './wav'
 import { aiff } from './aiff'
 import { au } from './au'
 import { flac } from './flac'
+import { mp3 } from './mp3'
 
 /**
  * Order here is the order targets are offered in: the first few a file can become are shown
@@ -87,6 +88,6 @@ export const formats: Format[] = [
   woff2, woff, ttf, otf,
   // Archives: files and folders, packed three ways.
   zip, tgz, tar,
-  // Sound, kept exactly: packed without loss in FLAC, and unpacked behind three labels.
-  wav, flac, aiff, au,
+  // Sound: MP3, which leaves some out to be small, and four formats that keep all of it.
+  mp3, wav, flac, aiff, au,
 ]

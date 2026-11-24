@@ -164,6 +164,19 @@ The sample sounds in `fixtures/` are two notes written by `fixtures/_tools/sound
 else's recording is in the repository. The FLAC samples are those notes, packed by the
 reference `flac` program and by ffmpeg.
 
+### audio-mp3
+
+MP3 is unpacked by **mpg123** (LGPL-2.1), built to WebAssembly by
+[`mpg123-decoder`](https://github.com/eshaz/wasm-audio-decoders) (MIT), and packed by **LAME**
+(LGPL-2.0-or-later), built to WebAssembly by
+[`wasm-media-encoders`](https://github.com/arseneyr/wasm-media-encoders) (MIT). Neither is
+changed. Their sources are at <https://www.mpg123.de> and <https://lame.sourceforge.io>, and
+the build scripts are in the two repositories named. Both are fetched only when an MP3 is read
+or written. The walk that checks an MP3 before it is unpacked, the reading of its tags, and
+the list of contents written at the front of each MP3 are Omsett's own code.
+
+The sample MP3s in `fixtures/` are Omsett's two test notes, packed by ffmpeg.
+
 ### font-woff2
 
 WOFF2 is read and written by Google's woff2 library and Brotli, built to WebAssembly.

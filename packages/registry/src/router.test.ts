@@ -38,7 +38,7 @@ describe('router, real registry', () => {
     for (const edge of deriveEdges(registry).edges) {
       const engines = edge.candidates.map((c) => c.engine)
       if (edge.from !== 'png') expect(engines, `${edge.from} → ${edge.to}`).not.toContain('canvas')
-      for (const engine of engines) expect(engine === 'canvas' || ['heif', 'resvg', 'magick', 'data', 'subtitle', 'markup', 'font', 'font-woff2', 'icon', 'archive', 'script', 'pdf', 'audio'].includes(engine) || engine.startsWith('vips')).toBe(true)
+      for (const engine of engines) expect(engine === 'canvas' || ['heif', 'resvg', 'magick', 'data', 'subtitle', 'markup', 'font', 'font-woff2', 'icon', 'archive', 'script', 'pdf', 'audio', 'audio-mp3'].includes(engine) || engine.startsWith('vips')).toBe(true)
       // The data engine reads and writes data and nothing else; no picture engine touches data.
       const data = [edge.from, edge.to].map((id) => ['data', 'spreadsheet'].includes(formatById(registry, id)!.category))
       expect(data[0], `${edge.from} → ${edge.to}`).toBe(data[1])
@@ -62,7 +62,7 @@ describe('router, real registry', () => {
       'fountain', 'fdx', 'drafter',
       'woff2', 'woff', 'ttf', 'otf',
       'zip', 'tgz', 'tar',
-      'wav', 'flac', 'aiff', 'au',
+      'mp3', 'wav', 'flac', 'aiff', 'au',
     ])
     const readOnly = new Set(everything.formats.filter((f) => f.readOnly).map((f) => f.id))
     expect([...readOnly].sort()).toEqual(['apng', 'dcm', 'dng', 'exr', 'fits', 'hdr', 'heic', 'pcx', 'pdf', 'pptx', 'psb', 'psd', 'ras', 'sgi', 'svg', 'svgz'])
@@ -113,7 +113,14 @@ describe('router, real registry', () => {
     expect(all.route('lrc', 'microdvd')!.warnings.map((w) => w.id).sort()).toEqual(['ends-guessed', 'frames-assumed'])
     // Sound: one step, its own kind only, nothing lost, and what the file says about itself left behind.
     expect(all.route('wav', 'aiff')!.edges.map((e) => e.candidates[0]!.engine)).toEqual(['audio'])
-    expect(all.targetsFor(['au']).map((t) => t.format.id)).toEqual(['wav', 'flac', 'aiff', 'au'])
+    expect(all.targetsFor(['au']).map((t) => t.format.id)).toEqual(['mp3', 'wav', 'flac', 'aiff', 'au'])
+    // MP3 is the one that loses sound, in one step, by the engine that is fetched for it alone.
+    expect(all.route('wav', 'mp3')!.edges.map((e) => e.candidates[0]!.engine)).toEqual(['audio-mp3'])
+    expect(all.route('wav', 'mp3')!.lossy).toBe(true)
+    expect(all.route('wav', 'mp3')!.edges[0]!.candidates[0]!.defaultOptions).toEqual({ soundQuality: 'standard' })
+    expect(all.route('flac', 'mp3')!.warnings.map((w) => w.id)).toEqual(['metadata-lost', 'sound-left-out'])
+    expect(all.route('mp3', 'flac')!.warnings.map((w) => w.id)).toEqual(['metadata-lost', 'sound-not-restored'])
+    expect(all.targetsFor(['mp3']).find((t) => t.format.id === 'mp3')!.reason).toBe('Already MP3')
     expect(all.route('flac', 'wav')!.edges.map((e) => e.candidates[0]!.engine)).toEqual(['audio'])
     expect(all.route('wav', 'flac')!.lossy).toBe(false)
     expect(all.route('aiff', 'wav')!.lossy).toBe(false)

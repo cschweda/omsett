@@ -60,7 +60,9 @@ These are invariants. A change that breaks one is wrong even if it works.
    screen reader testing, and no changes made for accessibility's sake. What already exists (the
    real file input, the radio-group picker, the live region) stays as it is; do not remove it and
    do not extend it. The axe and keyboard-order tests in `e2e/gate.spec.ts` are parked behind
-   `ACCESSIBILITY_DEFERRED`.
+   `ACCESSIBILITY_DEFERRED`. One exception, asked for on 24 November 2026: an automated check
+   of every page, recorded in the README, and its two findings fixed. A table wrapped in
+   `.table-wrap` is given `tabindex="0"`, `role="region"` and a label, so a keyboard can scroll it.
 9. **The converter is one screen.** `pages/index.vue` is the whole tool: no steps across pages,
    no modals on the happy path. The information pages (About, Trust, Technical details, What's new, Security, Settings, Trap files,
    Status) sit beside it and never stand between a person and a conversion.
@@ -222,6 +224,14 @@ build by `apps/web/scripts/write-headers.ts`.
 - **Details and the ZIP of results have a worker of their own** (`sideWorker` in
   `useEngines`). One worker does one thing at a time; asked of the converting worker, they
   would wait behind a long conversion, time out, and stop it.
+- **The preview before converting is the conversion itself, run quietly** (`makePreview` in
+  `useConversionQueue`): one picture, a picture target, under `PREVIEW_MAX_PIXELS`. It never
+  fetches an engine: one that is not loaded is offered with its size, and fetched on a press.
+  It waits for a conversion and a conversion waits for it, since one worker does one thing at a
+  time. It is hidden while converting and once there is a result, so that only one comparison
+  is ever on the page; the tests rely on that.
+- **The page goes to the result only for a conversion a person asked for** (`arrived`). A
+  re-conversion from moving a setting must not move the page.
 - **"Convert another" ends a session** (`sessions` in `useConversionQueue`). A batch checks
   after every wait whether its session is over, and writes nothing if it is.
 - **Word from the worker can arrive late.** A progress event may land after its file is
@@ -270,6 +280,19 @@ build by `apps/web/scripts/write-headers.ts`.
   and quietest numbers by turns) at every width and reads every number back. When changing the
   packer, also run a file through the reference tool by hand: `flac -t` must accept it. The
   samples in `fixtures/flac` come from that tool and from ffmpeg, never from Omsett.
+- **A decoder that forgives is given only what Omsett has walked.** mpg123 plays whatever it can
+  find in a damaged MP3 and reports nothing. `readMp3` follows the file from its first stretch
+  to its last by the length each gives, and refuses one that stops inside a stretch, counts
+  more stretches than it has, changes rate or channels part-way, or holds anything between
+  stretches. Only that span is handed to the decoder. Do not loosen the walk to read a file a
+  player accepts; a player's job is to make noise, and Omsett's is to hand back the whole sound
+  or say why not.
+- **Import one thing from `wasm-media-encoders`, through `app/workers/lame.ts`.** The package
+  carries LAME and an Ogg encoder inside its own script; imported whole it adds 780 KB that
+  never runs, and would start LAME from a copy the app has not verified.
+- **A choice of how much sound to leave out is `soundQuality`** (`smaller`, `standard`, `best`),
+  a key in the capability's `defaultOptions` like any other choice. The engine maps it to the
+  encoder's settings; the page names no format and no bitrate.
 - **The time a conversion is given grows with pixels and with bytes** (`conversionBudgetMs`).
   Sound has no pixels; without the bytes a long recording would be stopped half-way.
 - **A setting for ImageMagick's writer is data in the registry** (`defines` in a capability's

@@ -125,7 +125,7 @@ const totals = computed(() => {
       </StepSection>
 
       <StepSection title="Severity" heading-id="security-severity">
-        <div class="table-wrap">
+        <div class="table-wrap" tabindex="0" role="region" aria-labelledby="security-severity">
           <table class="table">
             <tbody>
               <tr v-for="level in SEVERITIES" :key="level">

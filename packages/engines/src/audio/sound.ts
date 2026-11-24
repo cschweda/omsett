@@ -36,6 +36,8 @@ export interface Read {
   packing?: string
   /** Bits to a number, where that is not a whole count of bytes. */
   bits?: number
+  /** How the sound is stored, in words, where it is not as plain numbers at all. */
+  stored?: string
 }
 
 /** More channels than this is not read. Surround sound has eight; a recording desk, sixty-four. */
