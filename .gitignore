@@ -26,3 +26,6 @@ apps/web/public/fonts/
 
 # Python leaves these beside the fixture tools.
 __pycache__/
+
+# Books lent for local testing. They are other people's work and are never committed.
+docs/ebooks/

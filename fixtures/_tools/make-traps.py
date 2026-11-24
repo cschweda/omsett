@@ -3358,8 +3358,8 @@ script(
     "says-it-is-something-else.drafter",
     package(first=("mimetype", b"application/epub+zip")),
     "A ZIP with a .drafter name whose first entry says it is an e-book. It is taken for what "
-    "it says it is, which is not something Omsett converts yet.",
-    "unregistered",
+    "it says it is, an EPUB, which Omsett writes and does not yet read: nothing is offered for it.",
+    "epub", mismatch=True,
 )
 script(
     "package-named.zip",
@@ -4368,6 +4368,91 @@ trap("old-document-named-as-new.docx", DOC,
      "A Word document from before 2007 with the name of a newer one. It is read as what it is.",
      "doc", node="succeeds", mismatch=True, group="identity")
 
+# --- e-books: AZW3 and MOBI ----------------------------------------------------------------------
+# A Kindle book is a list of numbered records, and tables that say which stretch of text is
+# which page and which piece goes where. Every one of those is a number that can lie. A book
+# may also be locked, and its text packed so that a few bytes stand for a great many.
+import kindle as K  # noqa: E402
+
+G = "books"
+AZW3, MOBI = read("azw3", "sample.azw3"), read("mobi", "sample.mobi")
+NOT_BOOK = "This file is not a valid Kindle book"
+LOCKED = "This book is copy-protected (DRM), and Omsett does not unlock books. Only books without copy protection can be converted"
+TOO_MUCH_TEXT = "This book unpacks to more text than Omsett will handle"
+
+
+def piece_put_past_the_end(parts):
+    """The table of pieces says the first goes two billion bytes into its page."""
+    parts["pieces"] = K.table(K.PIECES, [(b"2000000000", 0x0F, [0, 0, 0, 0, 40])], b"\0")
+
+
+def page_longer_than_the_book(parts):
+    parts["pages"] = K.table(K.PAGES, [(b"SKEL0000000000", 0x05, [1, 0, 0x7FFFFFF])])
+
+
+def page_with_no_pieces_listed(parts):
+    """A page that says it is made of forty thousand pieces, with one in the table."""
+    parts["pages"] = K.table(K.PAGES, [(b"SKEL0000000000", 0x05, [40000, 0, 60])])
+
+
+def records_out_of_order(book: bytes) -> bytes:
+    """The list of where each record starts, with two of them changed places."""
+    return book[:78] + book[86:94] + book[78:86] + book[94:]
+
+
+trap("truncated.azw3", AZW3[: len(AZW3) // 2],
+     "A Kindle book cut off half-way. The list at its start names records that are no longer there.",
+     "azw3", node="fails", note=NOT_BOOK, group=G)
+trap("truncated.mobi", MOBI[: len(MOBI) // 2],
+     "An older Kindle book cut off half-way.",
+     "mobi", node="fails", note=NOT_BOOK, group=G)
+trap("copy-protected.azw3", K.newer(locked=2),
+     "A Kindle book with copy protection, as most bought from the Kindle store have. Its text is scrambled. Omsett does not unlock books, and says so.",
+     "azw3", node="fails", note=LOCKED, group=G)
+trap("copy-protected.mobi", K.older(locked=2),
+     "An older Kindle book with copy protection.",
+     "mobi", node="fails", note=LOCKED, group=G)
+trap("text-of-two-gigabytes.azw3", K.newer(stated=0x7FFFFFFF),
+     "A book of three short pages that says its text is two gigabytes long. Nothing is set aside for it.",
+     "azw3", node="fails", note=TOO_MUCH_TEXT, group=G)
+trap("phrase-that-is-itself.azw3", K.newer(huff=True, book={"circle": True}, chapters=[("One", "<p>A page with a ~ in it.</p>")]),
+     "Kindle packs text as codes for phrases in a dictionary, and a phrase may be written in codes too. Here one phrase is the code for itself: unpacked without care, that never ends.",
+     "azw3", node="fails", note=NOT_BOOK, group=G)
+trap("phrases-that-double.azw3", K.newer(huff=True, book={"chain": 24}, chapters=[("One", "<p>" + chr(24) * 40 + "</p>")]),
+     "A dictionary of twenty-four phrases, each the one before it twice over, and a page that uses the last of them forty times: a few bytes that would unpack to several hundred gigabytes.",
+     "azw3", node="fails", note=NOT_BOOK, group=G)
+trap("piece-put-past-the-end.azw3", K.newer(change=piece_put_past_the_end),
+     "Each page of the newer kind of book is a frame and the pieces that go into it. Here a piece is to be put two billion bytes into a page of two hundred.",
+     "azw3", node="fails", note=NOT_BOOK, group=G)
+trap("page-longer-than-the-book.azw3", K.newer(change=page_longer_than_the_book),
+     "The table of pages says the first page is a hundred and thirty megabytes long, in a book of three kilobytes.",
+     "azw3", node="fails", note=NOT_BOOK, group=G)
+trap("page-of-forty-thousand-pieces.azw3", K.newer(change=page_with_no_pieces_listed),
+     "A page that says it is made of forty thousand pieces. The table of pieces holds three.",
+     "azw3", node="fails", note=NOT_BOOK, group=G)
+trap("records-out-of-order.azw3", records_out_of_order(AZW3),
+     "The list of where each record starts, with two entries changed places, so that a record would end before it begins.",
+     "azw3", node="fails", note=NOT_BOOK, group=G)
+trap("no-pages.mobi", K.older(change=lambda parts: parts.update(text=b"<html><body></body></html>")),
+     "A Kindle book with a title, an author, a picture and no pages.",
+     "mobi", node="fails", note=NOT_BOOK, group=G)
+
+trap("picture-that-is-not-there.azw3", K.newer(chapters=[("One", '<h1>One</h1><p>A picture: <img src="kindle:embed:00VV?mime=image/png" alt="Missing"/> and a link to <a href="kindle:pos:fid:00VV:off:0000000000">a page that is not there</a>.</p>')]),
+     "A page that asks for picture number 1,023 of a book that has one, and links to a piece of a page that does not exist. The words are kept; nothing is asked for that is not in the book.",
+     "azw3", node="succeeds", group="unusual")
+trap("packed-the-kindle-way.azw3", read("azw3", "packed.azw3"),
+     "A book whose text is in Kindle's own packing, a code for every phrase, as books from the Kindle store are.",
+     "azw3", node="succeeds", group="unusual")
+trap("not-packed-at-all.mobi", read("mobi", "unpacked.mobi"),
+     "An older book whose text is not packed in any way.",
+     "mobi", node="succeeds", group="unusual")
+trap("kindle-book-named-as-epub.epub", AZW3,
+     "A Kindle book with an EPUB's name. The two are nothing alike inside; it is read as what it is.",
+     "azw3", node="succeeds", mismatch=True, group="identity")
+trap("words-named-as-a-book.azw3", b"BOOKMOBI is how a Kindle book says what it is, sixty bytes in. This is a sentence.\n",
+     "A sentence with a Kindle book's name.",
+     "unknown", group="identity")
+
 # --- sound: WAV, AIFF, AU -------------------------------------------------------------------------
 # Sound stored unpacked is a label and then numbers. The label gives lengths, and a reader that
 # believes them reads past the end of the file, or sets aside room for hours of sound that are
@@ -4674,6 +4759,12 @@ code("code.doc", W.document([W.para(CANARY, style=1), W.para(CANARY, " ", W.link
      WHY % "as a heading, as text, as the words and the address of a link, in a table, as the title and the author, and beside a macro set to run on opening", "doc", node="succeeds")
 code("code.xls", X.container([("Workbook", X.workbook([(CANARY[:28], X.text_cell(0, 0, 0) + X.text_cell(0, 1, 1) + X.text_cell(1, 0, 2) + X.text_cell(1, 1, 3) + X.rec(0x0204, X.cell(2, 0) + X.words(CANARY)) + X.formula(2, 1, "=cmd|' /C " + SHELL + "'!A0"))], ["name", "__proto__", CANARY, "polluted"])), ("\x05SummaryInformation", X.about(CB[:200], CB[:200], MARK.encode())), ("_VBA_PROJECT_CUR", b"Sub Auto_Open(): Shell \"" + SHELL.encode() + b"\": End Sub")], small=True),
      WHY % "in cells, as the name of a sheet, as the title and the author, in a formula that asks to run a command, and in a macro set to run on opening", "xls", node="succeeds")
+BOOK_PAGE = '<h1 onclick="%s">%s</h1><p>%s <a href="javascript:%s">a link</a> <img src="http://canary.invalid/x.png" onerror="%s" alt="x"/></p><script>%s</script><iframe src="http://canary.invalid/"></iframe><form action="http://canary.invalid/"><input name="x"/></form>' % (MARK, "A title", "Text", MARK, MARK, MARK)
+BOOK_STYLE = b'@import url("http://canary.invalid/a.css");\nbody { background: url(http://canary.invalid/b.png); width: expression(' + MARK.encode() + b') }\n@font-face { font-family: x; src: url(http://canary.invalid/f.woff) }\n'
+code("code.azw3", K.newer(chapters=[("One", BOOK_PAGE), ("Two", "<p>" + CANARY.replace("&", "&amp;").replace("<", "&lt;") + "</p>")], style=BOOK_STYLE, title=CB[:120], author=CB[:120]),
+     WHY % "as the title and the author, in a page as a script, a handler, a link that is code, a frame and a form, and in a stylesheet that asks another site for a picture and a font", "azw3", node="succeeds")
+code("code.mobi", K.older(title=CB[:120], author=CB[:120], change=lambda parts: parts.update(text=("<html><body>" + BOOK_PAGE + "<mbp:pagebreak/><p>second page</p></body></html>").encode())),
+     WHY % "as the title and the author, and in a page as a script, a handler, a link that is code, a frame and a form", "mobi", node="succeeds")
 code("code.wav", S.wav(PCM, before=BROADCAST, after=LIST_OF_NOTES + S.part(b"id3 ", b"ID3\x03\0\0\0\0\0\x7fTIT2" + CB)),
      WHY % "as the title, the artist and the comment, in a broadcaster's description, and in a block of tags", "wav", node="succeeds", absent="omsett_canary")
 code("code.aiff", S.aiff(PCM_BIG, before=b"".join(S.part(name, CB, little=False) for name in (b"NAME", b"AUTH", b"(c) ", b"ANNO")), after=S.part(b"ID3 ", b"ID3\x03\0\0\0\0\0\x7fTIT2" + CB, little=False)),

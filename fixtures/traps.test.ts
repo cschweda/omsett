@@ -27,6 +27,7 @@ const zip = formatById(registry, 'zip')!
 const tar = formatById(registry, 'tar')!
 const fdx = formatById(registry, 'fdx')!
 const wav = formatById(registry, 'wav')!
+const epub = formatById(registry, 'epub')!
 const aiff = formatById(registry, 'aiff')!
 const fountain = formatById(registry, 'fountain')!
 
@@ -133,6 +134,8 @@ describe('trap files', () => {
                       ? [fdx, fountain]
                     : from.category === 'audio'
                       ? [wav, aiff]
+                    : from.category === 'ebook'
+                      ? [epub, epub]
                     : [webp, png]
       const to = from.id === usual.id ? otherwise : usual
       if (!router.route(from.id, to.id)) {
@@ -162,7 +165,7 @@ describe('trap files', () => {
         expect(error, 'a failure is an ordinary error').toBeInstanceOf(Error)
         outcome = 'fails'
         // Where the app must give a particular reason, the engine is where it comes from.
-        if (trap.note && ['data', 'spreadsheet', 'subtitle', 'text', 'font', 'archive', 'document', 'presentation', 'screenplay', 'pdf', 'audio'].includes(from.category)) expect((error as Error).message).toBe(trap.note)
+        if (trap.note && ['data', 'spreadsheet', 'subtitle', 'text', 'font', 'archive', 'document', 'presentation', 'screenplay', 'pdf', 'audio', 'ebook'].includes(from.category)) expect((error as Error).message).toBe(trap.note)
       }
       expect(outcome, 'the engine').toBe(trap.node)
 

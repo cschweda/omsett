@@ -155,6 +155,12 @@ Microsoft's published description of the format ([MS-DOC]). No library is used. 
 samples in `fixtures/doc`, one is written by `fixtures/_tools/doc.py` and one by macOS's
 `textutil`.
 
+### ebook
+
+Kindle books (AZW3 and MOBI) are read, and EPUB is written, by Omsett's own code. No library
+is used. The sample books in `fixtures/azw3` and `fixtures/mobi` are a few pages written for the
+tests by `fixtures/_tools/kindle.py`; nobody's book is in the repository.
+
 ### icon
 
 Omsett's own reader for Mac icons (ICNS), using the compression built into every browser.

@@ -7,6 +7,54 @@ The paragraph that opens a version is its teaser: the home page shows its first 
 in the "What's new" banner, so keep it to two or three sentences on what a visitor will notice.
 A line beginning "Released" gives the date.
 
+## 0.51.0
+
+Released 24 November 2026.
+
+Kindle books can now be made into EPUB, the e-book that everything else opens. Both of
+Kindle's formats are read, AZW3 and the older MOBI, with their pages, pictures, links and list
+of contents. Only books without copy protection: a locked book is refused, with the reason.
+
+### Added
+
+- **E-books**, a new kind of file: **AZW3** and **MOBI** as sources, and **EPUB** as what they
+  become. All of it is Omsett's own code; nothing is downloaded.
+- **The whole book comes across**: every page in order, its pictures, its stylesheets, its
+  cover, its list of contents, its title, author, publisher and language.
+- **Links inside the book land where they were made to**: a note's number takes you to the
+  note, not merely to the chapter it is in.
+- **Both of Kindle's ways of packing text are unpacked**: the older one, and the dictionary of
+  phrases that books from the Kindle store use.
+- **Every page is cleaned on the way**, as any page Omsett writes is. Scripts, forms, frames
+  and handlers are taken out, a picture or a stylesheet that would be fetched from a website
+  is not asked for, and each page is written again so that it is well-formed.
+- **A book's stylesheets are cleaned strictly.** CSS lets any letter be written as an escape
+  and has several ways of naming an address, so patterns alone miss some. Escapes and comments
+  are removed first, and an address is kept only if it names a picture that is in the book. A
+  sheet is cleaned until cleaning changes nothing, so a rule cannot be hidden in the two halves
+  of itself; any rule beginning with "@" that is not one of the few that only style is taken
+  out. Two reviews found earlier versions of this too trusting before release; it has a test
+  of three dozen ways of hiding an address.
+- **A book's details before converting**: its title and author, how many parts and pictures
+  it has, and whether it is copy-protected.
+- 19 trap files for it (a trap file is one made on purpose to be broken, hostile or
+  dishonest): a dictionary whose phrase is the code for itself, one whose phrases double until
+  a few bytes stand for hundreds of gigabytes, a page made of forty thousand pieces that are
+  not there, code in a page and in a stylesheet.
+
+### Known
+
+- **Copy-protected books cannot be converted**, and Omsett will not unlock them. Most books
+  bought from the Kindle store are protected.
+- **EPUB is written and not yet read.** Nothing converts from EPUB, and a Kindle book cannot
+  yet become a PDF or a Word document.
+- Fonts carried inside a book are left out, and so are styles written on a single tag. The
+  book is set in the reader's own fonts.
+- Kindle's newest format, KFX, is not read.
+- The samples in the tests are written by a script. By hand, six real books (four AZW3, two
+  MOBI) were converted and every page, link and picture in the results checked; none of those
+  books is in the repository.
+
 ## 0.50.0
 
 Released 24 November 2026.

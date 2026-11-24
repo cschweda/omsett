@@ -25,6 +25,7 @@ const KINDS: Array<[Category, string]> = [
   ['screenplay', 'Screenplays'],
   ['font', 'Fonts'],
   ['audio', 'Sound'],
+  ['ebook', 'E-books'],
   ['archive', 'Archives'],
 ]
 

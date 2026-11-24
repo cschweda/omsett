@@ -3,6 +3,7 @@ import { readZip } from '../archive/zip'
 import { readTar } from '../archive/tar'
 import { gunzipWithin } from '../archive/entries'
 import { readSound } from '../audio'
+import { readKindle } from '../ebook'
 import { readSfnt, readWoff } from '../font/sfnt'
 import { readFountain } from '../script/fountain'
 import { readCues } from '../subtitle/read'
@@ -112,6 +113,27 @@ async function oldOffice(blob: Blob, format: string): Promise<Detail[]> {
     if (sheets.length) details.push({ label: 'Sheets', value: `${sheets.length} shown: ${sheets.slice(0, 12).join(', ')}. The first is converted, unless you choose another. Hidden sheets never are` })
   }
   if (hasMacros(file)) details.push({ label: 'Macros', value: 'Yes. They are never run and never carried over', fate: 'removed' })
+  return details
+}
+
+/** A Kindle book: what it is called, who wrote it, what it holds, and whether it is locked. */
+async function book(blob: Blob): Promise<Detail[]> {
+  let parts
+  try {
+    parts = readKindle(new Uint8Array(await blob.arrayBuffer()))
+  } catch (error) {
+    if (error instanceof Error && /copy-protected/.test(error.message)) return [{ label: 'Copy protection', value: 'Yes (DRM). Omsett does not unlock books, so this one cannot be converted' }]
+    throw error
+  }
+  const details: Detail[] = []
+  const add = (label: string, value: string | undefined | null, fate?: Detail['fate']) => value && details.push({ label, value: value.slice(0, 300), fate })
+  add('Title', parts.title, 'kept')
+  add('Author', parts.authors.join(', '), 'kept')
+  add('Publisher', parts.publisher, 'kept')
+  add('Language', parts.language, 'kept')
+  add('Pages', `${count(parts.chapters.length, 'part')}, with ${count(parts.pictures.length, 'picture')}`, 'kept')
+  add('Contents', parts.contents.length ? count(parts.contents.length, 'entry', 'entries') : 'None of its own', parts.contents.length ? 'kept' : undefined)
+  add('Copy protection', 'None')
   return details
 }
 
@@ -247,6 +269,7 @@ export async function describeFile(blob: Blob, format: Format): Promise<Detail[]
     if (['docx', 'xlsx', 'pptx'].includes(format.id)) return await office(blob, format.id)
     if (['xls', 'doc', 'ppt'].includes(format.id)) return await oldOffice(blob, format.id)
     if (format.id === 'pdf') return await pdf(blob)
+    if (format.id === 'azw3' || format.id === 'mobi') return await book(blob)
     if (['ttf', 'otf', 'woff'].includes(format.id)) return await font(blob, format.id)
     if (format.category === 'archive') return await archive(blob, format.id)
     if (format.category === 'subtitle') {

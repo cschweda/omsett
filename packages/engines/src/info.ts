@@ -179,6 +179,15 @@ export const typstInfo: EngineInfo = {
   sourceUrl: 'https://github.com/Myriad-Dreamin/typst.ts',
 }
 
+// E-books: Kindle books read and EPUB written, by Omsett's own code.
+export const ebookInfo: EngineInfo = {
+  id: 'ebook',
+  sizeBytes: 0,
+  runtimes: ['browser', 'node'],
+  license: 'MIT',
+  sourceUrl: 'https://github.com/cschweda/omsett/tree/main/packages/engines/src/ebook',
+}
+
 // Fonts. TTF, OTF and WOFF are read and written by Omsett's own code, with the compression
 // every browser has built in.
 export const fontInfo: EngineInfo = {
@@ -240,4 +249,5 @@ export const engineInfo: Record<string, EngineInfo> = {
   [audioInfo.id]: audioInfo,
   [audioMp3Info.id]: audioMp3Info,
   [typstInfo.id]: typstInfo,
+  [ebookInfo.id]: ebookInfo,
 }
