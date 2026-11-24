@@ -132,7 +132,7 @@ build by `apps/web/scripts/write-headers.ts`.
   (scripts, drawings that name other files) is not a picture. Do not add an unhinted read.
 - **A file is offered only formats of its own kind** (`packages/registry/src/kinds.ts`):
   pictures and drawings are one kind, data another, subtitles a third, Markdown and HTML a
-  fourth, fonts a fifth, archives a sixth, sound a seventh. Spreadsheets are of data's kind, and documents of
+  fourth, fonts a fifth, archives a sixth, sound a seventh, e-books an eighth. Spreadsheets are of data's kind, and documents of
   Markdown's and HTML's, as are PDFs. Screenplays are a kind of their own. A new category that should convert into an
   existing one must be added there, or its formats will never be listed for it.
 - **A few things can become something of another kind, one way only** (`ALSO` and `canBecome` in
@@ -183,6 +183,24 @@ build by `apps/web/scripts/write-headers.ts`.
   opened into the `Opened` that XLSX is, so sheets, limits, dates and the column names are one
   piece of code. `xls/sample.xls` holds what `xlsx/sample.xlsx` holds; a change to either
   sample is made to both.
+- **A Kindle book is read by the numbers it gives, each checked first** (`packages/engines/src/ebook`):
+  where each record starts, how long the text is, which stretch is which page, where each piece
+  goes. Its text is unpacked under a limit set by how many records it has, never by the length
+  it claims; a phrase in its dictionary that is made of other phrases is unpacked once, to a
+  bounded size and depth, and one that names itself is refused.
+- **Bytes are counted as bytes** (`byteText` in `ebook/kindle.ts`). A Kindle book gives places as
+  counts of bytes, so its text is handled one letter to a byte until the links are settled.
+  `TextDecoder('latin1')` is not that: it is Windows-1252, and turns some bytes into letters
+  that do not fit back into a byte. That mistake corrupted every curly quote, and a test with
+  accented and Chinese text now guards it.
+- **An EPUB's pages are written by Omsett's own writer** (`written` in `ebook/epub-write.ts`),
+  from a tree that has been through the sanitizer, so they are well-formed whatever went in.
+  Marks (`id`) are kept, since a book's links depend on them; a link whose mark did not
+  survive cleaning falls back to its page. A stylesheet has `@import`, `@font-face` and any
+  address on the web taken out.
+- **Copy protection is never worked round.** A locked book is refused in words that say so.
+- **Books lent for testing live in `docs/ebooks`, which git ignores.** They are other people's
+  work: never commit one, never quote from one, and print only counts when testing with them.
 - **A document conversion keeps what a screen reader relies on, and says what to check.**
   Headings as headings, lists as lists, table headers marked, language and title stated,
   picture descriptions carried (`packages/engines/src/markup/docx-*.ts`). Every document pair

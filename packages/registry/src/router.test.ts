@@ -39,7 +39,7 @@ describe('router, real registry', () => {
     for (const edge of deriveEdges(registry).edges) {
       const engines = edge.candidates.map((c) => c.engine)
       if (edge.from !== 'png') expect(engines, `${edge.from} → ${edge.to}`).not.toContain('canvas')
-      for (const engine of engines) expect(engine === 'canvas' || ['heif', 'resvg', 'magick', 'data', 'subtitle', 'markup', 'font', 'font-woff2', 'icon', 'archive', 'script', 'pdf', 'audio', 'audio-mp3', 'typst'].includes(engine) || engine.startsWith('vips')).toBe(true)
+      for (const engine of engines) expect(engine === 'canvas' || ['heif', 'resvg', 'magick', 'data', 'subtitle', 'markup', 'font', 'font-woff2', 'icon', 'archive', 'script', 'pdf', 'audio', 'audio-mp3', 'typst', 'ebook'].includes(engine) || engine.startsWith('vips')).toBe(true)
       // The data engine reads data and nothing else, and writes data or a page that sets a
       // table out to be read; nothing but the data engine reads data, and no picture engine touches it.
       const data = [edge.from, edge.to].map((id) => ['data', 'spreadsheet'].includes(formatById(registry, id)!.category))
@@ -66,9 +66,10 @@ describe('router, real registry', () => {
       'woff2', 'woff', 'ttf', 'otf',
       'zip', 'tgz', 'tar',
       'mp3', 'wav', 'flac', 'aiff', 'au',
+      'epub', 'azw3', 'mobi',
     ])
     const readOnly = new Set(everything.formats.filter((f) => f.readOnly).map((f) => f.id))
-    expect([...readOnly].sort()).toEqual(['apng', 'dcm', 'dng', 'doc', 'exr', 'fits', 'hdr', 'heic', 'pcx', 'pptx', 'psb', 'psd', 'ras', 'sgi', 'svg', 'svgz', 'xls'])
+    expect([...readOnly].sort()).toEqual(['apng', 'azw3', 'dcm', 'dng', 'doc', 'exr', 'fits', 'hdr', 'heic', 'mobi', 'pcx', 'pptx', 'psb', 'psd', 'ras', 'sgi', 'svg', 'svgz', 'xls'])
     // Every pair of the same kind converts, directly or through a step in between; nothing is
     // written as HEIC. A picture never becomes data, nor data a picture.
     const kind = (id: string) => formatById(everything, id)!.category
@@ -164,6 +165,11 @@ describe('router, real registry', () => {
     expect(all.route('wav', 'flac')!.lossy).toBe(false)
     expect(all.route('aiff', 'wav')!.lossy).toBe(false)
     expect(all.route('aiff', 'wav')!.warnings.map((w) => w.id)).toEqual(['metadata-lost'])
+    // A Kindle book becomes an EPUB in one step, and an EPUB is the only thing it is offered.
+    expect(all.route('azw3', 'epub')!.edges.map((e) => e.candidates[0]!.engine)).toEqual(['ebook'])
+    expect(all.route('mobi', 'epub')!.warnings.map((w) => w.id)).toEqual(['book-kept'])
+    expect(all.targetsFor(['azw3']).map((t) => t.format.id)).toEqual(['epub', 'azw3', 'mobi'])
+    expect(all.targetsFor(['azw3']).find((t) => t.format.id === 'mobi')!.reason).toBe('MOBI can be read but not written')
     // HEIC is decoded to PNG first, without loss, and goes on from there.
     expect(all.route('heic', 'png')!.edges.map((e) => e.candidates[0]!.engine)).toEqual(['heif'])
     expect(all.route('heic', 'jpeg')!.edges.map((e) => e.to)).toEqual(['png', 'jpeg'])

@@ -8,6 +8,7 @@ import { createArchiveEngine } from './archive'
 import { createIconEngine } from './icon'
 import { createScriptEngine } from './script'
 import { createPdfEngine } from './pdf'
+import { createEbookEngine } from './ebook'
 import { createAudioEngine, createAudioMp3Engine, type Mp3Decoder, type Mp3Encoder } from './audio'
 import { createHeifEngine, type HeifModule } from './heif'
 import { engineInfo, resvgFonts, typstFonts, vipsModules } from './info'
@@ -74,6 +75,7 @@ export function createNodeEngines(): Record<string, Engine> {
     pieces: async (script) => JSON.parse(await readFile(require.resolve(`${SCRIPTS[script].pack}/unicode.json`), 'utf8')) as Record<string, string>,
     piece: async (script, name, weight) => new Uint8Array(await readFile(require.resolve(`${SCRIPTS[script].pack}/files/${SCRIPTS[script].stem}-${name}-${weight}-normal.woff`))),
   })
+  engines.ebook = createEbookEngine()
   engines.audio = createAudioEngine()
   engines['audio-mp3'] = createAudioMp3Engine({
     decoder: async () => new (await import('mpg123-decoder')).MPEGDecoder() as unknown as Mp3Decoder,

@@ -101,6 +101,13 @@ export async function detect(blob: Blob, formats: Format[], name?: string): Prom
       else if (kind === 'doc') found = { ext: 'doc', mime: 'application/msword' }
       else if (kind === 'ppt') found = { ext: 'ppt', mime: 'application/vnd.ms-powerpoint' }
     }
+    // A Kindle book of the newer kind opens exactly as the older does. The number of its
+    // edition, in its first record, says which it is.
+    if (found?.ext === 'mobi') {
+      const view = new DataView(head.buffer, head.byteOffset, head.byteLength)
+      const first = head.length >= 82 ? view.getUint32(78) : 0
+      if (first > 0 && first + 40 <= head.length && view.getUint32(first + 36) >= 8) found = { ext: 'azw3', mime: 'application/vnd.amazon.ebook' }
+    }
     // A Drafter package is a ZIP that says what it is in its first entry, as an EPUB does:
     // a file called "mimetype", stored as it is, holding the package's media type.
     if (found?.ext === 'zip' && isDrafter(head)) found = { ext: 'drafter', mime: DRAFTER }

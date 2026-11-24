@@ -13,6 +13,7 @@ import {
   zipFiles,
   createFontEngine,
   createAudioEngine,
+  createEbookEngine,
   createAudioMp3Engine,
   createTypstEngine,
   type Mp3Decoder,
@@ -154,6 +155,7 @@ const engines: Record<string, Engine> = Object.fromEntries(
         return new Uint8Array(await verified(found))
       },
     }),
+    createEbookEngine(),
     createAudioEngine(),
     // MP3: mpg123 unpacks and LAME packs. LAME is started from its verified binary; its small
     // loader, and mpg123 whole, are part of this worker's own code.

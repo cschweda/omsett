@@ -77,6 +77,7 @@ const KEPT_WHOLE = ['wav', 'flac', 'aiff', 'au']
 const LEFT_OUT = [{ id: 'sound-left-out', text: 'MP3 leaves out sound to make the file small. It cannot be put back, so keep the original.' }]
 const NOT_RESTORED = [{ id: 'sound-not-restored', text: 'An MP3 has already left sound out. Converting it does not bring that back; the file only gets larger.' }]
 
+const KINDLE_BOOK = [{ id: 'book-kept', text: 'The pages, pictures, stylesheets, links and list of contents are kept, and so are the title and the author. Fonts carried inside the book are not, and nor is anything a page could run.' }]
 const TABLE_PAGE = [{ id: 'table-as-page', text: 'The rows are set out as one table on a page, to be read. The first row of the table names its columns. Lists and groups inside a row are written as text.' }]
 
 const TYPED = ['json', 'jsonl', 'yaml', 'toml']
@@ -150,6 +151,8 @@ export const overrides: EdgeOverride[] = [
   ...[...TYPED, 'csv', 'tsv'].map((to) => ({ from: 'xml', to, warnings: ATTRIBUTES })),
   ...TYPED.map((to) => ({ from: 'xml', to, warnings: TEXT_VALUES })),
   ...['csv', 'tsv'].flatMap((from) => TYPED.map((to) => ({ from, to, warnings: TEXT_CELLS }))),
+  { from: 'azw3', to: 'epub', warnings: KINDLE_BOOK },
+  { from: 'mobi', to: 'epub', warnings: KINDLE_BOOK },
   ...KEPT_WHOLE.flatMap((other) => [
     { from: other, to: 'mp3', warnings: LEFT_OUT },
     { from: 'mp3', to: other, warnings: NOT_RESTORED },

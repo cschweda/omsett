@@ -14,7 +14,7 @@
 
 **Drop a file. Pick a format. Nothing leaves your device.**
 
-Omsett is a free, open-source file converter. Every conversion runs in your browser, on your own device, so your files are never uploaded: there is no server for them to go to. Pictures, documents, spreadsheets, data, subtitles, screenplays, fonts, archives and sound (MP3, WAV, FLAC, AIFF) convert today; more sound formats, video and a desktop app are ahead.
+Omsett is a free, open-source file converter. Every conversion runs in your browser, on your own device, so your files are never uploaded: there is no server for them to go to. Pictures, documents, spreadsheets, data, subtitles, screenplays, fonts, archives, sound (MP3, WAV, FLAC, AIFF) and Kindle e-books convert today; more e-book and sound formats, video and a desktop app are ahead.
 
 *Omsett* is Norwegian: to translate; to convert.
 
@@ -29,7 +29,7 @@ Omsett is a free, open-source file converter. Every conversion runs in your brow
 <!-- facts:start -->
 <!-- Generated from the registry by `pnpm readme:facts`. Do not edit by hand. -->
 
-**71 formats, 309 conversions**, every one of them run in your browser, on your device, and tested against 645 files made on purpose to be broken, hostile or dishonest. How many tests there are today is on the site's [Trust](https://omsett.com/trust) page, counted at every build.
+**74 formats, 311 conversions**, every one of them run in your browser, on your device, and tested against 664 files made on purpose to be broken, hostile or dishonest. How many tests there are today is on the site's [Trust](https://omsett.com/trust) page, counted at every build.
 
 | Kind | Converts to and from | Reads only |
 | --- | --- | --- |
@@ -45,6 +45,7 @@ Omsett is a free, open-source file converter. Every conversion runs in your brow
 | Screenplays | Fountain, Final Draft, Drafter | — |
 | Fonts | WOFF2, WOFF, TTF, OTF | — |
 | Sound | MP3, WAV, FLAC, AIFF, AU | — |
+| E-books | EPUB | AZW3, MOBI |
 | Archives | ZIP, TAR.GZ, TAR | — |
 
 A file is offered the formats of its own kind: a picture becomes another picture, a workbook becomes data, a Word document becomes a web page or Markdown.
@@ -57,6 +58,7 @@ A file is offered the formats of its own kind: a picture becomes another picture
 - **Refuses a damaged or hostile file with a reason**, instead of returning half of one or freezing the tab. Every conversion runs against a clock.
 - **Writes PDF, tagged for screen readers**: a Word document, a web page or Markdown becomes a PDF whose headings, lists, tables and picture descriptions are marked as what they are. In Latin, Greek, Cyrillic, Chinese, Japanese, Korean, Arabic, Hebrew, Hindi and Thai. And reads PDF back to a web page, Markdown or DOCX.
 - **Never carries across what an author hid or deleted**: tracked deletions, hidden text and slides, comments, speaker notes.
+- **Makes an EPUB of a Kindle book** (AZW3 or MOBI, without copy protection): pages, pictures, links and contents, read on anything.
 - **Makes a PDF, a Word document or a web page of a spreadsheet**: a workbook or a CSV is set out as a real table, with its column names marked, on pages turned sideways if it is wide.
 - **Makes a PDF of a picture**: a scan or a photograph becomes a page, without the photograph's location and other metadata.
 - **Makes icons**: any picture to a Windows icon, a Mac icon or a mouse pointer, at the sizes each expects.
@@ -129,7 +131,7 @@ A self-hostable image (Docker) serves the same site on your own network. There i
 
 ## Stack
 
-Nuxt 4 + Nuxt UI (a static site, served by nginx) · TypeScript · pnpm · Web Workers + WebAssembly (libvips, ImageMagick, libheif, resvg, pdf.js, Typst, mpg123, LAME) and Omsett's own readers and writers for data, documents, subtitles, screenplays, fonts, archives and sound · Docker for self-hosting. Every engine and its license is in [`THIRD-PARTY-NOTICES.md`](THIRD-PARTY-NOTICES.md).
+Nuxt 4 + Nuxt UI (a static site, served by nginx) · TypeScript · pnpm · Web Workers + WebAssembly (libvips, ImageMagick, libheif, resvg, pdf.js, Typst, mpg123, LAME) and Omsett's own readers and writers for data, documents, subtitles, screenplays, fonts, archives, sound and e-books · Docker for self-hosting. Every engine and its license is in [`THIRD-PARTY-NOTICES.md`](THIRD-PARTY-NOTICES.md).
 
 ## Run it locally
 

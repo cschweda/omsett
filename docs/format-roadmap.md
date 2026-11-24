@@ -165,9 +165,12 @@ When a format ships, update its row here, in the same change.
 
 | Format | Home | Engine | Status |
 | --- | --- | --- | --- |
-| EPUB, FB2, HTML, Markdown, DOCX to each other | Browser | Pandoc | Planned |
+| AZW3 and MOBI (Kindle books without copy protection) to EPUB | Browser | `ebook` (Omsett's own reader and writer) | **Done** (0.51.0) |
+| Reading EPUB; EPUB, AZW3 and MOBI to HTML, Markdown, DOCX and PDF; HTML, Markdown and DOCX to EPUB | Browser | `ebook`, with `markup` and `typst` | Next |
+| FB2 | Browser | Omsett's own reader | Planned |
 | CBZ; CBR, CB7 (read) | Browser | libarchive (WASM) | Planned |
-| MOBI, AZW3, AZW, AZW4, KEPUB, LIT, LRF, CHM, PDB, HTMLZ, TXTZ | Desktop | Calibre | Planned |
+| KFX, AZW4, KEPUB, LIT, LRF, CHM, PDB, HTMLZ, TXTZ | Desktop | Calibre | Planned |
+| Copy-protected books of any kind | Declined | — | Omsett does not unlock books |
 
 ## Video
 

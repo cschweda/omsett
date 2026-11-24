@@ -69,6 +69,9 @@ import { wav } from './wav'
 import { aiff } from './aiff'
 import { au } from './au'
 import { flac } from './flac'
+import { epub } from './epub'
+import { azw3 } from './azw3'
+import { mobi } from './mobi'
 import { mp3 } from './mp3'
 
 /**
@@ -92,4 +95,6 @@ export const formats: Format[] = [
   zip, tgz, tar,
   // Sound: MP3, which leaves some out to be small, and four formats that keep all of it.
   mp3, wav, flac, aiff, au,
+  // E-books: the one everything opens, and the Kindle's two.
+  epub, azw3, mobi,
 ]

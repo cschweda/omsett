@@ -165,6 +165,9 @@ export const capabilities: Capability[] = [
   { engine: 'audio-mp3', tier: 'browser', reads: SOUNDS, writes: [{ format: 'mp3', lossy: true, drops: ['metadata'], defaultOptions: { soundQuality: 'standard' } }], priority: 30 },
   { engine: 'audio-mp3', tier: 'browser', reads: ['mp3'], writes: SOUNDS.map((format) => ({ format, lossy: false, drops: ['metadata'] as Trait[] })), priority: 30 },
 
+  // A Kindle book is taken apart and written as an EPUB, in Omsett's own code.
+  { engine: 'ebook', tier: 'browser', reads: ['azw3', 'mobi'], writes: [{ format: 'epub', lossy: false }], priority: 20 },
+
   // Markdown and HTML, each to the other, through a tree that is cleaned on the way.
   {
     engine: 'markup',
