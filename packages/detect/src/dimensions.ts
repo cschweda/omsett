@@ -1,3 +1,5 @@
+import { dicomDimensions } from './dicom'
+
 export interface Dimensions {
   width: number
   height: number
@@ -186,7 +188,7 @@ const jp2: Reader = (bytes) => {
 }
 
 /** Keyed by `file-type` ext value. A format with no reader simply has unknown dimensions. */
-const readers: Record<string, Reader> = { png, apng: png, jpg: jpeg, webp, gif, tif: tiff, avif: heif, heic: heif, jxl, bmp, psd, psb: psd, ico, cur: ico, jp2 }
+const readers: Record<string, Reader> = { png, apng: png, jpg: jpeg, webp, gif, tif: tiff, avif: heif, heic: heif, jxl, bmp, psd, psb: psd, ico, cur: ico, jp2, dcm: dicomDimensions }
 
 /** How much of the file a header reader may need. */
 export const HEADER_BYTES = 512 * 1024

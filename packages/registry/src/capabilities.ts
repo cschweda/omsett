@@ -53,7 +53,7 @@ const icns: WriteSpec = {
   },
   drops: DROPPED,
 }
-const MAGICK_READS = ['bmp', 'tga', 'qoi', 'pnm', 'psd', 'psb', 'ico', 'cur', 'jp2', 'exr', 'hdr', 'dds', 'fits', 'pcx', 'sgi', 'ras']
+const MAGICK_READS = ['bmp', 'tga', 'qoi', 'pnm', 'psd', 'psb', 'ico', 'cur', 'jp2', 'exr', 'hdr', 'dds', 'fits', 'dcm', 'pcx', 'sgi', 'ras']
 
 /** What plain libvips reads and writes. Its two optional modules add to this, never replace it. */
 const CORE = ['png', 'jpeg', 'webp', 'gif', 'tiff']
