@@ -12,6 +12,8 @@ const props = defineProps<{
   suggestedQuality?: number | null
   /** True while a new result is being made, so the label can say so. */
   busy?: boolean
+  /** Set where this is a look ahead at a conversion not yet asked for. */
+  preview?: boolean
 }>()
 const emit = defineEmits<{ 'update:quality': [value: number] }>()
 
@@ -186,7 +188,14 @@ watch(
 </script>
 
 <template>
-  <figure v-if="!failed" class="compare" data-testid="compare" :data-ready="ready">
+  <figure v-if="!failed" class="compare" :data-testid="preview ? 'preview-compare' : 'compare'" :data-ready="ready">
+    <!-- Named and ruled off, so that it reads as a thing to use and not as a picture of the result. -->
+    <p class="compare-title" data-testid="compare-title">{{ preview ? 'Preview: before and after' : 'Before and after' }}</p>
+    <p class="compare-lead">
+      The original is on the left and {{ preview ? 'what the result will be' : 'the result' }} on the right. Drag the handle between them to see what the
+      conversion {{ preview ? 'will change' : 'changed' }}<template v-if="quality !== null && quality !== undefined">, and move Quality to change it</template>.
+      <template v-if="preview">Nothing is saved until you press Convert.</template>
+    </p>
     <div class="controls">
       <div class="control-row">
         <span class="control-name">Zoom</span>
@@ -272,16 +281,27 @@ watch(
         @keydown="touch"
       >
     </div>
-    <figcaption class="caption">
-      Drag the handle to compare the original, on the left, with the result, on the right.
-    </figcaption>
   </figure>
 </template>
 
 <style scoped>
 .compare {
   grid-column: 1 / -1;
-  margin: 1rem 0 0;
+  margin: 1.75rem 0 0;
+  padding-top: 0.875rem;
+  border-top: 4px solid var(--accent);
+}
+.compare-title {
+  margin: 0;
+  font-size: var(--text-lead);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+.compare-lead {
+  max-width: 44rem;
+  margin: 0.25rem 0 0.875rem;
+  color: var(--muted);
 }
 
 /* The bar above the picture: zoom, and quality where the conversion has one. */

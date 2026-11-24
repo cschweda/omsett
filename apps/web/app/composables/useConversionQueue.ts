@@ -329,6 +329,9 @@ export function useConversionQueue() {
     const target = selected.value
     if (!canConvert.value || !target?.route) return
     converting.value = true
+    // A preview being made is let finish first: one engine does one thing at a time.
+    clearTimeout(previewSoon)
+    if (previewing) await previewing
     // "Convert another" ends a session while this may still be waiting on a file. Whatever
     // comes back after that belongs to a session that is over, and is dropped.
     const session = sessions
@@ -426,8 +429,106 @@ export function useConversionQueue() {
     }, 120)
   })
 
+  // --- A look at the result before converting ---------------------------------------------------
+  // With one picture and a picture format chosen, the conversion is run quietly and shown beside
+  // the original, so that the choice of format and quality can be made by looking. It is the
+  // same conversion Convert will do; nothing is kept from it but what is on the screen.
+  //
+  // It never fetches a converter. One that has not been downloaded is named with its size, and
+  // fetched only if the person asks for the preview.
+  interface Preview {
+    state: 'working' | 'ready' | 'needs' | 'failed'
+    source: File
+    from: string
+    to: string
+    blob?: Blob
+    /** Bytes to download first, where a converter is not yet here. */
+    bytes?: number
+  }
+  const preview = shallowRef<Preview | null>(null)
+  /** Targets the person has said may fetch what they need for a preview. */
+  const fetchFor = ref<string[]>([])
+  let previewing: Promise<void> | null = null
+  let previewRun = 0
+  let previewSoon: ReturnType<typeof setTimeout> | undefined
+
+  async function makePreview() {
+    const run = ++previewRun
+    const target = selected.value
+    const ready = convertible.value
+    const entry = ready[0]
+    const detection = entry?.detection
+    const shown =
+      target?.route && entry && detection?.kind === 'known' && ready.length === 1 && !converting.value &&
+      detection.format.category === 'image' && target.format.category === 'image' &&
+      !results.value.some((result) => result.sourceId === entry.id && result.formatId === target.format.id)
+    const pixels = detection?.kind === 'known' ? pixelCount(detection.dimensions) : 0
+    if (!shown || !target.route || detection?.kind !== 'known' || pixels === 0 || pixels > PREVIEW_MAX_PIXELS) {
+      preview.value = null
+      return
+    }
+    const about = { source: entry.file, from: detection.format.id, to: target.format.id }
+    const hops = target.route.edges.map((edge) => ({ edge, candidate: viable(edge, pixels)[0] }))
+    if (hops.some((hop) => !hop.candidate)) {
+      preview.value = null
+      return
+    }
+    const missing = [...new Set(hops.map((hop) => hop.candidate!.engine))].filter((id) => (engines.info[id]?.sizeBytes ?? 0) > 0 && !engines.loaded.value.includes(id))
+    if (missing.length > 0 && !fetchFor.value.includes(target.format.id)) {
+      preview.value = { ...about, state: 'needs', bytes: missing.reduce((sum, id) => sum + engines.info[id]!.sizeBytes, 0) }
+      return
+    }
+    // The last look stays up while the next is made, so the picture does not blink as a setting moves.
+    const last = preview.value
+    preview.value = last?.state === 'ready' && last.source === about.source && last.to === about.to ? { ...last, state: 'working' } : { ...about, state: 'working' }
+    try {
+      let blob: Blob = entry.file
+      for (const [hop, { edge, candidate }] of hops.entries()) {
+        const final = hop === hops.length - 1
+        const chosen: Record<string, unknown> = {}
+        if (final && quality.value !== null && 'quality' in candidate!.defaultOptions) chosen.quality = quality.value
+        for (const [key, value] of Object.entries(choices.value)) if (final && key in candidate!.defaultOptions) chosen[key] = value
+        const outputs = await engines.convert(
+          candidate!.engine,
+          { blob, name: entry.file.name, from: formatById(registry, edge.from)!, to: formatById(registry, edge.to)!, options: { ...candidate!.defaultOptions, ...chosen }, maxPixels: MAX_PIXELS },
+          () => {},
+          conversionBudgetMs(pixels, blob.size),
+        )
+        if (!outputs[0]) throw new Error('nothing came back')
+        blob = outputs[0].blob
+      }
+      if (run === previewRun) preview.value = { ...about, state: 'ready', blob }
+    } catch {
+      // Why it failed is said when Convert is pressed, in the file's own row.
+      if (run === previewRun) preview.value = { ...about, state: 'failed' }
+    }
+  }
+  function schedulePreview() {
+    clearTimeout(previewSoon)
+    previewSoon = setTimeout(function again() {
+      // One at a time: a look that is being made is let finish before the next begins.
+      if (previewing || converting.value) previewSoon = setTimeout(again, 60)
+      else {
+        previewing = makePreview().finally(() => {
+          previewing = null
+        })
+      }
+    }, 120)
+  }
+  watch(
+    [targetId, () => convertible.value.map((entry) => entry.id).join(), quality, () => JSON.stringify(choices.value), () => results.value.length, converting, () => fetchFor.value.join()],
+    schedulePreview,
+  )
+  /** Fetch what the chosen format needs, and show the preview. */
+  function allowPreview() {
+    if (targetId.value && !fetchFor.value.includes(targetId.value)) fetchFor.value = [...fetchFor.value, targetId.value]
+  }
+
   function reset() {
     clearTimeout(requeue)
+    clearTimeout(previewSoon)
+    previewRun++
+    preview.value = null
     notice.value = ''
     sessions++
     stopClock()
@@ -449,6 +550,8 @@ export function useConversionQueue() {
     selected,
     converting,
     arrived,
+    preview,
+    allowPreview,
     quality,
     choices,
     defaultQuality,

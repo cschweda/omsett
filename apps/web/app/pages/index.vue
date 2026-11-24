@@ -36,10 +36,13 @@ useHead({
 
 // The list of formats is long, and the result comes after it. When a conversion a person asked
 // for is done, the result is brought to the top of the window, where the comparison can be seen.
-watch(queue.arrived, async () => {
-  await nextTick()
+function showResult() {
   const calm = window.matchMedia('(prefers-reduced-motion: reduce)').matches
   document.getElementById('results-heading')?.scrollIntoView({ block: 'start', behavior: calm ? 'auto' : 'smooth' })
+}
+watch(queue.arrived, async () => {
+  await nextTick()
+  showResult()
 })
 
 function onKeydown(event: KeyboardEvent) {
@@ -170,6 +173,31 @@ onBeforeUnmount(() => {
           :suggested="queue.defaultQuality.value"
         />
 
+        <!-- A look at the result before converting: one picture, a picture format, and a
+             converter that is already here. One that is not is fetched only when asked for. -->
+        <div v-if="queue.preview.value" class="preview" data-testid="preview" :data-state="queue.preview.value.state">
+          <CompareSlider
+            v-if="queue.preview.value.blob"
+            preview
+            :before="queue.preview.value.source"
+            :after="queue.preview.value.blob"
+            :before-label="`Original ${formatBytes(queue.preview.value.source.size)}`"
+            :after-label="`${queue.selected.value?.format.name ?? ''} ${formatBytes(queue.preview.value.blob.size)}`"
+            :quality="queue.quality.value"
+            :suggested-quality="queue.defaultQuality.value"
+            :busy="queue.preview.value.state === 'working'"
+            @update:quality="queue.quality.value = $event"
+          />
+          <p v-else-if="queue.preview.value.state === 'needs'" class="preview-ask">
+            <button type="button" class="button" data-testid="preview-fetch" @click="queue.allowPreview()">Show a preview</button>
+            <span>
+              Seeing how {{ queue.selected.value?.format.name }} will look means fetching its converter first:
+              {{ formatBytes(queue.preview.value.bytes ?? 0) }}, once.
+            </span>
+          </p>
+          <p v-else-if="queue.preview.value.state === 'working'" class="preview-ask" role="status">Making a preview…</p>
+        </div>
+
         <LanguageControl v-if="typeof choices.language === 'string'" v-model="choices.language" />
         <TableOptions
           v-if="typeof choices.headerRow === 'boolean'"
@@ -199,6 +227,16 @@ onBeforeUnmount(() => {
             <UKbd :value="isMac ? '⌘' : 'Ctrl'" />
             <UKbd value="Enter" />
           </span>
+          <!-- The result is below the list of formats. Once there is one, this goes to it. -->
+          <button
+            v-if="queue.results.value.length && !queue.converting.value"
+            type="button"
+            class="to-result"
+            data-testid="to-result"
+            @click="showResult"
+          >
+            {{ queue.results.value.length === 1 ? 'Converted. See the result' : `${queue.results.value.length} converted. See the results` }}
+          </button>
           <!-- The whole batch at a glance: which file it is on, and that it is still going. -->
           <div v-if="queue.batch.value" class="batch" data-testid="batch">
             <p class="batch-line figures" data-testid="batch-line">{{ batchLine }}</p>
@@ -316,6 +354,38 @@ onBeforeUnmount(() => {
   padding: 0.875rem var(--margin);
   border-top: 2px solid var(--accent);
   background: var(--bg);
+}
+.preview {
+  max-width: 100%;
+}
+.preview-ask {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0;
+  padding-top: 0.875rem;
+  border-top: 4px solid var(--accent);
+  color: var(--muted);
+}
+/* Green is for what is ready. This says a result is, and goes to it. */
+.to-result {
+  padding: 0.6rem 1rem;
+  border: 2px solid var(--positive);
+  border-radius: 0;
+  background: transparent;
+  color: var(--positive);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+.to-result:hover {
+  background: var(--positive);
+  color: var(--bg);
+}
+.to-result:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 .summary {
   font-size: var(--text-small);
