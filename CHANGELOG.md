@@ -7,6 +7,33 @@ The paragraph that opens a version is its teaser: the home page shows its first 
 in the "What's new" banner, so keep it to two or three sentences on what a visitor will notice.
 A line beginning "Released" gives the date.
 
+## 0.37.0
+
+Released 24 November 2026.
+
+A picture can now be made into a Mac icon (ICNS) or a Windows mouse pointer (CUR), as well as
+an ordinary icon. Each is written at the sizes its format expects, and the result says which.
+
+### Added
+
+- **Writing ICNS.** A Mac icon holds only the sizes it has names for: 16, 32, 64, 128, 256, 512
+  and 1,024 pixels. The picture is made square and written at each of those it is large enough
+  for, every one a PNG. A picture smaller than 16 pixels is made 16, and the result says so.
+  Checked against macOS's own tools, which open what Omsett writes.
+- **Writing CUR.** A pointer at 32, 48 and 64 pixels, never larger than the picture it came
+  from, that clicks with its top left corner, where the tip of an arrow is.
+- Tests of both: the sizes held, the names they are held under, that each picture inside a Mac
+  icon is a sound PNG, and that a pointer says it is a pointer.
+
+### Changed
+
+- The line on the result card now reads "The file holds the picture at…", since it is no
+  longer only icons that are written this way.
+
+### Known
+
+- Where a pointer clicks cannot be chosen yet.
+
 ## 0.36.0
 
 Released 24 November 2026.
