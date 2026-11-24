@@ -82,3 +82,17 @@ node "$tools/vips-samples.mjs" "$work/pattern.png" "$cases/animated.gif" "$out"
 python3 "$tools/make-traps.py"
 
 echo "samples written under $out"
+
+# --- sound ------------------------------------------------------------------------------------
+# WAV, AIFF and AU are written by sound.py, number by number. The FLAC samples are packed from
+# those by the reference packer (flac) and by ffmpeg, which is a different program, so that
+# Omsett's reader is tested against files that Omsett did not write. Needs `flac` (brew install flac).
+python3 "$tools/sound.py" >/dev/null
+dir flac
+fl() { flac --silent --force --no-padding "$@"; }
+fl -8 --tag=TITLE="Test pattern" --tag=ARTIST=Omsett "$out/wav/sample.wav" -o "$out/flac/sample.flac"
+fl -0 "$out/wav/sample.wav" -o "$out/flac/fixed-rules.flac"                  # the five fixed guesses only
+fl -8 -b 512 "$out/wav/three-bytes.wav" -o "$out/flac/three-bytes.flac"      # short stretches, 24 bits
+fl -5 "$out/wav/one-byte.wav" -o "$out/flac/one-byte.flac"
+fl -5 --channel-map=none "$out/wav/six-channels.wav" -o "$out/flac/six-channels.flac"
+ff -i "$out/wav/sample.wav" -map_metadata -1 -fflags +bitexact -c:a flac -compression_level 12 "$out/flac/from-ffmpeg.flac"

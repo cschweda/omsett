@@ -1,4 +1,5 @@
 // Sound, in the page: what a file says about itself, and that what is written is the same sound.
+import { createHash } from 'node:crypto'
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { expect, test } from '@playwright/test'
@@ -32,12 +33,35 @@ test('a WAV becomes an AIFF holding the very same numbers, each with its bytes t
   await expect(page.locator('.result-card')).toHaveAttribute('data-engine', 'audio')
 })
 
+test('a FLAC unpacks in the page to the very numbers it was packed from', async ({ page }) => {
+  const output = await convert(page, 'flac/sample.flac', 'wav')
+  expect(output.name).toBe('sample.wav')
+  // The FLAC sample was packed from the WAV sample by the reference packer. Unpacked here, in
+  // a browser, the sound is that WAV's sound, byte for byte.
+  const wav = readFileSync(fixture('wav/sample.wav'))
+  const sound = wav.subarray(44, 44 + wav.readUInt32LE(40))
+  expect(output.bytes.readUInt32LE(40)).toBe(sound.length)
+  expect(output.bytes.subarray(44, 44 + sound.length).equals(sound)).toBe(true)
+  expect(output.bytes.toString('latin1')).not.toMatch(/Test pattern|Omsett|libFLAC/)
+})
+
+test('a WAV packed as FLAC in the page carries the checksum of its sound, and is smaller', async ({ page }) => {
+  const output = await convert(page, 'wav/sample.wav', 'flac')
+  expect(output.name).toBe('sample.flac')
+  expect(output.found.kind === 'known' && output.found.format.id).toBe('flac')
+  const wav = readFileSync(fixture('wav/sample.wav'))
+  const sound = wav.subarray(44, 44 + wav.readUInt32LE(40))
+  expect(output.bytes.subarray(26, 42).toString('hex')).toBe(createHash('md5').update(sound).digest('hex'))
+  expect(output.bytes.length).toBeLessThan(sound.length * 0.7)
+})
+
 test('a sound file is offered sound formats and nothing else', async ({ page }) => {
   await open(page)
   await page.locator('#file-input').setInputFiles(fixture('au/sample.au'))
   await expect(page.locator('.file-card')).toContainText('AU')
   await expect(page.locator('[role="radio"][data-format="wav"]')).toBeVisible()
   await expect(page.locator('[role="radio"][data-format="aiff"]')).toBeVisible()
+  await expect(page.locator('[role="radio"][data-format="flac"]')).toBeVisible()
   await expect(page.locator('[role="radio"][data-format="webp"]')).toHaveCount(0)
   await expect(page.locator('[role="radio"][data-format="zip"]')).toHaveCount(0)
 })

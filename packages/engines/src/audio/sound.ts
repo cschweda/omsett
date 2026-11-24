@@ -32,6 +32,10 @@ export interface Read {
   tags: Array<{ label: string; value: string }>
   /** Something found on the way that the person should know. */
   notes: string[]
+  /** How the sound is packed, where it is: said in the file's details. */
+  packing?: string
+  /** Bits to a number, where that is not a whole count of bytes. */
+  bits?: number
 }
 
 /** More channels than this is not read. Surround sound has eight; a recording desk, sixty-four. */

@@ -71,6 +71,7 @@ const samples: Record<string, string> = {
   woff2: 'woff2/sample.woff2',
   zip: 'zip/sample.zip',
   wav: 'wav/sample.wav',
+  flac: 'flac/sample.flac',
   aiff: 'aiff/sample.aiff',
   au: 'au/sample.au',
   tar: 'tar/sample.tar',

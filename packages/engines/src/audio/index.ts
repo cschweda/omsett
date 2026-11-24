@@ -3,23 +3,27 @@ import type { ConvertInput, ConvertOutput, Engine } from '../types'
 import { outputName, Refusal, throwIfAborted } from '../util'
 import { readAiff, writeAiff } from './aiff'
 import { readAu, writeAu } from './au'
+import { readFlac, unpackFlac } from './flac'
+import { writeFlac } from './flac-write'
 import { notValid, type Read, type Sound } from './sound'
 import { readWav, writeWav } from './wav'
 
 export { readAiff } from './aiff'
 export { readAu } from './au'
 export { readWav } from './wav'
+export { readFlac, unpackFlac } from './flac'
 export type { Read, Sound } from './sound'
 
-// Sound that is stored unpacked: WAV, AIFF and AU. Each is a label and then the same numbers,
-// and converting writes a new label and copies the numbers, turning their bytes round where
-// the two formats disagree about which comes first. No number is changed, so every conversion
-// here gives back exactly the sound it was given.
+// Sound, kept exactly. WAV, AIFF and AU store it unpacked: each is a label and then the same
+// numbers, and converting writes a new label and copies the numbers, turning their bytes round
+// where two formats disagree about which comes first. FLAC packs the numbers without loss, and
+// unpacking gives every one of them back. So every conversion here hands back exactly the
+// sound it was given, and nothing is worked out from the sound on the way.
 
-const READERS: Record<string, (bytes: Uint8Array, length?: number) => Read> = { wav: readWav, aiff: readAiff, au: readAu }
-const WRITERS: Record<string, (sound: Sound, data: Uint8Array, notes: string[]) => Uint8Array[]> = { wav: writeWav, aiff: writeAiff, au: writeAu }
+const READERS: Record<string, (bytes: Uint8Array, length?: number) => Read> = { wav: readWav, aiff: readAiff, au: readAu, flac: readFlac }
+const WRITERS: Record<string, (sound: Sound, data: Uint8Array, notes: string[], onProgress?: (fraction: number) => void) => Uint8Array[]> = { wav: writeWav, aiff: writeAiff, au: writeAu, flac: writeFlac }
 
-/** Read a sound file's label: what it holds and where. Refuses what it cannot follow. */
+/** Read a sound file's label: what it holds and where, without unpacking anything. Refuses what it cannot follow. */
 export function readSound(format: string, bytes: Uint8Array, length = bytes.length): Read {
   const reader = READERS[format]
   if (!reader) throw new Refusal('This kind of sound file cannot be read')
@@ -37,7 +41,8 @@ export function createAudioEngine(): Engine {
       input.onProgress(0.2)
       let read: Read
       try {
-        read = readSound(input.from.id, bytes)
+        // Packed sound is unpacked here, which is most of the work; the rest of the bar is for writing.
+        read = input.from.id === 'flac' ? unpackFlac(bytes, (fraction) => input.onProgress(0.2 + fraction * 0.5)) : readSound(input.from.id, bytes)
       } catch (error) {
         // Reading past the end of a file that lied about a length ends here too.
         throw error instanceof Refusal ? error : notValid(input.from.name)
@@ -50,8 +55,8 @@ export function createAudioEngine(): Engine {
       if (sound.channels > 2) {
         notes.push(`This sound has ${sound.channels} channels. They are written in the order the file had them. Formats differ on which speaker each is for, so check that each plays where it should.`)
       }
-      const data = bytes.subarray(sound.at, sound.at + sound.frames * sound.channels * sound.bytes)
-      const parts = writer(sound, data, notes)
+      const data = (read as { data?: Uint8Array }).data ?? bytes.subarray(sound.at, sound.at + sound.frames * sound.channels * sound.bytes)
+      const parts = writer(sound, data, notes, (fraction) => input.onProgress(0.7 + fraction * 0.3))
       input.onProgress(1)
       return [
         {

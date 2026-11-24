@@ -7,6 +7,48 @@ The paragraph that opens a version is its teaser: the home page shows its first 
 in the "What's new" banner, so keep it to two or three sentences on what a visitor will notice.
 A line beginning "Released" gives the date.
 
+## 0.42.0
+
+Released 24 November 2026.
+
+FLAC joins WAV, AIFF and AU. A WAV packed as FLAC is about half the size and loses nothing:
+unpacked again, every number of the sound is the one that went in. Omsett checks that for
+itself each time it reads one.
+
+### Added
+
+- **FLAC**, to and from WAV, AIFF and AU. The packer and the unpacker are Omsett's own code;
+  nothing is downloaded. Sound of 8, 16, 24 and 32 bits and up to eight channels is packed;
+  every FLAC from 4 to 32 bits is unpacked.
+- **Every FLAC is checked three ways as it is read**: each stretch of sound against the two
+  checksums it carries, and all of the sound against the checksum in the file's label. A file
+  whose sound does not match is refused, not handed on.
+- A FLAC that Omsett writes carries the same checksums, so any player can make the same check.
+- A FLAC's details from its label alone: length, rate, channels, bits, and the title, artist
+  and cover picture that a conversion leaves behind.
+- 24 trap files for FLAC (a trap file is one made on purpose to be broken, hostile or
+  dishonest): 90 bytes that claim to hold eight days of sound; silence without end from a file
+  that does not say how long it is; a file in which every part checks out and the whole does
+  not; differences that add up to numbers too large for their bits; code in the comments.
+- The FLAC samples are packed by the reference packer and by ffmpeg, so the unpacker is tested
+  against files Omsett did not write.
+
+### Changed
+
+- **A conversion's time limit now grows with the size of the file**, by a second for every two
+  megabytes, as it already grew with the size of a picture. A long recording is worked through
+  from end to end. Ten minutes is still the most anything is given.
+
+### Known
+
+- Omsett's FLAC files are a few percent larger than those of the reference packer at its usual
+  setting. The sound in them is the same.
+- Sound stored as fractions (32-bit float) is written to FLAC as 24-bit whole numbers, the
+  nearest FLAC has, and the result says so. That is the one conversion between these four
+  formats that is not exact.
+- A FLAC may unpack to at most 1 GB of sound, about an hour and a half at CD quality.
+- MP3 is next, and needs an encoder to be chosen.
+
 ## 0.41.0
 
 Released 24 November 2026.

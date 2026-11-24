@@ -66,6 +66,7 @@ import { webp } from './webp'
 import { wav } from './wav'
 import { aiff } from './aiff'
 import { au } from './au'
+import { flac } from './flac'
 
 /**
  * Order here is the order targets are offered in: the first few a file can become are shown
@@ -86,6 +87,6 @@ export const formats: Format[] = [
   woff2, woff, ttf, otf,
   // Archives: files and folders, packed three ways.
   zip, tgz, tar,
-  // Sound, stored unpacked: the same numbers behind three labels.
-  wav, aiff, au,
+  // Sound, kept exactly: packed without loss in FLAC, and unpacked behind three labels.
+  wav, flac, aiff, au,
 ]

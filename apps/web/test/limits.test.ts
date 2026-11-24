@@ -35,6 +35,12 @@ describe('conversionBudgetMs', () => {
     expect(conversionBudgetMs(1_000_000)).toBe(33_000)
     expect(conversionBudgetMs(64_000_000)).toBe(222_000)
     expect(conversionBudgetMs(10_000_000_000)).toBe(600_000)
+    // What has no pixels is given time by its size: a second for every two megabytes.
+    expect(conversionBudgetMs(0, 1)).toBe(31_000)
+    expect(conversionBudgetMs(0, 100_000_000)).toBe(80_000)
+    expect(conversionBudgetMs(1_000_000, 4_000_000)).toBe(35_000)
+    expect(conversionBudgetMs(0, 500 * 1024 * 1024)).toBe(293_000)
+    expect(conversionBudgetMs(0, 5_000_000_000)).toBe(600_000)
   })
 })
 
