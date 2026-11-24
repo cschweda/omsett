@@ -24,6 +24,10 @@ card of its own with buttons for what to do next.
 - **A button on every converted document to check its accessibility**, with the reason beside
   it: to see that nothing a screen reader relies on was lost in converting. It was there
   before as a small link under the name, and was easy to miss.
+- **What each format is, before a file is added.** In the list of everything Omsett converts,
+  pointing at a name says what that format is, in a sentence or two. Drafter now says where
+  it comes from: drafter.dev, a screenplay format built on Fountain that goes to and from
+  Final Draft.
 - **Buttons under a score**: open the full report, go on to convert the file, or close. A
   check that failed has a button to try again.
 

@@ -8,7 +8,7 @@ export const drafter: Format = {
   mime: ['application/vnd.drafter.package+zip'],
   detect: ['drafter'],
   explain:
-    "A Drafter package is one file that holds a whole writing project: the script as plain Fountain, with its drafts and notes beside it. It is an open format, and unzips to ordinary files.",
+    "Drafter is the screenplay format of drafter.dev, a writing app by the author of Omsett. One file holds a whole writing project: the script as plain Fountain, with its drafts and notes beside it. It is built on Fountain, goes to and from Final Draft (FDX), is open, and unzips to ordinary files.",
   lossy: 'never',
   traits: [],
 }
