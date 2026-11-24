@@ -42,7 +42,9 @@ jobs:
   e2e:
     name: Browser tests (${{ matrix.browser }} ${{ matrix.shard }}/2)
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    # The tests take under ten minutes. Installing WebKit's system packages has taken sixteen
+    # on a slow day, and a run that had passed every test was cancelled a second after it finished.
+    timeout-minutes: 40
     strategy:
       # One browser failing says nothing about the others; let them all finish.
       fail-fast: false
