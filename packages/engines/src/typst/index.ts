@@ -2,9 +2,10 @@ import { readWoff, writeSfnt } from '../font/sfnt'
 import { typstInfo } from '../info'
 import { readPage } from '../markup'
 import type { ConvertInput, ConvertOutput, Engine } from '../types'
-import { outputName, Refusal, throwIfAborted } from '../util'
+import { MAX_PIXELS, pngStructureProblem, readDimensions } from '@omsett/detect'
+import { outputName, Refusal, safeBaseName, throwIfAborted } from '../util'
 import { MAX_PIECES, piecesFor, SCRIPTS, type ScriptId } from './scripts'
-import { writeTypst } from './source'
+import { quoted, writeTypst } from './source'
 
 export { SCRIPTS, type ScriptId } from './scripts'
 
@@ -23,6 +24,8 @@ export { SCRIPTS, type ScriptId } from './scripts'
 
 /** Larger pages than this are not laid out. */
 const MAX_PAGE_BYTES = 32 * 1024 * 1024
+/** The width of a sheet of A4, in points: the widest page a picture is set on. */
+const PAGE_WIDTH = 595.28
 
 export interface TypstHost {
   /** Typst itself, as bytes. */
@@ -84,12 +87,42 @@ export function createTypstEngine(host: TypstHost): Engine {
     return kept.get(key)!
   }
 
+  /** A picture, set on a page of its own that is the shape of the picture. */
+  async function picturePage(input: ConvertInput): Promise<ConvertOutput[]> {
+    const bytes = new Uint8Array(await input.blob.arrayBuffer())
+    // The picture is checked as any PNG is before a decoder sees it, and its size taken from itself.
+    const problem = await pngStructureProblem(input.blob, input.maxPixels ?? MAX_PIXELS)
+    if (problem) throw new Refusal('This picture is damaged, and cannot be set on a page')
+    const size = readDimensions('png', bytes.subarray(0, 65536))
+    if (!size || size.width < 1 || size.height < 1) throw new Refusal('This picture does not say how large it is')
+    if (input.maxPixels !== undefined && size.width * size.height > input.maxPixels) throw new Refusal('This image is too large to convert in a browser')
+    // At 96 pixels to the inch, and no wider than a sheet of A4: a scan becomes a page, not a poster.
+    const wide = Math.min(PAGE_WIDTH, size.width * 0.75)
+    const high = (wide * size.height) / size.width
+    const { compiler } = await start()
+    throwIfAborted(input.signal)
+    input.onProgress(0.5)
+    compiler.resetShadow()
+    compiler.addSource('/main.typ', `#set document(title: ${quoted(safeBaseName(input.name))}, author: (), date: none)\n#set page(width: ${wide.toFixed(2)}pt, height: ${high.toFixed(2)}pt, margin: 0pt)\n#image("/picture.png", width: 100%, height: 100%, fit: "stretch")`)
+    compiler.mapShadow('/picture.png', bytes)
+    let made: Awaited<ReturnType<Compiler['compile']>>
+    try {
+      made = await compiler.compile({ mainFilePath: '/main.typ', format: 1, diagnostics: 'full' })
+    } catch {
+      throw new Refusal('This picture could not be set on a page')
+    }
+    if (!made.result || made.result.length < 8) throw new Refusal('This picture could not be set on a page')
+    input.onProgress(1)
+    return [{ name: outputName(input.name, input.to), format: input.to.id, blob: new Blob([made.result as BlobPart], { type: input.to.mime[0] }) }]
+  }
+
   return {
     ...typstInfo,
     available: async () => typeof WebAssembly !== 'undefined',
     load: async () => void (await start()),
     async convert(input: ConvertInput): Promise<ConvertOutput[]> {
       throwIfAborted(input.signal)
+      if (input.from.category === 'image') return picturePage(input)
       if (input.blob.size > MAX_PAGE_BYTES) throw new Refusal('This page is too large to lay out as a PDF')
       let text: string
       try {

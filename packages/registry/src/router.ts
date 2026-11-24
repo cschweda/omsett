@@ -1,5 +1,5 @@
 import { dedupeWarnings, deriveEdges } from './derive'
-import { sameKind } from './kinds'
+import { canBecome } from './kinds'
 import { lossyToLossy } from './trait-warnings'
 import type { Edge, Format, Registry, Route, Router, Target } from './types'
 
@@ -47,6 +47,8 @@ export function createRouter(registry: Registry): Router {
   // extends every best-so-far path by one edge, and the best over all rounds wins.
   function route(from: string, to: string): Route | null {
     if (from === to || !formats.has(from) || !formats.has(to)) return null
+    // A road may pass through another kind of file; it may not end at a kind the file cannot become.
+    if (!canBecome(formats.get(from)!.category, formats.get(to)!.category)) return null
     // A pair that is ruled out is ruled out by any road: no going round through a third format.
     if (derived.blocked.has(`${from}>${to}`)) return null
     let frontier = new Map<string, Path>([[from, { edges: [], cost: 0, native: 0 }]])
@@ -75,7 +77,7 @@ export function createRouter(registry: Registry): Router {
 
   function reasonFor(from: Format, to: Format): string {
     if (from.id === to.id) return `Already ${to.name}`
-    if (!sameKind(from.category, to.category)) return `${from.name} files cannot become ${to.name}`
+    if (!canBecome(from.category, to.category)) return `${from.name} files cannot become ${to.name}`
     if (to.readOnly) return to.readOnly
     return derived.blocked.get(`${from.id}>${to.id}`) ?? `No converter from ${from.name} to ${to.name} yet`
   }
@@ -85,7 +87,7 @@ export function createRouter(registry: Registry): Router {
     // Formats of another kind altogether are not listed: nobody dropping a spreadsheet needs to
     // be told it cannot become a photograph. Before there is a file, everything is listed.
     const offered = registry.formats.filter(
-      (format) => sources.length === 0 || sources.some((source) => sameKind(source.category, format.category)),
+      (format) => sources.length === 0 || sources.some((source) => canBecome(source.category, format.category)),
     )
     return offered.map((format) => {
       if (sources.length === 0 || sources.length !== fromIds.length) {

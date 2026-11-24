@@ -15,6 +15,21 @@ export function sameKind(a: Category, b: Category): boolean {
   return a === b || KINDS.some((kind) => kind.includes(a) && kind.includes(b))
 }
 
+/**
+ * What can become something of another kind, one way only. A picture can be put on a page of
+ * a PDF; a PDF does not become a picture, and a picture does not become a Word document by
+ * way of one.
+ */
+const ALSO: Array<[from: Category, to: Category]> = [
+  ['image', 'pdf'],
+  ['vector', 'pdf'],
+]
+
+/** Whether a file in one category may be offered a format in the other, and routed to it. */
+export function canBecome(from: Category, to: Category): boolean {
+  return sameKind(from, to) || ALSO.some(([a, b]) => a === from && b === to)
+}
+
 /** Categories whose files are text a person can read, and so can be shown as text. */
 // A workbook and a Word document are not text, and are left out.
 const READABLE: Category[] = ['data', 'subtitle', 'text', 'screenplay']

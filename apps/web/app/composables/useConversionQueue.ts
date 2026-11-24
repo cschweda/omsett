@@ -213,7 +213,11 @@ export function useConversionQueue() {
 
   /** Choose a format and convert to it at once, with its usual settings. */
   async function convertTo(id: string) {
-    if (converting.value) return
+    // A press while another conversion is going is not lost: it waits its turn. Unless
+    // "Convert another" has been pressed meanwhile, which ends everything that was waiting.
+    const session = sessions
+    while (running) await running
+    if (session !== sessions) return
     select(id)
     if (targetId.value !== id) return
     // The choices offered follow the selection; they are let settle before work starts.
@@ -325,7 +329,17 @@ export function useConversionQueue() {
   /** Counts sessions: each "Convert another" starts a new one. */
   let sessions = 0
 
-  async function convertAll({ quiet = false }: { quiet?: boolean } = {}) {
+  /** The conversion going on now, if one is: what a further press waits behind. */
+  let running: Promise<void> | null = null
+  function convertAll(options: { quiet?: boolean } = {}): Promise<void> {
+    const mine = runAll(options).finally(() => {
+      if (running === mine) running = null
+    })
+    running = mine
+    return mine
+  }
+
+  async function runAll({ quiet = false }: { quiet?: boolean } = {}) {
     const target = selected.value
     if (!canConvert.value || !target?.route) return
     converting.value = true

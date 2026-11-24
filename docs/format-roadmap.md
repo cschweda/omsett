@@ -117,7 +117,8 @@ When a format ships, update its row here, in the same change.
 | PDF in Chinese, Japanese, Korean, Arabic, Hebrew, Devanagari and Thai: a typeface for each, fetched a piece at a time | Browser | the same, with Noto faces from @fontsource | **Done** (0.48.0) |
 | PDF in the remaining scripts (Bengali, Tamil and others of India, Armenian, Georgian, Ethiopic) and emoji | Browser | the same | Planned |
 | Reading Arabic and Hebrew back out of a PDF in the right order | Browser | `pdf` | Planned |
-| Pictures to PDF; combining, splitting and rearranging PDFs | Browser | to be decided | Planned |
+| Pictures to PDF, one picture to a PDF | Browser | `typst` | **Done** (0.49.0) |
+| Several pictures into one PDF; combining, splitting and rearranging PDFs; a JPEG kept as a JPEG inside the PDF | Browser | to be decided | Planned |
 | Workbooks from Excel 95 and earlier | Browser | — | Planned |
 | Numbers (read) | Browser | SheetJS | Planned |
 | OTS, FODS, ET | Desktop | LibreOffice | Planned |

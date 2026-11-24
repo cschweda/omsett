@@ -83,3 +83,26 @@ test('a page mostly in a script no typeface here draws is refused, and says what
   await expect(page.locator('.file-card')).toContainText('Much of this page is in a script Omsett’s PDFs cannot draw yet'.replace('’', "'"))
   await expect(page.locator('.file-card')).toContainText('Choose DOCX or a web page, which keep every letter')
 })
+
+test('a photograph becomes a PDF of one page, by way of PNG, and says what such a PDF is', async ({ page }) => {
+  await open(page)
+  await page.locator('#file-input').setInputFiles(fixture('jpeg/sample.jpg'))
+  const tile = page.locator('[role="radio"][data-format="pdf"]')
+  await tile.click()
+  await expect(page.locator('main')).toContainText('The PDF is one page with the picture on it. It holds no text')
+  await page.getByTestId('convert').click()
+  const link = page.getByTestId('download')
+  await expect(link).toBeVisible({ timeout: 60_000 })
+  const output = await describeDownload(page, () => link.click())
+  expect(output.name).toBe('sample.pdf')
+  expect(output.bytes.subarray(0, 5).toString('latin1')).toBe('%PDF-')
+  expect(output.bytes.toString('latin1').match(/\/Type\s*\/Page[^s]/g) ?? ['one']).toHaveLength(1)
+})
+
+test('a PDF is not offered picture formats: the road goes one way', async ({ page }) => {
+  await open(page)
+  await page.locator('#file-input').setInputFiles(fixture('pdf/sample.pdf'))
+  await expect(page.locator('[role="radio"][data-format="html"]')).toBeVisible()
+  await expect(page.locator('[role="radio"][data-format="png"]')).toHaveCount(0)
+  await expect(page.locator('[role="radio"][data-format="webp"]')).toHaveCount(0)
+})

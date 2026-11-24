@@ -135,6 +135,13 @@ build by `apps/web/scripts/write-headers.ts`.
   fourth, fonts a fifth, archives a sixth, sound a seventh. Spreadsheets are of data's kind, and documents of
   Markdown's and HTML's, as are PDFs. Screenplays are a kind of their own. A new category that should convert into an
   existing one must be added there, or its formats will never be listed for it.
+- **A few things can become something of another kind, one way only** (`ALSO` and `canBecome` in
+  `kinds.ts`): a picture can become a PDF. The router ends no road at a kind the file cannot
+  become, so a picture does not go on through a PDF to a Word document, and a PDF is not
+  offered picture formats. Add a pair there; do not merge two kinds to get one conversion.
+- **Only PNG is set on a PDF page** (`picturePage` in the `typst` engine). Every other picture is
+  made a PNG first, by the engines that drop its metadata; Typst would embed a JPEG as it is,
+  location and all. The PNG's structure is checked before Typst decodes it.
 - **An engine's reason for refusing a file reaches the user only as a `Refusal`**
   (`packages/engines/src/util.ts`). Any other error is shown as "This file couldn't be
   converted". Write the message for the person who dropped the file.
@@ -271,6 +278,9 @@ build by `apps/web/scripts/write-headers.ts`.
 - **The page goes to the result only for a conversion a person asked for** (`arrived`). A
   re-conversion from moving a setting must not move the page. It goes at once, never as a
   glide: a click made while the page is moving misses, in a browser and in the tests.
+- **A press on a format's Convert button during a conversion waits its turn** (`running` in
+  `useConversionQueue`), and is dropped only if the session ends meanwhile. Do not go back to
+  ignoring it: the page gives no sign that a press was lost.
 - **"Convert another" ends a session** (`sessions` in `useConversionQueue`). A batch checks
   after every wait whether its session is over, and writes nothing if it is.
 - **Word from the worker can arrive late.** A progress event may land after its file is
