@@ -89,8 +89,8 @@ const conversions = deriveEdges(registry).edges.length
           <p>
             It is at an early stage. Today it handles {{ formats.length }} formats, pictures, PDFs, documents, presentations, spreadsheets, screenplays, data, subtitles,
             web pages, fonts, archives and sound
-            ({{ formats.join(', ') }}): {{ conversions }} conversions in all. More formats, more kinds of sound
-            and then video are the work ahead.
+            ({{ formats.join(', ') }}): {{ conversions }} conversions in all. More formats, PDF in more scripts,
+            more kinds of sound and then video are the work ahead.
           </p>
         </div>
       </StepSection>

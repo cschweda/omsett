@@ -7,6 +7,57 @@ The paragraph that opens a version is its teaser: the home page shows its first 
 in the "What's new" banner, so keep it to two or three sentences on what a visitor will notice.
 A line beginning "Released" gives the date.
 
+## 0.47.0
+
+Released 24 November 2026.
+
+Omsett now writes PDF. A Word document, a web page, Markdown or a presentation becomes a PDF
+that is tagged: its headings, lists, tables and picture descriptions are marked as what they
+are, so a screen reader can find its way through it. Until today Omsett could only read one.
+
+### Added
+
+- **Writing PDF**, from HTML, and through it from DOCX, DOC, Markdown and PPTX.
+- **Every PDF Omsett writes is tagged.** Headings at their levels, lists with their items,
+  tables with their heading cells marked, links, the description of each picture, the
+  document's title and its language are all in the PDF's own structure. Omsett's PDF reader,
+  given one back, reads all of that from the tags.
+- The pages are laid out by **Typst**, a typesetting program in the line of TeX, built to
+  WebAssembly. It is the largest thing Omsett fetches (28 MB, about 10 MB as omsett.com
+  sends it), and it is fetched only when a PDF is asked for, from omsett.com itself.
+- **Set in Omsett's own typeface**, which draws Latin, Greek and Cyrillic. The typeface is
+  fetched from omsett.com too; nothing comes from anyone else's server.
+- **A PDF says nothing of when or by whom it was made**: no date, no author, no name of a
+  program beyond Typst's.
+- No word of a document is ever given to Typst as an instruction. Each is passed as quoted
+  text to a function Omsett chose, so a document that is written to look like a program is
+  set as the words it is.
+
+### Fixed
+
+- **Omsett's PDF reader no longer distrusts a well-tagged PDF for its list numbers.** The
+  "2." and the dash in front of a list item are in the PDF as text but are not carried as
+  words. They were counted as words the tags had failed to give, and in a short document with
+  many items that was enough for the tags to be set aside and the structure guessed instead.
+
+### Changed
+
+- The social card says "DOCX → PDF" again, as it did before 0.46.0. It is true now.
+- PDF comes before PPTX in the list of formats, so it is among the large tiles for a document.
+
+### Known
+
+- **Letters outside Latin, Greek and Cyrillic are not drawn**, and are left out of the PDF:
+  Chinese, Japanese, Korean, Arabic, Hebrew, the scripts of India, emoji. The result names
+  them. A page that is mostly in such a script is refused, with the advice to choose DOCX or a
+  web page. Typefaces for those scripts, fetched when a document needs one, are to come.
+- The look of the original is not kept: the PDF is laid out afresh on plain A4 or Letter
+  pages. Fonts, colours, columns, headers and footers are not carried.
+- Pictures cannot be made into a PDF by themselves yet, and a PDF cannot be combined with
+  another, split or rearranged.
+- The PDFs are tagged, and have not yet been scored by an accessibility checker other than
+  Omsett's own reader and poppler's.
+
 ## 0.46.0
 
 Released 24 November 2026.
@@ -44,7 +95,7 @@ struck out or hid does not.
 
 ### Known
 
-- **Omsett cannot write a PDF.** Nothing converts to PDF yet.
+- At this version Omsett could not write a PDF. That came in 0.47.0.
 - From a DOC, pictures are left out, and so are footnotes, headers and footers. A list whose
   bullets come from a style and not from the paragraph is written as plain paragraphs.
 - Documents from Word 95 and earlier, and documents locked with a password, are refused with

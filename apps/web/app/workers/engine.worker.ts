@@ -14,6 +14,7 @@ import {
   createFontEngine,
   createAudioEngine,
   createAudioMp3Engine,
+  createTypstEngine,
   type Mp3Decoder,
   type Mp3Encoder,
   createIconEngine,
@@ -137,6 +138,11 @@ const engines: Record<string, Engine> = Object.fromEntries(
     createIconEngine(),
     createFontEngine(),
     createFontWoff2Engine(),
+    // Typst, which writes PDF, and its typeface: each fetched and verified, and only when a PDF is asked for.
+    createTypstEngine({
+      wasm: () => verified(assets.typst.wasm),
+      fonts: () => Promise.all(assets.typst.fonts.map(async (font) => new Uint8Array(await verified(font)))),
+    }),
     createAudioEngine(),
     // MP3: mpg123 unpacks and LAME packs. LAME is started from its verified binary; its small
     // loader, and mpg123 whole, are part of this worker's own code.
