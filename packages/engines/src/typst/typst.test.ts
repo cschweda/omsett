@@ -6,6 +6,7 @@ import assets from '../../../../apps/web/app/generated/engine-assets.json'
 import { typstFonts } from '../info'
 import { readPage } from '../markup'
 import { createNodeEngines } from '../node'
+import { titleShown } from './finish'
 import { quoted, writeTypst } from './source'
 
 // Writing PDF. Two things are tested apart: the program written for Typst, which must hold a
@@ -292,5 +293,70 @@ describe('the typeface', () => {
   it('is the same list where the app fetches it as where the engine names it', () => {
     expect(assets.typst.fonts).toHaveLength(typstFonts.length)
     for (const [i, file] of typstFonts.entries()) expect(assets.typst.fonts[i]!.url).toContain(file.split('/').pop()!.replace('.woff', ''))
+  })
+})
+
+describe('a PDF asks for its title to be shown', () => {
+  const text = (bytes: Uint8Array) => Buffer.from(bytes).toString('latin1')
+
+  it('so that a viewer and a screen reader give the title, and not the name of the file', async () => {
+    // Without this a Word document with full marks for its title became a PDF without them.
+    for (const [engine, from, file] of [['typst', 'html', 'html/sample.html'], ['typst', 'png', 'png/sample.png']] as const) {
+      const pdf = text((await through(engine, await fixture(file), from, 'pdf')).bytes)
+      // The catalog the file ends on is the one that counts.
+      const last = pdf.slice(pdf.lastIndexOf('/Type /Catalog'))
+      expect(last, file).toMatch(/\/ViewerPreferences\s*<<[^>]*\/DisplayDocTitle true/)
+      expect(pdf, file).toMatch(/\/Prev \d+\s*>>\s*startxref\s+\d+\s+%%EOF\s*$/)
+    }
+    const made = (await pdfOf(PAGE)).bytes
+    expect(text(made)).toMatch(/\/Lang \(en-GB\)[\s\S]*\/DisplayDocTitle true/)
+    // And it is still a PDF that reads: Omsett's own reader finds its headings and its table.
+    const back = await readBack(made)
+    expect(back).toContain('<h1>Quarterly report</h1>')
+    expect(back).toContain('<th')
+  })
+
+  it('by adding to the end of what Typst wrote, and changing none of it', async () => {
+    const made = (await pdfOf(PAGE)).bytes
+    const whole = text(made)
+    // What was added begins after the last "%%EOF" but one: everything before it is Typst's, and has one table.
+    // (The words "%%EOF" also end a font's own table of letters, so the first of them is not the place.)
+    const first = whole.lastIndexOf('%%EOF', whole.trimEnd().length - 6)
+    expect(whole.slice(0, first).match(/\nxref\n/g)).toHaveLength(1)
+    expect(whole.slice(0, first)).not.toContain('/DisplayDocTitle')
+    const original = made.subarray(0, first + 5)
+    const again = titleShown(original)!
+    expect(Buffer.from(again.subarray(0, original.length)).equals(Buffer.from(original))).toBe(true)
+    // The place the new table gives for the catalog is where the catalog is.
+    const added = text(again.subarray(original.length))
+    const [, number, offset] = /xref\n(\d+) 1\n(\d{10}) 00000 n/.exec(added)!
+    expect(text(again.subarray(Number(offset), Number(offset) + 20))).toMatch(new RegExp(`^${number} 0 obj\\n<<`))
+    const startxref = Number(/startxref\n(\d+)\n%%EOF\n$/.exec(added)![1])
+    expect(text(again.subarray(startxref, startxref + 5))).toBe('xref\n')
+    // Asked twice, it is done once.
+    expect(titleShown(again)).toBe(again)
+  })
+
+  it('and gives nothing back for a file that is not laid out as Typst lays one out', () => {
+    for (const not of ['', '%PDF-1.7\n%%EOF', '%PDF-1.7\nxref\n0 1\n0000000000 65535 f\r\ntrailer\n<< /Size 1 >>\nstartxref\n9\n%%EOF', `startxref\n${'9'.repeat(10)}\n%%EOF`]) {
+      expect(titleShown(new TextEncoder().encode(not)), JSON.stringify(not)).toBeNull()
+    }
+  })
+
+  it('and a strict reader of PDFs finds nothing wrong with it', async () => {
+    let has = true
+    try {
+      execFileSync('qpdf', ['--version'], { stdio: 'ignore' })
+    } catch {
+      has = false
+    }
+    if (!has) return
+    const { mkdtemp, writeFile } = await import('node:fs/promises')
+    const { tmpdir } = await import('node:os')
+    const dir = await mkdtemp(`${tmpdir()}/omsett-pdf-`)
+    await writeFile(`${dir}/a.pdf`, (await pdfOf(PAGE)).bytes)
+    const report = execFileSync('qpdf', ['--check', `${dir}/a.pdf`]).toString()
+    expect(report).toContain('No syntax or stream encoding errors found')
+    expect(execFileSync('qpdf', ['--json', '--json-key=qpdf', `${dir}/a.pdf`]).toString()).toContain('"/DisplayDocTitle": true')
   })
 })

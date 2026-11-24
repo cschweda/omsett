@@ -4,6 +4,7 @@ import { readPage } from '../markup'
 import type { ConvertInput, ConvertOutput, Engine } from '../types'
 import { MAX_PIXELS, pngStructureProblem, readDimensions } from '@omsett/detect'
 import { outputName, Refusal, safeBaseName, throwIfAborted } from '../util'
+import { titleShown } from './finish'
 import { MAX_PIECES, piecesFor, SCRIPTS, type ScriptId } from './scripts'
 import { quoted, writeTypst } from './source'
 
@@ -112,8 +113,10 @@ export function createTypstEngine(host: TypstHost): Engine {
       throw new Refusal('This picture could not be set on a page')
     }
     if (!made.result || made.result.length < 8) throw new Refusal('This picture could not be set on a page')
+    const finished = titleShown(made.result)
+    if (!finished) throw new Refusal('This picture could not be set on a page')
     input.onProgress(1)
-    return [{ name: outputName(input.name, input.to), format: input.to.id, blob: new Blob([made.result as BlobPart], { type: input.to.mime[0] }) }]
+    return [{ name: outputName(input.name, input.to), format: input.to.id, blob: new Blob([finished as BlobPart], { type: input.to.mime[0] }) }]
   }
 
   return {
@@ -180,6 +183,9 @@ export function createTypstEngine(host: TypstHost): Engine {
         throw new Refusal('This page could not be laid out as a PDF')
       }
       if (!made.result || made.result.length < 8) throw new Refusal('This page could not be laid out as a PDF')
+      // The title is to be shown and read out, not the file's name: without this the PDF scores lower than the document it came from.
+      const finished = titleShown(made.result)
+      if (!finished) throw new Refusal('This page could not be laid out as a PDF')
       input.onProgress(1)
       const notes: string[] = []
       if (lost > 0) notes.push(`${lost === 1 ? 'One letter on this page has' : `${lost} letters on this page have`} no drawing in any typeface Omsett has (${named}), and ${lost === 1 ? 'is' : 'are'} left out of the PDF. Check the result, or choose DOCX, which keeps every letter.`)
@@ -188,7 +194,7 @@ export function createTypstEngine(host: TypstHost): Engine {
         {
           name: outputName(input.name, input.to),
           format: input.to.id,
-          blob: new Blob([made.result as BlobPart], { type: input.to.mime[0] }),
+          blob: new Blob([finished as BlobPart], { type: input.to.mime[0] }),
           ...(notes.length ? { note: notes.join(' ') } : {}),
         },
       ]
