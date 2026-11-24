@@ -31,6 +31,9 @@ const bmp: WriteSpec = { format: 'bmp', lossy: false, drops: DROPPED }
 const qoi: WriteSpec = { format: 'qoi', lossy: false, drops: DROPPED }
 const tga: WriteSpec = { format: 'tga', lossy: false, drops: DROPPED }
 const pnm: WriteSpec = { format: 'pnm', lossy: false, drops: DROPPED }
+// An icon is one picture at several sizes. These are the ones Windows and browsers ask for; a
+// picture smaller than one of them is not made larger to fill it.
+const ico: WriteSpec = { format: 'ico', lossy: false, defaultOptions: { iconSizes: [16, 32, 48, 256] }, drops: DROPPED }
 const MAGICK_READS = ['bmp', 'tga', 'qoi', 'pnm', 'psd', 'psb', 'ico', 'cur', 'jp2', 'exr', 'hdr', 'dds', 'fits', 'pcx', 'sgi', 'ras']
 
 /** What plain libvips reads and writes. Its two optional modules add to this, never replace it. */
@@ -102,9 +105,9 @@ export const capabilities: Capability[] = [
 
   // ImageMagick, for the long tail of formats nothing else here reads. It is large, so it is
   // the last resort: it reads these to PNG and writes them from PNG, and every other pair goes
-  // through that step. Each file is read as the one format it was identified as, never guessed.
+  // through that step. An icon is the one thing it writes at another size than it was given. Each file is read as the one format it was identified as, never guessed.
   { engine: 'magick', tier: 'browser', reads: MAGICK_READS, writes: [png], priority: 40 },
-  { engine: 'magick', tier: 'browser', reads: ['png'], writes: [bmp, qoi, tga, pnm], priority: 40 },
+  { engine: 'magick', tier: 'browser', reads: ['png'], writes: [bmp, qoi, tga, pnm, ico], priority: 40 },
 
   // libvips with its JPEG XL module, on the same terms.
   { engine: 'vips-jxl', tier: 'browser', reads: CORE, writes: [jxl], priority: 30 },

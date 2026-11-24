@@ -1,5 +1,5 @@
 import { layoutProblem } from '@omsett/detect'
-import { dimensionProblem } from '@omsett/registry'
+import { dimensionProblem, iconSidesFor, iconSizes } from '@omsett/registry'
 import { magickInfo } from '../info'
 import type { ConvertInput, ConvertOutput, Engine } from '../types'
 import { outputName, Refusal, throwIfAborted } from '../util'
@@ -12,6 +12,9 @@ export interface MagickImage {
   backgroundColor: unknown
   alpha(action: unknown): void
   strip(): void
+  extent(width: number, height: number, gravity: unknown): void
+  resize(width: number, height: number): void
+  settings: { setDefine(name: string, value: string): void }
   write<T>(format: string, use: (data: Uint8Array) => T): T
 }
 export interface MagickApi {
@@ -21,8 +24,9 @@ export interface MagickApi {
   /** ImageMagick's own limits. Set before every read, so that it refuses before it allocates. */
   ResourceLimits: { area: bigint; width: bigint; height: bigint; listLength: bigint; memory: bigint; disk: bigint }
   MagickFormat: Record<string, string>
-  MagickColors: { White: unknown }
-  AlphaAction: { Remove: unknown }
+  MagickColors: { White: unknown; Transparent: unknown }
+  AlphaAction: { Remove: unknown; Set: unknown }
+  Gravity: { Center: unknown }
 }
 export interface MagickHost {
   /** Fetch and start ImageMagick. Called once; how is the host's business. */
@@ -35,6 +39,31 @@ const MAX_SIDE = 65_535
 const MAX_PICTURES = 256
 /** The most memory ImageMagick may ask for. Past it, it refuses; it is never given a disk. */
 const MAX_MEMORY = 3 * 1024 * 1024 * 1024
+
+const listed = (sizes: number[]) => (sizes.length > 1 ? `${sizes.slice(0, -1).join(', ')} and ${sizes.at(-1)}` : `${sizes[0]}`)
+
+/**
+ * Make a picture into an icon: square, no larger than the largest size asked for, and held at
+ * each of the sizes below its own. A picture is never made larger than it was. Returns what to
+ * tell the person about it.
+ */
+function asIcon(magick: MagickApi, image: MagickImage, sizes: number[]): string {
+  const longest = Math.max(image.width, image.height)
+  const square = image.width === image.height
+  if (!square) {
+    // Clear margins on the short side, the picture in the middle.
+    // The ground is set on the picture and not handed to `extent`, which paints the margins
+    // white when given the colour itself. A test reads the margins back.
+    image.alpha(magick.AlphaAction.Set)
+    image.backgroundColor = magick.MagickColors.Transparent
+    image.extent(longest, longest, magick.Gravity.Center)
+  }
+  const held = iconSidesFor(sizes, image.width, image.height)
+  if (held[0]! < longest) image.resize(held[0]!, held[0]!)
+  if (held.length > 1) image.settings.setDefine('icon:auto-resize', held.join(','))
+  const margins = square ? '' : ' The picture was not square, so it has been given clear margins.'
+  return `This icon holds the picture at ${listed(held)} pixels.${margins}`
+}
 
 /**
  * ImageMagick compiled to WebAssembly, for the formats nothing else here reads. A file is
@@ -81,7 +110,9 @@ export function createMagickEngine(host: MagickHost): Engine {
       const damage = layoutProblem(from, bytes)
       if (damage) throw new Refusal(`This file is damaged: ${damage}`)
 
+      const sizes = iconSizes(input.options)
       let out: Uint8Array
+      let note: string | undefined
       try {
         // What a file says about its size up front and what its pictures really are can be two
         // things: an icon lists 16 by 16 and holds a picture of 20,000; a file of two hundred
@@ -109,6 +140,7 @@ export function createMagickEngine(host: MagickHost): Engine {
           if (input.maxPixels !== undefined && image.width * image.height > input.maxPixels) {
             throw new RangeError('The picture is too large')
           }
+          if (sizes) note = asIcon(magick, image, sizes)
           const tooLarge = dimensionProblem(to, image.width, image.height)
           if (tooLarge) throw new RangeError(tooLarge)
           onProgress(0.6)
@@ -128,7 +160,7 @@ export function createMagickEngine(host: MagickHost): Engine {
       }
       throwIfAborted(signal)
       onProgress(1)
-      return [{ name: outputName(input.name, to), format: to.id, blob: new Blob([out as BlobPart], { type: to.mime[0] }) }]
+      return [{ name: outputName(input.name, to), format: to.id, blob: new Blob([out as BlobPart], { type: to.mime[0] }), ...(note ? { note } : {}) }]
     },
   }
 }

@@ -237,6 +237,10 @@ build by `apps/web/scripts/write-headers.ts`.
 - **Settings in the address bar are for tests and work on localhost only** (`testHook`).
 - **Trap files** (`fixtures/_traps/`, listed in `manifest.json`) run in both test suites. A new
   failure mode gets a trap; add it in `fixtures/_tools/make-traps.py`.
+- **A conversion keeps the size of the picture, with one exception that the registry states.**
+  An icon is written square and at most 256 pixels, at the sizes in its capability's
+  `iconSizes`; `writtenSize` (`packages/registry`) says what size comes out, and the tests that
+  compare sizes ask it. A second output at another size goes there too, not into a test.
 - **ImageMagick forgives some damaged files too.** Of a Photoshop file that stopped halfway it
   returned the half it found. `layoutProblem` (`packages/detect/src/structure.ts`) adds up the
   lengths such a file gives for its own parts, and the `magick` engine refuses what does not fit

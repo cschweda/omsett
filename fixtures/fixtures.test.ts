@@ -3,7 +3,7 @@ import { createRequire } from 'node:module'
 import { detect, MAX_PIXELS } from '@omsett/detect'
 import { engineInfo } from '@omsett/engines'
 import { createNodeEngines } from '@omsett/engines/node'
-import { deriveEdges, engineIds, everything, formatById, registry } from '@omsett/registry'
+import { deriveEdges, engineIds, everything, formatById, registry, writtenSize } from '@omsett/registry'
 import { describe, expect, it } from 'vitest'
 
 const nodeEngines = createNodeEngines()
@@ -100,13 +100,14 @@ describe('fixtures through every Node-capable engine', () => {
           expect(output.name).toBe(fixture.name.replace(/(?:\.tar)?\.[^.]+$/, `.${to.extensions[0]}`))
           expect(output.format).toBe(to.id)
 
-          // Decodable as the target format, same dimensions, judged from the bytes.
+          // Decodable as the target format, same dimensions, judged from the bytes. An icon is
+          // the one thing written at another size, and the registry says which.
           // Markdown and Fountain are plain text with no mark of their own, known by name alone,
           // so for those two the name is given.
           const after = await detect(output.blob, registry.formats, ['md', 'fountain'].includes(to.id) ? output.name : undefined)
           expect(after.kind === 'known' && after.format.id).toBe(to.id)
           expect(after.kind === 'known' && after.dimensions).toEqual(
-            before.kind === 'known' ? before.dimensions : null,
+            writtenSize(candidate.defaultOptions, before.kind === 'known' ? before.dimensions : null),
           )
           expect(output.blob.size, 'output is not empty').toBeGreaterThan(0)
         }
