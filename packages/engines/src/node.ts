@@ -8,6 +8,7 @@ import { createArchiveEngine } from './archive'
 import { createIconEngine } from './icon'
 import { createScriptEngine } from './script'
 import { createPdfEngine } from './pdf'
+import { createAudioEngine } from './audio'
 import { createHeifEngine, type HeifModule } from './heif'
 import { engineInfo, resvgFonts, vipsModules } from './info'
 import { createResvgEngine, type ResvgHost } from './resvg'
@@ -66,6 +67,7 @@ export function createNodeEngines(): Record<string, Engine> {
   engines.pdf = createPdfEngine()
   engines.icon = createIconEngine()
   engines.font = createFontEngine()
+  engines.audio = createAudioEngine()
   engines['font-woff2'] = createFontWoff2Engine()
   return engines
 }

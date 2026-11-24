@@ -63,6 +63,9 @@ import { svg } from './svg'
 import { apng } from './apng'
 import { tiff } from './tiff'
 import { webp } from './webp'
+import { wav } from './wav'
+import { aiff } from './aiff'
+import { au } from './au'
 
 /**
  * Order here is the order targets are offered in: the first few a file can become are shown
@@ -83,4 +86,6 @@ export const formats: Format[] = [
   woff2, woff, ttf, otf,
   // Archives: files and folders, packed three ways.
   zip, tgz, tar,
+  // Sound, stored unpacked: the same numbers behind three labels.
+  wav, aiff, au,
 ]

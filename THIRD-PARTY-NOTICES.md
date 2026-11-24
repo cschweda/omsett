@@ -154,6 +154,14 @@ browser. Nothing is downloaded.
 The sample fonts in `fixtures/` are a typeface drawn for the tests by
 `fixtures/_tools/make-fonts.py`; no one else's font is in the repository.
 
+### audio
+
+Omsett's own reader and writer for WAV, AIFF and AU. Nothing is downloaded. The two telephone
+codes, µ-law and A-law, are unpacked by the tables of the G.711 standard.
+
+The sample sounds in `fixtures/` are two notes written by `fixtures/_tools/sound.py`; no one
+else's recording is in the repository.
+
 ### font-woff2
 
 WOFF2 is read and written by Google's woff2 library and Brotli, built to WebAssembly.

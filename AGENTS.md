@@ -130,7 +130,7 @@ build by `apps/web/scripts/write-headers.ts`.
   (scripts, drawings that name other files) is not a picture. Do not add an unhinted read.
 - **A file is offered only formats of its own kind** (`packages/registry/src/kinds.ts`):
   pictures and drawings are one kind, data another, subtitles a third, Markdown and HTML a
-  fourth, fonts a fifth, archives a sixth. Spreadsheets are of data's kind, and documents of
+  fourth, fonts a fifth, archives a sixth, sound a seventh. Spreadsheets are of data's kind, and documents of
   Markdown's and HTML's, as are PDFs. Screenplays are a kind of their own. A new category that should convert into an
   existing one must be added there, or its formats will never be listed for it.
 - **An engine's reason for refusing a file reaches the user only as a `Refusal`**
@@ -251,6 +251,14 @@ build by `apps/web/scripts/write-headers.ts`.
   that describe it (`pictureOnly`), never the patient's details, the notes or the lists. The
   elements kept are a fixed list; add to it only a plain value the pixels cannot be drawn
   without. A size is taken from the scan itself, never from a list inside it.
+- **Unpacked sound is copied, never worked out** (`packages/engines/src/audio`). WAV, AIFF and
+  AU hold the same numbers behind different labels; a conversion turns bytes round, flips the
+  sign of a single byte, or unpacks a telephone code by table, and does nothing else. No number
+  passes through a fraction on the way. `audio.test.ts` reads every number back and compares
+  it; a new layout or format goes into that test. The readers take the start of a file and the
+  length of the whole (`readSound(format, head, length)`), so details come from the label alone.
+- **A length a sound file gives is compared with the file before anything is set aside for it.**
+  What a conversion holds is the file and one copy, never a buffer sized by a header.
 - **A setting for ImageMagick's writer is data in the registry** (`defines` in a capability's
   `defaultOptions`, as DDS has), held to a pattern by the engine. A format the registry calls
   lossless is sent there and back in `magick/exact.test.ts` and every pixel compared; add a new

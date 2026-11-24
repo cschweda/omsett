@@ -146,6 +146,15 @@ export const iconInfo: EngineInfo = {
   sourceUrl: 'https://github.com/cschweda/omsett/tree/main/packages/engines/src/icon',
 }
 
+// Sound stored unpacked: WAV, AIFF and AU. Omsett's own readers and writers.
+export const audioInfo: EngineInfo = {
+  id: 'audio',
+  sizeBytes: 0,
+  runtimes: ['browser', 'node'],
+  license: 'MIT',
+  sourceUrl: 'https://github.com/cschweda/omsett/tree/main/packages/engines/src/audio',
+}
+
 // Fonts. TTF, OTF and WOFF are read and written by Omsett's own code, with the compression
 // every browser has built in.
 export const fontInfo: EngineInfo = {
@@ -194,4 +203,5 @@ export const engineInfo: Record<string, EngineInfo> = {
   [fontInfo.id]: fontInfo,
   [iconInfo.id]: iconInfo,
   [fontWoff2Info.id]: fontWoff2Info,
+  [audioInfo.id]: audioInfo,
 }

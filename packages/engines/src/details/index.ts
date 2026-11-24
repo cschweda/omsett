@@ -2,6 +2,7 @@ import type { Format } from '@omsett/registry'
 import { readZip } from '../archive/zip'
 import { readTar } from '../archive/tar'
 import { gunzipWithin } from '../archive/entries'
+import { readSound } from '../audio'
 import { readSfnt, readWoff } from '../font/sfnt'
 import { readFountain } from '../script/fountain'
 import { readCues } from '../subtitle/read'
@@ -191,10 +192,40 @@ async function archive(blob: Blob, format: string): Promise<Detail[]> {
   ]
 }
 
+/** How long a sound runs, in the words a person would use. */
+const lasting = (seconds: number) => {
+  if (seconds < 60) return `${seconds.toLocaleString('en', { maximumFractionDigits: seconds < 10 ? 2 : 1 })} seconds`
+  const s = Math.round(seconds)
+  const hours = Math.floor(s / 3600)
+  return `${hours ? `${hours}:${String(Math.floor(s / 60) % 60).padStart(2, '0')}` : Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
+}
+
+// A sound's label is at its start, so only the start is read, however long the recording. Words
+// a program wrote after the sound are then out of reach, and are simply not listed.
+async function sound(blob: Blob, format: string): Promise<Detail[]> {
+  const head = new Uint8Array(await blob.slice(0, blob.size <= MAX_WHOLE_BYTES ? blob.size : HEAD_BYTES).arrayBuffer())
+  const { sound: found, tags } = readSound(format, head, blob.size)
+  const stored =
+    found.coding === 'float'
+      ? `${found.bytes * 8}-bit fractions`
+      : found.coding === 'ulaw' || found.coding === 'alaw'
+        ? `${found.coding === 'ulaw' ? 'µ-law' : 'A-law'}, a telephone code of 8 bits. It is unpacked to 16-bit numbers`
+        : `${found.bytes * 8}-bit whole numbers`
+  const channels = found.channels === 1 ? '1 (mono)' : found.channels === 2 ? '2 (stereo)' : String(found.channels)
+  return [
+    { label: 'Length', value: lasting(found.frames / found.rate), fate: 'kept' },
+    { label: 'Rate', value: `${found.rate.toLocaleString('en', { maximumFractionDigits: 3 })} samples a second`, fate: 'kept' },
+    { label: 'Channels', value: channels, fate: 'kept' },
+    { label: 'Stored as', value: stored, fate: 'kept' },
+    ...tags.map((tag) => ({ ...tag, fate: 'removed' as const })),
+  ]
+}
+
 /** What the file holds beside what it shows. Never throws: a file that cannot be read has no details. */
 export async function describeFile(blob: Blob, format: Format): Promise<Detail[]> {
   try {
     if (format.category === 'image' && !['svg', 'svgz'].includes(format.id)) return await picture(blob)
+    if (format.category === 'audio') return await sound(blob, format.id)
     if (blob.size > MAX_WHOLE_BYTES) return []
     if (['docx', 'xlsx', 'pptx'].includes(format.id)) return await office(blob, format.id)
     if (format.id === 'pdf') return await pdf(blob)

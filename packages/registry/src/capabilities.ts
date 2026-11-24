@@ -1,4 +1,4 @@
-import type { Capability, WriteSpec } from './types'
+import type { Capability, Trait, WriteSpec } from './types'
 
 // What each engine reads and writes. Every conversion the app offers follows from these lists.
 //
@@ -87,6 +87,7 @@ const SHEET_WRITES: WriteSpec[] = TABLE_WRITES.map((write) => ({ ...write, defau
 const SCRIPTS = ['fountain', 'fdx', 'drafter']
 const ARCHIVES = ['zip', 'tgz', 'tar']
 const SFNT = ['ttf', 'otf', 'woff']
+const SOUNDS = ['wav', 'aiff', 'au']
 
 export const capabilities: Capability[] = [
   {
@@ -149,6 +150,10 @@ export const capabilities: Capability[] = [
   { engine: 'font', tier: 'browser', reads: SFNT, writes: SFNT.map((format) => ({ format, lossy: false })), priority: 20 },
   { engine: 'font-woff2', tier: 'browser', reads: SFNT, writes: [{ format: 'woff2', lossy: false }], priority: 30 },
   { engine: 'font-woff2', tier: 'browser', reads: ['woff2'], writes: SFNT.map((format) => ({ format, lossy: false })), priority: 30 },
+
+  // Sound stored unpacked, in Omsett's own code: a new label, and the same numbers. A title, an
+  // artist and whatever else the file says about itself are left behind, as a picture's are.
+  { engine: 'audio', tier: 'browser', reads: SOUNDS, writes: SOUNDS.map((format) => ({ format, lossy: false, drops: ['metadata'] as Trait[] })), priority: 20 },
 
   // Markdown and HTML, each to the other, through a tree that is cleaned on the way.
   {
