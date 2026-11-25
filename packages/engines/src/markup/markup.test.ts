@@ -164,3 +164,12 @@ describe('nesting', () => {
     expect(await convert(`${'<div>'.repeat(100)}deep${'</div>'.repeat(100)}`, 'html', 'md')).toBe('deep\n')
   })
 })
+
+describe('values that look like tags', () => {
+  it('writes a "<" or ">" inside a quoted value as a reference, and touches nothing else', async () => {
+    const { quietValues } = await import('./index')
+    expect(quietValues('<p><img alt="a <script>x</script> b" src="a.png"> 1 &#x3C; 2 <a href="#x">y</a></p>')).toBe('<p><img alt="a &#x3C;script&#x3E;x&#x3C;/script&#x3E; b" src="a.png"> 1 &#x3C; 2 <a href="#x">y</a></p>')
+    const plain = '<h1 id="a">One</h1>\n<p>Two <em>three</em></p>'
+    expect(quietValues(plain)).toBe(plain)
+  })
+})

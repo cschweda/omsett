@@ -1,5 +1,5 @@
 import { dedupeWarnings, deriveEdges } from './derive'
-import { canBecome } from './kinds'
+import { canBecome, ownFirst } from './kinds'
 import { lossyToLossy } from './trait-warnings'
 import type { Edge, Format, Registry, Route, Router, Target } from './types'
 
@@ -86,9 +86,12 @@ export function createRouter(registry: Registry): Router {
     const sources = fromIds.map((id) => formats.get(id)).filter((f): f is Format => f !== undefined)
     // Formats of another kind altogether are not listed: nobody dropping a spreadsheet needs to
     // be told it cannot become a photograph. Before there is a file, everything is listed.
-    const offered = registry.formats.filter(
+    const all = registry.formats.filter(
       (format) => sources.length === 0 || sources.some((source) => canBecome(source.category, format.category)),
     )
+    // For a book, the formats of books come first; otherwise the one order holds.
+    const first = (format: Format) => sources.length > 0 && sources.every((source) => ownFirst(source.category) && source.category === format.category)
+    const offered = [...all.filter(first), ...all.filter((format) => !first(format))]
     return offered.map((format) => {
       if (sources.length === 0 || sources.length !== fromIds.length) {
         return { format, route: null, reason: 'Drop a file first' }

@@ -7,6 +7,57 @@ The paragraph that opens a version is its teaser: the home page shows its first 
 in the "What's new" banner, so keep it to two or three sentences on what a visitor will notice.
 A line beginning "Released" gives the date.
 
+## 0.53.0
+
+Released 24 November 2026.
+
+Omsett now reads EPUB. A book, EPUB or Kindle, becomes a PDF, a Word document, Markdown or a
+web page, with its headings, notes, links and pictures kept. And it goes the other way: a Word
+document, Markdown, a web page or a PDF becomes an EPUB, a chapter to each main heading.
+
+### Added
+
+- **EPUB is read.** Drop an EPUB and it can become a PDF, a Word document, Markdown or a web
+  page. The book is set out as one document, a section to each of its pages, and every link
+  inside it (a note, a cross-reference, an entry in an index) still leads to its place.
+  Headings, lists, tables and pictures with their descriptions are kept; the book's own fonts
+  and layout are not. Both kinds of EPUB are read, 3 and the older 2.
+- **A Kindle book becomes those too**: PDF, Word, Markdown or a web page, as well as EPUB.
+- **A document becomes an EPUB.** Word, Markdown, a web page, a PDF or a presentation: a
+  chapter starts at each main heading, the headings become the list of contents, and pictures
+  inside the file go into the book.
+- **Chapter titles a book marks only by their look are made headings.** Many books set a
+  chapter's title as a large paragraph and mark no heading at all, which leaves a screen
+  reader, and a PDF's outline, with nothing to go by. Where a page has no heading and one of
+  its paragraphs is word for word an entry in the book's own list of contents, that paragraph
+  is made the heading. The result says how many were.
+- **What an EPUB holds is shown before converting**: title, author, publisher, language, how
+  many parts and pictures, and whether it is copy-protected.
+- **Trap files for EPUB** (a trap file is one made to be broken or hostile in one deliberate
+  way): a locked book, a list that expands a short word into a gigabyte, a page three hundred
+  megabytes long, a page of a million line breaks, a page nested three thousand deep, a page
+  named outside the book, a picture asked of another site, tags written
+  in the way that swallows the rest of a page, and a book carrying scripts in every place it
+  holds text.
+
+### Changed
+
+- **For a book, the book formats are offered first**, then what else it can become. Every
+  other kind of file is offered formats in the one order as before.
+- **A "<" inside a description is written as a reference** in the web pages Omsett makes from
+  documents. It was harmless as it was, and no longer looks like a tag to a tool that searches
+  a page without reading it as a browser does.
+
+### Known
+
+- **A copy-protected EPUB is refused**, in words that say so, as a Kindle book is. Fonts
+  scrambled to stay with their book are not copy protection, and such a book is read.
+- **A book with many large pictures loses some of them** on the way to a PDF or a document:
+  past about nine megabytes of pictures the rest are left out, their descriptions kept, and
+  the result says how many. Kindle to EPUB keeps every picture, as before.
+- **A book's own stylesheet is not carried** to a PDF or a document, which are laid out afresh.
+- **Nothing is written as a Kindle book** (AZW3 or MOBI). EPUB is what Omsett writes.
+
 ## 0.52.2
 
 Released 24 November 2026.

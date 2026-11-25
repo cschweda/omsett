@@ -42,7 +42,7 @@ const textBytes = (text: string) => Uint8Array.from(text, (letter) => letter.cha
 /** Kindle writes some numbers in base 32, with the digits 0 to 9 and then A to V. */
 const base32 = (text: string) => Number.parseInt(text, 32)
 
-function pictureType(bytes: Uint8Array): { type: string; ending: string } | null {
+export function pictureType(bytes: Uint8Array): { type: string; ending: string } | null {
   if (bytes[0] === 0xFF && bytes[1] === 0xD8) return { type: 'image/jpeg', ending: 'jpg' }
   if (bytes[0] === 0x89 && ascii(bytes, 1, 3) === 'PNG') return { type: 'image/png', ending: 'png' }
   if (ascii(bytes, 0, 4) === 'GIF8') return { type: 'image/gif', ending: 'gif' }

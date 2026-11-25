@@ -7,7 +7,8 @@ const KINDS: Category[][] = [
   ['image', 'vector'],
   ['data', 'spreadsheet'],
   // A document is writing, and so are Markdown and a web page; a presentation is writing on slides.
-  ['text', 'document', 'presentation', 'pdf'],
+  // A book is writing too: it can be set out as a page, and a page can be cut into chapters.
+  ['text', 'document', 'presentation', 'pdf', 'ebook'],
 ]
 
 /** Whether a file in one category could ever become a format in the other. */
@@ -36,6 +37,15 @@ const ALSO: Array<[from: Category, to: Category]> = [
 export function canBecome(from: Category, to: Category): boolean {
   return sameKind(from, to) || ALSO.some(([a, b]) => a === from && b === to)
 }
+
+/**
+ * Formats are offered in one order for everyone (the order of `formats/index.ts`), with one
+ * exception: for a book, the formats of books come first. A book can become a page or a PDF,
+ * but what a person holding a Kindle book most often wants is the book every reader opens.
+ */
+const OWN_FIRST: Category[] = ['ebook']
+
+export const ownFirst = (category: Category): boolean => OWN_FIRST.includes(category)
 
 /** Categories whose files are text a person can read, and so can be shown as text. */
 // A workbook and a Word document are not text, and are left out.

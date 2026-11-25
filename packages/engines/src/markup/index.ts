@@ -264,6 +264,34 @@ function onlyPictures() {
   }
 }
 
+/**
+ * A "<" or ">" inside a quoted value is only a letter there, and the writer leaves it as it is.
+ * A description of a picture that reads `<script>` is then harmless, and still looks like a tag
+ * to anything that searches a page for tags without reading it as a browser does. So inside a
+ * value each is written as its reference. The page is the writer's own: every value is in
+ * double quotes, and a "<" in the words between tags has already been written as a reference.
+ */
+export function quietValues(html: string): string {
+  let out = ''
+  let from = 0
+  let inTag = false
+  let inValue = false
+  for (let at = 0; at < html.length; at++) {
+    const letter = html[at]!
+    if (inValue) {
+      if (letter === '"') inValue = false
+      else if (letter === '<' || letter === '>') {
+        out += `${html.slice(from, at)}${letter === '<' ? '&#x3C;' : '&#x3E;'}`
+        from = at + 1
+      }
+    } else if (inTag) {
+      if (letter === '"') inValue = true
+      else if (letter === '>') inTag = false
+    } else if (letter === '<') inTag = true
+  }
+  return out + html.slice(from)
+}
+
 /** A Word document or a presentation, read to a page and cleaned like any other page. */
 export async function officeToHtml(document: ReadDocument, name: string): Promise<string> {
   const [{ unified }, parse, sanitize, stringify] = await Promise.all([
@@ -287,7 +315,7 @@ export async function officeToHtml(document: ReadDocument, name: string): Promis
     .use(stringify.default)
     .process(document.body)
   // One block to a line, so that the page can be read as well as opened.
-  const lines = String(body).replace(/(<\/(?:p|h[1-6]|ul|ol|li|table|thead|tbody|tr|blockquote|section)>|<(?:ul|ol|table|thead|tbody|tr|section)>)(?=<)/g, '$1\n')
+  const lines = quietValues(String(body)).replace(/(<\/(?:p|h[1-6]|ul|ol|li|table|thead|tbody|tr|blockquote|section)>|<(?:ul|ol|table|thead|tbody|tr|section)>)(?=<)/g, '$1\n')
   return page(lines, document.title ?? heading ?? safeBaseName(name), document.language ?? 'en')
 }
 

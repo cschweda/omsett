@@ -3358,8 +3358,8 @@ script(
     "says-it-is-something-else.drafter",
     package(first=("mimetype", b"application/epub+zip")),
     "A ZIP with a .drafter name whose first entry says it is an e-book. It is taken for what "
-    "it says it is, an EPUB, which Omsett writes and does not yet read: nothing is offered for it.",
-    "epub", mismatch=True,
+    "it says it is, an EPUB, and read as one. It is not one: it has no list of what a book holds.",
+    "epub", mismatch=True, node="fails", note="This file is not a valid EPUB book",
 )
 script(
     "package-named.zip",
@@ -4453,6 +4453,89 @@ trap("words-named-as-a-book.azw3", b"BOOKMOBI is how a Kindle book says what it 
      "A sentence with a Kindle book's name.",
      "unknown", group="identity")
 
+# --- books: EPUB ------------------------------------------------------------------------------------
+import epub as E  # noqa: E402
+
+G = "books"
+EPUB = read("epub", "sample.epub")
+NOT_EPUB = "This file is not a valid EPUB book"
+BOOK_TOO_LARGE = "This book is too large to convert in a browser"
+SCRAMBLED = '<?xml version="1.0"?><encryption xmlns="urn:oasis:names:tc:opendocument:xmlns:container" xmlns:enc="http://www.w3.org/2001/04/xmlenc#"><enc:EncryptedData><enc:EncryptionMethod Algorithm="%s"/><enc:CipherData><enc:CipherReference URI="%s"/></enc:CipherData></enc:EncryptedData></encryption>'
+
+
+def list_with(head):
+    def change(parts):
+        parts["OEBPS/content.opf"] = parts["OEBPS/content.opf"].replace('<?xml version="1.0" encoding="utf-8"?>\n', '<?xml version="1.0" encoding="utf-8"?>\n' + head, 1).replace("&amp;a8;", "&a8;").replace("&amp;x;", "&x;")
+    return change
+
+
+def contents_five_thousand_deep(parts):
+    del parts["OEBPS/nav.xhtml"]
+    parts["OEBPS/content.opf"] = parts["OEBPS/content.opf"].replace('<item id="nav" href="nav.xhtml" media-type="application/xhtml+xml" properties="nav"/>', "")
+    point = '<navPoint id="n"><navLabel><text>Deeper</text></navLabel><content src="text/title.xhtml"/>'
+    parts["OEBPS/toc.ncx"] = '<?xml version="1.0"?><ncx xmlns="http://www.daisy.org/z3986/2005/ncx/" version="2005-1"><navMap>' + point * 5000 + "</navPoint>" * 5000 + "</navMap></ncx>"
+
+
+def list_names_what_is_not_there(parts):
+    for name in [key for key in parts if key.startswith("OEBPS/text/")]:
+        del parts[name]
+
+
+trap("truncated.epub", EPUB[: len(EPUB) // 2],
+     "An EPUB that stops half-way: the list of what it holds, which is at the end, is gone.",
+     "epub", node="fails", note=NOT_EPUB, group=G)
+trap("copy-protected.epub", E.book(extra=[("META-INF/encryption.xml", SCRAMBLED % ("http://www.w3.org/2001/04/xmlenc#aes128-cbc", "OEBPS/text/title.xhtml")), ("META-INF/rights.xml", "<rights/>")]),
+     "An EPUB that says its pages are locked (copy protection, DRM). It is refused with the reason; Omsett does not unlock books.",
+     "epub", node="fails", note=LOCKED, group=G)
+trap("shorthand-that-multiplies.epub", E.book(title="&a8;", change=list_with("<!DOCTYPE l [" + xml_entities.decode() + "]>\n")),
+     'The "billion laughs" as a book\'s title: one word that stands for a gigabyte of the letter a.',
+     "epub", node="fails", note=NOT_EPUB, group=G)
+trap("reads-a-local-file.epub", E.book(title="&x;", change=list_with('<!DOCTYPE l [<!ENTITY x SYSTEM "file:///etc/passwd">]>\n')),
+     "A book whose title asks the reader to fetch a file from the computer and print it.",
+     "epub", node="fails", note=NOT_EPUB, group=G)
+trap("bomb-inside.epub", E.book(pages=[("title.xhtml", "One", "<p>x</p>" + " " * (300 * 1024 * 1024))]),
+     "A book with one page that is three hundred megabytes of spaces, packed to 290 kilobytes.",
+     "epub", node="fails", note=BOOK_TOO_LARGE, group=G)
+trap("pages-that-add-up.epub", E.book(pages=[("p%d.xhtml" % n, "Page", "<p>x</p>" + " " * (24 * 1024 * 1024)) for n in range(3)]),
+     "A book of three pages, each twenty-four megabytes of spaces: every page is under the limit for a page, and together they are past the limit for a book.",
+     "epub", node="fails", note=BOOK_TOO_LARGE, group=G)
+trap("page-of-a-million-line-breaks.epub", E.book(pages=[("title.xhtml", "One", '<p><img src="https://elsewhere.example/watch.png" alt="x"/></p>' + "<br/>" * 1000000)]),
+     "A page that asks another site for a picture and then holds a million line breaks. A reader that looks at only so much of a page would stop before it reached the picture, and carry it across. The page is refused for its size instead.",
+     "epub", node="fails", note="This book has a page with more in it than Omsett will handle", group=G)
+trap("page-three-thousand-deep.epub", E.book(pages=[("title.xhtml", "One", "<div>" * 3000 + "<p>Deep.</p>" + "</div>" * 3000)]),
+     "A page nested three thousand tags deep. How deep a browser can read before it fails differs from one to the next, so the limit is stated and checked first.",
+     "epub", node="fails", note="This file is nested too deeply to convert", group=G)
+trap("locked-under-another-name.epub", E.book(extra=[("META-INF/ENCRYPTION.XML", SCRAMBLED % ("http://www.w3.org/2001/04/xmlenc#aes256-cbc", "OEBPS/text/title.xhtml")), ("META-INF/license.lcpl", "{}")]),
+     "A locked book whose list of what is scrambled is named in capitals, with a lending licence beside it.",
+     "epub", node="fails", note=LOCKED, group=G)
+trap("pages-that-are-not-there.epub", E.book(change=list_names_what_is_not_there),
+     "A book whose list names three pages, none of which is in the file.",
+     "epub", node="fails", note="This book has no pages in it", group=G)
+trap("page-outside-the-book.epub", E.book(change=lambda parts: parts.update({"OEBPS/content.opf": parts["OEBPS/content.opf"].replace('href="text/notes.xhtml"', 'href="../../../../etc/passwd"')})),
+     "A book whose list names, as one of its pages, a file four folders above the book. A name that leads out of the book names nothing; the pages that are in it are read.",
+     "epub", node="succeeds", absent="root:", group=G)
+trap("fetches-a-picture.epub", E.book(pages=[("title.xhtml", "One", '<h1>One</h1><p>A picture kept somewhere else: <img src="https://elsewhere.example/watch.png" alt="A square"/></p><p style="background: url(https://elsewhere.example/b.png)">Text.</p>')], style='@import url("https://elsewhere.example/a.css");\n'),
+     "A page that asks another site for a picture, and a stylesheet that asks it for another stylesheet. Opening the book would tell that site it had been opened. Neither is carried; the picture's description is.",
+     "epub", node="succeeds", absent="elsewhere.example", group=G)
+trap("contents-five-thousand-deep.epub", E.book(change=contents_five_thousand_deep),
+     "A list of contents nested five thousand entries deep. No book is, and the reader of such lists stops long before.",
+     "epub", node="fails", note=NOT_EPUB, group=G)
+trap("fonts-scrambled.epub", E.book(extra=[("META-INF/encryption.xml", SCRAMBLED % ("http://www.idpf.org/2008/embedding", "OEBPS/fonts/a.otf")), ("OEBPS/fonts/a.otf", b"\0" * 64)]),
+     "A book whose fonts are scrambled so that they work only inside it, which many publishers do. That is not copy protection: the pages can be read, and are.",
+     "epub", node="succeeds", group="unusual")
+trap("tags-written-closed.epub", E.book(pages=[("title.xhtml", "One", '<h1>One</h1><div/><a id="mark"/><p>After the mark.</p><script/><p>After the script.</p><textarea/><p>The last words.</p>')]).replace(b"<title>One</title>", b"<title/>            "),
+     "A page whose tags are written closed, as XML allows: a title, a script and a mark with nothing in them. Read as a web page, each would swallow everything after it.",
+     "epub", node="succeeds", group="unusual")
+trap("everything-after-is-text.epub", E.book(pages=[("title.xhtml", "One", "<h1>One</h1><p>Before.</p><plaintext/><p>After.</p>"), ("two.xhtml", "Two", "<h1>Two</h1><p>The second page.</p>")]),
+     "A page with a tag that tells a browser everything after it is plain text, to the end of the file. Joined to the next page, it would turn the rest of the book into text with its tags showing.",
+     "epub", node="succeeds", absent="&lt;h1", group="unusual")
+trap("the-older-kind.epub", read("epub", "older.epub"),
+     "A book as EPUB 2 wrote it: the older list of contents, a document type on every file, and a cover that is a drawing with the picture in it.",
+     "epub", node="succeeds", group="unusual")
+trap("document-named-as-a-book.epub", read("docx", "sample.docx"),
+     "A Word document with an EPUB's name. Both are ZIPs; it is read as what it is.",
+     "docx", node="succeeds", mismatch=True, group="identity")
+
 # --- sound: WAV, AIFF, AU -------------------------------------------------------------------------
 # Sound stored unpacked is a label and then numbers. The label gives lengths, and a reader that
 # believes them reads past the end of the file, or sets aside room for hours of sound that are
@@ -4763,6 +4846,8 @@ BOOK_PAGE = '<h1 onclick="%s">%s</h1><p>%s <a href="javascript:%s">a link</a> <i
 BOOK_STYLE = b'@import url("http://canary.invalid/a.css");\nbody { background: url(http://canary.invalid/b.png); width: expression(' + MARK.encode() + b') }\n@font-face { font-family: x; src: url(http://canary.invalid/f.woff) }\n'
 code("code.azw3", K.newer(chapters=[("One", BOOK_PAGE), ("Two", "<p>" + CANARY.replace("&", "&amp;").replace("<", "&lt;") + "</p>")], style=BOOK_STYLE, title=CB[:120], author=CB[:120]),
      WHY % "as the title and the author, in a page as a script, a handler, a link that is code, a frame and a form, and in a stylesheet that asks another site for a picture and a font", "azw3", node="succeeds")
+code("code.epub", E.book(pages=[("title.xhtml", CANARY.replace("&", "&amp;").replace("<", "&lt;"), BOOK_PAGE), ("two.xhtml", "Two", "<p>" + CANARY.replace("&", "&amp;").replace("<", "&lt;") + "</p>")], style=BOOK_STYLE.decode(), title=CB[:120].decode(), author=CB[:120].decode()),
+     WHY % "as the title and the author, in the list of contents, in a page as a script, a handler, a link that is code, a frame and a form, and in a stylesheet that asks another site for a picture and a font", "epub", node="succeeds")
 code("code.mobi", K.older(title=CB[:120], author=CB[:120], change=lambda parts: parts.update(text=("<html><body>" + BOOK_PAGE + "<mbp:pagebreak/><p>second page</p></body></html>").encode())),
      WHY % "as the title and the author, and in a page as a script, a handler, a link that is code, a frame and a form", "mobi", node="succeeds")
 code("code.wav", S.wav(PCM, before=BROADCAST, after=LIST_OF_NOTES + S.part(b"id3 ", b"ID3\x03\0\0\0\0\0\x7fTIT2" + CB)),

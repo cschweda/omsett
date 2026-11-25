@@ -135,7 +135,7 @@ describe('trap files', () => {
                     : from.category === 'audio'
                       ? [wav, aiff]
                     : from.category === 'ebook'
-                      ? [epub, epub]
+                      ? [epub, html]
                     : [webp, png]
       const to = from.id === usual.id ? otherwise : usual
       if (!router.route(from.id, to.id)) {
