@@ -7,6 +7,19 @@ The paragraph that opens a version is its teaser: the home page shows its first 
 in the "What's new" banner, so keep it to two or three sentences on what a visitor will notice.
 A line beginning "Released" gives the date.
 
+## 0.52.2
+
+Released 24 November 2026.
+
+The line above the PDF tile is no longer red. Red in Omsett means that something went wrong,
+and nothing had: it was only the colour PDF had been given.
+
+### Changed
+
+- **No kind of file is coloured red.** Each kind has a colour, drawn as a line above its tile.
+  PDF's was red and read as a warning; it is now purple. Video's, for when video arrives, was
+  red too and is now a blue-green. A test holds every such colour away from red.
+
 ## 0.52.1
 
 Released 24 November 2026.

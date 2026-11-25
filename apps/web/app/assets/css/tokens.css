@@ -34,10 +34,11 @@
   --text-title: 2.5rem; /* 40 */
 
   /* One accent per category, so the picker reads as a color-coded chart.
-     Secondary: used for rules and marks, never for text. */
+     Secondary: used for rules and marks, never for text. None is red: red means
+     only that something went wrong (--signal), and a test holds every one away from it. */
   --cat-image: #3b6cff;
   --cat-vector: #8b5cf6;
-  --cat-pdf: #ef4444;
+  --cat-pdf: #a855f7;
   --cat-document: #0ea5e9;
   --cat-spreadsheet: #22c55e;
   --cat-presentation: #f97316;
@@ -49,7 +50,7 @@
   --cat-subtitle: #84cc16;
   --cat-archive: #a16207;
   --cat-font: #6366f1;
-  --cat-video: #f43f5e;
+  --cat-video: #0891b2;
 }
 
 .dark {
