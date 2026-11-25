@@ -20,6 +20,11 @@ what a book has and cannot add what it lacks.
 - **A note on every conversion of a book** (EPUB, AZW3 or MOBI, to anything): a book is only as
   accessible as its publisher made it. It is shown before converting, with the other notes.
 
+### Changed
+
+- **The browser tests run in three parts for each browser, not two.** With the e-book tests the
+  slowest part had reached twenty-two minutes.
+
 ## 0.53.0
 
 Released 24 November 2026.
