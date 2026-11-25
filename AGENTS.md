@@ -225,6 +225,8 @@ build by `apps/web/scripts/write-headers.ts`.
   word. The result says how many were made. Do not guess headings from size or weight.
 - **For a book, book formats are offered first** (`ownFirst` in `kinds.ts`). It is the one
   exception to "formats are ranked by their order in `formats/index.ts`".
+- **Every conversion of a book carries `book-as-published`**: it is only as accessible as its
+  publisher made it. Omsett does not write descriptions or invent table headings for a book.
 - **Copy protection is never worked round.** A locked book is refused in words that say so.
 - **Books lent for testing live in `docs/ebooks`, which git ignores.** They are other people's
   work: never commit one, never quote from one, and print only counts when testing with them.

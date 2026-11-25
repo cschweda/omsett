@@ -183,7 +183,9 @@ describe('router, real registry', () => {
     expect(all.route('epub', 'azw3')).toBeNull()
     expect(all.route('epub', 'csv')).toBeNull()
     expect(all.route('xlsx', 'epub')).toBeNull()
-    expect(all.route('mobi', 'epub')!.warnings.map((w) => w.id)).toEqual(['book-kept'])
+    expect(all.route('mobi', 'epub')!.warnings.map((w) => w.id)).toEqual(['book-kept', 'book-as-published'])
+    // Every conversion of a book says that it is only as accessible as its publisher made it.
+    for (const to of ['pdf', 'docx', 'md', 'html']) expect(all.route('epub', to)!.warnings.map((w) => w.id), to).toContain('book-as-published')
     // For a book, the formats of books are offered first, and then what else a book can become.
     expect(all.targetsFor(['azw3']).map((t) => t.format.id)).toEqual(['epub', 'azw3', 'mobi', 'md', 'html', 'docx', 'pdf', 'pptx', 'doc'])
     expect(all.targetsFor(['azw3', 'docx']).map((t) => t.format.id).slice(0, 4)).toEqual(['md', 'html', 'docx', 'pdf'])
