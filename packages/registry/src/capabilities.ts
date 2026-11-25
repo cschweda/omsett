@@ -167,6 +167,10 @@ export const capabilities: Capability[] = [
 
   // A Kindle book is taken apart and written as an EPUB, in Omsett's own code.
   { engine: 'ebook', tier: 'browser', reads: ['azw3', 'mobi'], writes: [{ format: 'epub', lossy: false }], priority: 20 },
+  // A book set out as one page, which is how it reaches PDF, Word and Markdown; and a page cut
+  // into chapters and written as a book, which is how those reach EPUB.
+  { engine: 'ebook', tier: 'browser', reads: ['epub', 'azw3', 'mobi'], writes: [{ format: 'html', lossy: false }], priority: 20 },
+  { engine: 'ebook', tier: 'browser', reads: ['html'], writes: [{ format: 'epub', lossy: false }], priority: 20 },
 
   // Markdown and HTML, each to the other, through a tree that is cleaned on the way.
   {

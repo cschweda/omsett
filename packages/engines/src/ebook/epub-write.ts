@@ -12,7 +12,7 @@ import type { Parts } from './kindle'
 // that what comes out is well-formed whatever went in. An e-book reader is a browser, and a
 // book is a stranger's pages.
 
-interface Hast {
+export interface Hast {
   type: string
   tagName?: string
   value?: string
@@ -42,7 +42,7 @@ function attributeName(property: string): string | null {
 }
 
 /** A cleaned tree as XHTML. Every tag is closed, every attribute quoted, every character escaped. */
-function written(nodes: Hast[], depth = 0): string {
+export function written(nodes: Hast[], depth = 0): string {
   if (depth > MAX_DEPTH) return ''
   let out = ''
   for (const node of nodes) {
@@ -57,6 +57,8 @@ function written(nodes: Hast[], depth = 0): string {
       }
       out += VOID.has(node.tagName!) ? `<${node.tagName}${attributes}/>` : `<${node.tagName}${attributes}>${written(node.children ?? [], depth + 1)}</${node.tagName}>`
     }
+    // A tag with a name that is not a plain one is not written; what is inside it is.
+    else if (node.type === 'element') out += written(node.children ?? [], depth + 1)
   }
   return out
 }
@@ -119,7 +121,7 @@ function cleanedOnce(css: string, inBook: (path: string) => boolean): string {
   )
 }
 
-const TYPES: Record<string, string> = { xhtml: 'application/xhtml+xml', css: 'text/css', jpg: 'image/jpeg', png: 'image/png', gif: 'image/gif', ncx: 'application/x-dtbncx+xml' }
+const TYPES: Record<string, string> = { xhtml: 'application/xhtml+xml', css: 'text/css', jpg: 'image/jpeg', png: 'image/png', gif: 'image/gif', webp: 'image/webp', ncx: 'application/x-dtbncx+xml' }
 
 export async function writeEpub(parts: Parts): Promise<Uint8Array> {
   if (parts.chapters.length === 0) throw new Refusal('This book has no pages in it')

@@ -74,6 +74,7 @@ const samples: Record<string, string> = {
   zip: 'zip/sample.zip',
   mp3: 'mp3/sample.mp3',
   azw3: 'azw3/sample.azw3',
+  epub: 'epub/sample.epub',
   mobi: 'mobi/sample.mobi',
   wav: 'wav/sample.wav',
   flac: 'flac/sample.flac',

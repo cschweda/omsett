@@ -132,8 +132,8 @@ build by `apps/web/scripts/write-headers.ts`.
   (scripts, drawings that name other files) is not a picture. Do not add an unhinted read.
 - **A file is offered only formats of its own kind** (`packages/registry/src/kinds.ts`):
   pictures and drawings are one kind, data another, subtitles a third, Markdown and HTML a
-  fourth, fonts a fifth, archives a sixth, sound a seventh, e-books an eighth. Spreadsheets are of data's kind, and documents of
-  Markdown's and HTML's, as are PDFs. Screenplays are a kind of their own. A new category that should convert into an
+  fourth, fonts a fifth, archives a sixth, sound a seventh. Spreadsheets are of data's kind, and documents of
+  Markdown's and HTML's, as are PDFs and e-books: a book is writing. Screenplays are a kind of their own. A new category that should convert into an
   existing one must be added there, or its formats will never be listed for it.
 - **A few things can become something of another kind, one way only** (`ALSO` and `canBecome` in
   `kinds.ts`): a picture can become a PDF. The router ends no road at a kind the file cannot
@@ -203,6 +203,21 @@ build by `apps/web/scripts/write-headers.ts`.
   every other function that takes an address is renamed; and it is cleaned until cleaning
   changes nothing, because taking a thing out can join its two sides into the thing taken out.
   Add a new case to its test, and never a new pattern that keeps something.
+- **A book reaches PDF, Word and Markdown as one page, and a page reaches EPUB as chapters**
+  (`ebook/page.ts`). `bookPage` renames every mark for the section it is in and points every
+  link at the new name; a test requires that no link on the page is dead. `pageParts` cuts a
+  page at the highest level of heading it has more than one of. Both hand on to code that
+  already cleans (`officeToHtml`, `writeEpub`); neither writes a page of its own.
+- **An EPUB's pages are XML and are read as web pages, so tags written closed are opened first**
+  (`openedAndClosed` in `ebook/epub-read.ts`). `<a id="x"/>` and `<title/>`, read as HTML,
+  swallow what follows them. A name in a book's list is a file in the book or it is nothing:
+  every path is worked out from the file that names it, and one that leads out names nothing.
+  A list that declares shorthand (`<!ENTITY`) is refused.
+- **A heading is made from a paragraph only where the book's own list of contents says so**
+  (`bookPage`): the page has no heading, and the paragraph is an entry of the list word for
+  word. The result says how many were made. Do not guess headings from size or weight.
+- **For a book, book formats are offered first** (`ownFirst` in `kinds.ts`). It is the one
+  exception to "formats are ranked by their order in `formats/index.ts`".
 - **Copy protection is never worked round.** A locked book is refused in words that say so.
 - **Books lent for testing live in `docs/ebooks`, which git ignores.** They are other people's
   work: never commit one, never quote from one, and print only counts when testing with them.

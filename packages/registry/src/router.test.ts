@@ -117,7 +117,7 @@ describe('router, real registry', () => {
     expect(all.route('otf', 'woff2')!.warnings.map((w) => w.id)).toEqual(['font-licence'])
     // Markdown and HTML become each other and nothing else.
     expect(all.route('md', 'html')!.edges.map((e) => e.candidates[0]!.engine)).toEqual(['markup'])
-    expect(all.targetsFor(['html']).map((t) => t.format.id)).toEqual(['md', 'html', 'docx', 'pdf', 'pptx', 'doc'])
+    expect(all.targetsFor(['html']).map((t) => t.format.id)).toEqual(['md', 'html', 'docx', 'pdf', 'pptx', 'doc', 'epub', 'azw3', 'mobi'])
     // PDF is written from a page, by the engine fetched for that alone; everything else reaches it through a page.
     expect(all.route('html', 'pdf')!.edges.map((e) => e.candidates[0]!.engine)).toEqual(['typst'])
     expect(all.route('docx', 'pdf')!.edges.map((e) => `${e.from}>${e.to}`)).toEqual(['docx>html', 'html>pdf'])
@@ -167,8 +167,26 @@ describe('router, real registry', () => {
     expect(all.route('aiff', 'wav')!.warnings.map((w) => w.id)).toEqual(['metadata-lost'])
     // A Kindle book becomes an EPUB in one step, and an EPUB is the only thing it is offered.
     expect(all.route('azw3', 'epub')!.edges.map((e) => e.candidates[0]!.engine)).toEqual(['ebook'])
+    // A book is writing: it is set out as a page, and goes on from there; and a page is cut into a book.
+    expect(all.route('epub', 'html')!.edges.map((e) => e.candidates[0]!.engine)).toEqual(['ebook'])
+    expect(all.route('epub', 'pdf')!.edges.map((e) => `${e.from}>${e.to}`)).toEqual(['epub>html', 'html>pdf'])
+    expect(all.route('epub', 'docx')!.edges.map((e) => `${e.from}>${e.to}`)).toEqual(['epub>html', 'html>docx'])
+    expect(all.route('epub', 'md')!.edges.map((e) => `${e.from}>${e.to}`)).toEqual(['epub>html', 'html>md'])
+    expect(all.route('mobi', 'pdf')!.edges.map((e) => `${e.from}>${e.to}`)).toEqual(['mobi>html', 'html>pdf'])
+    expect(all.route('azw3', 'epub')!.edges.map((e) => `${e.from}>${e.to}`)).toEqual(['azw3>epub'])
+    expect(all.route('md', 'epub')!.edges.map((e) => `${e.from}>${e.to}`)).toEqual(['md>html', 'html>epub'])
+    expect(all.route('docx', 'epub')!.edges.map((e) => `${e.from}>${e.to}`)).toEqual(['docx>html', 'html>epub'])
+    expect(all.route('pdf', 'epub')!.edges.map((e) => `${e.from}>${e.to}`)).toEqual(['pdf>html', 'html>epub'])
+    expect(all.route('epub', 'pdf')!.warnings.map((w) => w.id)).toEqual(expect.arrayContaining(['book-as-page', 'pdf-written', 'accessibility-check']))
+    expect(all.route('md', 'epub')!.warnings.map((w) => w.id)).toEqual(expect.arrayContaining(['page-as-book', 'accessibility-check']))
+    // Nothing is written as a Kindle book, a book does not become a table, and a table does not become a book.
+    expect(all.route('epub', 'azw3')).toBeNull()
+    expect(all.route('epub', 'csv')).toBeNull()
+    expect(all.route('xlsx', 'epub')).toBeNull()
     expect(all.route('mobi', 'epub')!.warnings.map((w) => w.id)).toEqual(['book-kept'])
-    expect(all.targetsFor(['azw3']).map((t) => t.format.id)).toEqual(['epub', 'azw3', 'mobi'])
+    // For a book, the formats of books are offered first, and then what else a book can become.
+    expect(all.targetsFor(['azw3']).map((t) => t.format.id)).toEqual(['epub', 'azw3', 'mobi', 'md', 'html', 'docx', 'pdf', 'pptx', 'doc'])
+    expect(all.targetsFor(['azw3', 'docx']).map((t) => t.format.id).slice(0, 4)).toEqual(['md', 'html', 'docx', 'pdf'])
     expect(all.targetsFor(['azw3']).find((t) => t.format.id === 'mobi')!.reason).toBe('MOBI can be read but not written')
     // HEIC is decoded to PNG first, without loss, and goes on from there.
     expect(all.route('heic', 'png')!.edges.map((e) => e.candidates[0]!.engine)).toEqual(['heif'])

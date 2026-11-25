@@ -29,7 +29,7 @@ Omsett is a free, open-source file converter. Every conversion runs in your brow
 <!-- facts:start -->
 <!-- Generated from the registry by `pnpm readme:facts`. Do not edit by hand. -->
 
-**74 formats, 311 conversions**, every one of them run in your browser, on your device, and tested against 664 files made on purpose to be broken, hostile or dishonest. How many tests there are today is on the site's [Trust](https://omsett.com/trust) page, counted at every build.
+**74 formats, 315 conversions**, every one of them run in your browser, on your device, and tested against 679 files made on purpose to be broken, hostile or dishonest. How many tests there are today is on the site's [Trust](https://omsett.com/trust) page, counted at every build.
 
 | Kind | Converts to and from | Reads only |
 | --- | --- | --- |
@@ -59,7 +59,8 @@ A file is offered the formats of its own kind: a picture becomes another picture
 - **Writes PDF, tagged for screen readers**: a Word document, a web page or Markdown becomes a PDF whose headings, lists, tables and picture descriptions are marked as what they are. In Latin, Greek, Cyrillic, Chinese, Japanese, Korean, Arabic, Hebrew, Hindi and Thai. And reads PDF back to a web page, Markdown or DOCX.
 - **Never carries across what an author hid or deleted**: tracked deletions, hidden text and slides, comments, speaker notes.
 - **Names what it makes so it is not mistaken for the original**: “report-converted.pdf”, or words of your own, set in Settings.
-- **Makes an EPUB of a Kindle book** (AZW3 or MOBI, without copy protection): pages, pictures, links and contents, read on anything.
+- **Reads e-books**: an EPUB or a Kindle book (AZW3 or MOBI, without copy protection) becomes a PDF, a Word document, Markdown or a web page, with its headings, notes, links and pictures kept; a Kindle book also becomes an EPUB, read on anything.
+- **Makes an EPUB of a document**: Word, Markdown, a web page or a PDF, a chapter to each main heading, the headings as its list of contents.
 - **Makes a PDF, a Word document or a web page of a spreadsheet**: a workbook or a CSV is set out as a real table, with its column names marked, on pages turned sideways if it is wide.
 - **Makes a PDF of a picture**: a scan or a photograph becomes a page, without the photograph's location and other metadata.
 - **Makes icons**: any picture to a Windows icon, a Mac icon or a mouse pointer, at the sizes each expects.
@@ -210,7 +211,7 @@ To report a vulnerability, use the **Security** tab of this repository (“Repor
 | --- | --- |
 | 0 · Foundation (done) | PNG → WebP end to end on omsett.com |
 | 1 · Images, data, archives, fonts (mostly done) | Squish parity |
-| 2 · Documents, subtitles (done); sound begun (MP3, WAV, FLAC, AIFF, AU done; AAC, Ogg and the rest ahead); ebooks (ahead) | DOCX → Markdown/EPUB and WAV → MP3 in the browser |
+| 2 · Documents, subtitles (done); sound begun (MP3, WAV, FLAC, AIFF, AU done; AAC, Ogg and the rest ahead); e-books (EPUB, AZW3 and MOBI read; EPUB written) | DOCX → Markdown/EPUB and WAV → MP3 in the browser |
 | 3 · Desktop app and CLI | DOC → tagged PDF locally; installers on 3 OSes |
 | 4 · Video | 10-minute MOV → MP4 with progress, offline |
 | 5 · Plugins | CAD, 3D, geospatial, HWP as registry plugins |
