@@ -38,9 +38,9 @@ jobs:
       - run: pnpm build
 
   # Every conversion and every trap file, in each browser. The suite grows with every format,
-  # so each browser's share is cut in four; add to `shard` when a job passes ten minutes.
+  # so each browser's share is cut in four, and WebKit's, the slowest, in five (`parts`); add a part when a job passes ten minutes.
   e2e:
-    name: Browser tests (${{ matrix.browser }} ${{ matrix.shard }}/4)
+    name: Browser tests (${{ matrix.browser }} ${{ matrix.shard }}/${{ matrix.browser == 'webkit' && 5 || 4 }})
     runs-on: ubuntu-latest
     # The tests take under ten minutes. Installing WebKit's system packages has taken sixteen
     # on a slow day, and a run that had passed every test was cancelled a second after it finished.
@@ -50,7 +50,13 @@ jobs:
       fail-fast: false
       matrix:
         browser: [chromium, firefox, webkit]
-        shard: [1, 2, 3, 4]
+        shard: [1, 2, 3, 4, 5]
+        # Only WebKit has a fifth part.
+        exclude:
+          - browser: chromium
+            shard: 5
+          - browser: firefox
+            shard: 5
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
@@ -61,7 +67,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
       - run: pnpm exec playwright install --with-deps ${{ matrix.browser }}
-      - run: pnpm e2e --project=${{ matrix.browser }} --shard=${{ matrix.shard }}/4
+      - run: pnpm e2e --project=${{ matrix.browser }} --shard=${{ matrix.shard }}/${{ matrix.browser == 'webkit' && 5 || 4 }}
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: failure()
         with:

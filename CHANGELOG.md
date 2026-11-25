@@ -20,8 +20,8 @@ file is marked down for and a PDF is not. The README shows a book being converte
   scored lower as Word files than as PDFs. The Word writer was not at fault: those books have
   no real lists at all, only paragraphs that begin "1." or with a bullet, and a checker counts
   those in a Word file. Omsett keeps them as the book has them and does not guess at lists.
-- **The browser tests run in four parts for each browser.** WebKit's parts were still at
-  fifteen minutes with three.
+- **The browser tests run in four parts for each browser, and five for WebKit.** WebKit's
+  parts were still at fifteen minutes with three, and its slowest at twelve with four.
 - **The README has a picture of a book being converted**, and its other pictures are retaken.
 
 ## 0.53.1
