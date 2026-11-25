@@ -38,7 +38,8 @@ jobs:
       - run: pnpm build
 
   # Every conversion and every trap file, in each browser. The suite grows with every format,
-  # so each browser's share is cut in four, and WebKit's, the slowest, in five (`parts`); add a part when a job passes ten minutes.
+  # so each browser's share is cut in four, and WebKit's, the slowest, in five; add a part when a job passes ten
+  # minutes, in `shard` and in the two places that give the count.
   e2e:
     name: Browser tests (${{ matrix.browser }} ${{ matrix.shard }}/${{ matrix.browser == 'webkit' && 5 || 4 }})
     runs-on: ubuntu-latest
