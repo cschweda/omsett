@@ -7,6 +7,19 @@ The paragraph that opens a version is its teaser: the home page shows its first 
 in the "What's new" banner, so keep it to two or three sentences on what a visitor will notice.
 A line beginning "Released" gives the date.
 
+## 0.53.1
+
+Released 24 November 2026.
+
+Converting a book now says plainly that the result is only as accessible as the book was. Many
+published books have pictures with no description and tables with no headings; Omsett keeps
+what a book has and cannot add what it lacks.
+
+### Added
+
+- **A note on every conversion of a book** (EPUB, AZW3 or MOBI, to anything): a book is only as
+  accessible as its publisher made it. It is shown before converting, with the other notes.
+
 ## 0.53.0
 
 Released 24 November 2026.
