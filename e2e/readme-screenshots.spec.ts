@@ -22,6 +22,22 @@ test('converter', async ({ page }) => {
   await page.screenshot({ path: out('converter') })
 })
 
+test('book', async ({ page }) => {
+  await page.goto('/')
+  await page.getByRole('radiogroup').waitFor()
+  await page.getByTestId('whats-new-dismiss').click().catch(() => {})
+  await page.locator('#file-input').setInputFiles(fixture('azw3/sample.azw3'))
+  await page.getByRole('radio', { name: /EPUB/ }).click()
+  await page.waitForTimeout(400)
+  // The file, the formats and the notes under them: the top of the page is in the first picture.
+  await page.evaluate(() => {
+    const card = document.querySelector('.file-card')!
+    window.scrollTo(0, card.getBoundingClientRect().top + window.scrollY - 40)
+  })
+  await page.waitForTimeout(200)
+  await page.screenshot({ path: out('book') })
+})
+
 test('compare', async ({ page }) => {
   await page.goto('/')
   await page.getByRole('radiogroup').waitFor()

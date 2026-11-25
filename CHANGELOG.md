@@ -7,6 +7,23 @@ The paragraph that opens a version is its teaser: the home page shows its first 
 in the "What's new" banner, so keep it to two or three sentences on what a visitor will notice.
 A line beginning "Released" gives the date.
 
+## 0.53.2
+
+Released 25 November 2026.
+
+The note on converting a book now also names lists typed as plain paragraphs, which a Word
+file is marked down for and a PDF is not. The README shows a book being converted.
+
+### Changed
+
+- **The note on a book's accessibility names typed lists.** Several books lent for testing
+  scored lower as Word files than as PDFs. The Word writer was not at fault: those books have
+  no real lists at all, only paragraphs that begin "1." or with a bullet, and a checker counts
+  those in a Word file. Omsett keeps them as the book has them and does not guess at lists.
+- **The browser tests run in four parts for each browser.** WebKit's parts were still at
+  fifteen minutes with three.
+- **The README has a picture of a book being converted**, and its other pictures are retaken.
+
 ## 0.53.1
 
 Released 24 November 2026.

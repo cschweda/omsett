@@ -14,7 +14,7 @@
 
 **Drop a file. Pick a format. Nothing leaves your device.**
 
-Omsett is a free, open-source file converter. Every conversion runs in your browser, on your own device, so your files are never uploaded: there is no server for them to go to. Pictures, documents, spreadsheets, data, subtitles, screenplays, fonts, archives, sound (MP3, WAV, FLAC, AIFF) and Kindle e-books convert today; more e-book and sound formats, video and a desktop app are ahead.
+Omsett is a free, open-source file converter. Every conversion runs in your browser, on your own device, so your files are never uploaded: there is no server for them to go to. Pictures, documents, spreadsheets, data, subtitles, screenplays, fonts, archives, sound (MP3, WAV, FLAC, AIFF) and e-books (EPUB and Kindle) convert today; more sound formats, video and a desktop app are ahead.
 
 *Omsett* is Norwegian: to translate; to convert.
 
@@ -61,6 +61,11 @@ A file is offered the formats of its own kind: a picture becomes another picture
 - **Names what it makes so it is not mistaken for the original**: “report-converted.pdf”, or words of your own, set in Settings.
 - **Reads e-books**: an EPUB or a Kindle book (AZW3 or MOBI, without copy protection) becomes a PDF, a Word document, Markdown or a web page, with its headings, notes, links and pictures kept; a Kindle book also becomes an EPUB, read on anything.
 - **Makes an EPUB of a document**: Word, Markdown, a web page or a PDF, a chapter to each main heading, the headings as its list of contents.
+
+<p align="center">
+  <img src="docs/screenshots/book.png" alt="A Kindle book added: EPUB is the first format offered, then Markdown, a web page and Word, each with the note that a book is only as accessible as its publisher made it." width="820">
+</p>
+
 - **Makes a PDF, a Word document or a web page of a spreadsheet**: a workbook or a CSV is set out as a real table, with its column names marked, on pages turned sideways if it is wide.
 - **Makes a PDF of a picture**: a scan or a photograph becomes a page, without the photograph's location and other metadata.
 - **Makes icons**: any picture to a Windows icon, a Mac icon or a mouse pointer, at the sizes each expects.
