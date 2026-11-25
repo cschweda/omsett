@@ -439,5 +439,5 @@ build by `apps/web/scripts/write-headers.ts`.
   `tokens.css`, rules instead of boxes, square corners, no shadows, no second typeface. The one
   exception is `--font-file`, the system's fixed-width typeface, for the contents of a file in
   the side-by-side view and nothing else. Blue is
-  the accent; red means something went wrong or cannot be done; green means ready, or new. Tokens live in `tokens.css` only.
+  the accent; red means something went wrong or cannot be done, and nothing else is red, a kind of file's colour included (`test/colours.test.ts`); green means ready, or new. Tokens live in `tokens.css` only.
 - **Tone:** plain, short, no cheerleading.
