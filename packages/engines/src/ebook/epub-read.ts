@@ -2,7 +2,7 @@ import { readZip } from '../archive/zip'
 import type { Entry } from '../archive/entries'
 import { all, attrs, child, kids, tagOf, type Node } from '../markup/docx-read'
 import { Refusal, withinTags } from '../util'
-import { written, type Hast } from './epub-write'
+import { MAX_PAGE_TAGS, tooManyTags, written, type Hast } from './epub-write'
 import { pictureType, type Parts } from './kindle'
 import { locked } from './mobi'
 
@@ -32,6 +32,8 @@ const FONT_ONLY = new Set(['http://www.idpf.org/2008/embedding', 'http://ns.adob
 
 /** Tags that hold nothing in a page. Every other tag written closed ("<a id="x"/>") is opened and closed. */
 const VOID = new Set(['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'source', 'track', 'wbr'])
+
+const SWALLOWS = new Set(['plaintext', 'xmp', 'listing', 'noembed', 'noframes'])
 
 /**
  * A book's pages are XML, where any tag may be written closed: <a id="x"/>, <title/>. Read as a
@@ -71,10 +73,28 @@ export function openedAndClosed(source: string): string {
     }
     const tag = source.slice(open, end + 1)
     const name = /^<([a-z][\w:.-]*)/i.exec(tag)?.[1]?.toLowerCase()
-    out += source.slice(at, open) + (name && tag.endsWith('/>') && !VOID.has(name) ? `${tag.slice(0, -2)}></${name}>` : tag)
+    // A tag that tells a web page "all that follows is plain text" is left out, opening and closing: its words stay.
+    const swallows = SWALLOWS.has(name ?? /^<\/([a-z][\w:.-]*)/i.exec(tag)?.[1]?.toLowerCase() ?? '')
+    out += source.slice(at, open) + (swallows ? '' : name && tag.endsWith('/>') && !VOID.has(name) ? `${tag.slice(0, -2)}></${name}>` : tag)
     at = end + 1
   }
   return out + source.slice(at)
+}
+
+const MAX_DEPTH = 256
+/** Tags a web page closes by itself when the next one opens, so that a run of them is not depth. */
+const CLOSES_ITSELF = new Set(['p', 'li', 'dt', 'dd', 'tr', 'td', 'th', 'option', 'thead', 'tbody', 'tfoot'])
+
+/** Whether a page opens more tags inside one another than a page of writing does. One pass. */
+export function tooDeep(source: string): boolean {
+  let open = 0
+  for (const tag of source.matchAll(/<(\/?)([a-z][\w:.-]*)/gi)) {
+    const name = tag[2]!.toLowerCase()
+    if (VOID.has(name) || CLOSES_ITSELF.has(name)) continue
+    open = tag[1] ? Math.max(0, open - 1) : open + 1
+    if (open > MAX_DEPTH) return true
+  }
+  return false
 }
 
 /** A path named in one file of the book, as a path from the top of the book. Null if it leads out of the book or is an address. */
@@ -155,12 +175,16 @@ export async function readEpub(bytes: Uint8Array): Promise<Parts> {
 
   // A locked book says so: it lists what is scrambled and how. Fonts scrambled to stay with
   // their book are not that; anything else is, and the book is refused, never worked round.
-  const scrambled = files.get('META-INF/encryption.xml')
+  // The names are looked for whatever their capitals: a reader on a Mac or Windows finds them so.
+  const about = new Map([...files].filter(([name]) => /^meta-inf\//i.test(name)).map(([name, data]) => [name.toLowerCase(), data]))
+  const scrambled = about.get('meta-inf/encryption.xml')
   if (scrambled) {
-    const how = [...decoder.decode(scrambled.subarray(0, MAX_PAGE_BYTES)).matchAll(/\bAlgorithm\s*=\s*["']([^"']*)["']/g)].map((match) => match[1]!)
+    // A list too long to read through is not taken on trust.
+    if (scrambled.length > MAX_PAGE_BYTES) throw locked()
+    const how = [...decoder.decode(scrambled).matchAll(/\bAlgorithm\s*=\s*(?:"([^"]*)"|'([^']*)')/gi)].map((match) => match[1] ?? match[2]!)
     if (how.length === 0 || how.some((algorithm) => !FONT_ONLY.has(algorithm))) throw locked()
   }
-  if (files.has('META-INF/rights.xml') || files.has('META-INF/sinf.xml')) throw locked()
+  if (about.has('meta-inf/rights.xml') || about.has('meta-inf/sinf.xml') || about.has('meta-inf/license.lcpl') || [...files.keys()].some((name) => /^license\.lcpl$/i.test(name))) throw locked()
 
   const container = root('META-INF/container.xml', 'container')
   const listPath = within(container, 'rootfile').map((node) => attrs(node)['@full-path']).find((path) => typeof path === 'string' && files.has(path))
@@ -214,7 +238,12 @@ export async function readEpub(bytes: Uint8Array): Promise<Parts> {
   const tree = (path: string): Hast => {
     const data = files.get(path)!
     if (data.length > MAX_PAGE_BYTES) throw tooLarge()
-    return reader.parse(openedAndClosed(decoder.decode(data))) as unknown as Hast
+    const source = openedAndClosed(decoder.decode(data))
+    // Both counted before the page is read: how much is in it, so that every walk below reaches
+    // its end, and how deep it goes, so that no browser's stack decides what is refused.
+    if (!withinTags(source, MAX_PAGE_TAGS)) throw tooManyTags()
+    if (tooDeep(source)) throw new Refusal('This file is nested too deeply to convert')
+    return reader.parse(source) as unknown as Hast
   }
   /** Where a link in a page of the book leads, in the names given here. Null where it leads nowhere in the book. */
   const linked = (from: string, href: string): string | null => {

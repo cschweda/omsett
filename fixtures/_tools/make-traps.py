@@ -4499,6 +4499,15 @@ trap("bomb-inside.epub", E.book(pages=[("title.xhtml", "One", "<p>x</p>" + " " *
 trap("pages-that-add-up.epub", E.book(pages=[("p%d.xhtml" % n, "Page", "<p>x</p>" + " " * (24 * 1024 * 1024)) for n in range(3)]),
      "A book of three pages, each twenty-four megabytes of spaces: every page is under the limit for a page, and together they are past the limit for a book.",
      "epub", node="fails", note=BOOK_TOO_LARGE, group=G)
+trap("page-of-a-million-line-breaks.epub", E.book(pages=[("title.xhtml", "One", '<p><img src="https://elsewhere.example/watch.png" alt="x"/></p>' + "<br/>" * 1000000)]),
+     "A page that asks another site for a picture and then holds a million line breaks. A reader that looks at only so much of a page would stop before it reached the picture, and carry it across. The page is refused for its size instead.",
+     "epub", node="fails", note="This book has a page with more in it than Omsett will handle", group=G)
+trap("page-three-thousand-deep.epub", E.book(pages=[("title.xhtml", "One", "<div>" * 3000 + "<p>Deep.</p>" + "</div>" * 3000)]),
+     "A page nested three thousand tags deep. How deep a browser can read before it fails differs from one to the next, so the limit is stated and checked first.",
+     "epub", node="fails", note="This file is nested too deeply to convert", group=G)
+trap("locked-under-another-name.epub", E.book(extra=[("META-INF/ENCRYPTION.XML", SCRAMBLED % ("http://www.w3.org/2001/04/xmlenc#aes256-cbc", "OEBPS/text/title.xhtml")), ("META-INF/license.lcpl", "{}")]),
+     "A locked book whose list of what is scrambled is named in capitals, with a lending licence beside it.",
+     "epub", node="fails", note=LOCKED, group=G)
 trap("pages-that-are-not-there.epub", E.book(change=list_names_what_is_not_there),
      "A book whose list names three pages, none of which is in the file.",
      "epub", node="fails", note="This book has no pages in it", group=G)
@@ -4517,6 +4526,9 @@ trap("fonts-scrambled.epub", E.book(extra=[("META-INF/encryption.xml", SCRAMBLED
 trap("tags-written-closed.epub", E.book(pages=[("title.xhtml", "One", '<h1>One</h1><div/><a id="mark"/><p>After the mark.</p><script/><p>After the script.</p><textarea/><p>The last words.</p>')]).replace(b"<title>One</title>", b"<title/>            "),
      "A page whose tags are written closed, as XML allows: a title, a script and a mark with nothing in them. Read as a web page, each would swallow everything after it.",
      "epub", node="succeeds", group="unusual")
+trap("everything-after-is-text.epub", E.book(pages=[("title.xhtml", "One", "<h1>One</h1><p>Before.</p><plaintext/><p>After.</p>"), ("two.xhtml", "Two", "<h1>Two</h1><p>The second page.</p>")]),
+     "A page with a tag that tells a browser everything after it is plain text, to the end of the file. Joined to the next page, it would turn the rest of the book into text with its tags showing.",
+     "epub", node="succeeds", absent="&lt;h1", group="unusual")
 trap("the-older-kind.epub", read("epub", "older.epub"),
      "A book as EPUB 2 wrote it: the older list of contents, a document type on every file, and a cover that is a drawing with the picture in it.",
      "epub", node="succeeds", group="unusual")

@@ -1,6 +1,6 @@
 import { writeZip } from '../archive/zip'
 import type { Entry } from '../archive/entries'
-import { Refusal } from '../util'
+import { Refusal, withinTags } from '../util'
 import type { Parts } from './kindle'
 
 // An e-book's parts written as an EPUB: a ZIP holding a page for each chapter, the stylesheets
@@ -24,6 +24,11 @@ const MAX_DEPTH = 256
 const XHTML = 'http://www.w3.org/1999/xhtml'
 /** Tags that hold nothing and are written closed. */
 const VOID = new Set(['br', 'hr', 'img', 'col', 'wbr'])
+/** Tags that turn everything after them into text, closed or not. Never written; what is inside them is. */
+const SWALLOWS = new Set(['plaintext', 'xmp', 'listing', 'noembed', 'noframes'])
+/** The most tags one page of a book may hold. A long chapter has a few tens of thousands. */
+export const MAX_PAGE_TAGS = 400_000
+export const tooManyTags = () => new Refusal('This book has a page with more in it than Omsett will handle')
 /** Tags a book's pages may use beyond those any cleaned page may. */
 const BOOKISH = ['article', 'aside', 'nav', 'header', 'footer', 'figure', 'figcaption', 'small', 'center', 'u', 'big', 'abbr', 'cite', 'mark', 'address', 'caption', 'colgroup', 'col', 'wbr', 'main']
 
@@ -47,7 +52,7 @@ export function written(nodes: Hast[], depth = 0): string {
   let out = ''
   for (const node of nodes) {
     if (node.type === 'text') out += text(node.value ?? '')
-    else if (node.type === 'element' && /^[a-z][a-z0-9]{0,20}$/.test(node.tagName ?? '')) {
+    else if (node.type === 'element' && /^[a-z][a-z0-9]{0,20}$/.test(node.tagName ?? '') && !SWALLOWS.has(node.tagName!)) {
       let attributes = ''
       for (const [property, value] of Object.entries(node.properties ?? {})) {
         const name = attributeName(property)
@@ -153,6 +158,8 @@ export async function writeEpub(parts: Parts): Promise<Uint8Array> {
   /** Every name a place has been given, on each page: what a link may point at. */
   const marks = new Map<string, Set<string>>()
   for (const chapter of parts.chapters) {
+    // Counted before it is read, so that every walk below reaches the end of the page.
+    if (!withinTags(chapter.html, MAX_PAGE_TAGS)) throw tooManyTags()
     const raw = clean.parse(chapter.html) as unknown as Hast
     // The stylesheets the page asks for, before its head is set aside: only ones that are in the book.
     const styles: string[] = []

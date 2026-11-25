@@ -7080,6 +7080,42 @@
     "absent": null
   },
   {
+    "file": "page-of-a-million-line-breaks.epub",
+    "group": "books",
+    "why": "A page that asks another site for a picture and then holds a million line breaks. A reader that looks at only so much of a page would stop before it reached the picture, and carry it across. The page is refused for its size instead.",
+    "detect": "epub",
+    "mismatch": false,
+    "guard": "ok",
+    "node": "fails",
+    "browser": "fails",
+    "note": "This book has a page with more in it than Omsett will handle",
+    "absent": null
+  },
+  {
+    "file": "page-three-thousand-deep.epub",
+    "group": "books",
+    "why": "A page nested three thousand tags deep. How deep a browser can read before it fails differs from one to the next, so the limit is stated and checked first.",
+    "detect": "epub",
+    "mismatch": false,
+    "guard": "ok",
+    "node": "fails",
+    "browser": "fails",
+    "note": "This file is nested too deeply to convert",
+    "absent": null
+  },
+  {
+    "file": "locked-under-another-name.epub",
+    "group": "books",
+    "why": "A locked book whose list of what is scrambled is named in capitals, with a lending licence beside it.",
+    "detect": "epub",
+    "mismatch": false,
+    "guard": "ok",
+    "node": "fails",
+    "browser": "fails",
+    "note": "This book is copy-protected (DRM), and Omsett does not unlock books. Only books without copy protection can be converted",
+    "absent": null
+  },
+  {
     "file": "pages-that-are-not-there.epub",
     "group": "books",
     "why": "A book whose list names three pages, none of which is in the file.",
@@ -7150,6 +7186,18 @@
     "browser": "succeeds",
     "note": null,
     "absent": null
+  },
+  {
+    "file": "everything-after-is-text.epub",
+    "group": "unusual",
+    "why": "A page with a tag that tells a browser everything after it is plain text, to the end of the file. Joined to the next page, it would turn the rest of the book into text with its tags showing.",
+    "detect": "epub",
+    "mismatch": false,
+    "guard": "ok",
+    "node": "succeeds",
+    "browser": "succeeds",
+    "note": null,
+    "absent": "&lt;h1"
   },
   {
     "file": "the-older-kind.epub",

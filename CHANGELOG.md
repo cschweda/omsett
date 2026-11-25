@@ -35,7 +35,8 @@ document, Markdown, a web page or a PDF becomes an EPUB, a chapter to each main 
   many parts and pictures, and whether it is copy-protected.
 - **Trap files for EPUB** (a trap file is one made to be broken or hostile in one deliberate
   way): a locked book, a list that expands a short word into a gigabyte, a page three hundred
-  megabytes long, a page named outside the book, a picture asked of another site, tags written
+  megabytes long, a page of a million line breaks, a page nested three thousand deep, a page
+  named outside the book, a picture asked of another site, tags written
   in the way that swallows the rest of a page, and a book carrying scripts in every place it
   holds text.
 

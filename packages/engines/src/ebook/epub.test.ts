@@ -4,6 +4,7 @@ import { formatById, registry } from '@omsett/registry'
 import { describe, expect, it } from 'vitest'
 import { readZip, writeZip } from '../archive/zip'
 import { describeFile } from '../details'
+import { tooDeep } from './epub-read'
 import { bookPage, createEbookEngine, openedAndClosed, pageParts, readEpub } from './index'
 
 // Reading an EPUB, setting a book out as one page, and cutting a page into a book. The samples
@@ -86,6 +87,7 @@ describe('reading an EPUB', () => {
     // A ">" inside a value is not the end of the tag; a comment is passed over; what is not a tag is left alone.
     expect(openedAndClosed('<a title="a > b"/>x<!-- <b/> -->1 < 2<?xml version="1.0"?>')).toBe('<a title="a > b"></a>x<!-- <b/> -->1 < 2')
     expect(openedAndClosed('<p>never closed <span')).toBe('<p>never closed <span')
+    expect(openedAndClosed('a<plaintext/>b<PLAINTEXT>c</plaintext>d')).toBe('abcd')
   })
 
   it('keeps every word after tags written closed', async () => {
@@ -111,6 +113,49 @@ describe('reading an EPUB', () => {
     expect(await refusal(await fixture('_traps/pages-that-are-not-there.epub'), 'epub', 'html')).toBe('Refusal: This book has no pages in it')
     expect(await refusal(await fixture('_traps/bomb-inside.epub'), 'epub', 'html')).toBe('Refusal: This book is too large to convert in a browser')
     expect(await refusal(await fixture('_traps/pages-that-add-up.epub'), 'epub', 'html')).toBe('Refusal: This book is too large to convert in a browser')
+  })
+
+  it('refuses a page with more in it than every walk can reach, and one nested past the stated depth', async () => {
+    expect(await refusal(await fixture('_traps/page-of-a-million-line-breaks.epub'), 'epub', 'html')).toBe('Refusal: This book has a page with more in it than Omsett will handle')
+    expect(await refusal(await fixture('_traps/page-three-thousand-deep.epub'), 'epub', 'html')).toBe('Refusal: This file is nested too deeply to convert')
+    // The same page nested within the limit is read.
+    const within = await rebuilt('epub/sample.epub', { 'OEBPS/text/title.xhtml': `<html><body>${'<div>'.repeat(200)}<p>Deep enough.</p>${'</div>'.repeat(200)}</body></html>` })
+    expect((await converted(within, 'epub', 'html')).text).toContain('Deep enough.')
+    // A run of paragraphs nobody closed is not depth.
+    expect(tooDeep('<p>x'.repeat(5000))).toBe(false)
+    expect(tooDeep('<div>'.repeat(257))).toBe(true)
+  })
+
+  it('knows a locked book by any of its signs, whatever their capitals or quotes', async () => {
+    expect(await refusal(await fixture('_traps/locked-under-another-name.epub'), 'epub', 'html')).toMatch(/copy-protected/)
+    const aes = `<encryption><EncryptionMethod Algorithm='http://www.idpf.org/2008/embedding"x' /></encryption>`
+    expect(await refusal(await rebuilt('epub/sample.epub', { 'META-INF/encryption.xml': aes }), 'epub', 'html')).toMatch(/copy-protected/)
+    expect(await refusal(await rebuilt('epub/sample.epub', { 'META-INF/Rights.xml': '<rights/>' }), 'epub', 'html')).toMatch(/copy-protected/)
+    expect(await refusal(await rebuilt('epub/sample.epub', { 'license.lcpl': '{}' }), 'epub', 'html')).toMatch(/copy-protected/)
+  })
+
+  it('does not let one page turn the rest of the book into text', async () => {
+    const page = await converted(await fixture('_traps/everything-after-is-text.epub'), 'epub', 'html')
+    expect(page.text).toContain('<p>After.</p>')
+    expect(page.text).toMatch(/<section id="part-2"><h1>Two<\/h1>/)
+    expect(page.text).not.toContain('&#x3C;')
+  })
+
+  it('reads a page of a hundred thousand empty marks, or of text nested deep under a contents entry, in good time', async () => {
+    const marks = await rebuilt('epub/sample.epub', { 'OEBPS/text/title.xhtml': `<html><body><p>${Array.from({ length: 100_000 }, (_, n) => `<a id="m${n}"/>`).join('')}Words.</p></body></html>` })
+    let began = Date.now()
+    expect((await converted(marks, 'epub', 'html')).text).toContain('Words.')
+    expect(Date.now() - began).toBeLessThan(8000)
+    const nested = await rebuilt('epub/sample.epub', { 'OEBPS/text/title.xhtml': `<html><body>${'<div><span>'.repeat(100)}${'word '.repeat(400_000)}${'</span></div>'.repeat(100)}</body></html>` })
+    began = Date.now()
+    expect((await converted(nested, 'epub', 'html')).text).toContain('word word')
+    expect(Date.now() - began).toBeLessThan(8000)
+  }, 60_000)
+
+  it('mends a link only inside a link, never the same letters in the words of the book', async () => {
+    const book = await rebuilt('epub/sample.epub', { 'OEBPS/text/title.xhtml': '<html><body><p>Written out: href="#part-1-zz" and <a href="#gone">a link to nowhere</a>.</p></body></html>' })
+    const { text } = await converted(book, 'epub', 'html')
+    expect(text).toContain('Written out: href="#part-1-zz" and')
   })
 
   it('takes a name that leads out of the book to name nothing', async () => {
@@ -289,6 +334,15 @@ describe('a page as a book', () => {
     expect(made.text('page0002.xhtml')).toContain('<img alt="Far away"/>')
     expect(made.entries.map((entry) => new TextDecoder('latin1').decode(entry.data)).join('\n')).not.toMatch(/elsewhere\.example|__omsett_canary|color: red/)
   })
+
+  it('carries no picture from another site into a book, however long the page it is on', async () => {
+    const long = `<h1>One</h1><p><img src="https://elsewhere.example/a.png" alt="Far"></p>${'<br>'.repeat(300_000)}<p>End.</p>`
+    const made = await converted(long, 'html', 'epub')
+    const all = (await readZip(made.bytes)).map((entry) => new TextDecoder('latin1').decode(entry.data)).join('\n')
+    expect(all).not.toContain('elsewhere.example')
+    expect(all).toContain('<p>End.</p>')
+    expect(await refusal('<br>'.repeat(1_700_000), 'html', 'epub')).toBe('Refusal: This page has more in it than Omsett will make a book of')
+  }, 60_000)
 
   it('keeps the head of a table, and gives the pages a plain stylesheet', async () => {
     const made = await book()

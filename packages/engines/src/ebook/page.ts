@@ -1,6 +1,6 @@
 import { officeToHtml, readPage } from '../markup'
-import { Refusal } from '../util'
-import { written, type Hast } from './epub-write'
+import { Refusal, withinTags } from '../util'
+import { MAX_PAGE_TAGS, tooManyTags, written, type Hast } from './epub-write'
 import { pictureType, type Parts } from './kindle'
 
 // A book as one page, and a page as a book.
@@ -35,13 +35,19 @@ function* elements(tree: Hast): Generator<Hast> {
     const inside = node.children ?? []
     for (let i = inside.length - 1; i >= 0; i--) if (inside[i]!.type === 'element') pending.push(inside[i]!)
   }
+  // A walk that stopped short would leave part of a page unlooked at, and so uncleaned.
+  if (pending.length > 0) throw tooManyTags()
 }
 
 const HEADING = /^h[1-6]$/
-const said = (node: Hast): string => {
+/** The words in a tag. With a limit, null as soon as there are more than that, without reading the rest. */
+function said(node: Hast): string
+function said(node: Hast, most: number): string | null
+function said(node: Hast, most = Infinity): string | null {
   let out = ''
   const pending: Hast[] = [node]
   for (let guard = 0; pending.length > 0 && guard < 100_000; guard++) {
+    if (out.length > most || guard > most * 4) return null
     const next = pending.pop()!
     if (next.type === 'text') out += next.value ?? ''
     else for (let i = (next.children ?? []).length - 1; i >= 0; i--) pending.push(next.children![i]!)
@@ -74,6 +80,7 @@ export async function bookPage(parts: Parts, name: string): Promise<{ html: stri
   for (const chapter of parts.chapters) {
     const id = section.get(chapter.file)!
     // A page of a Kindle book is a whole page, with a head; what is wanted is what is in its body.
+    if (!withinTags(chapter.html, MAX_PAGE_TAGS)) throw tooManyTags()
     let tree = reader.parse(chapter.html) as unknown as Hast
     for (const node of elements(tree)) {
       if (node.tagName === 'body') {
@@ -114,13 +121,20 @@ export async function bookPage(parts: Parts, name: string): Promise<{ html: stri
     // in Markdown and an empty run in a document.
     for (const node of [tree, ...elements(tree)]) {
       const inside = node.children ?? []
+      // What follows each thing, found in one pass from the end: the next that is not empty space.
+      const after: Array<Hast | undefined> = []
+      let following: Hast | undefined
+      for (let at = inside.length - 1; at >= 0; at--) {
+        after[at] = following
+        if (inside[at]!.type === 'element' || (inside[at]!.value ?? '').trim() !== '') following = inside[at]
+      }
       const kept: Hast[] = []
       inside.forEach((kid, at) => {
         kept.push(kid)
         const mark = kid.properties?.id
         const empty = (kid.tagName === 'a' || kid.tagName === 'span') && kid.properties?.href === undefined && !(kid.children ?? []).some((part) => part.type === 'element' || (part.value ?? '').trim() !== '')
         if (!empty || typeof mark !== 'string') return
-        const next = inside.slice(at + 1).find((later) => later.type === 'element' || (later.value ?? '').trim() !== '')
+        const next = after[at]
         const taker = next?.type === 'element' && next.properties?.id === undefined ? next : node.type === 'element' && node.properties?.id === undefined && node.tagName !== 'body' ? node : null
         if (!taker) return
         ;(taker.properties ??= {}).id = mark
@@ -149,9 +163,11 @@ export async function bookPage(parts: Parts, name: string): Promise<{ html: stri
     if (marked) continue
     const wanted = new Map(entries.map((entry) => [plain(entry.label), entry.depth] as const).reverse())
     for (const node of candidates) {
-      const depth = wanted.get(plain(said(node)))
+      // A title is short. What is longer than any entry is not read to its end.
+      const words = said(node, 600)
+      const depth = words === null ? undefined : wanted.get(plain(words))
       if (depth === undefined) continue
-      wanted.delete(plain(said(node)))
+      wanted.delete(plain(words!))
       node.tagName = `h${Math.min(6, depth + 1)}`
       headingsMade++
     }
@@ -185,7 +201,8 @@ export async function bookPage(parts: Parts, name: string): Promise<{ html: stri
   const cleaned = await officeToHtml({ body, title: title || null, language: parts.language }, name)
   // Cleaning may have taken away a tag that a link pointed at. Such a link goes to its section instead.
   const kept = new Set([...cleaned.matchAll(/ id="([^"]*)"/g)].map((match) => match[1]!))
-  const html = cleaned.replace(/ href="#(part-\d+)-([^"]*)"/g, (whole, part: string, mark: string) => (kept.has(`${part}-${mark}`) ? whole : ` href="#${part}"`))
+  // Only inside a link's own tag: the same letters in the words of the book are words.
+  const html = cleaned.replace(/(<a (?:id="[^"]*" )?href="#)(part-\d+)-([^"]*)"/g, (whole, open: string, part: string, mark: string) => (kept.has(`${part}-${mark}`) ? whole : `${open}${part}"`))
   const inside = html.slice(html.indexOf('<body>'))
   if (!/<img\b/.test(inside) && inside.replace(/<[^<>]*>/g, '').trim() === '') throw new Refusal('This book has no text in it to convert')
   const notes = [
@@ -199,6 +216,8 @@ export async function bookPage(parts: Parts, name: string): Promise<{ html: stri
 const STYLE = 'img { max-width: 100%; height: auto; }\ntable { border-collapse: collapse; }\nth, td { border: 1px solid; padding: 0.25em 0.5em; text-align: left; vertical-align: top; }\n'
 
 export async function pageParts(text: string, name: string): Promise<Parts> {
+  // Counted before it is read, so that every walk below reaches the end of the page.
+  if (!withinTags(text, MAX_PAGE_TAGS * 4)) throw new Refusal('This page has more in it than Omsett will make a book of')
   const page = await readPage(text, name)
   // Wrappers at the top of the page are opened, so that the headings inside them are where a chapter can start.
   let top = ((page.tree as Hast).children ?? []).filter((node) => node.type === 'element' || (node.type === 'text' && (node.value ?? '').trim() !== ''))

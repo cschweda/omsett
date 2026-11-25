@@ -213,6 +213,13 @@ build by `apps/web/scripts/write-headers.ts`.
   swallow what follows them. A name in a book's list is a file in the book or it is nothing:
   every path is worked out from the file that names it, and one that leads out names nothing.
   A list that declares shorthand (`<!ENTITY`) is refused.
+- **A walk over a page that stops short leaves the rest uncleaned.** A review put a picture kept
+  on another site at the top of a page of two million line breaks: the walk that drops such
+  pictures stopped at its limit before reaching it. A page of a book is now counted before it
+  is read (`MAX_PAGE_TAGS`) and refused past the count, and `elements` refuses rather than
+  stops. A new walk with a guard must do one or the other; never stop quietly.
+- **A book's page is checked for depth before it is parsed** (`tooDeep` in `ebook/epub-read.ts`),
+  and tags that turn the rest of a page into text (`plaintext`) are never read or written.
 - **A heading is made from a paragraph only where the book's own list of contents says so**
   (`bookPage`): the page has no heading, and the paragraph is an entry of the list word for
   word. The result says how many were made. Do not guess headings from size or weight.
