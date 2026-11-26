@@ -8,7 +8,8 @@ import { openOdf, type Odf } from './odt-read'
 // boxes is read by the code that reads an ODT, so lists, tables, emphasis, links and pictures
 // with their descriptions come across the same way, and what that code leaves out stays out.
 //
-// What the presenter kept from the audience is left out too: speaker notes, hidden slides,
+// What the presenter kept from the audience is left out too: speaker notes (unless the person
+// converting asks for them, when they follow their slide under a heading of their own), hidden slides,
 // shapes that are not shown (hidden, only printed, or on a hidden layer), and empty placeholders
 // with their prompts. So is the furniture that is the same on every slide: the slide's number,
 // the date, the footer. `odf.shown` decides for every shape, at any depth.
@@ -73,7 +74,7 @@ export async function describeSlides(bytes: Uint8Array): Promise<{ slides: numbe
   }
 }
 
-export async function readOdp(bytes: Uint8Array): Promise<ReadDocument> {
+export async function readOdp(bytes: Uint8Array, options: { notes?: boolean } = {}): Promise<ReadDocument> {
   const odf = await openOdf(bytes, TYPES, notOdp, 'presentation')
   let written = ''
   let first: string | null = null
@@ -120,6 +121,17 @@ export async function readOdp(bytes: Uint8Array): Promise<ReadDocument> {
       }
     }
     walk(kids(page), 0)
+    // The presenter's notes, where asked for: the notes box of the slide's notes page, nothing else of it.
+    if (options.notes) {
+      let said = ''
+      for (const notes of kids(page).filter((part) => tagOf(part) === 'notes')) {
+        for (const frame of kids(notes)) {
+          const box = tagOf(frame) === 'frame' && attrs(frame)['@presentation:class'] === 'notes' ? child(frame, 'text-box') : undefined
+          if (box) said += odf.blocks(kids(box), 1)
+        }
+      }
+      if (said !== '') content += `<h3>Speaker notes</h3>${said}`
+    }
 
     if (title === '' && content === '') continue
     // Every slide is a section with a heading, so the page can be moved through slide by slide.

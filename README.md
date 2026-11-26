@@ -77,6 +77,7 @@ A file is offered the formats of its own kind: a picture becomes another picture
 - **Try it without a file of your own**: a sample picture, PDF and Word document are in the drop zone.
 - **See the result before you convert**: choose a picture and a format, and the original and what it will become are shown side by side, with a divider to drag and the quality to move. Nothing is fetched or saved to do it.
 - **Before and after, side by side**, once converted too: a slider for pictures; the two texts for data and subtitles.
+- **Speaker notes on request**: a presentation's notes are left out unless you tick the box, and then follow their slide under a heading of their own. Hidden slides never come.
 - **Opens OpenDocument presentations (.odp)** and makes them a web page, a Word document, Markdown or a PDF, a section to a slide. Speaker notes, hidden slides and hidden shapes are left behind.
 - **Opens OpenDocument spreadsheets (.ods)** and makes them XLSX, CSV, JSON or any other data format, with numbers as numbers, dates as dates, and the value each formula last showed. Hidden sheets, comments and macros are left behind.
 - **Reads and writes OpenDocument text (.odt)**, as LibreOffice and many governments save it: to and from DOCX, a web page, Markdown, a PDF and the rest. Deleted text, comments, notes and hidden sections are left behind.

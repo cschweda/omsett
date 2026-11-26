@@ -181,7 +181,7 @@ build by `apps/web/scripts/write-headers.ts`.
 - **An OpenDocument presentation is read with the ODT reader's text** (`openOdf` in
   `odt-read.ts`, `odp-read.ts`): the slides are walked in the order their shapes are stored,
   and each box handed to the same `blocks`, so lists, tables, emphasis, links, pictures and
-  what is hidden inside a box behave as in an ODT. Left out besides: speaker notes, slides
+  what is hidden inside a box behave as in an ODT. Left out besides: speaker notes (unless asked for), slides
   hidden by their style (found among the named styles and through parents too), and any shape,
   at any depth, that `odf.shown` turns away: `display` of `none` or `printer`, a hidden layer,
   an empty placeholder, the slide's number, date, header and footer. An OpenDocument
@@ -280,8 +280,11 @@ build by `apps/web/scripts/write-headers.ts`.
   `meta.xml`, and the manifest schema for `META-INF/manifest.xml`). Each must validate. Its first
   entry is `mimetype`, stored (`writeZip(…, { stored })`).
 - **What a document's author deleted or hid is never carried across**: tracked deletions,
-  hidden text, comments, author names; and from a presentation, hidden slides and speaker
-  notes. There is a trap for each.
+  hidden text, comments, author names; and from a presentation, hidden slides. There is a trap
+  for each. Speaker notes are left out too, unless the person converting asks for them, each
+  time (`speakerNotes`, off by default, decided 26 November 2026): they then follow their
+  slide under the heading "Speaker notes". A hidden slide's notes never come, asked or not. Do
+  not turn the choice on by default, and do not remember it between conversions.
 - **Binary formats are fuzzed on every run** (`fixtures/fuzz.test.ts`), in a child process with a
   watchdog. A new binary format is picked up from the registry; it needs only its `sample.*`.
   A hang, a wrong result or more than three engine deaths fails the run. Do not raise that
@@ -324,8 +327,10 @@ build by `apps/web/scripts/write-headers.ts`.
 - **The data engine writes one thing that is not data: a page** (`writeTablePage`). It is how a
   spreadsheet reaches PDF, DOCX and Markdown. Every cell and every column name is written as
   escaped text; the page is plain enough that the markup engine and Typst need no special case.
-  Options belong to the last step of a route, so a workbook going straight to PDF takes its
-  first sheet; that is said in the changelog, and is the thing to fix if a choice is wanted there.
+  A choice belongs to the step that makes use of it, wherever in the route that step is
+  (`defaults` and `runAll` in `useConversionQueue`): a sheet is chosen where a workbook is read,
+  speaker notes where a presentation is, so a workbook going to PDF chooses its sheet as one
+  going to CSV does.
 - **A value written into a line-based format is escaped, always** (`escaped` in
   `packages/engines/src/data/cards.ts`). Anything written as a parameter or an unescaped value
   (a time zone, a repeat rule, a status) is held to a pattern first, and left out if it fails.

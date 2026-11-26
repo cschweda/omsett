@@ -87,6 +87,12 @@ describe('old PowerPoint presentations (PPT)', () => {
     expect(readPpt(await fixture('_traps/letters-under-a-long-link.ppt')).body).not.toContain('<a ')
   })
 
+  it('carries speaker notes only when asked, after their slide, and never a hidden slide\'s', async () => {
+    const { body } = readPpt(await fixture('ppt/sample.ppt'), { notes: true })
+    expect(body).toContain('<h3>Speaker notes</h3><p>SECRET-SPEAKER-NOTES: not for the audience</p></section>')
+    expect(body).not.toMatch(/SECRET-HIDDEN-SLIDE|SECRET-HIDDEN-SHAPE|SECRET-EARLIER-SAVE/)
+  })
+
   it('reads the slide as the last save left it, though an earlier one is still in the file', async () => {
     const bytes = await fixture('ppt/sample.ppt')
     expect(new TextDecoder('latin1').decode(bytes)).toContain('SECRET-EARLIER-SAVE')

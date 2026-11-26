@@ -6,8 +6,9 @@ import { all, attrs, child, escapeHtml, kids, MAX_PICTURE_BYTES, openOffice, pic
 // the outline the presentation had: titles as headings, bullets as lists at their levels,
 // tables as tables, and each picture with the description its author gave it.
 //
-// Speaker notes and hidden slides are not read. They are what the presenter kept from the
-// audience, and a converter that published them would be telling what was not said.
+// Hidden slides are never read. Speaker notes are read only when the person converting asks
+// for them (`notes`), and are then written after their slide under a heading of their own:
+// they are what the presenter kept from the audience, and are not published unless asked.
 
 const MAX_SLIDES = 2000
 /** The most HTML a presentation may become, pictures included. */
@@ -18,6 +19,8 @@ export const notPresentation = () => new Refusal('This file is not a valid PPTX 
 
 interface Links {
   get(id: string | undefined): { target: string; external: boolean } | undefined
+  /** The first link of a kind ("notesSlide"), by the end of its type. */
+  ofType(kind: string): { target: string; external: boolean } | undefined
 }
 
 /** "../media/image1.png", named from "ppt/slides/slide1.xml" → "ppt/media/image1.png". Null if it leaves the file. */
@@ -32,17 +35,20 @@ function resolve(from: string, target: string): string | null {
   return parts.join('/')
 }
 
-export async function readPptx(bytes: Uint8Array): Promise<ReadDocument> {
+export async function readPptx(bytes: Uint8Array, options: { notes?: boolean } = {}): Promise<ReadDocument> {
   const { parts, root } = await openOffice(bytes, notPresentation, 'presentation')
   const linksOf = (path: string): Links => {
     const folder = path.slice(0, path.lastIndexOf('/'))
     const name = path.slice(path.lastIndexOf('/') + 1)
     const found = new Map<string, { target: string; external: boolean }>()
+    const kinds: Array<{ type: string; target: string; external: boolean }> = []
     for (const link of all(root(`${folder}/_rels/${name}.rels`, 'Relationships') ?? {}, 'Relationship')) {
       const a = attrs(link)
-      if (a['@Id']) found.set(a['@Id'], { target: a['@Target'] ?? '', external: a['@TargetMode'] === 'External' })
+      const entry = { target: a['@Target'] ?? '', external: a['@TargetMode'] === 'External' }
+      if (a['@Id']) found.set(a['@Id'], entry)
+      kinds.push({ type: a['@Type'] ?? '', ...entry })
     }
-    return { get: (id) => (id ? found.get(id) : undefined) }
+    return { get: (id) => (id ? found.get(id) : undefined), ofType: (kind) => kinds.find((link) => link.type.endsWith(`/${kind}`)) }
   }
 
   const presentation = root('ppt/presentation.xml', 'presentation')
@@ -194,6 +200,28 @@ export async function readPptx(bytes: Uint8Array): Promise<ReadDocument> {
       }
     }
     walk(kids(slide), 0)
+    // The presenter's notes, where asked for: the body of the slide's notes page, and nothing
+    // else of it (its picture of the slide, its number).
+    const notesLink = options.notes ? links.ofType('notesSlide') : undefined
+    const notesPath = notesLink && !notesLink.external ? resolve(path, notesLink.target) : null
+    const notesPage = notesPath ? root(notesPath, 'notes') : undefined
+    if (notesPage) {
+      const notesLinks = linksOf(notesPath!)
+      let said = ''
+      const look = (nodes: Node[], depth: number): void => {
+        if (depth > MAX_DEPTH) throw notPresentation()
+        for (const node of nodes) {
+          const tag = tagOf(node)
+          if (tag === 'sp') {
+            const kind = attrs(child(child(child(node, 'nvSpPr') ?? {}, 'nvPr') ?? {}, 'ph') ?? {})['@type']
+            const body = child(node, 'txBody')
+            if (kind === 'body' && body) said += paragraphs(body, notesLinks, false)
+          } else if (tag === 'grpSp' || tag === 'spTree' || tag === 'cSld') look(kids(node), depth + 1)
+        }
+      }
+      look(kids(notesPage), 0)
+      if (said !== '') content += `<h3>Speaker notes</h3>${said}`
+    }
     if (title === '' && content === '') continue
     // Every slide is a section with a heading, so the page can be moved through slide by slide.
     const heading = title || `Slide ${shown}`

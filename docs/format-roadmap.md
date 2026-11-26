@@ -136,7 +136,8 @@ When a format ships, update its row here, in the same change.
 | PPTX to HTML and Markdown: a section to a slide, with titles, bullets, tables, links and pictures | Browser | `markup` (Omsett's own reader) | **Shipped** (0.21.0) |
 | PPTM, PPSX, PPSM, POTX, POTM (read, macros ignored) | Browser | `markup`, as PPTX | **Done** (0.54.1) |
 | ODP, OTP to HTML, and through it to DOCX, Markdown, PDF and EPUB; read only | Browser | `markup` (Omsett's own reader, sharing the ODT reader's text) | **Done** (0.57.0) |
-| Speaker notes, as a choice; charts and SmartArt as their text | Browser | the same | Planned |
+| Speaker notes, as a choice, off by default, for PPTX, PPT and ODP | Browser | the same | **Done** (0.59.0) |
+| Charts and SmartArt as their text | Browser | the same | Planned |
 | PPTX, PPTM, PPSX, PPT, ODP, Keynote to PDF, PNG, JPEG, DOCX | Desktop | LibreOffice | Planned |
 
 ## HWP

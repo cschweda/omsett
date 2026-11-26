@@ -117,10 +117,12 @@ export function useConversionQueue() {
    * from the capability's default options, so no format is named here; a conversion that
    * offers none leaves this empty.
    */
-  const OFFERED = ['language', 'headerRow', 'shape', 'sheet', 'soundQuality']
+  const OFFERED = ['language', 'headerRow', 'shape', 'sheet', 'soundQuality', 'speakerNotes']
   const choices = ref<Record<string, unknown>>({})
   const defaults = computed(() => {
-    const options = selected.value?.route?.edges.at(-1)?.candidates[0]?.defaultOptions ?? {}
+    // A choice belongs to the step that makes use of it, wherever that step is in the route: a
+    // sheet is chosen where a workbook is read, speaker notes where a presentation is.
+    const options = Object.assign({}, ...(selected.value?.route?.edges ?? []).map((edge) => edge.candidates[0]?.defaultOptions ?? {})) as Record<string, unknown>
     return Object.fromEntries(Object.entries(options).filter(([key]) => OFFERED.includes(key)))
   })
   watch(
@@ -266,7 +268,8 @@ export function useConversionQueue() {
         // The user's quality applies to the final encode, and only if that encoder has one.
         const chosen: Record<string, unknown> = {}
         if (last && quality.value !== null && 'quality' in candidate.defaultOptions) chosen.quality = quality.value
-        for (const [key, value] of Object.entries(choices.value)) if (last && key in candidate.defaultOptions) chosen[key] = value
+        // A choice is given to every step that makes use of it.
+        for (const [key, value] of Object.entries(choices.value)) if (key in candidate.defaultOptions) chosen[key] = value
         const options = { ...candidate.defaultOptions, ...chosen }
         // A converter that has not been fetched yet is fetched first, and that can be the
         // longest part. The first word back from the engine means it has arrived.

@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest'
 import { readZip, writeZip } from '../archive/zip'
 import { Refusal } from '../util'
 import { createMarkupEngine } from './index'
+import { readPptx } from './pptx-read'
 
 const fixture = async (path: string) => new Uint8Array(await readFile(new URL(`../../../../fixtures/${path}`, import.meta.url)))
 async function convert(input: Uint8Array | string, from = 'pptx', to = 'html') {
@@ -56,6 +57,13 @@ describe('presentations', () => {
   it('leave out what the audience was not shown: hidden slides, speaker notes, the author', async () => {
     const html = await convert(await fixture('pptx/sample.pptx'))
     for (const gone of ['SECRET-HIDDEN-SLIDE', 'not for the audience', 'SECRET-SPEAKER-NOTES', 'SECRET-AUTHOR']) expect(html.includes(gone), gone).toBe(false)
+  })
+
+  it('carry speaker notes only when asked, after their slide, and never a hidden slide\'s', async () => {
+    expect((await readPptx(await fixture('pptx/sample.pptx'))).body).not.toContain('SECRET-SPEAKER-NOTES')
+    const { body } = await readPptx(await fixture('pptx/sample.pptx'), { notes: true })
+    expect(body).toMatch(/<h3>Speaker notes<\/h3><p>SECRET-SPEAKER-NOTES[^<]*<\/p><\/section>/)
+    expect(body).not.toContain('SECRET-HIDDEN-SLIDE')
   })
 
   it('become Markdown in two steps', async () => {

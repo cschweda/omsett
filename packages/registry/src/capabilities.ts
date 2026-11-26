@@ -197,12 +197,13 @@ export const capabilities: Capability[] = [
   { engine: 'typst', tier: 'browser', reads: ['png'], writes: [{ format: 'pdf', lossy: false, defaultOptions: { onPage: true }, drops: ['metadata'] }], priority: 30 },
   // A PDF is read to a page, from its tags where it has them and from its layout where not.
   { engine: 'pdf', tier: 'browser', reads: ['pdf'], writes: [{ format: 'html', lossy: false }], priority: 20 },
-  // A presentation is read to a page, a section to a slide.
-  { engine: 'markup', tier: 'browser', reads: ['pptx'], writes: [{ format: 'html', lossy: false }], priority: 20 },
+  // A presentation is read to a page, a section to a slide. Its speaker notes are left out
+  // unless the person converting asks for them.
+  { engine: 'markup', tier: 'browser', reads: ['pptx'], writes: [{ format: 'html', lossy: false, defaultOptions: { speakerNotes: false } }], priority: 20 },
   // A presentation from before 2007 is read to a page as the newer kind is. It is never written.
-  { engine: 'markup', tier: 'browser', reads: ['ppt'], writes: [{ format: 'html', lossy: false }], priority: 20 },
+  { engine: 'markup', tier: 'browser', reads: ['ppt'], writes: [{ format: 'html', lossy: false, defaultOptions: { speakerNotes: false } }], priority: 20 },
   // An OpenDocument presentation is read to a page as a PowerPoint one is. It is not written yet.
-  { engine: 'markup', tier: 'browser', reads: ['odp'], writes: [{ format: 'html', lossy: false }], priority: 20 },
+  { engine: 'markup', tier: 'browser', reads: ['odp'], writes: [{ format: 'html', lossy: false, defaultOptions: { speakerNotes: false } }], priority: 20 },
   // An OpenDocument text is read to a page as a Word document is, and written from one.
   { engine: 'markup', tier: 'browser', reads: ['odt'], writes: [{ format: 'html', lossy: false }], priority: 20 },
   { engine: 'markup', tier: 'browser', reads: ['html'], writes: [{ format: 'odt', lossy: false }], priority: 20 },

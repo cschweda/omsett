@@ -14,8 +14,9 @@ import { escapeHtml, MAX_PICTURE_BYTES, pictureAddress, type ReadDocument } from
 // every directory it ever had, newest first, each pointing to the one before. Every one of
 // those numbers is checked against the stream before it is followed.
 //
-// Speaker notes, hidden slides and hidden shapes are not read, as from a PPTX: they are what
-// the presenter kept from the audience. Nothing in the file is run; macros are not opened.
+// Hidden slides and hidden shapes are never read, as from a PPTX. Speaker notes are read only
+// when the person converting asks for them (`notes`), and are written after their slide under a
+// heading of their own. Nothing in the file is run; macros are not opened.
 
 export const notOldPresentation = () => new Refusal('This file is not a valid PPT presentation')
 const tooLarge = () => new Refusal('This presentation is too large to convert in a browser')
@@ -40,6 +41,7 @@ const DOCUMENT = 0x03E8
 const SLIDE = 0x03EE
 const SLIDE_PERSIST = 0x03F3
 const SLIDE_SHOW_INFO = 0x03F9
+const SLIDE_ATOM = 0x03EF
 const ENVIRONMENT = 0x03F2
 const EX_OBJECTS = 0x0409
 const DRAWING_GROUP = 0x040B
@@ -115,7 +117,7 @@ interface Text {
 /** A picture's file, by its place among the presentation's pictures. */
 type Blip = { data: Uint8Array; kind: 'png' | 'jpg' } | null
 
-export function readPpt(bytes: Uint8Array): ReadDocument {
+export function readPpt(bytes: Uint8Array, options: { notes?: boolean } = {}): ReadDocument {
   let file: Cfb
   let stream: Uint8Array | null
   let current: Uint8Array | null
@@ -260,6 +262,22 @@ export function readPpt(bytes: Uint8Array): ReadDocument {
   }
   // A slide is shown once. A list that names one slide twice is asking for it to be read twice.
   if (new Set(slides.map((slide) => slide.id)).size !== slides.length) throw notOldPresentation()
+
+  // The notes pages, by the number a slide names its notes by, each with the texts that follow
+  // it in the list of notes. Read only where asked for.
+  const notesPages = new Map<number, Rec[][]>()
+  const notesList = options.notes ? parts.find((record) => record.type === SLIDE_LIST && record.instance === 2 && record.container) : undefined
+  if (notesList) {
+    let current: Rec[][] | null = null
+    for (const record of children(notesList)) {
+      if (record.type === SLIDE_PERSIST) {
+        current = []
+        if (notesPages.size >= MAX_SLIDES) throw tooLarge()
+        notesPages.set(u32(record, 12), current)
+      } else if (record.type === TEXT_HEADER) current?.push([record])
+      else current?.at(-1)?.push(record)
+    }
+  }
 
   /** A stretch of text, from the records that make it up: what kind, the letters, and how they are set. */
   const readText = (records: Rec[]): Text | null => {
@@ -542,6 +560,18 @@ export function readPpt(bytes: Uint8Array): ReadDocument {
     }
     // Text of the slide's list that no shape refers to, as older files keep it, is read after.
     for (const [index, text] of texts.entries()) if (!claimed.has(index)) place(text, undefined)
+
+    // The presenter's notes, where asked for: the notes page the slide names, its body only.
+    const atom = inside.find((record) => record.type === SLIDE_ATOM)
+    const notesOf = atom && atom.length >= 20 ? notesPages.get(u32(atom, 16)) : undefined
+    if (notesOf) {
+      const said = notesOf
+        .map(readText)
+        .filter((text): text is Text => text !== null && text.kind === 2)
+        .map((text) => paragraphsOf(text, false))
+        .join('')
+      if (said !== '') content += `<h3>Speaker notes</h3>${said}`
+    }
 
     if (title === '' && content === '') continue
     // Every slide is a section with a heading, so the page can be moved through slide by slide.

@@ -53,6 +53,12 @@ describe('OpenDocument presentations (ODP)', () => {
     expect(html).not.toMatch(/<p>1<\/p>/)
   })
 
+  it('carry speaker notes only when asked, after their slide, and never a hidden slide\'s', async () => {
+    const { body } = await readOdp(await fixture('odp/sample.odp'), { notes: true })
+    expect(body).toContain('<h3>Speaker notes</h3><p>SECRET-SPEAKER-NOTES: not for the audience</p></section>')
+    expect(body).not.toMatch(/SECRET-HIDDEN-SLIDE|SECRET-HIDDEN-SHAPE|Click to add/)
+  })
+
   it('leave out shapes not shown, however they are hidden', async () => {
     expect((await readOdp(await fixture('_traps/shapes-not-shown.odp'))).body).not.toContain('unchecked')
   })
