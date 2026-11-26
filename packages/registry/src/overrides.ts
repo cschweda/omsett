@@ -33,8 +33,8 @@ const FROM_OLD_WORD = [{ id: 'old-word-kept', text: 'Headings, lists, tables, li
 const FROM_WORD = [{ id: 'word-kept', text: 'Headings, lists, tables, links and pictures with their descriptions are kept. Fonts, colours, page layout, headers, footers, footnotes and comments are not.' }]
 const TO_WORD = [{ id: 'word-written', text: 'Pictures inside the page go into the document. A picture kept on a website is not fetched: its description and address are written in its place.' }]
 
-const FROM_OLD_SLIDES = [{ id: 'old-slides-kept', text: 'Each slide becomes a section, with its title as a heading. Text, lists, tables, links, and PNG and JPEG pictures with their descriptions are kept. A PPT does not mark which rows of a table are headings, so none are. Layout, animations, speaker notes and hidden slides are not kept.' }]
-const FROM_SLIDES = [{ id: 'slides-kept', text: 'Each slide becomes a section, with its title as a heading. Text, lists, tables, links and pictures with their descriptions are kept. Layout, animations, speaker notes and hidden slides are not.' }]
+const FROM_OLD_SLIDES = [{ id: 'old-slides-kept', text: 'Each slide becomes a section, with its title as a heading. Text, lists, tables, links, and PNG and JPEG pictures with their descriptions are kept. A PPT does not mark which rows of a table are headings, so none are. Layout, animations and hidden slides are not kept, and speaker notes only if you choose to include them.' }]
+const FROM_SLIDES = [{ id: 'slides-kept', text: 'Each slide becomes a section, with its title as a heading. Text, lists, tables, links and pictures with their descriptions are kept. Layout, animations and hidden slides are not, and speaker notes only if you choose to include them.' }]
 
 // Screenplays.
 const SCRIPT_KEPT = [{ id: 'script-kept', text: 'Scene headings, action, characters, dialogue, parentheticals, transitions and the title page are kept. Notes, outline headings, revision marks and page numbering are not.' }]

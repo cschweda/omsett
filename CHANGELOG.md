@@ -7,6 +7,26 @@ The paragraph that opens a version is its teaser: the home page shows its first 
 in the "What's new" banner, so keep it to two or three sentences on what a visitor will notice.
 A line beginning "Released" gives the date.
 
+## 0.59.0
+
+Released 26 November 2026.
+
+A presentation's speaker notes can now come with it, if you ask: tick "Include speaker notes"
+and each slide's notes follow it under a heading of their own. They are still left out unless
+you do, and a hidden slide never comes, notes and all.
+
+### Added
+
+- **Speaker notes, as a choice**, for PowerPoint (PPTX and PPT) and OpenDocument (ODP)
+  presentations going to any format: a web page, Word, Markdown, PDF, an EPUB, an ODT. Off by
+  default each time; only the notes themselves are read, not the rest of the notes page.
+
+### Changed
+
+- **A choice is offered wherever in a conversion it is used.** A workbook going to PDF or to a
+  Word document can now be given its sheet, and its page a language, as one going to CSV
+  always could; before, only the last step of a conversion offered choices.
+
 ## 0.58.0
 
 Released 26 November 2026.

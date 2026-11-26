@@ -140,8 +140,8 @@ def drawing(shapes, patriarch=0x400):
     return box(0x040C, box(0xF002, rec(0xF008, struct.pack("<II", len(shapes) + 1, patriarch + len(shapes)), 1) + box(0xF003, box(0xF004, own), *shapes)))
 
 
-def slide(shapes, hidden=False):
-    out = rec(0x03EF, struct.pack("<I8BIIHH", 0, 0x0F, 0x10, 0, 0, 0, 0, 0, 0, 0x80000000, 0, 0x0007, 0), 0, 2)
+def slide(shapes, hidden=False, notes_id=0):
+    out = rec(0x03EF, struct.pack("<I8BIIHH", 0, 0x0F, 0x10, 0, 0, 0, 0, 0, 0, 0x80000000, notes_id, 0x0007, 0), 0, 2)
     if hidden:
         out += rec(0x03F9, struct.pack("<IIBBHB3x", 0, 0, 0, 0, 0x0004, 0))
     return box(0x03EE, out + drawing(shapes))
@@ -161,7 +161,7 @@ def table(deck, spid, rows):
 
 
 def presentation(slides, title=b"About Omsett", author=b"SECRET-AUTHOR", language=0x0809, locked=False, version=0x03F4,
-                 notes_text=None, earlier=None, pictures=(), change=None, extra=(), links=None, stored=None):
+                 notes_text=None, earlier=None, pictures=(), change=None, extra=(), links=None, stored=None, notes_for=1):
     """
     A presentation. `slides` is a list of (shapes, texts, hidden): the shapes are written by
     `shape`, the texts by `text`, and a shape refers to its slide's texts by number with `ref`.
@@ -220,17 +220,19 @@ def presentation(slides, title=b"About Omsett", author=b"SECRET-AUTHOR", languag
 
     # A file saved twice: the first save wrote everything, one slide of it as it was then; the
     # second wrote that slide again, and its directory says that the new one stands.
-    first_slide = slide(*earlier) if earlier else slide(resolved[0][0], resolved[0][2])
+    first_slide = slide(*earlier) if earlier else slide(resolved[0][0], resolved[0][2], 256 if notes_text and notes_for == 0 else 0)
     place(1, document)
     place(slide_ids[0], first_slide)
+    # The slide whose notes these are names them by the number the list of notes gives them.
+    named = lambda n: 256 if notes_text and n == min(notes_for, len(resolved) - 1) else 0  # noqa: E731
     for n in stored or range(1, len(resolved)):
         if n:
-            place(slide_ids[n], slide(resolved[n][0], resolved[n][2]))
+            place(slide_ids[n], slide(resolved[n][0], resolved[n][2], named(n)))
     if notes_text:
         place(notes_id, notes(0x400 * (len(resolved) + 1) + 1, notes_text))
     edit = save(parts["objects"].keys(), 0)
     if earlier:
-        place(slide_ids[0], slide(resolved[0][0], resolved[0][2]))
+        place(slide_ids[0], slide(resolved[0][0], resolved[0][2], 256 if notes_text and notes_for == 0 else 0))
         edit = save([slide_ids[0]], edit)
     parts["edit"] = edit
     parts["user"] = bytearray(rec(0x0FF6, struct.pack("<IIIHHBBH", 0x14, LOCKED if locked else TOKEN, edit, 6, version, 3, 0, 0) + b"Omsett"))

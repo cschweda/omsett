@@ -144,6 +144,8 @@ describe('router, real registry', () => {
     // An OpenDocument presentation goes the same way, and says what a presentation's conversion keeps.
     for (const to of ['docx', 'md', 'pdf']) expect(all.route('odp', to)!.edges.map((e) => `${e.from}>${e.to}`)).toEqual(['odp>html', `html>${to}`])
     expect(all.route('odp', 'md')!.warnings.map((w) => w.id)).toEqual(expect.arrayContaining(['slides-kept', 'accessibility-check']))
+    // A presentation offers its speaker notes where it is read, the first step, however far the route goes.
+    for (const from of ['pptx', 'ppt', 'odp']) expect(all.route(from, 'docx')!.edges[0]!.candidates[0]!.defaultOptions).toMatchObject({ speakerNotes: false })
     // An OpenDocument text is written from a page, so every document reaches one by way of a page.
     for (const from of ['md', 'docx', 'doc', 'pdf', 'pptx', 'odp']) {
       expect(all.route(from, 'odt')!.edges.map((e) => e.to).slice(-2), from).toEqual(['html', 'odt'])
