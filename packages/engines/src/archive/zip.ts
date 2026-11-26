@@ -135,16 +135,23 @@ export async function readZip(bytes: Uint8Array): Promise<Entry[]> {
   return contents.done()
 }
 
-export async function writeZip(entries: Entry[]): Promise<Uint8Array> {
+/**
+ * @param entries the files and folders, in the order they are written
+ * @param options how to write them
+ * @param options.stored names of entries kept as they are, never packed. An OpenDocument
+ *                file's first entry, its type, must be readable without unpacking anything.
+ */
+export async function writeZip(entries: Entry[], options: { stored?: string[] } = {}): Promise<Uint8Array> {
   const encoder = new TextEncoder()
   const files: Uint8Array[] = []
   const list: Uint8Array[] = []
   let offset = 0
   for (const entry of entries) {
     const name = encoder.encode(entry.directory ? `${entry.name}/` : entry.name)
-    const packed = entry.directory ? entry.data : await pack(entry.data, 'deflate-raw')
+    const asItIs = entry.directory || options.stored?.includes(entry.name) === true
+    const packed = asItIs ? entry.data : await pack(entry.data, 'deflate-raw')
     // Kept packed only where that is smaller.
-    const deflated = !entry.directory && packed.length < entry.data.length
+    const deflated = !asItIs && packed.length < entry.data.length
     const stored = deflated ? packed : entry.data
     const when = entry.modified && entry.modified.getUTCFullYear() >= 1980 ? entry.modified : new Date(Date.UTC(1980, 0, 1))
     const time = (when.getUTCHours() << 11) | (when.getUTCMinutes() << 5) | (when.getUTCSeconds() >> 1)

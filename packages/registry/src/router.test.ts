@@ -69,7 +69,7 @@ describe('router, real registry', () => {
       'epub', 'azw3', 'mobi',
     ])
     const readOnly = new Set(everything.formats.filter((f) => f.readOnly).map((f) => f.id))
-    expect([...readOnly].sort()).toEqual(['apng', 'azw3', 'dcm', 'dng', 'doc', 'exr', 'fits', 'hdr', 'heic', 'mobi', 'odp', 'ods', 'odt', 'pcx', 'ppt', 'pptx', 'psb', 'psd', 'ras', 'sgi', 'svg', 'svgz', 'xls'])
+    expect([...readOnly].sort()).toEqual(['apng', 'azw3', 'dcm', 'dng', 'doc', 'exr', 'fits', 'hdr', 'heic', 'mobi', 'odp', 'ods', 'pcx', 'ppt', 'pptx', 'psb', 'psd', 'ras', 'sgi', 'svg', 'svgz', 'xls'])
     // Every pair of the same kind converts, directly or through a step in between; nothing is
     // written as HEIC. A picture never becomes data, nor data a picture.
     const kind = (id: string) => formatById(everything, id)!.category
@@ -144,6 +144,11 @@ describe('router, real registry', () => {
     // An OpenDocument presentation goes the same way, and says what a presentation's conversion keeps.
     for (const to of ['docx', 'md', 'pdf']) expect(all.route('odp', to)!.edges.map((e) => `${e.from}>${e.to}`)).toEqual(['odp>html', `html>${to}`])
     expect(all.route('odp', 'md')!.warnings.map((w) => w.id)).toEqual(expect.arrayContaining(['slides-kept', 'accessibility-check']))
+    // An OpenDocument text is written from a page, so every document reaches one by way of a page.
+    for (const from of ['md', 'docx', 'doc', 'pdf', 'pptx', 'odp']) {
+      expect(all.route(from, 'odt')!.edges.map((e) => e.to).slice(-2), from).toEqual(['html', 'odt'])
+    }
+    expect(all.route('md', 'odt')!.warnings.map((w) => w.id)).toEqual(expect.arrayContaining(['word-written', 'accessibility-check']))
     // An OpenDocument text goes the same way, and says what it keeps.
     for (const to of ['docx', 'md', 'pdf']) expect(all.route('odt', to)!.edges.map((e) => `${e.from}>${e.to}`)).toEqual(['odt>html', `html>${to}`])
     expect(all.route('odt', 'md')!.warnings.map((w) => w.id)).toEqual(expect.arrayContaining(['word-kept', 'accessibility-check']))

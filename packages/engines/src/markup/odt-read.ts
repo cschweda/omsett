@@ -48,10 +48,21 @@ interface Style {
   parent?: string
   bold?: boolean
   italic?: boolean
+  strike?: boolean
+  /** Raised above the line, lowered below it, or neither ('' where a style says so). */
+  raised?: 'sup' | 'sub' | ''
   hidden?: boolean
   /** The list style a paragraph style gives the lists its paragraphs are in. */
   list?: string
 }
+/** How a run of letters is set. */
+interface Look {
+  bold: boolean
+  italic: boolean
+  strike: boolean
+  raised: 'sup' | 'sub' | ''
+}
+const PLAIN: Look = { bold: false, italic: false, strike: false, raised: '' }
 interface Piece {
   text: string
   /** The tags around it, outermost first: 'strong', 'em', 'a:https://…'. */
@@ -69,7 +80,7 @@ export interface Odf {
   /** A picture inside the file, or its description in its place. */
   picture(frame: Node): string
   /** Whether a style of a family hides, or makes bold or slanted, what it is given. */
-  said(family: string, name: string | undefined, what: 'bold' | 'italic' | 'hidden'): boolean | undefined
+  said(family: string, name: string | undefined, what: 'bold' | 'italic' | 'strike' | 'hidden'): boolean | undefined
   /** The title and language the file gives itself. */
   meta(): { title: string | null; language: string | null }
   /** Whether a shape is shown: not hidden, not only printed, not on a hidden layer, not a page's furniture or an empty placeholder. */
@@ -86,6 +97,16 @@ export interface Odf {
  * @param invalid the refusal for a file that is not one
  * @param what what to call it in a refusal: "document", "presentation"
  */
+/** "super 58%", "sub", "33% 58%", "-33% 58%", "0% 100%": raised, lowered, or on the line. */
+function raisedBy(position: string | undefined): Look['raised'] | undefined {
+  if (position === undefined) return undefined
+  const first = position.trim().split(/\s+/)[0] ?? ''
+  if (first === 'super') return 'sup'
+  if (first === 'sub') return 'sub'
+  const amount = Number.parseFloat(first)
+  return Number.isFinite(amount) && amount !== 0 ? (amount > 0 ? 'sup' : 'sub') : ''
+}
+
 export async function openOdf(bytes: Uint8Array, types: ReadonlySet<string>, invalid: () => Refusal, what: string): Promise<Odf> {
   const { parts, root } = await openOffice(bytes, invalid, what, ODF)
   const type = new TextDecoder().decode(parts.get('mimetype') ?? new Uint8Array()).trim()
@@ -129,6 +150,8 @@ export async function openOdf(bytes: Uint8Array, types: ReadonlySet<string>, inv
         parent: a['@style:parent-style-name'],
         bold: props['@fo:font-weight'] === undefined ? undefined : /^(?:bold|[6-9]00)$/.test(props['@fo:font-weight']),
         italic: props['@fo:font-style'] === undefined ? undefined : /^(?:italic|oblique)$/.test(props['@fo:font-style']),
+        strike: props['@style:text-line-through-style'] === undefined ? undefined : props['@style:text-line-through-style'] !== 'none',
+        raised: raisedBy(props['@style:text-position']),
         // Shown only on a condition the document sets is hidden here, as a section on a condition is.
         hidden: props['@text:display'] === undefined ? undefined : ['none', 'condition'].includes(props['@text:display']),
         list: a['@style:list-style-name'],
@@ -140,7 +163,7 @@ export async function openOdf(bytes: Uint8Array, types: ReadonlySet<string>, inv
   learn(child(styled ?? {}, 'automatic-styles'))
   learn(child(content, 'automatic-styles'))
   /** What a style says, or the style it is based on, of one thing. A circle of styles says nothing. */
-  const said = (family: string, name: string | undefined, what: 'bold' | 'italic' | 'hidden'): boolean | undefined => {
+  const said = (family: string, name: string | undefined, what: 'bold' | 'italic' | 'strike' | 'hidden'): boolean | undefined => {
     const seen = new Set<string>()
     for (let at = name; at !== undefined && !seen.has(at) && seen.size < MAX_DEPTH; ) {
       seen.add(at)
@@ -150,6 +173,35 @@ export async function openOdf(bytes: Uint8Array, types: ReadonlySet<string>, inv
       at = style.parent
     }
     return undefined
+  }
+
+  /** How a style sets its letters, where it says, over how they were set before. */
+  const lookOf = (family: string, name: string | undefined, base: Look): Look => {
+    let raised: Look['raised'] | undefined
+    const seen = new Set<string>()
+    for (let at = name; at !== undefined && raised === undefined && !seen.has(at) && seen.size < MAX_DEPTH; ) {
+      seen.add(at)
+      const style = styles.get(`${family}:${at}`)
+      if (!style) break
+      raised = style.raised
+      at = style.parent
+    }
+    return {
+      bold: said(family, name, 'bold') ?? base.bold,
+      italic: said(family, name, 'italic') ?? base.italic,
+      strike: said(family, name, 'strike') ?? base.strike,
+      raised: raised ?? base.raised,
+    }
+  }
+  /** Whether a paragraph style is a quotation's, or is based on one. */
+  const quoted = (name: string | undefined): boolean => {
+    const seen = new Set<string>()
+    for (let at = name; at !== undefined && !seen.has(at) && seen.size < MAX_DEPTH; ) {
+      seen.add(at)
+      if (/^(?:Quotations?|Quote)$/i.test(at)) return true
+      at = styles.get(`paragraph:${at}`)?.parent
+    }
+    return false
   }
 
   const budget = { left: MAX_PICTURE_BYTES }
@@ -172,7 +224,7 @@ export async function openOdf(bytes: Uint8Array, types: ReadonlySet<string>, inv
   }
 
   /** The runs of a paragraph, with their emphasis and links. `hidden`: the paragraph's style hides its text where a run does not say. */
-  function pieces(nodes: Node[], marks: string[], depth: number, out: Array<Piece | string>, bold: boolean, italic: boolean, hidden: boolean): void {
+  function pieces(nodes: Node[], marks: string[], depth: number, out: Array<Piece | string>, look: Look, hidden: boolean): void {
     if (depth > MAX_DEPTH) throw invalid()
     for (const node of nodes) {
       const tag = tagOf(node)
@@ -180,7 +232,7 @@ export async function openOdf(bytes: Uint8Array, types: ReadonlySet<string>, inv
         if (hidden) continue
         // Spaces, tabs and line ends in the file are one space; a space that counts is a mark of its own.
         const words = String(node['#text']).replace(/[ \t\r\n]+/g, ' ')
-        const set = [...(bold ? ['strong'] : []), ...(italic ? ['em'] : [])]
+        const set = [...(look.bold ? ['strong'] : []), ...(look.italic ? ['em'] : []), ...(look.strike ? ['del'] : []), ...(look.raised ? [look.raised] : [])]
         out.push({ text: words, marks: [...marks.filter((mark) => mark.startsWith('a:')), ...set] })
         continue
       }
@@ -197,12 +249,12 @@ export async function openOdf(bytes: Uint8Array, types: ReadonlySet<string>, inv
         if (!hidden) out.push('<br>')
       } else if (tag === 'span') {
         const name = a['@text:style-name']
-        pieces(kids(node), marks, depth + 1, out, said('text', name, 'bold') ?? bold, said('text', name, 'italic') ?? italic, said('text', name, 'hidden') ?? hidden)
+        pieces(kids(node), marks, depth + 1, out, lookOf('text', name, look), said('text', name, 'hidden') ?? hidden)
       } else if (tag === 'a') {
         const href = (a['@xlink:href'] ?? '').trim()
         // Only an address a browser would open or write to is made a link; any other is its words.
         const link = /^(?:https?:|mailto:)/i.test(href) ? [`a:${href}`] : []
-        pieces(kids(node), [...marks.filter((mark) => !mark.startsWith('a:')), ...link], depth + 1, out, bold, italic, hidden)
+        pieces(kids(node), [...marks.filter((mark) => !mark.startsWith('a:')), ...link], depth + 1, out, look, hidden)
       } else if (tag === 'frame') {
         if (hidden) continue
         const box = child(node, 'text-box')
@@ -212,7 +264,7 @@ export async function openOdf(bytes: Uint8Array, types: ReadonlySet<string>, inv
             const name = attrs(paragraph)['@text:style-name']
             if (hiddenParagraph(paragraph) || said('paragraph', name, 'hidden')) continue
             out.push('<br>')
-            pieces(kids(paragraph), marks, depth + 1, out, said('paragraph', name, 'bold') ?? bold, said('paragraph', name, 'italic') ?? italic, hidden)
+            pieces(kids(paragraph), marks, depth + 1, out, lookOf('paragraph', name, look), hidden)
           }
         } else {
           const html = picture(node)
@@ -221,18 +273,18 @@ export async function openOdf(bytes: Uint8Array, types: ReadonlySet<string>, inv
       } else {
         // A field (a page number, a date, a cross-reference) shows its words. Anything else
         // that holds words is read for them.
-        pieces(kids(node), marks, depth + 1, out, bold, italic, hidden)
+        pieces(kids(node), marks, depth + 1, out, look, hidden)
       }
     }
   }
 
   function inline(paragraph: Node): string {
     const name = attrs(paragraph)['@text:style-name']
-    // A heading's style makes it bold, and that is how a heading looks, not a word stressed. A
-    // heading's words are bold or slanted only where its own runs say so.
-    const look = tagOf(paragraph) !== 'h'
+    // A heading's style makes it bold, and a quotation's slanted: that is how each looks, not a
+    // word stressed. Their words are bold or slanted only where their own runs say so.
+    const looks = tagOf(paragraph) !== 'h' && !quoted(name)
     const found: Array<Piece | string> = []
-    pieces(kids(paragraph), [], 0, found, look && (said('paragraph', name, 'bold') ?? false), look && (said('paragraph', name, 'italic') ?? false), said('paragraph', name, 'hidden') ?? false)
+    pieces(kids(paragraph), [], 0, found, looks ? lookOf('paragraph', name, PLAIN) : PLAIN, said('paragraph', name, 'hidden') ?? false)
     let html = ''
     let open: string[] = []
     const close = (keep: number) => {
@@ -372,7 +424,8 @@ export async function openOdf(bytes: Uint8Array, types: ReadonlySet<string>, inv
         if (tag === 'h') {
           const level = Math.min(6, Math.max(1, Number(a['@text:outline-level']) || 1))
           html += `<h${level}>${words}</h${level}>`
-        } else html += tight && paragraphs === 1 ? words : `<p>${words}</p>`
+        } else if (quoted(a['@text:style-name'])) html += `<blockquote><p>${words}</p></blockquote>`
+        else html += tight && paragraphs === 1 ? words : `<p>${words}</p>`
       } else if (tag === 'list') html += list(node, depth + 1, 1, undefined)
       else if (tag === 'table') html += table(node, depth + 1)
       // A section can be hidden, or shown only on a condition the document sets: either way it is not read.

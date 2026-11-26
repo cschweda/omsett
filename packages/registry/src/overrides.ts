@@ -106,6 +106,7 @@ export const overrides: EdgeOverride[] = [
   { from: 'html', to: 'pdf', warnings: [...TO_PDF, ...CHECK_ACCESS] },
   { from: 'png', to: 'pdf', warnings: PICTURE_PAGE },
   { from: 'html', to: 'docx', warnings: [...TO_WORD, ...CHECK_ACCESS] },
+  { from: 'html', to: 'odt', warnings: [...TO_WORD, ...CHECK_ACCESS] },
   ...BESIDE_WORKBOOK.flatMap((other) => [
     { from: 'xlsx', to: other, warnings: WORKBOOK_READ },
     { from: other, to: 'xlsx', warnings: WORKBOOK_WRITTEN },
