@@ -7,6 +7,29 @@ The paragraph that opens a version is its teaser: the home page shows its first 
 in the "What's new" banner, so keep it to two or three sentences on what a visitor will notice.
 A line beginning "Released" gives the date.
 
+## 0.58.0
+
+Released 26 November 2026.
+
+Omsett now writes OpenDocument text. A Word document, a web page, Markdown, a PDF, a
+presentation or a book can become an ODT, with real headings, lists, tables with heading rows,
+links, and pictures with their descriptions, in the language the page says it is in.
+
+### Added
+
+- **ODT is written**, from a page, and so from everything that becomes a page: DOCX, DOC,
+  Markdown, HTML, PDF, PPTX, PPT, ODP, EPUB and the Kindle books, and spreadsheets set out as a
+  table. Headings are headings at their levels, lists are lists, a table's heading rows are
+  marked as its headers, quotations and code are set apart, and the document states its title
+  and language. Pictures inside the page go into the document with their descriptions; a picture
+  kept on a website is not fetched, and its description and address are written in its place.
+  A written ODT validates against OASIS's schema for OpenDocument 1.3.
+
+### Fixed
+
+- **An ODT's subscript, superscript and struck-out text are read as such, and a quotation as
+  a quotation.** They were read as plain text, and a quotation as slanted words.
+
 ## 0.57.0
 
 Released 26 November 2026.

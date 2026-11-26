@@ -8,6 +8,7 @@ import { readOdt } from './odt-read'
 import { readPpt } from './ppt-read'
 import { readPptx } from './pptx-read'
 import { writeDocx } from './docx-write'
+import { writeOdt } from './odt-write'
 
 // Markdown and HTML, each to the other. Both are read into a tree of headings, paragraphs,
 // lists, tables and links, cleaned, and written out from the tree. Nothing a file holds is run,
@@ -353,6 +354,11 @@ async function htmlToDocx(text: string, name: string): Promise<Uint8Array> {
   return writeDocx(page.tree, page.title, page.language)
 }
 
+async function htmlToOdt(text: string, name: string): Promise<Uint8Array> {
+  const page = await readPage(text, name)
+  return writeOdt(page.tree, page.title, page.language)
+}
+
 export function createMarkupEngine(): Engine {
   return {
     ...markupInfo,
@@ -387,6 +393,7 @@ export function createMarkupEngine(): Engine {
         else if (pair === 'odt>html') written = await officeToHtml(await readOdt(bytes), input.name)
         else if (pair === 'odp>html') written = await officeToHtml(await readOdp(bytes), input.name)
         else if (pair === 'html>docx') written = await htmlToDocx(decode(), input.name)
+        else if (pair === 'html>odt') written = await htmlToOdt(decode(), input.name)
         else throw new Error(`The markup engine does not convert ${pair}`)
       } catch (error) {
         // A reader may run out of room before the depth limit is even checked. Browsers name

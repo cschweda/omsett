@@ -98,3 +98,42 @@ describe('OpenDocument text (ODT)', () => {
     expect(await refusal('_traps/styles-in-a-circle.odt')).toBe('read')
   })
 })
+
+describe('writing OpenDocument text', () => {
+  // An ODT is bytes, not text: read from the engine as they are.
+  const written = async (html: string) => {
+    const [output] = await createMarkupEngine().convert({
+      blob: new Blob([html]),
+      name: 'page.html',
+      from: formatById(registry, 'html')!,
+      to: formatById(registry, 'odt')!,
+      options: {},
+      signal: new AbortController().signal,
+      onProgress: () => {},
+    })
+    return new Uint8Array(await output!.blob.arrayBuffer())
+  }
+
+  it('writes a page that reads back as the same page, as a Word document does', async () => {
+    const page = await convert(await fixture('docx/sample.docx'), 'docx', 'html')
+    const strip = (body: string) => body.replace(/base64,[^"]+/g, '')
+    expect(strip((await readOdt(await written(page))).body)).toBe(strip((await readDocx(await fixture('docx/sample.docx'))).body))
+    const { title, language } = await readOdt(await written(page))
+    expect(title).toBe('About Omsett')
+    expect(language).toBe('en-GB')
+  })
+
+  it('puts its type first, stored as it is, so that it is known without unpacking', async () => {
+    const bytes = await written('<!doctype html><html lang="en"><head><title>T</title></head><body><p>Words.</p></body></html>')
+    expect(new TextDecoder().decode(bytes.subarray(30, 38))).toBe('mimetype')
+    expect(new TextDecoder().decode(bytes.subarray(38, 77))).toBe('application/vnd.oasis.opendocument.text')
+  })
+
+  it('fetches no picture, and makes no link of code', async () => {
+    const bytes = await written('<!doctype html><html lang="en"><head><title>T</title></head><body><p><img src="https://example.com/x.png" alt="A chart"> <a href="javascript:alert(1)">read</a></p></body></html>')
+    const { body } = await readOdt(bytes)
+    expect(body).toContain('<a href="https://example.com/x.png">[Picture: A chart]</a>')
+    expect(body).not.toContain('javascript:')
+    expect(body).toContain('read')
+  })
+})

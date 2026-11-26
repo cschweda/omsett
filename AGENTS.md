@@ -271,8 +271,14 @@ build by `apps/web/scripts/write-headers.ts`.
   work: never commit one, never quote from one, and print only counts when testing with them.
 - **A document conversion keeps what a screen reader relies on, and says what to check.**
   Headings as headings, lists as lists, table headers marked, language and title stated,
-  picture descriptions carried (`packages/engines/src/markup/docx-*.ts`). Every document pair
-  carries the `accessibility-check` warning. A change that drops one of these is a regression.
+  picture descriptions carried (`packages/engines/src/markup/docx-*.ts`, `odt-*.ts`). Every
+  document pair carries the `accessibility-check` warning. A change that drops one of these is
+  a regression. A written ODT is read back by Omsett's own reader in its tests, to the same page
+  the DOCX sample reads to; nothing in CI checks it against the standard itself, so when
+  changing the ODT writer also validate a file it writes by hand against OASIS's schema
+  (`xmllint --relaxng OpenDocument-v1.3-schema.rng content.xml`, and the same for `styles.xml`,
+  `meta.xml`, and the manifest schema for `META-INF/manifest.xml`). Each must validate. Its first
+  entry is `mimetype`, stored (`writeZip(…, { stored })`).
 - **What a document's author deleted or hid is never carried across**: tracked deletions,
   hidden text, comments, author names; and from a presentation, hidden slides and speaker
   notes. There is a trap for each.
