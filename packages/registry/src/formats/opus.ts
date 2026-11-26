@@ -5,8 +5,7 @@ export const opus: Format = {
   name: 'Opus',
   category: 'audio',
   extensions: ['opus'],
-  // An Opus file is Ogg, and audio/ogg is its type (RFC 7845). Firefox knows no audio/opus: given
-  // it, it names the download .ogx. Under audio/ogg, .opus is a name it keeps.
+  // An Opus file is Ogg, and audio/ogg is its type (RFC 7845).
   mime: ['audio/ogg', 'audio/opus'],
   detect: ['opus'],
   explain:

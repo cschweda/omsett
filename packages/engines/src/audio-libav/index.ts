@@ -36,9 +36,14 @@ interface Target {
   rate?: number
   /** Keeps every number, so is written at the sound's own depth or refused. */
   lossless?: boolean
+  /**
+   * The type the file is handed back with, where the format's own would cost it its name. Firefox
+   * on Linux renames any Ogg download it is given as Ogg to ".ogx"; as plain bytes it keeps ".opus".
+   */
+  blobType?: string
 }
 const TARGETS: Record<string, Target> = {
-  opus: { codec: 'libopus', format: 'ogg', sampleFormat: 'flt', rate: 48000 },
+  opus: { codec: 'libopus', format: 'ogg', sampleFormat: 'flt', rate: 48000, blobType: 'application/octet-stream' },
   ogg: { codec: 'libvorbis', format: 'ogg', sampleFormat: 'fltp' },
   wv: { codec: 'wavpack', format: 'wv', sampleFormat: 's32p', lossless: true },
   m4a: { codec: 'alac', format: 'ipod', sampleFormat: 's32p', lossless: true },
@@ -302,7 +307,8 @@ export function createAudioLibavEngine(host: LibavHost): Engine {
         written = await libav.readFile(outName)
       }
       input.onProgress(1)
-      return [{ name: outputName(input.name, input.to), format: input.to.id, blob: new Blob([written as BlobPart], { type: input.to.mime[0] }) }]
+      const type = TARGETS[input.to.id]?.blobType ?? input.to.mime[0]
+      return [{ name: outputName(input.name, input.to), format: input.to.id, blob: new Blob([written as BlobPart], { type }) }]
     } finally {
       for (const free of cleanup.reverse()) await free().catch(() => {})
       await libav.unlink(inName).catch(() => {})
