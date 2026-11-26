@@ -105,11 +105,23 @@ export async function openOffice(bytes: Uint8Array, invalid: () => Refusal, what
   return { parts, root: (path, tag) => open(path).find((node) => tagOf(node) === tag) }
 }
 
-/** A picture held inside the file, as an address that carries it; null if it is not one Omsett carries. */
+/** The first bytes of each kind of picture carried. A part named for one that does not begin so is not one. */
+const SIGNATURES: Record<string, number[][]> = {
+  'image/png': [[0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]],
+  'image/jpeg': [[0xFF, 0xD8, 0xFF]],
+  'image/gif': [[0x47, 0x49, 0x46, 0x38]],
+  'image/webp': [[0x52, 0x49, 0x46, 0x46]],
+}
+const isA = (type: string, data: Uint8Array) => (SIGNATURES[type] ?? []).some((start) => start.every((byte, i) => data[i] === byte))
+
+/**
+ * A picture held inside the file, as an address that carries it; null if it is not one Omsett
+ * carries. A part is believed to be a picture only when its bytes say so, not its name.
+ */
 export function pictureAddress(parts: Map<string, Uint8Array>, path: string, budget: { left: number }): string | null {
   const data = parts.get(path.toLowerCase())
   const type = PICTURES[path.slice(path.lastIndexOf('.') + 1).toLowerCase()]
-  if (!data || !type || data.length > budget.left) return null
+  if (!data || !type || data.length > budget.left || !isA(type, data)) return null
   budget.left -= data.length
   let binary = ''
   for (let i = 0; i < data.length; i += 0x8000) binary += String.fromCodePoint(...data.subarray(i, i + 0x8000))

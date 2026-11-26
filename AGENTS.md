@@ -168,6 +168,15 @@ build by `apps/web/scripts/write-headers.ts`.
   (DOCM, DOTX, PPTM, PPSX, XLSM and the rest) is its family's package under another label, and
   is that family's format in the registry, not one of its own: it is read by the same reader
   under the same limits, and its macro project is never opened.
+- **An OpenDocument text is read as a DOCX is** (`packages/engines/src/markup/odt-read.ts`), through
+  the same `openOffice`, so the archive limits and the DOCTYPE refusal hold. Bold, slanted and
+  hidden are said by styles, which take from other styles; a chain is followed no further than
+  it is long and a circle says nothing. Deleted text is kept apart in a list of changes and is
+  never read; comments, notes, hidden text, hidden paragraphs and sections hidden outright or
+  on a condition are left out. A heading's own style does not make its words bold.
+- **A picture inside an office file is believed by its bytes, never its name**
+  (`pictureAddress` in `docx-read.ts`). A part named `.png` that does not begin as a PNG is
+  described, not carried. Every reader that carries pictures goes through it.
 - **An old Office file is two things to check, one inside the other.** Outside, the container
   (`packages/detect/src/cfb.ts`): every sector number, chain and length is held against the size
   of the file, and a chain is followed no further than the file has sectors. Inside, for a

@@ -7,6 +7,36 @@ The paragraph that opens a version is its teaser: the home page shows its first 
 in the "What's new" banner, so keep it to two or three sentences on what a visitor will notice.
 A line beginning "Released" gives the date.
 
+## 0.55.0
+
+Released 26 November 2026.
+
+OpenDocument text, the .odt files LibreOffice saves and many governments ask for, can now be
+converted: to a Word document, a web page, Markdown, a PDF or an EPUB, with its headings, lists,
+tables, links and pictures. What its author deleted, hid or wrote in the margin stays behind.
+
+### Added
+
+- **ODT is read** (and OTT, its template). It becomes the same page a Word document does, and
+  through it DOCX, Markdown, PDF or EPUB: headings with their levels, bold and italic as the
+  styles say, links to web and mail addresses, lists at their levels and numbered where the
+  list's style numbers them, tables with their heading rows, and pictures with their
+  descriptions. The title and language are taken from the file. Read only.
+- **What the author took out or kept aside is left behind**: text deleted with changes tracked,
+  comments, footnotes, hidden words, hidden paragraphs, sections hidden outright or on a
+  condition, the author's name, and macros, which are never run. The details before converting
+  say which of these a document holds.
+- **18 trap files** for the new reader, and a code trap. Among them an entity bomb, a text part
+  that unpacks to three hundred megabytes, styles that take from each other in a circle, a
+  billion spaces in one mark, a picture kept on another site, one outside the document, and one
+  named as a PNG that is a script.
+
+### Fixed
+
+- **A picture inside a Word document, a presentation or an ODT is believed by its bytes, not
+  its name.** A part named as a PNG that was something else was carried into the page as a
+  picture, where it showed as a broken one. It is now described in its place.
+
 ## 0.54.1
 
 Released 26 November 2026.

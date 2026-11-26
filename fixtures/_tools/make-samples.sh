@@ -118,3 +118,10 @@ textutil -convert doc "$work/page.html" -output "$out/doc/from-macos.doc"
 # program that knows nothing of Omsett. It needs Java and POI's jars, so it is committed and
 # made again only by hand.
 python3 "$tools/ppt.py" >/dev/null
+
+# --- OpenDocument text ---------------------------------------------------------------------------
+# odt/sample.odt is written by odt.py, laid out as LibreOffice lays one out. The other is written
+# by macOS itself (textutil), a program that knows nothing of Omsett.
+python3 "$tools/odt.py" >/dev/null
+printf '%s' '<html><head><meta charset="utf-8"><title>Test pattern</title></head><body><h1>Heading one</h1><p>A paragraph with <b>bold</b> and <i>italic</i> words and a <a href="https://omsett.com/">link</a>.</p><ul><li>First</li><li>Second<ul><li>Inner</li></ul></li></ul><ol><li>One</li><li>Two</li></ol><table><tr><th>a</th><th>b</th></tr><tr><td>1</td><td>2</td></tr></table><p>Café 字幕</p></body></html>' > "$work/page.html"
+textutil -convert odt "$work/page.html" -output "$out/odt/from-macos.odt"

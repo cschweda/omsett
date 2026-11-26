@@ -4635,6 +4635,74 @@ trap("presentation-with-a-macro-named-as-a-document.docm", labelled("pptx", VARI
      "A presentation saved with macros, with the name of a Word document saved with macros. It is read as what it is.",
      "pptx", node="succeeds", mismatch=True, group="identity", absent="AutoOpen")
 
+# --- OpenDocument text: ODT -----------------------------------------------------------------------
+# A ZIP of XML like a DOCX, with XML's bombs and a ZIP's. Its styles say which words are hidden
+# and which are bold, and a style may take from another, which may take from the first. What
+# the author took out is kept apart (tracked changes) or beside the text (comments, hidden
+# sections, hidden paragraphs), and must stay out.
+import odt as O  # noqa: E402
+
+G = "documents"
+ODT = read("odt", "sample.odt")
+NOT_ODT = "This file is not a valid ODT document"
+ODT_PLAIN = O.h("A heading", 1) + O.p("One paragraph of an open document.")
+
+trap("truncated.odt", ODT[: len(ODT) // 2],
+     "An OpenDocument text cut off half-way. Its type is still at the front, and it is refused as a damaged document.",
+     "odt", node="fails", note=NOT_ODT, group=G)
+trap("locked-with-a-password.odt", O.document(ODT_PLAIN, encrypted=True),
+     "An OpenDocument text saved with a password. Its parts are scrambled, and are not guessed at.",
+     "odt", node="fails", note="This document is locked with a password, and cannot be read without it", group=G)
+BOMB = '<!DOCTYPE lolz [<!ENTITY lol "lol"><!ENTITY lol2 "&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;"><!ENTITY lol3 "&lol2;&lol2;&lol2;&lol2;&lol2;&lol2;&lol2;&lol2;&lol2;&lol2;"><!ENTITY lol4 "&lol3;&lol3;&lol3;&lol3;&lol3;&lol3;&lol3;&lol3;&lol3;&lol3;">]>'
+trap("entity-bomb.odt", O.document(O.p("&lol4;"), prolog=BOMB),
+     'The "billion laughs" in the text of an open document.',
+     "odt", node="fails", note=NOT_ODT, group=G)
+trap("bomb-inside.odt", O.document(O.p("x") + " " * (300 * 1024 * 1024)),
+     "An open document whose text part is three hundred megabytes of spaces, packed small.",
+     "odt", node="fails", note="This document is too large to convert in a browser", group=G)
+trap("spans-two-hundred-deep.odt", O.document(O.p('<text:span text:style-name="T1">' * 200 + "deep" + "</text:span>" * 200)),
+     "A run of words inside a run inside a run, two hundred times over.",
+     "odt", node="fails", note=NOT_ODT, group=G)
+trap("styles-in-a-circle.odt", O.document(O.p(O.span("Bold, or not?", "A")), automatic=O.AUTOMATIC + '<style:style style:name="A" style:family="text" style:parent-style-name="B"/><style:style style:name="B" style:family="text" style:parent-style-name="A"/>'),
+     "Two styles, each taking what it does not say from the other. Followed without care, that never ends.",
+     "odt", node="succeeds", group="unusual")
+trap("a-billion-spaces.odt", O.document(O.p('Before<text:s text:c="1000000000"/>after.')),
+     "A mark that says a billion spaces stand in one place. A hundred are written.",
+     "odt", node="succeeds", group=G)
+trap("what-was-deleted.odt", O.document(O.p('The offer is <text:change text:change-id="ct1"/>two million.'), changes=O.CHANGES.replace("SECRET-DELETED words that were taken out.", "one million")),
+     "A document with changes tracked. The figure that was deleted is kept in a list of changes beside the text, and is not carried across.",
+     "odt", node="succeeds", group=G, absent="one million")
+trap("comment-and-hidden-words.odt", O.document(O.p("Minutes of the meeting." + O.span(" Do not circulate the paragraph about pay.", "T4") + '<office:annotation><text:p>Check the redundancy figures</text:p></office:annotation>')),
+     "A document with hidden words and a comment beside the text. Neither is carried across.",
+     "odt", node="succeeds", group=G, absent="circulate")
+trap("hidden-section.odt", O.document(O.p("Shown.") + '<text:section text:name="Draft" text:display="none">%s</text:section>' % O.p("The draft settlement terms.") + '<text:section text:name="Maybe" text:display="condition" text:condition="ooow:1">%s</text:section>' % O.p("The draft settlement terms again.")),
+     "A section hidden outright, and one shown only on a condition the document sets. Neither is carried across.",
+     "odt", node="succeeds", group=G, absent="settlement")
+trap("hidden-paragraph.odt", O.document(O.p("Shown.") + O.p('<text:hidden-paragraph text:condition="ooow:1" text:is-hidden="true"/>The redundancy list.')),
+     "A paragraph hidden by a condition. It is not carried across.",
+     "odt", node="succeeds", group=G, absent="redundancy")
+trap("link-that-is-code.odt", O.document(O.p("Please " + O.link("read the report", "javascript:" + MARK) + " today.")),
+     "A link whose address is a line of code. The words of the link are kept; the address is not.",
+     "odt", node="succeeds", group=G, absent="javascript:")
+trap("fetches-a-picture.odt", O.document(O.p(O.picture("http://canary.invalid/tracking.png", "A chart of the year"))),
+     "A picture kept on another site, fetched whenever the document is opened, which tells that site who opened it and when. It is not fetched; its description is kept.",
+     "odt", node="succeeds", group=G, absent="canary.invalid")
+trap("picture-that-is-a-script.odt", O.document(O.p(O.picture("Pictures/chart.png", "A chart of the year")), pictures={"Pictures/chart.png": b"<script>" + MARK.encode() + b"</script>"}),
+     "A part named as a PNG that is a script. A picture is believed by its bytes, not its name: it is not put on the page, and its description is.",
+     "odt", node="succeeds", group=G)
+trap("picture-outside-the-document.odt", O.document(O.p(O.picture("../../../etc/passwd", "A chart of the year"))),
+     "A picture that says it is a file outside the document. It is not read; its description is kept.",
+     "odt", node="succeeds", group=G, absent="passwd")
+trap("macro-in-an-open-document.odt", O.document(ODT_PLAIN + '<text:p><text:script script:language="ooo:Basic" xmlns:script="urn:oasis:names:tc:opendocument:xmlns:script:1.0">Shell("' + SHELL + '")</text:script></text:p>', extra={"Basic/Standard/Module1.xml": b'<script:module script:name="Module1">Sub Main: Shell("' + SHELL.encode() + b'"): End Sub</script:module>'}),
+     "An open document with a macro in it and a script in its text. Neither is run nor carried anywhere.",
+     "odt", node="succeeds", group=G, absent="Shell")
+trap("spreadsheet-named-as-text.odt", O.document(ODT_PLAIN, mimetype="application/vnd.oasis.opendocument.spreadsheet"),
+     "A file that says, in the first thing it holds, that it is an OpenDocument spreadsheet, with the name of a text document. Omsett does not read OpenDocument spreadsheets yet, and does not take it for text.",
+     "unregistered", group="identity")
+trap("open-document-named-as-word.docx", ODT,
+     "An OpenDocument text with the name of a Word document. It is read as what it is.",
+     "odt", node="succeeds", mismatch=True, group="identity")
+
 # --- e-books: AZW3 and MOBI ----------------------------------------------------------------------
 # A Kindle book is a list of numbered records, and tables that say which stretch of text is
 # which page and which piece goes where. Every one of those is a number that can lie. A book
@@ -5118,6 +5186,9 @@ def code_slide(deck):
              P.text(deck, P.BODY, [P.para(CANARY, " ", P.run(CANARY, link="javascript:" + MARK), " ", P.run(CANARY, P.BOLD)), P.para(P.run(CANARY, link=CANARY), indent=1)])], False)
 
 
+code("code.odt", O.document(O.h(XML_CANARY.decode(), 1) + O.p(XML_CANARY.decode() + " " + O.link(XML_CANARY.decode(), "javascript:" + MARK) + " " + O.span(XML_CANARY.decode(), "T1")) + O.table([[XML_CANARY.decode(), "__proto__"], ["constructor", XML_CANARY.decode()]]) + O.p(O.picture("Pictures/x.png", XML_CANARY.decode())),
+                          title=XML_CANARY.decode(), author=XML_CANARY.decode(), pictures={"Pictures/x.png": CB}),
+     WHY % "as a heading, as text, as the words and the address of a link, in a table, as a picture's description and as the picture itself, and as the title and the author", "odt", node="succeeds")
 code("code.ppt", P.presentation([code_slide], title=CB[:200], author=CB[:200], notes_text=CANARY, pictures=[CB + b" " * 64], extra=[("_VBA_PROJECT", b"Sub Auto_Open(): Shell \"" + SHELL.encode() + b"\": End Sub")]),
      WHY % "as a title, in a list, in a box drawn by hand, as a picture's description and as the picture itself, in a table, as the words and the address of a link, as speaker notes, as the title and the author, and beside a macro set to run on opening", "ppt", node="succeeds")
 code("code.xls", X.container([("Workbook", X.workbook([(CANARY[:28], X.text_cell(0, 0, 0) + X.text_cell(0, 1, 1) + X.text_cell(1, 0, 2) + X.text_cell(1, 1, 3) + X.rec(0x0204, X.cell(2, 0) + X.words(CANARY)) + X.formula(2, 1, "=cmd|' /C " + SHELL + "'!A0"))], ["name", "__proto__", CANARY, "polluted"])), ("\x05SummaryInformation", X.about(CB[:200], CB[:200], MARK.encode())), ("_VBA_PROJECT_CUR", b"Sub Auto_Open(): Shell \"" + SHELL.encode() + b"\": End Sub")], small=True),

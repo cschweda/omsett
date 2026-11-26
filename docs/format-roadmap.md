@@ -94,7 +94,8 @@ When a format ships, update its row here, in the same change.
 | --- | --- | --- | --- |
 | DOCX ↔ HTML, Markdown | Browser | `markup` (Omsett's own reader and writer, through rehype-sanitize) | **Shipped** (0.19.0). Structure and words; not fonts or page layout |
 | Footnotes, headers and footers; pictures saved as separate files; a score for the accessibility of the result | Browser | the same | Planned |
-| ODT, RTF, TXT, EPUB to and from these | Browser | ODT the same way (a ZIP of XML); Pandoc (WASM) for the rest | Planned |
+| ODT, OTT to HTML, and through it to DOCX, Markdown, PDF and EPUB; read only | Browser | `markup` (Omsett's own reader, through the same `openOffice`) | **Done** (0.55.0) |
+| Writing ODT; RTF, TXT to and from these | Browser | ODT the same way (a ZIP of XML); Pandoc (WASM) for the rest | Planned |
 | DOCM, DOTX, DOTM (read, macros ignored) | Browser | `markup`, as DOCX | **Done** (0.54.1) |
 | EML, Outlook MSG to HTML, TXT; MSG to EML | Browser | JavaScript | Planned |
 | DOCX to PDF, tagged | Desktop; Browser if the Typst route holds | LibreOffice; Typst | Planned |

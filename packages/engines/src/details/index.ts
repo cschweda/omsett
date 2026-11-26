@@ -103,6 +103,29 @@ async function office(blob: Blob, format: string): Promise<Detail[]> {
   return details
 }
 
+/** An OpenDocument text: who wrote it, and what is in it that its author may think is gone. */
+async function openDocument(blob: Blob): Promise<Detail[]> {
+  const entries = await readZip(new Uint8Array(await blob.arrayBuffer()))
+  const part = (name: string) => {
+    const data = entries.find((entry) => entry.name.toLowerCase() === name)?.data
+    return data && data.length < 8 * 1024 * 1024 ? decode(data) : ''
+  }
+  const meta = part('meta.xml')
+  const content = part('content.xml')
+  const details: Detail[] = []
+  const add = (label: string, value: string | undefined, fate?: Detail['fate']) => value && details.push({ label, value, fate })
+  add('Title', inTag(meta, 'title'), 'kept')
+  add('Author', inTag(meta, 'initial-creator') ?? inTag(meta, 'creator'), 'removed')
+  add('Created', inTag(meta, 'creation-date')?.replace('T', ' '), 'removed')
+  add('Made with', inTag(meta, 'generator'), 'removed')
+  const deleted = (content.match(/<text:deletion\b/g) ?? []).length
+  if (deleted) add('Tracked changes', `${count(deleted, 'deletion')}. Deleted text is left out; inserted text is kept as ordinary text`, 'removed')
+  if (/<office:annotation\b/.test(content)) add('Comments', 'Yes', 'removed')
+  if (/text:display="(?:none|condition)"|<text:hidden-(?:text|paragraph)\b/.test(content)) add('Hidden text', 'Yes', 'removed')
+  if (entries.some((entry) => /^basic\//i.test(entry.name)) || /<(?:text|office):script\b/.test(content)) add('Macros', 'Yes. They are never run and never carried over', 'removed')
+  return details
+}
+
 /** An Office file from before 2007: who wrote it and with what, and what it holds that a conversion leaves behind. */
 async function oldOffice(blob: Blob, format: string): Promise<Detail[]> {
   const bytes = new Uint8Array(await blob.arrayBuffer())
@@ -269,6 +292,7 @@ export async function describeFile(blob: Blob, format: Format): Promise<Detail[]
     if (blob.size > MAX_WHOLE_BYTES) return []
     if (['docx', 'xlsx', 'pptx'].includes(format.id)) return await office(blob, format.id)
     if (['xls', 'doc', 'ppt'].includes(format.id)) return await oldOffice(blob, format.id)
+    if (format.id === 'odt') return await openDocument(blob)
     if (format.id === 'pdf') return await pdf(blob)
     if (format.id === 'azw3' || format.id === 'mobi') return await book(blob)
     if (format.id === 'epub') return await book(blob, true)
