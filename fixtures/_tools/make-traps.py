@@ -4681,6 +4681,19 @@ trap("hidden-section.odt", O.document(O.p("Shown.") + '<text:section text:name="
 trap("hidden-paragraph.odt", O.document(O.p("Shown.") + O.p('<text:hidden-paragraph text:condition="ooow:1" text:is-hidden="true"/>The redundancy list.')),
      "A paragraph hidden by a condition. It is not carried across.",
      "odt", node="succeeds", group=G, absent="redundancy")
+trap("hidden-paragraph-in-a-box.odt", O.document(O.p("Shown.") + O.p('<draw:frame draw:name="Box"><draw:text-box>%s%s</draw:text-box></draw:frame>' % (O.p("The pay figures.", "P1"), O.p('<text:hidden-paragraph text:is-hidden="true"/>The pay figures again.')))),
+     "A box of text with two paragraphs in it, one hidden by its style and one by a mark. A box is read as the page is, and neither is carried across.",
+     "odt", node="succeeds", group=G, absent="pay figures")
+trap("hidden-field.odt", O.document(O.p('Total: <text:variable-set text:name="v" text:display="none">the figure before the audit</text:variable-set>shown.')),
+     "A field whose value is set where it is not shown. It is not carried across.",
+     "odt", node="succeeds", group=G, absent="before the audit")
+trap("hidden-column.odt", O.document('<table:table table:name="T"><table:table-column/><table:table-column table:visibility="collapse"/><table:table-row><table:table-cell>%s</table:table-cell><table:table-cell>%s</table:table-cell></table:table-row></table:table>' % (O.p("Name"), O.p("Salary withheld"))),
+     "A table with a column folded away, as a spreadsheet hides one. The column is not carried across.",
+     "odt", node="succeeds", group=G, absent="withheld")
+trap("hidden-under-another-name.odt", O.document(O.p("Shown.") + '<text:section text:name="S" text:display="none" foo:display="true" xmlns:foo="urn:example:foo">%s</text:section>' % O.p("The draft terms.")
+                                                 + O.p(O.span("And these.", "Z")), automatic=O.AUTOMATIC + '<style:style style:name="Z" style:family="text"><foo:text-properties xmlns:foo="urn:example:foo"/><style:text-properties text:display="none"/></style:style>'),
+     "A hidden section that also says, in a vocabulary of its own, that it is shown; and a hidden style with an empty part of another vocabulary before the part that hides. OpenDocument's own words decide; the others are not taken for them.",
+     "odt", node="succeeds", group=G, absent="draft terms")
 trap("link-that-is-code.odt", O.document(O.p("Please " + O.link("read the report", "javascript:" + MARK) + " today.")),
      "A link whose address is a line of code. The words of the link are kept; the address is not.",
      "odt", node="succeeds", group=G, absent="javascript:")

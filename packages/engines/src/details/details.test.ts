@@ -44,6 +44,7 @@ describe('what a file carries', () => {
     expect(await details('odt/sample.odt', 'odt')).toEqual({
       Title: 'About Omsett [kept]',
       Author: 'SECRET-AUTHOR [removed]',
+      'Last changed by': 'SECRET-AUTHOR [removed]',
       'Made with': 'fixtures/_tools/odt.py [removed]',
       'Tracked changes': '1 deletion. Deleted text is left out; inserted text is kept as ordinary text [removed]',
       Comments: 'Yes [removed]',

@@ -7392,6 +7392,54 @@
     "absent": "redundancy"
   },
   {
+    "file": "hidden-paragraph-in-a-box.odt",
+    "group": "documents",
+    "why": "A box of text with two paragraphs in it, one hidden by its style and one by a mark. A box is read as the page is, and neither is carried across.",
+    "detect": "odt",
+    "mismatch": false,
+    "guard": "ok",
+    "node": "succeeds",
+    "browser": "succeeds",
+    "note": null,
+    "absent": "pay figures"
+  },
+  {
+    "file": "hidden-field.odt",
+    "group": "documents",
+    "why": "A field whose value is set where it is not shown. It is not carried across.",
+    "detect": "odt",
+    "mismatch": false,
+    "guard": "ok",
+    "node": "succeeds",
+    "browser": "succeeds",
+    "note": null,
+    "absent": "before the audit"
+  },
+  {
+    "file": "hidden-column.odt",
+    "group": "documents",
+    "why": "A table with a column folded away, as a spreadsheet hides one. The column is not carried across.",
+    "detect": "odt",
+    "mismatch": false,
+    "guard": "ok",
+    "node": "succeeds",
+    "browser": "succeeds",
+    "note": null,
+    "absent": "withheld"
+  },
+  {
+    "file": "hidden-under-another-name.odt",
+    "group": "documents",
+    "why": "A hidden section that also says, in a vocabulary of its own, that it is shown; and a hidden style with an empty part of another vocabulary before the part that hides. OpenDocument's own words decide; the others are not taken for them.",
+    "detect": "odt",
+    "mismatch": false,
+    "guard": "ok",
+    "node": "succeeds",
+    "browser": "succeeds",
+    "note": null,
+    "absent": "draft terms"
+  },
+  {
     "file": "link-that-is-code.odt",
     "group": "documents",
     "why": "A link whose address is a line of code. The words of the link are kept; the address is not.",

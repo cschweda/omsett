@@ -173,7 +173,11 @@ build by `apps/web/scripts/write-headers.ts`.
   hidden are said by styles, which take from other styles; a chain is followed no further than
   it is long and a circle says nothing. Deleted text is kept apart in a list of changes and is
   never read; comments, notes, hidden text, hidden paragraphs and sections hidden outright or
-  on a condition are left out. A heading's own style does not make its words bold.
+  on a condition are left out; so are fields, columns and rows hidden the same ways, and
+  paragraphs hidden inside a box of text. A heading's own style does not make its words bold.
+  Its XML is read with namespaces resolved (`openOffice(…, ODF)`): names in OpenDocument's
+  vocabularies lose their prefix, any other becomes `foreign:…` and is never read as one of
+  them. Do not read an ODT with prefixes simply dropped.
 - **A picture inside an office file is believed by its bytes, never its name**
   (`pictureAddress` in `docx-read.ts`). A part named `.png` that does not begin as a PNG is
   described, not carried. Every reader that carries pictures goes through it.

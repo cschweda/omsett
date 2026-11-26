@@ -116,13 +116,15 @@ async function openDocument(blob: Blob): Promise<Detail[]> {
   const add = (label: string, value: string | undefined, fate?: Detail['fate']) => value && details.push({ label, value, fate })
   add('Title', inTag(meta, 'title'), 'kept')
   add('Author', inTag(meta, 'initial-creator') ?? inTag(meta, 'creator'), 'removed')
+  if (inTag(meta, 'initial-creator')) add('Last changed by', inTag(meta, 'creator'), 'removed')
   add('Created', inTag(meta, 'creation-date')?.replace('T', ' '), 'removed')
   add('Made with', inTag(meta, 'generator'), 'removed')
-  const deleted = (content.match(/<text:deletion\b/g) ?? []).length
+  // Whatever prefix the file gave each vocabulary.
+  const deleted = (content.match(/<[\w.-]+:deletion\b/g) ?? []).length
   if (deleted) add('Tracked changes', `${count(deleted, 'deletion')}. Deleted text is left out; inserted text is kept as ordinary text`, 'removed')
-  if (/<office:annotation\b/.test(content)) add('Comments', 'Yes', 'removed')
-  if (/text:display="(?:none|condition)"|<text:hidden-(?:text|paragraph)\b/.test(content)) add('Hidden text', 'Yes', 'removed')
-  if (entries.some((entry) => /^basic\//i.test(entry.name)) || /<(?:text|office):script\b/.test(content)) add('Macros', 'Yes. They are never run and never carried over', 'removed')
+  if (/<[\w.-]+:annotation\b/.test(content)) add('Comments', 'Yes', 'removed')
+  if (/:display="(?:none|condition)"|:visibility="(?:collapse|filter)"|<[\w.-]+:hidden-(?:text|paragraph)\b/.test(content)) add('Hidden text', 'Yes', 'removed')
+  if (entries.some((entry) => /^basic\//i.test(entry.name)) || /<[\w.-]+:script\b/.test(content)) add('Macros', 'Yes. They are never run and never carried over', 'removed')
   return details
 }
 

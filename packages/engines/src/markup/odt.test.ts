@@ -63,6 +63,13 @@ describe('OpenDocument text (ODT)', () => {
     for (const gone of ['SECRET-DELETED', 'SECRET-HIDDEN-WORDS', 'SECRET-COMMENT', 'SECRET-FOOTNOTE', 'SECRET-HIDDEN-PARAGRAPH', 'SECRET-HIDDEN-SECTION', 'SECRET-AUTHOR']) expect(html.includes(gone), gone).toBe(false)
   })
 
+  it('reads each paragraph as itself, wherever it is kept, and hides what is hidden wherever that is said', async () => {
+    for (const trap of ['hidden-paragraph-in-a-box', 'hidden-field', 'hidden-column', 'hidden-under-another-name']) {
+      const { body } = await readOdt(await fixture(`_traps/${trap}.odt`))
+      expect(body, trap).not.toMatch(/pay figures|before the audit|withheld|draft terms|And these/)
+    }
+  })
+
   it('becomes Markdown and a Word document by way of a page', async () => {
     const html = await convert(await fixture('odt/sample.odt'), 'odt', 'html')
     expect(html).toContain('<html lang="en-GB">')

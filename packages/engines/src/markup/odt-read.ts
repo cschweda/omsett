@@ -1,5 +1,5 @@
 import { Refusal } from '../util'
-import { all, attrs, child, escapeHtml, kids, MAX_PICTURE_BYTES, openOffice, pictureAddress, tagOf, type Node, type ReadDocument } from './docx-read'
+import { attrs, child, escapeHtml, kids, MAX_PICTURE_BYTES, openOffice, pictureAddress, tagOf, type Node, type ReadDocument } from './docx-read'
 
 // OpenDocument text (ODT) → HTML: the document LibreOffice, OpenOffice and many government
 // offices save. Like a DOCX it is a ZIP of XML, read through the same `openOffice`, so the
@@ -17,10 +17,16 @@ export const notOdt = () => new Refusal('This file is not a valid ODT document')
 const MAX_DEPTH = 64
 /** The most spaces one mark may stand for. */
 const MAX_SPACES = 100
+/** The most columns a table is counted to. */
+const MAX_COLUMNS = 16384
+
+/** OpenDocument's own vocabularies. A name in any other is foreign, and never taken for one of these. */
+const ODF = new Set(['office', 'style', 'text', 'table', 'drawing', 'xsl-fo-compatible', 'svg-compatible', 'meta', 'datastyle', 'presentation', 'chart', 'dr3d', 'form', 'script', 'smil', 'anim'].map((name) => `urn:oasis:names:tc:opendocument:xmlns:${name}:1.0`))
+for (const uri of ['http://www.w3.org/1999/xlink', 'http://purl.org/dc/elements/1.1/', 'urn:oasis:names:tc:opendocument:xmlns:manifest:1.0']) ODF.add(uri)
 
 const TYPES = new Set(['application/vnd.oasis.opendocument.text', 'application/vnd.oasis.opendocument.text-template'])
 /** Inside a paragraph: what is never part of the text as it is read. */
-const SET_ASIDE = new Set(['note', 'annotation', 'annotation-end', 'hidden-text', 'hidden-paragraph', 'script', 'tracked-changes', 'event-listeners', 'change', 'change-start', 'change-end', 'bookmark', 'bookmark-start', 'bookmark-end', 'reference-mark', 'reference-mark-start', 'reference-mark-end', 'soft-page-break'])
+const SET_ASIDE = new Set(['note', 'annotation', 'annotation-end', 'hidden-text', 'hidden-paragraph', 'script', 'tracked-changes', 'event-listeners', 'change', 'change-start', 'change-end', 'bookmark', 'bookmark-start', 'bookmark-end', 'reference-mark', 'reference-mark-start', 'reference-mark-end', 'soft-page-break', 'changed-region', 'deletion', 'title', 'desc'])
 /** Lists of contents and indexes, whose words are on the page, kept inside a body of their own. */
 const INDEXES = new Set(['table-of-content', 'alphabetical-index', 'user-index', 'illustration-index', 'table-index', 'object-index', 'bibliography'])
 
@@ -30,6 +36,8 @@ interface Style {
   bold?: boolean
   italic?: boolean
   hidden?: boolean
+  /** The list style a paragraph style gives the lists its paragraphs are in. */
+  list?: string
 }
 interface Piece {
   text: string
@@ -38,7 +46,7 @@ interface Piece {
 }
 
 export async function readOdt(bytes: Uint8Array): Promise<ReadDocument> {
-  const { parts, root } = await openOffice(bytes, notOdt, 'document')
+  const { parts, root } = await openOffice(bytes, notOdt, 'document', ODF)
   const type = new TextDecoder().decode(parts.get('mimetype') ?? new Uint8Array()).trim()
   if (!TYPES.has(type)) throw notOdt()
   // A document saved with a password keeps its parts scrambled, and says so in its list of parts.
@@ -63,7 +71,9 @@ export async function readOdt(bytes: Uint8Array): Promise<ReadDocument> {
         parent: a['@parent-style-name'],
         bold: props['@font-weight'] === undefined ? undefined : /^(?:bold|[6-9]00)$/.test(props['@font-weight']),
         italic: props['@font-style'] === undefined ? undefined : /^(?:italic|oblique)$/.test(props['@font-style']),
-        hidden: props['@display'] === undefined ? undefined : props['@display'] === 'none',
+        // Shown only on a condition the document sets is hidden here, as a section on a condition is.
+        hidden: props['@display'] === undefined ? undefined : ['none', 'condition'].includes(props['@display']),
+        list: a['@list-style-name'],
       })
     }
   }
@@ -116,10 +126,13 @@ export async function readOdt(bytes: Uint8Array): Promise<ReadDocument> {
         out.push({ text: words, marks: [...marks.filter((mark) => mark.startsWith('a:')), ...set] })
         continue
       }
-      if (SET_ASIDE.has(tag)) continue
+      if (SET_ASIDE.has(tag) || tag.startsWith('foreign:')) continue
       const a = attrs(node)
+      // A field may be hidden on the spot, or on a condition the document sets.
+      if (['none', 'condition'].includes(a['@display'] ?? '')) continue
       if (tag === 's') {
-        if (!hidden) out.push({ text: ' '.repeat(Math.min(MAX_SPACES, Math.max(1, Number(a['@c']) || 1))), marks })
+        // Spaces that count are written so that a page keeps them: one ordinary, the rest fixed.
+        if (!hidden) out.push({ text: ` ${'\u00A0'.repeat(Math.min(MAX_SPACES, Math.max(1, Number(a['@c']) || 1)) - 1)}`, marks })
       } else if (tag === 'tab') {
         if (!hidden) out.push({ text: ' ', marks })
       } else if (tag === 'line-break') {
@@ -137,8 +150,11 @@ export async function readOdt(bytes: Uint8Array): Promise<ReadDocument> {
         const box = child(node, 'text-box')
         if (box) {
           for (const paragraph of kids(box).filter((kid) => ['p', 'h'].includes(tagOf(kid)))) {
+            // Each paragraph in a box is hidden as any other is: by its style, or by a hidden-paragraph mark.
+            const name = attrs(paragraph)['@style-name']
+            if (hiddenParagraph(paragraph) || said('paragraph', name, 'hidden')) continue
             out.push('<br>')
-            pieces(kids(paragraph), marks, depth + 1, out, bold, italic, hidden)
+            pieces(kids(paragraph), marks, depth + 1, out, said('paragraph', name, 'bold') ?? bold, said('paragraph', name, 'italic') ?? italic, hidden)
           }
         } else {
           const html = picture(node)
@@ -179,6 +195,19 @@ export async function readOdt(bytes: Uint8Array): Promise<ReadDocument> {
     return html.trim()
   }
 
+  /** The list style a paragraph style gives, or that of the style it is based on. */
+  const listOfStyle = (name: string | undefined): string | undefined => {
+    const seen = new Set<string>()
+    for (let at = name; at !== undefined && !seen.has(at) && seen.size < MAX_DEPTH; ) {
+      seen.add(at)
+      const style = styles.get(`paragraph:${at}`)
+      if (!style) return undefined
+      if (style.list) return style.list
+      at = style.parent
+    }
+    return undefined
+  }
+
   const hiddenParagraph = (paragraph: Node) => kids(paragraph).some((kid) => tagOf(kid) === 'hidden-paragraph' && attrs(kid)['@is-hidden'] !== 'false')
 
   /** Whether a level of a list is numbered, by its list style. */
@@ -190,16 +219,27 @@ export async function readOdt(bytes: Uint8Array): Promise<ReadDocument> {
 
   function list(node: Node, depth: number, level: number, inherited: string | undefined): string {
     if (depth > MAX_DEPTH) throw notOdt()
-    const style = attrs(node)['@style-name'] ?? inherited
+    // A list without a style of its own takes its outer list's, or the one its first paragraph's style gives.
+    const firstParagraph = kids(kids(node).find((item) => tagOf(item) === 'list-item') ?? {}).find((part) => ['p', 'h'].includes(tagOf(part)))
+    const style = attrs(node)['@style-name'] ?? inherited ?? listOfStyle(attrs(firstParagraph ?? {})['@style-name'])
     const tag = numbered(style, level) ? 'ol' : 'ul'
     const items = kids(node)
       .filter((item) => ['list-item', 'list-header'].includes(tagOf(item)))
       .map((item) => {
+        // The paragraphs of an item are read together, so that two stay two; a list inside it is its own.
         let html = ''
-        for (const part of kids(item)) {
-          if (tagOf(part) === 'list') html += list(part, depth + 1, level + 1, style)
-          else html += blocks([part], depth + 1, true)
+        let run: Node[] = []
+        const flush = () => {
+          if (run.length) html += blocks(run, depth + 1, true)
+          run = []
         }
+        for (const part of kids(item)) {
+          if (tagOf(part) === 'list') {
+            flush()
+            html += list(part, depth + 1, level + 1, style)
+          } else run.push(part)
+        }
+        flush()
         return html
       })
       .filter((html) => html.trim() !== '')
@@ -208,6 +248,22 @@ export async function readOdt(bytes: Uint8Array): Promise<ReadDocument> {
 
   function table(node: Node, depth: number): string {
     if (depth > MAX_DEPTH) throw notOdt()
+    // Which columns are folded away or filtered out. A cell is placed by counting the cells
+    // before it, each as wide as it spans and as many as it repeats.
+    const hiddenColumns: boolean[] = []
+    const columns = (group: Node, level: number) => {
+      if (level > MAX_DEPTH) throw notOdt()
+      for (const part of kids(group)) {
+        const tag = tagOf(part)
+        if (['table-columns', 'table-header-columns', 'table-column-group'].includes(tag)) columns(part, level + 1)
+        else if (tag === 'table-column') {
+          const gone = ['collapse', 'filter'].includes(attrs(part)['@visibility'] ?? '')
+          const many = Math.min(MAX_COLUMNS - hiddenColumns.length, Math.max(1, Number(attrs(part)['@number-columns-repeated']) || 1))
+          for (let i = 0; i < many; i++) hiddenColumns.push(gone)
+        }
+      }
+    }
+    columns(node, 0)
     const rows: Array<{ header: boolean; html: string }> = []
     const gather = (group: Node, header: boolean, level: number) => {
       if (level > MAX_DEPTH) throw notOdt()
@@ -219,11 +275,18 @@ export async function readOdt(bytes: Uint8Array): Promise<ReadDocument> {
           // A row folded away or filtered out is not in the table as it is read.
           if (['collapse', 'filter'].includes(attrs(part)['@visibility'] ?? '')) continue
           const cell = header ? 'th' : 'td'
-          const cells = all(part, 'table-cell').map((found) => {
+          const cells: string[] = []
+          let column = 0
+          for (const found of kids(part)) {
+            const tag = tagOf(found)
+            if (tag !== 'table-cell' && tag !== 'covered-table-cell') continue
+            const at = column
+            column += Math.min(MAX_COLUMNS, Math.max(1, Number(attrs(found)['@number-columns-repeated']) || 1))
+            if (tag !== 'table-cell' || hiddenColumns[at]) continue
             const span = attrs(found)['@number-columns-spanned']
             const wide = span && /^[2-9]$|^[1-9]\d$/.test(span) ? ` colspan="${span}"` : ''
-            return `<${cell}${wide}>${blocks(kids(found), depth + 1, true)}</${cell}>`
-          })
+            cells.push(`<${cell}${wide}>${blocks(kids(found), depth + 1, true)}</${cell}>`)
+          }
           rows.push({ header, html: `<tr>${cells.join('')}</tr>` })
         }
       }
@@ -259,8 +322,13 @@ export async function readOdt(bytes: Uint8Array): Promise<ReadDocument> {
       } else if (INDEXES.has(tag)) html += blocks(kids(child(node, 'index-body') ?? {}), depth + 1)
       else if (tag === 'index-title') html += blocks(kids(node), depth + 1)
       else if (tag === 'frame') {
-        const found = picture(node)
-        if (found) html += `<p>${found}</p>`
+        // A box of text anchored to the page holds paragraphs of its own; anything else is a picture.
+        const box = child(node, 'text-box')
+        if (box) html += blocks(kids(box), depth + 1)
+        else {
+          const found = picture(node)
+          if (found) html += `<p>${found}</p>`
+        }
       }
     }
     return html

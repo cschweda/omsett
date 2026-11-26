@@ -26,10 +26,16 @@ tables, links and pictures. What its author deleted, hid or wrote in the margin 
   comments, footnotes, hidden words, hidden paragraphs, sections hidden outright or on a
   condition, the author's name, and macros, which are never run. The details before converting
   say which of these a document holds.
-- **18 trap files** for the new reader, and a code trap. Among them an entity bomb, a text part
+- **22 trap files** for the new reader, and a code trap. Among them an entity bomb, a text part
   that unpacks to three hundred megabytes, styles that take from each other in a circle, a
-  billion spaces in one mark, a picture kept on another site, one outside the document, and one
-  named as a PNG that is a script.
+  billion spaces in one mark, a picture kept on another site, one outside the document, one
+  named as a PNG that is a script, a hidden paragraph inside a box of text, a hidden field, a
+  hidden column, and a hidden section that says in a vocabulary of its own that it is shown.
+  An adversarial review of the reader found six ways hidden words could get through and one
+  way two paragraphs ran together, before release; each is fixed and has its trap or test.
+- **OpenDocument's names are read as the file declares them.** A part of another vocabulary
+  with the same name as one of OpenDocument's (a `display`, a `text-properties`) is never taken
+  for it, whatever prefix the file gives either.
 
 ### Fixed
 
