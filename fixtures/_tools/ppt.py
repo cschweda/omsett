@@ -274,7 +274,7 @@ def sample_slides():
     def four(deck):
         return ([shape(4097, placeholder=P_TITLE, textbox=ref(0)),
                  shape(4098, kind=75, props=[(0x4104, 1)], alt="The Omsett mark: a word in white with a blue square"),
-                 table(deck, 4099, [["Format", "Kind"], ["PNG", "Picture"], ["CSV", "Data"]])],
+                 table(deck, 4099, [["Format", "Kind"], ["PNG", "Picture"], ["XLSX", "Workbook"]])],
                 [text(deck, TITLE, [para("A picture and a table, café 字幕")])], False)
 
     return [one, two, hidden, four]

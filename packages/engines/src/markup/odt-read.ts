@@ -45,16 +45,39 @@ interface Piece {
   marks: string[]
 }
 
-export async function readOdt(bytes: Uint8Array): Promise<ReadDocument> {
-  const { parts, root } = await openOffice(bytes, notOdt, 'document', ODF)
+/** An OpenDocument file opened, and the readers of its text that every kind shares. */
+export interface Odf {
+  content: Node
+  root: (path: string, tag: string) => Node | undefined
+  /** Paragraphs, headings, lists, tables and boxes → HTML. `tight`: inside a cell or an item, one paragraph needs no <p>. */
+  blocks(nodes: Node[], depth: number, tight?: boolean): string
+  /** One paragraph's words, with their emphasis and links. */
+  inline(paragraph: Node): string
+  /** A picture inside the file, or its description in its place. */
+  picture(frame: Node): string
+  /** Whether a style of a family hides, or makes bold or slanted, what it is given. */
+  said(family: string, name: string | undefined, what: 'bold' | 'italic' | 'hidden'): boolean | undefined
+  /** The title and language the file gives itself. */
+  meta(): { title: string | null; language: string | null }
+}
+
+/**
+ * Open an OpenDocument file of one of `types`: its parts, its styles, and the readers of its
+ * text. A text document and a presentation's boxes are read by the same code.
+ * @param bytes the file
+ * @param types the types it may say it is
+ * @param invalid the refusal for a file that is not one
+ * @param what what to call it in a refusal: "document", "presentation"
+ */
+export async function openOdf(bytes: Uint8Array, types: ReadonlySet<string>, invalid: () => Refusal, what: string): Promise<Odf> {
+  const { parts, root } = await openOffice(bytes, invalid, what, ODF)
   const type = new TextDecoder().decode(parts.get('mimetype') ?? new Uint8Array()).trim()
-  if (!TYPES.has(type)) throw notOdt()
-  // A document saved with a password keeps its parts scrambled, and says so in its list of parts.
+  if (!types.has(type)) throw invalid()
+  // A file saved with a password keeps its parts scrambled, and says so in its list of parts.
   const manifest = new TextDecoder().decode(parts.get('meta-inf/manifest.xml') ?? new Uint8Array())
-  if (/encryption-data/.test(manifest)) throw new Refusal('This document is locked with a password, and cannot be read without it')
+  if (/encryption-data/.test(manifest)) throw new Refusal(`This ${what} is locked with a password, and cannot be read without it`)
   const content = root('content.xml', 'document-content')
-  const text = child(child(content ?? {}, 'body') ?? {}, 'text')
-  if (!content || !text) throw notOdt()
+  if (!content) throw invalid()
   const styled = root('styles.xml', 'document-styles')
 
   // --- Styles: what each says of its text, and which it takes the rest from -----------------
@@ -115,7 +138,7 @@ export async function readOdt(bytes: Uint8Array): Promise<ReadDocument> {
 
   /** The runs of a paragraph, with their emphasis and links. `hidden`: the paragraph's style hides its text where a run does not say. */
   function pieces(nodes: Node[], marks: string[], depth: number, out: Array<Piece | string>, bold: boolean, italic: boolean, hidden: boolean): void {
-    if (depth > MAX_DEPTH) throw notOdt()
+    if (depth > MAX_DEPTH) throw invalid()
     for (const node of nodes) {
       const tag = tagOf(node)
       if (tag === '#text') {
@@ -218,7 +241,7 @@ export async function readOdt(bytes: Uint8Array): Promise<ReadDocument> {
   }
 
   function list(node: Node, depth: number, level: number, inherited: string | undefined): string {
-    if (depth > MAX_DEPTH) throw notOdt()
+    if (depth > MAX_DEPTH) throw invalid()
     // A list without a style of its own takes its outer list's, or the one its first paragraph's style gives.
     const firstParagraph = kids(kids(node).find((item) => tagOf(item) === 'list-item') ?? {}).find((part) => ['p', 'h'].includes(tagOf(part)))
     const style = attrs(node)['@style-name'] ?? inherited ?? listOfStyle(attrs(firstParagraph ?? {})['@style-name'])
@@ -247,12 +270,12 @@ export async function readOdt(bytes: Uint8Array): Promise<ReadDocument> {
   }
 
   function table(node: Node, depth: number): string {
-    if (depth > MAX_DEPTH) throw notOdt()
+    if (depth > MAX_DEPTH) throw invalid()
     // Which columns are folded away or filtered out. A cell is placed by counting the cells
     // before it, each as wide as it spans and as many as it repeats.
     const hiddenColumns: boolean[] = []
     const columns = (group: Node, level: number) => {
-      if (level > MAX_DEPTH) throw notOdt()
+      if (level > MAX_DEPTH) throw invalid()
       for (const part of kids(group)) {
         const tag = tagOf(part)
         if (['table-columns', 'table-header-columns', 'table-column-group'].includes(tag)) columns(part, level + 1)
@@ -266,7 +289,7 @@ export async function readOdt(bytes: Uint8Array): Promise<ReadDocument> {
     columns(node, 0)
     const rows: Array<{ header: boolean; html: string }> = []
     const gather = (group: Node, header: boolean, level: number) => {
-      if (level > MAX_DEPTH) throw notOdt()
+      if (level > MAX_DEPTH) throw invalid()
       for (const part of kids(group)) {
         const tag = tagOf(part)
         if (tag === 'table-header-rows') gather(part, true, level + 1)
@@ -299,7 +322,7 @@ export async function readOdt(bytes: Uint8Array): Promise<ReadDocument> {
 
   /** Paragraphs, headings, lists and tables → HTML. `tight`: inside a cell or an item, one paragraph needs no <p>. */
   function blocks(nodes: Node[], depth: number, tight = false): string {
-    if (depth > MAX_DEPTH) throw notOdt()
+    if (depth > MAX_DEPTH) throw invalid()
     let html = ''
     const paragraphs = nodes.filter((node) => ['p', 'h'].includes(tagOf(node))).length
     for (const node of nodes) {
@@ -334,26 +357,31 @@ export async function readOdt(bytes: Uint8Array): Promise<ReadDocument> {
     return html
   }
 
-  const written = blocks(kids(text), 0)
+  // What the file calls itself, and the language it says it is written in.
+  function meta(): { title: string | null; language: string | null } {
+    const found = child(root('meta.xml', 'document-meta') ?? {}, 'meta')
+    const metaText = (tag: string) =>
+      kids(child(found ?? {}, tag) ?? {})
+        .map((piece) => String(piece['#text'] ?? ''))
+        .join('')
+        .trim()
+    const defaults = kids(child(styled ?? {}, 'styles') ?? {}).find((node) => tagOf(node) === 'default-style' && ['paragraph', 'graphic'].includes(attrs(node)['@family'] ?? ''))
+    const props = attrs(child(defaults ?? {}, 'text-properties') ?? {})
+    const fromStyles = props['@language'] && props['@language'] !== 'none' ? `${props['@language']}${props['@country'] && props['@country'] !== 'none' ? `-${props['@country']}` : ''}` : ''
+    const language = metaText('language') || fromStyles
+    return { title: metaText('title') || null, language: /^[a-z]{2,3}(?:-[a-z0-9]{2,8}){0,3}$/i.test(language) ? language : null }
+  }
+
+  return { content, root, blocks, inline, picture, said, meta }
+}
+
+export async function readOdt(bytes: Uint8Array): Promise<ReadDocument> {
+  const odf = await openOdf(bytes, TYPES, notOdt, 'document')
+  const text = child(child(odf.content, 'body') ?? {}, 'text')
+  if (!text) throw notOdt()
+  const written = odf.blocks(kids(text), 0)
   if (written.replace(/<[^>]*>/g, '').trim() === '' && !written.includes('<img')) {
     throw new Refusal('This document has no text in it to convert')
   }
-
-  // What the document calls itself, and the language it says it is written in.
-  const meta = child(root('meta.xml', 'document-meta') ?? {}, 'meta')
-  const metaText = (tag: string) =>
-    kids(child(meta ?? {}, tag) ?? {})
-      .map((piece) => String(piece['#text'] ?? ''))
-      .join('')
-      .trim()
-  const defaults = kids(child(styled ?? {}, 'styles') ?? {}).find((node) => tagOf(node) === 'default-style' && attrs(node)['@family'] === 'paragraph')
-  const props = attrs(child(defaults ?? {}, 'text-properties') ?? {})
-  const fromStyles = props['@language'] && props['@language'] !== 'none' ? `${props['@language']}${props['@country'] && props['@country'] !== 'none' ? `-${props['@country']}` : ''}` : ''
-  const language = metaText('language') || fromStyles
-  const title = metaText('title')
-  return {
-    body: written,
-    title: title || null,
-    language: /^[a-z]{2,3}(?:-[a-z0-9]{2,8}){0,3}$/i.test(language) ? language : null,
-  }
+  return { body: written, ...odf.meta() }
 }

@@ -7,6 +7,27 @@ The paragraph that opens a version is its teaser: the home page shows its first 
 in the "What's new" banner, so keep it to two or three sentences on what a visitor will notice.
 A line beginning "Released" gives the date.
 
+## 0.57.0
+
+Released 26 November 2026.
+
+OpenDocument presentations, the .odp files LibreOffice Impress saves, can now be converted: to a
+web page, a Word document, Markdown, a PDF or an EPUB, a section to each slide. Speaker notes,
+hidden slides and shapes the audience never saw stay behind. With this, all three OpenDocument
+kinds are read.
+
+### Added
+
+- **ODP is read** (and OTP, its template). It becomes the same page a PPTX does: each slide a
+  section with its title as a heading, its outline as lists at their levels, bold, italic,
+  links, tables with their heading rows, and pictures with their descriptions. Each slide's
+  boxes are read by the same code that reads an ODT. Read only.
+- **What the audience was not shown is left behind**: speaker notes, hidden slides, shapes
+  hidden outright or shown only when printed, groups hidden whole, placeholders never filled in
+  (and their "Click to add" prompts), the slide's number, date and footer, and the author. The
+  details before converting count the slides and say which of these a presentation holds.
+- **15 trap files**, and a code trap.
+
 ## 0.56.0
 
 Released 26 November 2026.

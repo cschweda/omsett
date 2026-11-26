@@ -29,14 +29,14 @@ Omsett is a free, open-source file converter. Every conversion runs in your brow
 <!-- facts:start -->
 <!-- Generated from the registry by `pnpm readme:facts`. Do not edit by hand. -->
 
-**77 formats, 328 conversions**, every one of them run in your browser, on your device, and tested against 767 files made on purpose to be broken, hostile or dishonest. How many tests there are today is on the site's [Trust](https://omsett.com/trust) page, counted at every build.
+**78 formats, 329 conversions**, every one of them run in your browser, on your device, and tested against 783 files made on purpose to be broken, hostile or dishonest. How many tests there are today is on the site's [Trust](https://omsett.com/trust) page, counted at every build.
 
 | Kind | Converts to and from | Reads only |
 | --- | --- | --- |
 | Pictures | WebP, JPEG, PNG, AVIF, GIF, TIFF, JPEG XL, BMP, TGA, QOI, Netpbm, ICO, ICNS, CUR, JPEG 2000, DDS | HEIC, Animated PNG, PSD, PSB, OpenEXR, Radiance HDR, FITS, DICOM, DNG, PCX, SGI, Sun Raster |
 | Drawings | — | SVG, SVGZ |
 | Documents | DOCX | DOC, ODT |
-| Presentations | — | PPTX, PPT |
+| Presentations | — | PPTX, PPT, ODP |
 | PDF | PDF | — |
 | Text and markup | Markdown, HTML | — |
 | Spreadsheets | XLSX | XLS, ODS |
@@ -77,6 +77,7 @@ A file is offered the formats of its own kind: a picture becomes another picture
 - **Try it without a file of your own**: a sample picture, PDF and Word document are in the drop zone.
 - **See the result before you convert**: choose a picture and a format, and the original and what it will become are shown side by side, with a divider to drag and the quality to move. Nothing is fetched or saved to do it.
 - **Before and after, side by side**, once converted too: a slider for pictures; the two texts for data and subtitles.
+- **Opens OpenDocument presentations (.odp)** and makes them a web page, a Word document, Markdown or a PDF, a section to a slide. Speaker notes, hidden slides and hidden shapes are left behind.
 - **Opens OpenDocument spreadsheets (.ods)** and makes them XLSX, CSV, JSON or any other data format, with numbers as numbers, dates as dates, and the value each formula last showed. Hidden sheets, comments and macros are left behind.
 - **Opens OpenDocument text (.odt)**, as LibreOffice and many governments save it, and makes it DOCX, a web page, Markdown or a PDF. Deleted text, comments, notes and hidden sections are left behind.
 - **Opens Office files saved with macros or as templates** (.docm, .dotx, .pptm, .ppsx, .xlsm and the rest) as the documents, presentations and workbooks they are. The macros are never run and never carried over.

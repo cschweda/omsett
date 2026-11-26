@@ -61,7 +61,7 @@ describe('router, real registry', () => {
       'heic', 'apng', 'svg', 'svgz', 'psd', 'psb', 'ico', 'icns', 'cur', 'jp2', 'exr', 'hdr', 'dds', 'fits', 'dcm', 'dng', 'pcx', 'sgi', 'ras',
       'json', 'yaml', 'csv', 'xlsx', 'xml', 'toml', 'jsonl', 'tsv', 'vcf', 'ics', 'xls', 'ods',
       'srt', 'vtt', 'ass', 'ssa', 'ttml', 'lrc', 'sbv', 'smi', 'microdvd',
-      'md', 'html', 'docx', 'pdf', 'pptx', 'doc', 'ppt', 'odt',
+      'md', 'html', 'docx', 'pdf', 'pptx', 'doc', 'ppt', 'odt', 'odp',
       'fountain', 'fdx', 'drafter',
       'woff2', 'woff', 'ttf', 'otf',
       'zip', 'tgz', 'tar',
@@ -69,7 +69,7 @@ describe('router, real registry', () => {
       'epub', 'azw3', 'mobi',
     ])
     const readOnly = new Set(everything.formats.filter((f) => f.readOnly).map((f) => f.id))
-    expect([...readOnly].sort()).toEqual(['apng', 'azw3', 'dcm', 'dng', 'doc', 'exr', 'fits', 'hdr', 'heic', 'mobi', 'ods', 'odt', 'pcx', 'ppt', 'pptx', 'psb', 'psd', 'ras', 'sgi', 'svg', 'svgz', 'xls'])
+    expect([...readOnly].sort()).toEqual(['apng', 'azw3', 'dcm', 'dng', 'doc', 'exr', 'fits', 'hdr', 'heic', 'mobi', 'odp', 'ods', 'odt', 'pcx', 'ppt', 'pptx', 'psb', 'psd', 'ras', 'sgi', 'svg', 'svgz', 'xls'])
     // Every pair of the same kind converts, directly or through a step in between; nothing is
     // written as HEIC. A picture never becomes data, nor data a picture.
     const kind = (id: string) => formatById(everything, id)!.category
@@ -117,7 +117,7 @@ describe('router, real registry', () => {
     expect(all.route('otf', 'woff2')!.warnings.map((w) => w.id)).toEqual(['font-licence'])
     // Markdown and HTML become each other and nothing else.
     expect(all.route('md', 'html')!.edges.map((e) => e.candidates[0]!.engine)).toEqual(['markup'])
-    expect(all.targetsFor(['html']).map((t) => t.format.id)).toEqual(['md', 'html', 'docx', 'pdf', 'pptx', 'doc', 'ppt', 'odt', 'epub', 'azw3', 'mobi'])
+    expect(all.targetsFor(['html']).map((t) => t.format.id)).toEqual(['md', 'html', 'docx', 'pdf', 'pptx', 'doc', 'ppt', 'odt', 'odp', 'epub', 'azw3', 'mobi'])
     // PDF is written from a page, by the engine fetched for that alone; everything else reaches it through a page.
     expect(all.route('html', 'pdf')!.edges.map((e) => e.candidates[0]!.engine)).toEqual(['typst'])
     expect(all.route('docx', 'pdf')!.edges.map((e) => `${e.from}>${e.to}`)).toEqual(['docx>html', 'html>pdf'])
@@ -141,6 +141,9 @@ describe('router, real registry', () => {
     expect(all.route('doc', 'docx')!.edges.map((e) => `${e.from}>${e.to}`)).toEqual(['doc>html', 'html>docx'])
     expect(all.route('doc', 'md')!.warnings.map((w) => w.id)).toEqual(expect.arrayContaining(['old-word-kept', 'accessibility-check']))
     expect(all.targetsFor(['docx']).find((t) => t.format.id === 'doc')!.reason).toMatch(/can be read but not written/)
+    // An OpenDocument presentation goes the same way, and says what a presentation's conversion keeps.
+    for (const to of ['docx', 'md', 'pdf']) expect(all.route('odp', to)!.edges.map((e) => `${e.from}>${e.to}`)).toEqual(['odp>html', `html>${to}`])
+    expect(all.route('odp', 'md')!.warnings.map((w) => w.id)).toEqual(expect.arrayContaining(['slides-kept', 'accessibility-check']))
     // An OpenDocument text goes the same way, and says what it keeps.
     for (const to of ['docx', 'md', 'pdf']) expect(all.route('odt', to)!.edges.map((e) => `${e.from}>${e.to}`)).toEqual(['odt>html', `html>${to}`])
     expect(all.route('odt', 'md')!.warnings.map((w) => w.id)).toEqual(expect.arrayContaining(['word-kept', 'accessibility-check']))
@@ -194,7 +197,7 @@ describe('router, real registry', () => {
     // Every conversion of a book says that it is only as accessible as its publisher made it.
     for (const to of ['pdf', 'docx', 'md', 'html']) expect(all.route('epub', to)!.warnings.map((w) => w.id), to).toContain('book-as-published')
     // For a book, the formats of books are offered first, and then what else a book can become.
-    expect(all.targetsFor(['azw3']).map((t) => t.format.id)).toEqual(['epub', 'azw3', 'mobi', 'md', 'html', 'docx', 'pdf', 'pptx', 'doc', 'ppt', 'odt'])
+    expect(all.targetsFor(['azw3']).map((t) => t.format.id)).toEqual(['epub', 'azw3', 'mobi', 'md', 'html', 'docx', 'pdf', 'pptx', 'doc', 'ppt', 'odt', 'odp'])
     expect(all.targetsFor(['azw3', 'docx']).map((t) => t.format.id).slice(0, 4)).toEqual(['md', 'html', 'docx', 'pdf'])
     expect(all.targetsFor(['azw3']).find((t) => t.format.id === 'mobi')!.reason).toBe('MOBI can be read but not written')
     // HEIC is decoded to PNG first, without loss, and goes on from there.

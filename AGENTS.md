@@ -178,6 +178,13 @@ build by `apps/web/scripts/write-headers.ts`.
   Its XML is read with namespaces resolved (`openOffice(…, ODF)`): names in OpenDocument's
   vocabularies lose their prefix, any other becomes `foreign:…` and is never read as one of
   them. Do not read an ODT with prefixes simply dropped.
+- **An OpenDocument presentation is read with the ODT reader's text** (`openOdf` in
+  `odt-read.ts`, `odp-read.ts`): the slides are walked in the order their shapes are stored,
+  and each box handed to the same `blocks`, so lists, tables, emphasis, links, pictures and
+  what is hidden inside a box behave as in an ODT. Left out besides: speaker notes, slides
+  hidden by their style, shapes whose `display` is `none` or `printer`, empty placeholders,
+  and the slide's number, date, header and footer. `sample.odp` reads to exactly the page
+  `pptx/sample.pptx` does, and a test holds them to it.
 - **A picture inside an office file is believed by its bytes, never its name**
   (`pictureAddress` in `docx-read.ts`). A part named `.png` that does not begin as a PNG is
   described, not carried. Every reader that carries pictures goes through it.

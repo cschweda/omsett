@@ -71,7 +71,7 @@ public class PptSample {
     d.setComplexData(alt);
     pic.getEscherOptRecord().addEscherProperty(d);
     HSLFTable table = three.createTable(3, 2);
-    String[][] cells = {{"Format", "Kind"}, {"PNG", "Picture"}, {"CSV", "Data"}};
+    String[][] cells = {{"Format", "Kind"}, {"PNG", "Picture"}, {"XLSX", "Workbook"}};
     for (int r = 0; r < 3; r++) for (int c = 0; c < 2; c++) table.getCell(r, c).setText(cells[r][c]);
     table.moveTo(50, 250);
 

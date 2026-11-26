@@ -64,6 +64,17 @@ describe('what a file carries', () => {
     })
   })
 
+  it('an OpenDocument presentation: its slides, and what the audience was not shown', async () => {
+    expect(await details('odp/sample.odp', 'odp')).toEqual({
+      Title: 'About Omsett [kept]',
+      Author: 'SECRET-AUTHOR [removed]',
+      'Made with': 'fixtures/_tools/odp.py [removed]',
+      Slides: '4',
+      'Speaker notes': 'On 1 slide [removed]',
+      'Hidden slides': 'Yes [removed]',
+    })
+  })
+
   it('an Office file saved with macros: the macros, which are never run and never carried over', async () => {
     const macros = 'Yes. They are never run and never carried over [removed]'
     expect(await details('_traps/with-a-macro.docm', 'docx')).toMatchObject({ Macros: macros })

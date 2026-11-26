@@ -4815,6 +4815,63 @@ trap("open-spreadsheet-named-as-excel.xlsx", ODS,
      "An OpenDocument spreadsheet with the name of an Excel workbook. It is read as what it is.",
      "ods", node="succeeds", mismatch=True, group="identity")
 
+# --- OpenDocument presentations: ODP -----------------------------------------------------------------
+# Slides of boxes, each box read as an ODT's text is. What a presenter keeps from the audience
+# sits beside the slides: notes, hidden slides, shapes not shown, placeholders never filled in.
+import odp as P2  # noqa: E402
+
+G = "slides"
+ODP = read("odp", "sample.odp")
+NOT_ODP = "This file is not a valid ODP presentation"
+ODP_PLAIN = [P2.page("One", [P2.box(O.p("A title"), "title"), P2.box(O.p("One slide of an open presentation."), "outline")])]
+
+trap("truncated.odp", ODP[: len(ODP) // 2],
+     "An OpenDocument presentation cut off half-way. Its type is still at the front, and it is refused as a damaged presentation.",
+     "odp", node="fails", note=NOT_ODP, group=G)
+trap("locked-with-a-password.odp", P2.presentation(ODP_PLAIN, encrypted=True),
+     "An open presentation saved with a password. Its parts are scrambled, and are not guessed at.",
+     "odp", node="fails", note="This presentation is locked with a password, and cannot be read without it", group=G)
+trap("entity-bomb.odp", P2.presentation(ODP_PLAIN, prolog=BOMB),
+     'The "billion laughs" in an open presentation.',
+     "odp", node="fails", note=NOT_ODP, group=G)
+trap("shorthand-after-a-long-comment.odp", P2.presentation(ODP_PLAIN, prolog="<!--" + "x" * 5000 + '--><!DOCTYPE office:document-content [<!ENTITY s "words from nowhere">]>'),
+     "A presentation that declares shorthand of its own after a comment five thousand letters long.",
+     "odp", node="fails", note=NOT_ODP, group=G)
+trap("groups-two-hundred-deep.odp", P2.presentation([P2.page("One", [P2.box(O.p("Groups"), "title"), "<draw:g>" * 200 + P2.box(O.p("deep")) + "</draw:g>" * 200])]),
+     "A group of shapes inside a group of shapes, two hundred times over.",
+     "odp", node="fails", note=NOT_ODP, group=G)
+trap("every-slide-hidden.odp", P2.presentation([P2.page("One", [P2.box(O.p("A title"), "title")], hidden=True), P2.page("Two", [P2.box(O.p("Another"), "title")], hidden=True)]),
+     "A presentation whose every slide is marked not to be shown. There is nothing to convert.",
+     "odp", node="fails", note="This presentation has no text in it to convert", group=G)
+trap("hidden-slide.odp", P2.presentation(ODP_PLAIN + [P2.page("Two", [P2.box(O.p("Not for the board"), "title"), P2.box(O.p("The figures from before the audit."), "outline")], hidden=True)]),
+     "A presentation with a slide marked not to be shown. It is not carried across.",
+     "odp", node="succeeds", group=G, absent="before the audit")
+trap("speaker-notes.odp", P2.presentation([P2.page("One", [P2.box(O.p("A title"), "title")], notes="Do not mention the layoffs until asked.")]),
+     "A presentation with speaker notes, which the presenter reads and the audience does not. They are not carried across.",
+     "odp", node="succeeds", group=G, absent="layoffs")
+trap("shapes-not-shown.odp", P2.presentation([P2.page("One", [P2.box(O.p("A title"), "title"), P2.box(O.p("Draft figure, unchecked"), display="none"), P2.box(O.p("For the printed copy only: unchecked"), display="printer"),
+                                                             '<draw:g draw:display="none">%s</draw:g>' % P2.box(O.p("A group hidden whole: unchecked"))])]),
+     "A slide with a box hidden outright, one shown only when printed, and a group hidden whole. None is on the slide the audience saw, and none is carried across.",
+     "odp", node="succeeds", group=G, absent="unchecked")
+trap("placeholder-never-filled-in.odp", P2.presentation([P2.page("One", [P2.box(O.p("A title"), "title"), P2.box(O.p("Click to add Text"), "outline", placeholder=True)])]),
+     "A slide with a placeholder that was never filled in, showing its prompt. The prompt is the program's words, not the presentation's.",
+     "odp", node="succeeds", group=G, absent="Click to add")
+trap("link-that-is-code.odp", P2.presentation([P2.page("One", [P2.box(O.p("Links"), "title"), P2.box(O.p("Please " + O.link("read the report", "javascript:" + MARK) + " today."))])]),
+     "A link whose address is a line of code. The words of the link are kept; the address is not.",
+     "odp", node="succeeds", group=G, absent="javascript:")
+trap("picture-that-is-a-script.odp", P2.presentation([P2.page("One", [P2.box(O.p("A chart"), "title"), '<draw:frame><draw:image xlink:href="Pictures/chart.png"/><svg:desc>A chart of the year</svg:desc></draw:frame>'])], pictures={"Pictures/chart.png": b"<script>" + MARK.encode() + b"</script>"}),
+     "A part named as a PNG that is a script. It is not put on the page; its description is.",
+     "odp", node="succeeds", group=G)
+trap("fetches-a-picture.odp", P2.presentation([P2.page("One", [P2.box(O.p("A chart"), "title"), '<draw:frame><draw:image xlink:href="http://canary.invalid/tracking.png"/><svg:desc>A chart of the year</svg:desc></draw:frame>'])]),
+     "A picture kept on another site, fetched whenever the presentation is shown. It is not fetched; its description is kept.",
+     "odp", node="succeeds", group=G, absent="canary.invalid")
+trap("macro-in-an-open-presentation.odp", P2.presentation(ODP_PLAIN, extra={"Basic/Standard/Module1.xml": b'<script:module script:name="Module1">Sub Main: Shell("' + SHELL.encode() + b'"): End Sub</script:module>'}),
+     "An open presentation with a macro in it. It is neither run nor carried anywhere.",
+     "odp", node="succeeds", group=G, absent="Shell")
+trap("open-presentation-named-as-powerpoint.pptx", ODP,
+     "An OpenDocument presentation with the name of a PowerPoint file. It is read as what it is.",
+     "odp", node="succeeds", mismatch=True, group="identity")
+
 # --- e-books: AZW3 and MOBI ----------------------------------------------------------------------
 # A Kindle book is a list of numbered records, and tables that say which stretch of text is
 # which page and which piece goes where. Every one of those is a number that can lie. A book
@@ -5306,6 +5363,11 @@ code("code.ods", S2.workbook(['<table:table table:name="%s">%s</table:table>' % 
         S2.row(S2.text(XML_CANARY.decode()), '<table:table-cell table:formula="of:=WEBSERVICE(&quot;http://canary.invalid/x&quot;)" office:value-type="string" office:string-value="%s"><text:p>%s</text:p></table:table-cell>' % (XML_CANARY.decode(), XML_CANARY.decode()), S2.text("polluted")),
     ]))], extra={"Basic/Standard/Module1.xml": b'<script:module script:name="Module1">Sub Main: Shell("' + SHELL.encode() + b'"): End Sub</script:module>'}),
      WHY % "in cells, as the name of a sheet, in a formula that asks another site for a page, beside column names meant to reach every object, and beside a macro", "ods", node="succeeds")
+code("code.odp", P2.presentation([P2.page("One", [P2.box(O.p(XML_CANARY.decode()), "title"), P2.box(O.p(XML_CANARY.decode() + " " + O.link(XML_CANARY.decode(), "javascript:" + MARK)), "outline"),
+                                                    '<draw:frame><draw:image xlink:href="Pictures/x.png"/><svg:desc>%s</svg:desc></draw:frame>' % XML_CANARY.decode(),
+                                                    '<draw:frame>%s</draw:frame>' % O.table([[XML_CANARY.decode(), "__proto__"], ["constructor", XML_CANARY.decode()]])],
+                                  notes=XML_CANARY.decode())], title=XML_CANARY.decode(), author=XML_CANARY.decode(), pictures={"Pictures/x.png": CB}),
+     WHY % "as a slide's title, in its outline, as the words and the address of a link, as a picture's description and as the picture itself, in a table, as speaker notes, and as the title and the author", "odp", node="succeeds")
 code("code.ppt", P.presentation([code_slide], title=CB[:200], author=CB[:200], notes_text=CANARY, pictures=[CB + b" " * 64], extra=[("_VBA_PROJECT", b"Sub Auto_Open(): Shell \"" + SHELL.encode() + b"\": End Sub")]),
      WHY % "as a title, in a list, in a box drawn by hand, as a picture's description and as the picture itself, in a table, as the words and the address of a link, as speaker notes, as the title and the author, and beside a macro set to run on opening", "ppt", node="succeeds")
 code("code.xls", X.container([("Workbook", X.workbook([(CANARY[:28], X.text_cell(0, 0, 0) + X.text_cell(0, 1, 1) + X.text_cell(1, 0, 2) + X.text_cell(1, 1, 3) + X.rec(0x0204, X.cell(2, 0) + X.words(CANARY)) + X.formula(2, 1, "=cmd|' /C " + SHELL + "'!A0"))], ["name", "__proto__", CANARY, "polluted"])), ("\x05SummaryInformation", X.about(CB[:200], CB[:200], MARK.encode())), ("_VBA_PROJECT_CUR", b"Sub Auto_Open(): Shell \"" + SHELL.encode() + b"\": End Sub")], small=True),
