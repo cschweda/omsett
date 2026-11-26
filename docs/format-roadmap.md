@@ -112,7 +112,7 @@ When a format ships, update its row here, in the same change.
 | XLSM (read, macros ignored), ODS | Browser | the same approach: a ZIP of XML | Planned |
 | XLS, XLT (the older binary form, from Excel 97 on) to XLSX and every data format; read only | Browser | `data` (Omsett's own reader, of the container and of the workbook) | **Done** (0.45.0) |
 | DOC (the older binary form, from Word 97 on) to DOCX, HTML and Markdown; read only | Browser | `markup` (Omsett's own reader, on the same container reader) | **Done** (0.46.0) |
-| PPT (the older binary form) to the newer formats; read only | Browser | Omsett's own reader, on the same container reader | Next |
+| PPT (the older binary form) to HTML, and through it to DOCX, Markdown, PDF and EPUB; read only | Browser | `markup` (Omsett's own reader, on the same container reader) | **Done** (0.54.0) |
 | **Writing PDF** from HTML, DOCX, DOC, Markdown and PPTX, tagged | Browser | `typst` (Typst, built to WebAssembly by typst.ts, 28 MB fetched on demand) | **Done** (0.47.0) |
 | PDF in Chinese, Japanese, Korean, Arabic, Hebrew, Devanagari and Thai: a typeface for each, fetched a piece at a time | Browser | the same, with Noto faces from @fontsource | **Done** (0.48.0) |
 | PDF in the remaining scripts (Bengali, Tamil and others of India, Armenian, Georgian, Ethiopic) and emoji | Browser | the same | Planned |

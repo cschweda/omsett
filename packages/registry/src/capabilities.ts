@@ -199,5 +199,7 @@ export const capabilities: Capability[] = [
   { engine: 'pdf', tier: 'browser', reads: ['pdf'], writes: [{ format: 'html', lossy: false }], priority: 20 },
   // A presentation is read to a page, a section to a slide.
   { engine: 'markup', tier: 'browser', reads: ['pptx'], writes: [{ format: 'html', lossy: false }], priority: 20 },
+  // A presentation from before 2007 is read to a page as the newer kind is. It is never written.
+  { engine: 'markup', tier: 'browser', reads: ['ppt'], writes: [{ format: 'html', lossy: false }], priority: 20 },
   { engine: 'subtitle', tier: 'browser', reads: SUBTITLES, writes: SUBTITLE_WRITES, priority: 20 },
 ]

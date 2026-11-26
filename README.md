@@ -29,14 +29,14 @@ Omsett is a free, open-source file converter. Every conversion runs in your brow
 <!-- facts:start -->
 <!-- Generated from the registry by `pnpm readme:facts`. Do not edit by hand. -->
 
-**74 formats, 315 conversions**, every one of them run in your browser, on your device, and tested against 683 files made on purpose to be broken, hostile or dishonest. How many tests there are today is on the site's [Trust](https://omsett.com/trust) page, counted at every build.
+**75 formats, 316 conversions**, every one of them run in your browser, on your device, and tested against 705 files made on purpose to be broken, hostile or dishonest. How many tests there are today is on the site's [Trust](https://omsett.com/trust) page, counted at every build.
 
 | Kind | Converts to and from | Reads only |
 | --- | --- | --- |
 | Pictures | WebP, JPEG, PNG, AVIF, GIF, TIFF, JPEG XL, BMP, TGA, QOI, Netpbm, ICO, ICNS, CUR, JPEG 2000, DDS | HEIC, Animated PNG, PSD, PSB, OpenEXR, Radiance HDR, FITS, DICOM, DNG, PCX, SGI, Sun Raster |
 | Drawings | — | SVG, SVGZ |
 | Documents | DOCX | DOC |
-| Presentations | — | PPTX |
+| Presentations | — | PPTX, PPT |
 | PDF | PDF | — |
 | Text and markup | Markdown, HTML | — |
 | Spreadsheets | XLSX | XLS |
@@ -77,7 +77,7 @@ A file is offered the formats of its own kind: a picture becomes another picture
 - **Try it without a file of your own**: a sample picture, PDF and Word document are in the drop zone.
 - **See the result before you convert**: choose a picture and a format, and the original and what it will become are shown side by side, with a divider to drag and the quality to move. Nothing is fetched or saved to do it.
 - **Before and after, side by side**, once converted too: a slider for pictures; the two texts for data and subtitles.
-- **Opens Word and Excel files from before 2007 (.doc, .xls)** and makes them DOCX, a web page, Markdown, XLSX, CSV or JSON, without running a macro or working out a formula.
+- **Opens Word, Excel and PowerPoint files from before 2007 (.doc, .xls, .ppt)** and makes them DOCX, a web page, Markdown, PDF, XLSX, CSV or JSON, without running a macro or working out a formula. Speaker notes and hidden slides are left behind.
 - **Choose which sheet of a workbook to convert**, by name, or all of them at once.
 - **Convert to several formats at once**, and download everything as one ZIP.
 - **Settings**: light or dark, your own words in the names of converted files, and whether your visit is counted.

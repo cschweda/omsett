@@ -170,8 +170,17 @@ build by `apps/web/scripts/write-headers.ts`.
   of the file, and a chain is followed no further than the file has sectors. Inside, for a
   workbook, a row of records (`packages/engines/src/data/xls.ts`), each checked to lie within
   its stream. Which of Word, Excel or PowerPoint a file is, is said by its streams, never its
-  name. DOC is read through the same container reader (`packages/engines/src/markup/doc-read.ts`),
-  and PPT is to be. All are read only.
+  name. DOC and PPT are read through the same container reader (`packages/engines/src/markup/doc-read.ts`,
+  `ppt-read.ts`). All are read only.
+- **An old PowerPoint file is found by its directories, newest first** (`ppt-read.ts`). Each
+  save adds a directory of where every object is and points to the save before; the reader
+  follows that chain (refusing a circle), lays the directories down oldest first so that the
+  last save's word stands, and reads only what the newest names. The text of an earlier save is
+  still in such a file and must never come out (`earlier-save-still-in-the-file.ppt`). The list
+  of slides decides their order, never where each is stored. A placeholder's text is kept in that
+  list (PowerPoint) or in its shape (Apache POI); both are read. Every record's length is held to
+  its container's, with one exception: inside a shape's client data, where POI writes an atom
+  longer than it is, the reader keeps the placeholder and reads no further. Do not widen that.
 - **An old Word document is mostly directions, and each is checked before it is followed**: the
   list of which stretches of the file are the text, the numbered pages that say how each run is
   set, the count of characters. Text is taken in the order of the list, never the order of the

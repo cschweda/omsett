@@ -88,7 +88,7 @@ Sound files that exercise one specific path.
 
 ## Traps
 
-`_traps/` holds 683 files (listed on the site's Trap files page) that are broken, hostile, or lying, each in one deliberate way.
+`_traps/` holds 705 files (listed on the site's Trap files page) that are broken, hostile, or lying, each in one deliberate way.
 `_traps/manifest.json` says what each is and what must happen to it, and both test suites read
 it: `traps.test.ts` runs every trap through identification, the size guard, and libvips in Node;
 `e2e/traps.spec.ts` drops every trap into the app in Chromium, Firefox, and WebKit.
