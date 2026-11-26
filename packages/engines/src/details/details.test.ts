@@ -40,6 +40,19 @@ describe('what a file carries', () => {
     expect(await details('pptx/sample.pptx', 'pptx')).toMatchObject({ Title: 'About Omsett [kept]', 'Speaker notes': 'On 1 slide [removed]' })
   })
 
+  it('an OpenDocument text: its author, and what is in it that its author may think is gone', async () => {
+    expect(await details('odt/sample.odt', 'odt')).toEqual({
+      Title: 'About Omsett [kept]',
+      Author: 'SECRET-AUTHOR [removed]',
+      'Last changed by': 'SECRET-AUTHOR [removed]',
+      'Made with': 'fixtures/_tools/odt.py [removed]',
+      'Tracked changes': '1 deletion. Deleted text is left out; inserted text is kept as ordinary text [removed]',
+      Comments: 'Yes [removed]',
+      'Hidden text': 'Yes [removed]',
+    })
+    expect(await details('_traps/macro-in-an-open-document.odt', 'odt')).toMatchObject({ Macros: 'Yes. They are never run and never carried over [removed]' })
+  })
+
   it('an Office file saved with macros: the macros, which are never run and never carried over', async () => {
     const macros = 'Yes. They are never run and never carried over [removed]'
     expect(await details('_traps/with-a-macro.docm', 'docx')).toMatchObject({ Macros: macros })

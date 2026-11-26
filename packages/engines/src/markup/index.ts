@@ -3,6 +3,7 @@ import type { ConvertInput, ConvertOutput, Engine } from '../types'
 import { outputName, Refusal, safeBaseName, throwIfAborted } from '../util'
 import { readDoc } from './doc-read'
 import { readDocx, type ReadDocument } from './docx-read'
+import { readOdt } from './odt-read'
 import { readPpt } from './ppt-read'
 import { readPptx } from './pptx-read'
 import { writeDocx } from './docx-write'
@@ -382,6 +383,7 @@ export function createMarkupEngine(): Engine {
         else if (pair === 'doc>html') written = await officeToHtml(readDoc(bytes), input.name)
         else if (pair === 'pptx>html') written = await officeToHtml(await readPptx(bytes), input.name)
         else if (pair === 'ppt>html') written = await officeToHtml(readPpt(bytes), input.name)
+        else if (pair === 'odt>html') written = await officeToHtml(await readOdt(bytes), input.name)
         else if (pair === 'html>docx') written = await htmlToDocx(decode(), input.name)
         else throw new Error(`The markup engine does not convert ${pair}`)
       } catch (error) {

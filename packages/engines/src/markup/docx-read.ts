@@ -61,8 +61,12 @@ export interface OfficeFile {
  * @param bytes   the file
  * @param invalid the refusal for a file that is not one of these
  * @param what    what to call it when it is too large: "document", "presentation"
+ * @param namespaces where given, the namespaces the reader knows. Names in them lose their
+ *                prefix, whatever prefix the file chose; names in any other keep theirs, behind
+ *                `foreign:`, so that something of another vocabulary is never taken for
+ *                something of this one. Without it every prefix is dropped.
  */
-export async function openOffice(bytes: Uint8Array, invalid: () => Refusal, what: string): Promise<OfficeFile> {
+export async function openOffice(bytes: Uint8Array, invalid: () => Refusal, what: string, namespaces?: ReadonlySet<string>): Promise<OfficeFile> {
   const tooLarge = () => new Refusal(`This ${what} is too large to convert in a browser`)
   let entries: Entry[]
   try {
@@ -78,7 +82,7 @@ export async function openOffice(bytes: Uint8Array, invalid: () => Refusal, what
     preserveOrder: true,
     ignoreAttributes: false,
     attributeNamePrefix: '@',
-    removeNSPrefix: true,
+    removeNSPrefix: namespaces === undefined,
     parseTagValue: false,
     parseAttributeValue: false,
     trimValues: false,
@@ -95,21 +99,81 @@ export async function openOffice(bytes: Uint8Array, invalid: () => Refusal, what
     if (/<!DOCTYPE/i.test(source.slice(0, 4096))) throw invalid()
     // Counted before it is read: an empty tag costs as much to read as a full one.
     if (!withinTags(source)) throw tooLarge()
+    let tree: Node[]
     try {
-      return parser.parse(source) as Node[]
+      tree = parser.parse(source) as Node[]
     } catch {
       // The parser has limits of its own (how deep tags may nest, for one) and says so by throwing.
       throw invalid()
     }
+    if (namespaces) resolve(tree, namespaces)
+    return tree
   }
   return { parts, root: (path, tag) => open(path).find((node) => tagOf(node) === tag) }
 }
 
-/** A picture held inside the file, as an address that carries it; null if it is not one Omsett carries. */
+/**
+ * Name every element and attribute by its namespace, as the file declares it, in place: a known
+ * namespace's names lose their prefix, any other's become `foreign:local`. Done without
+ * recursion, so a deep tree costs no stack.
+ */
+function resolve(tree: Node[], known: ReadonlySet<string>): void {
+  const stack: Array<{ nodes: Node[]; scope: Map<string, string> }> = [{ nodes: tree, scope: new Map([['xml', 'http://www.w3.org/XML/1998/namespace']]) }]
+  const named = (name: string, scope: Map<string, string>, element: boolean): string => {
+    const colon = name.indexOf(':')
+    const prefix = colon < 0 ? '' : name.slice(0, colon)
+    const local = colon < 0 ? name : name.slice(colon + 1)
+    // An attribute without a prefix is in no namespace, and an element without one in the default.
+    if (prefix === '' && !element) return local
+    const uri = scope.get(prefix)
+    return uri !== undefined && known.has(uri) ? local : `foreign:${local}`
+  }
+  while (stack.length) {
+    const { nodes, scope: outer } = stack.pop()!
+    for (const [index, node] of nodes.entries()) {
+      const tag = tagOf(node)
+      if (tag === '#text' || tag === '') continue
+      const old = (node[':@'] ?? {}) as Record<string, string>
+      let scope = outer
+      for (const [key, value] of Object.entries(old)) {
+        if (key === '@xmlns' || key.startsWith('@xmlns:')) {
+          if (scope === outer) scope = new Map(outer)
+          scope.set(key === '@xmlns' ? '' : key.slice(7), value)
+        }
+      }
+      const attributes: Record<string, string> = {}
+      for (const [key, value] of Object.entries(old)) {
+        if (key === '@xmlns' || key.startsWith('@xmlns:')) continue
+        const name = `@${named(key.slice(1), scope, false)}`
+        // Of two attributes that come to the same name, the one in a known namespace stands.
+        if (!name.startsWith('@foreign:') || !(name in attributes)) attributes[name] = value
+      }
+      const inner = node[tag]
+      const renamed: Node = { [named(tag, scope, true)]: inner }
+      if (node[':@'] !== undefined) renamed[':@'] = attributes
+      nodes[index] = renamed
+      if (Array.isArray(inner)) stack.push({ nodes: inner as Node[], scope })
+    }
+  }
+}
+
+/** The first bytes of each kind of picture carried. A part named for one that does not begin so is not one. */
+const SIGNATURES: Record<string, number[][]> = {
+  'image/png': [[0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]],
+  'image/jpeg': [[0xFF, 0xD8, 0xFF]],
+  'image/gif': [[0x47, 0x49, 0x46, 0x38]],
+  'image/webp': [[0x52, 0x49, 0x46, 0x46]],
+}
+const isA = (type: string, data: Uint8Array) => (SIGNATURES[type] ?? []).some((start) => start.every((byte, i) => data[i] === byte))
+
+/**
+ * A picture held inside the file, as an address that carries it; null if it is not one Omsett
+ * carries. A part is believed to be a picture only when its bytes say so, not its name.
+ */
 export function pictureAddress(parts: Map<string, Uint8Array>, path: string, budget: { left: number }): string | null {
   const data = parts.get(path.toLowerCase())
   const type = PICTURES[path.slice(path.lastIndexOf('.') + 1).toLowerCase()]
-  if (!data || !type || data.length > budget.left) return null
+  if (!data || !type || data.length > budget.left || !isA(type, data)) return null
   budget.left -= data.length
   let binary = ''
   for (let i = 0; i < data.length; i += 0x8000) binary += String.fromCodePoint(...data.subarray(i, i + 0x8000))
