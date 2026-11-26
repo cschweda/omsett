@@ -1,4 +1,7 @@
+import { existsSync } from 'node:fs'
 import { readFile } from 'node:fs/promises'
+import { dirname, join } from 'node:path'
+import { pathToFileURL } from 'node:url'
 import { createRequire } from 'node:module'
 import { createDataEngine } from './data'
 import { createSubtitleEngine } from './subtitle'
@@ -13,6 +16,7 @@ import { createAudioEngine, createAudioMp3Engine, type Mp3Decoder, type Mp3Encod
 import { createHeifEngine, type HeifModule } from './heif'
 import { engineInfo, resvgFonts, typstFonts, vipsModules } from './info'
 import { createTypstEngine, SCRIPTS } from './typst'
+import { createPandocEngine } from './pandoc'
 import { createResvgEngine, type ResvgHost } from './resvg'
 import { createMagickEngine, type MagickApi } from './magick'
 import { createVipsEngine, type VipsModule } from './vips'
@@ -74,6 +78,14 @@ export function createNodeEngines(): Record<string, Engine> {
     fonts: () => Promise.all(typstFonts.map(async (file) => new Uint8Array(await readFile(require.resolve(file))))),
     pieces: async (script) => JSON.parse(await readFile(require.resolve(`${SCRIPTS[script].pack}/unicode.json`), 'utf8')) as Record<string, string>,
     piece: async (script, name, weight) => new Uint8Array(await readFile(require.resolve(`${SCRIPTS[script].pack}/files/${SCRIPTS[script].stem}-${name}-${weight}-normal.woff`))),
+  })
+  // Pandoc's package says where its parts are only through its main file; its loader and binary
+  // are found from the top of the package, wherever its main file is.
+  let pandocDir = dirname(require.resolve('pandoc-wasm'))
+  while (!existsSync(join(pandocDir, 'package.json'))) pandocDir = dirname(pandocDir)
+  engines.pandoc = createPandocEngine({
+    wasm: async () => new Uint8Array(await readFile(join(pandocDir, 'src', 'pandoc.wasm'))),
+    core: () => import(pathToFileURL(join(pandocDir, 'src', 'core.js')).href),
   })
   engines.ebook = createEbookEngine()
   engines.audio = createAudioEngine()

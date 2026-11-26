@@ -29,16 +29,16 @@ Omsett is a free, open-source file converter. Every conversion runs in your brow
 <!-- facts:start -->
 <!-- Generated from the registry by `pnpm readme:facts`. Do not edit by hand. -->
 
-**78 formats, 330 conversions**, every one of them run in your browser, on your device, and tested against 788 files made on purpose to be broken, hostile or dishonest. How many tests there are today is on the site's [Trust](https://omsett.com/trust) page, counted at every build.
+**80 formats, 334 conversions**, every one of them run in your browser, on your device, and tested against 805 files made on purpose to be broken, hostile or dishonest. How many tests there are today is on the site's [Trust](https://omsett.com/trust) page, counted at every build.
 
 | Kind | Converts to and from | Reads only |
 | --- | --- | --- |
 | Pictures | WebP, JPEG, PNG, AVIF, GIF, TIFF, JPEG XL, BMP, TGA, QOI, Netpbm, ICO, ICNS, CUR, JPEG 2000, DDS | HEIC, Animated PNG, PSD, PSB, OpenEXR, Radiance HDR, FITS, DICOM, DNG, PCX, SGI, Sun Raster |
 | Drawings | — | SVG, SVGZ |
-| Documents | DOCX, ODT | DOC |
+| Documents | DOCX, ODT, RTF | DOC |
 | Presentations | — | PPTX, PPT, ODP |
 | PDF | PDF | — |
-| Text and markup | Markdown, HTML | — |
+| Text and markup | Markdown, HTML, Plain text | — |
 | Spreadsheets | XLSX | XLS, ODS |
 | Data | JSON, YAML, CSV, XML, TOML, JSON Lines, TSV, vCard, iCalendar | — |
 | Subtitles | SRT, WebVTT, ASS, SSA, TTML, LRC, SBV, SAMI, MicroDVD | — |
@@ -80,6 +80,7 @@ A file is offered the formats of its own kind: a picture becomes another picture
 - **Speaker notes on request**: a presentation's notes are left out unless you tick the box, and then follow their slide under a heading of their own. Hidden slides never come.
 - **Opens OpenDocument presentations (.odp)** and makes them a web page, a Word document, Markdown or a PDF, a section to a slide. Speaker notes, hidden slides and hidden shapes are left behind.
 - **Opens OpenDocument spreadsheets (.ods)** and makes them XLSX, CSV, JSON or any other data format, with numbers as numbers, dates as dates, and the value each formula last showed. Hidden sheets, comments and macros are left behind.
+- **Reads and writes RTF and plain text**: RTF to and from Word, ODT, Markdown, a PDF and the rest, with real headings, lists and tables, and what was deleted with changes tracked left behind. Reading RTF fetches Pandoc, once, only when it is needed.
 - **Reads and writes OpenDocument text (.odt)**, as LibreOffice and many governments save it: to and from DOCX, a web page, Markdown, a PDF and the rest. Deleted text, comments, notes and hidden sections are left behind.
 - **Opens Office files saved with macros or as templates** (.docm, .dotx, .pptm, .ppsx, .xlsm and the rest) as the documents, presentations and workbooks they are. The macros are never run and never carried over.
 - **Opens Word, Excel and PowerPoint files from before 2007 (.doc, .xls, .ppt)** and makes them DOCX, a web page, Markdown, PDF, XLSX, CSV or JSON, without running a macro or working out a formula. Speaker notes and hidden slides are left behind.

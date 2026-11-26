@@ -1,6 +1,6 @@
 {
   "name": "@omsett/engines",
-  "version": "0.59.0",
+  "version": "0.60.0",
   "private": true,
   "type": "module",
   "license": "MIT",
@@ -30,6 +30,7 @@
     "fast-xml-parser": "^5.12.1",
     "libheif-js": "^1.23.5",
     "mpg123-decoder": "1.0.3",
+    "pandoc-wasm": "1.1.0",
     "pdfjs-dist": "6.5.438",
     "rehype-parse": "9.0.1",
     "rehype-raw": "7.0.0",

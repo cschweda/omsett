@@ -1107,8 +1107,8 @@ trap(
     "notes.txt",
     b"Shopping, Thursday\nmilk, eggs\nbread: two loaves\n",
     "Ordinary notes that happen to have commas and colons in them. A .txt name says they are "
-    "not a table.",
-    "unknown",
+    "not a table: they are plain text, and are read as that.",
+    "txt", node="succeeds",
     group=G,
 )
 
@@ -4895,6 +4895,69 @@ trap("open-presentation-named-as-powerpoint.pptx", ODP,
      "An OpenDocument presentation with the name of a PowerPoint file. It is read as what it is.",
      "odp", node="succeeds", mismatch=True, group="identity")
 
+# --- RTF and plain text -----------------------------------------------------------------------------
+# RTF is text in braces, read by Pandoc after Omsett's own walk of it. Its words can be marked
+# deleted, hidden, a comment, or an instruction, and a field can name a file on the computer.
+# Its groups can nest without end, and a run of raw bytes can say it is longer than the file.
+import rtf as RT  # noqa: E402
+
+G = "documents"
+RTF = read("rtf", "sample.rtf")
+NOT_RTF = "This file is not a valid RTF document"
+
+
+def rtf_doc(*paragraphs, **more):
+    return RT.document("".join(RT.para(p) for p in paragraphs), **more)
+
+
+trap("truncated.rtf", RTF[: len(RTF) // 2],
+     "An RTF document cut off half-way, before the brace that closes it. It is refused as damaged, not read as far as it goes.",
+     "rtf", node="fails", note=NOT_RTF, group=G)
+trap("groups-three-hundred-deep.rtf", RT.document("{" * 300 + "deep" + "}" * 300),
+     "A group inside a group, three hundred times over. Two hundred is deeper than any document nests.",
+     "rtf", node="fails", note=NOT_RTF, group=G)
+trap("raw-bytes-past-the-end.rtf", rtf_doc("{\\bin2000000000 x}"),
+     "A run of raw bytes that says it is two billion bytes long, in a file of a few hundred.",
+     "rtf", node="fails", note=NOT_RTF, group=G)
+trap("words-after-the-end.rtf", RT.document(RT.para("Words.") + "}}"),
+     "A document that closes its last brace early and goes on after it. What follows the end would be read by one program and not another; the document is refused, not read as far as its end.",
+     "rtf", node="fails", note=NOT_RTF, group=G)
+trap("what-was-deleted.rtf", rtf_doc("The offer is {\\deleted one million }two million.", "Then \\deleted cut \\u233? words \\deleted0 back."),
+     "A document with changes tracked. The figures and words that were deleted are still in the file, marked so, and are not carried across.",
+     "rtf", node="succeeds", group=G, absent="one million")
+trap("hidden-and-commented.rtf", rtf_doc("Minutes of the meeting.{\\v  Do not circulate the paragraph about pay.}{\\*\\annotation{\\*\\atnid X}Check the redundancy figures}"),
+     "Hidden words, and a comment beside the text. Neither is carried across.",
+     "rtf", node="succeeds", group=G, absent="circulate")
+trap("field-that-includes-a-file.rtf", rtf_doc('{\\field{\\*\\fldinst INCLUDETEXT "C:\\\\\\\\Users\\\\\\\\secrets.txt"}{\\fldrslt Report.}}', '{\\field{\\*\\fldinst INCLUDEPICTURE "http://canary.invalid/x.png"}{\\fldrslt }}'),
+     "A field that tells a word processor to put a file from the computer into the document, and one that fetches a picture from another site. What the first last showed is kept; neither is followed.",
+     "rtf", node="succeeds", group=G, absent="canary.invalid")
+trap("link-that-is-code.rtf", rtf_doc("Please " + '{\\field{\\*\\fldinst{HYPERLINK "javascript:' + MARK + '"}}{\\fldrslt read the report}}' + " today."),
+     "A link whose address is a line of code. The words of the link are kept; the address is not.",
+     "rtf", node="succeeds", group=G, absent="javascript:")
+trap("embedded-object.rtf", rtf_doc("Before.", "{\\object\\objemb{\\*\\objclass Package}{\\*\\objdata 0105000002000000" + SHELL.encode().hex() + "}}", "After."),
+     "A program packed inside the document as an embedded object, as such files were used to attack people. It is neither run nor carried anywhere.",
+     "rtf", node="succeeds", group=G)
+trap("picture-that-is-a-script.rtf", rtf_doc("A chart: {\\pict\\pngblip\\picw10\\pich10 " + (b"<script>" + MARK.encode() + b"</script>").hex() + "}"),
+     "A picture that says it is a PNG and is a script. It is not put on the page.",
+     "rtf", node="succeeds", group=G)
+trap("the-author.rtf", RT.document(RT.para("A short note."), title="Note", author="Ada Lovelace, the author"),
+     "A document whose information block names its author and the last person to save it. Neither is carried across.",
+     "rtf", node="succeeds", group=G, absent="Lovelace")
+trap("document-named-as-rtf.rtf", read("docx", "sample.docx"),
+     "A Word document with the name of an RTF document. It is read as what it is.",
+     "docx", node="succeeds", mismatch=True, group="identity")
+trap("text-named-as-rtf.rtf", b"Just a few words, with no braces at all.\n",
+     "Plain text with the name of an RTF document. It is not RTF, and is not taken for it.",
+     "unknown", group="identity")
+
+G = "text"
+trap("picture-named-as-text.txt", GOOD,
+     "A PNG with the name of a text file. A name never makes text of something that is not.",
+     "png", node="succeeds", mismatch=True, group="identity")
+trap("not-utf8.txt", "Caf\u00e9 au lait, in the encoding Windows once used.\n".encode("cp1252"),
+     "Text in an older encoding than UTF-8. It is not read as text, as it cannot be read correctly.",
+     "unknown", group="identity")
+
 # --- e-books: AZW3 and MOBI ----------------------------------------------------------------------
 # A Kindle book is a list of numbered records, and tables that say which stretch of text is
 # which page and which piece goes where. Every one of those is a number that can lie. A book
@@ -5391,6 +5454,11 @@ code("code.odp", P2.presentation([P2.page("One", [P2.box(O.p(XML_CANARY.decode()
                                                     '<draw:frame>%s</draw:frame>' % O.table([[XML_CANARY.decode(), "__proto__"], ["constructor", XML_CANARY.decode()]])],
                                   notes=XML_CANARY.decode())], title=XML_CANARY.decode(), author=XML_CANARY.decode(), pictures={"Pictures/x.png": CB}),
      WHY % "as a slide's title, in its outline, as the words and the address of a link, as a picture's description and as the picture itself, in a table, as speaker notes, and as the title and the author", "odp", node="succeeds")
+code("code.rtf", RT.document(RT.heading(CANARY, 0) + RT.para(RT.letters(CANARY) + " " + '{\\field{\\*\\fldinst{HYPERLINK "javascript:' + MARK + '"}}{\\fldrslt ' + RT.letters(CANARY) + '}}') + RT.table([[CANARY, "__proto__"], ["constructor", CANARY]]),
+                             title=CANARY, author=CANARY),
+     WHY % "as a heading, as text, as the words and the address of a link, in a table, and as the title and the author", "rtf", node="succeeds")
+code("code.txt", (CANARY + "\n\n" + CANARY + "\n").encode(),
+     WHY % "as the words of a plain text file", "txt", node="succeeds")
 code("code.ppt", P.presentation([code_slide], title=CB[:200], author=CB[:200], notes_text=CANARY, pictures=[CB + b" " * 64], extra=[("_VBA_PROJECT", b"Sub Auto_Open(): Shell \"" + SHELL.encode() + b"\": End Sub")]),
      WHY % "as a title, in a list, in a box drawn by hand, as a picture's description and as the picture itself, in a table, as the words and the address of a link, as speaker notes, as the title and the author, and beside a macro set to run on opening", "ppt", node="succeeds")
 code("code.xls", X.container([("Workbook", X.workbook([(CANARY[:28], X.text_cell(0, 0, 0) + X.text_cell(0, 1, 1) + X.text_cell(1, 0, 2) + X.text_cell(1, 1, 3) + X.rec(0x0204, X.cell(2, 0) + X.words(CANARY)) + X.formula(2, 1, "=cmd|' /C " + SHELL + "'!A0"))], ["name", "__proto__", CANARY, "polluted"])), ("\x05SummaryInformation", X.about(CB[:200], CB[:200], MARK.encode())), ("_VBA_PROJECT_CUR", b"Sub Auto_Open(): Shell \"" + SHELL.encode() + b"\": End Sub")], small=True),

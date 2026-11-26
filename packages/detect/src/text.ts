@@ -29,6 +29,7 @@ const FOUNTAIN = found('fountain', 'text/x-fountain')
 const FDX = found('fdx', 'application/xml')
 const HTML = found('html', 'text/html')
 const MARKDOWN = found('md', 'text/markdown')
+const PLAIN = found('txt', 'text/plain')
 
 /** What a name's ending claims, for the formats whose contents cannot say. */
 const NAMED: Record<string, Found> = {
@@ -216,7 +217,7 @@ export function sniffText(head: Uint8Array, complete: boolean, name?: string): F
     if (whole && (lines.length > 1 || claimed === JSONL)) return JSONL
     // A bracket opens plenty of things that are not JSON ("[x] buy milk"). Where the whole
     // file is in hand it must read as JSON, unless its name says that is what it set out to be.
-    if (complete && ending !== 'json' && !parses(decoded)) return null
+    if (complete && ending !== 'json' && !parses(decoded)) return ending === 'txt' || ending === 'text' ? PLAIN : null
     return JSON_
   }
 
@@ -227,6 +228,9 @@ export function sniffText(head: Uint8Array, complete: boolean, name?: string): F
   const line = content[0]?.trim()
   if (claimed === TOML) return line === undefined || looksToml(line) ? TOML : null
   if (claimed === YAML || claimed === CSV || claimed === TSV) return claimed
+  // Plain text is any text at all, like Markdown: only its name says that this is what it is.
+  // It is asked last, so that a file named .txt that is a table, JSON or subtitles is that.
+  if (ending === 'txt' || ending === 'text') return PLAIN
   if (ending !== null && claimed === undefined && !['json', 'xml'].includes(ending)) return null
   if (line === undefined) return null
   if (looksToml(line)) return TOML

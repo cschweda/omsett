@@ -161,6 +161,19 @@ Kindle books (AZW3 and MOBI) are read, and EPUB is written, by Omsett's own code
 is used. The sample books in `fixtures/azw3` and `fixtures/mobi` are a few pages written for the
 tests by `fixtures/_tools/kindle.py`; nobody's book is in the repository.
 
+### pandoc (RTF)
+
+RTF is read by [Pandoc](https://pandoc.org), by John MacFarlane and its contributors,
+GPL-2.0-or-later, in the WebAssembly build the Pandoc project publishes, shipped unmodified
+from the npm package [`pandoc-wasm`](https://github.com/pandoc/pandoc-wasm) 1.1.0 (Pandoc
+3.10). Its source is at https://github.com/jgm/pandoc, and its licence is served beside the
+binary as `/engines/pandoc.LICENSE.txt`. It runs on
+[`@bjorn3/browser_wasi_shim`](https://github.com/bjorn3/browser_wasi_shim) (MIT OR Apache-2.0).
+Pandoc is a separate program that Omsett starts and gives a file to; it is fetched only when an
+RTF is converted. RTF is written, and plain text read and written, by Omsett's own code. Of the
+two RTF samples in `fixtures/rtf`, one is written by `fixtures/_tools/rtf.py` and one by
+macOS's `textutil`.
+
 ### markup (OpenDocument presentations)
 
 ODP is read by Omsett's own code, written from OASIS's published standard (OpenDocument 1.3),

@@ -2,6 +2,7 @@
 // engine binaries (content-hashed, with a manifest the app imports), fonts, and the sample file.
 // Nothing here is committed; node_modules and fixtures/ are the single sources.
 import { createHash } from 'node:crypto'
+import { existsSync } from 'node:fs'
 import { copyFile, mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { createRequire } from 'node:module'
 import { dirname, join } from 'node:path'
@@ -17,6 +18,9 @@ const generatedDir = join(web, 'app', 'generated')
 
 // Resolve engine binaries from packages/engines, so there is one pinned version.
 const fromEngines = createRequire(join(repo, 'packages', 'engines', 'package.json'))
+// The top of Pandoc's package, found from its main file, wherever in the package that is.
+let pandocRoot = dirname(fromEngines.resolve('pandoc-wasm'))
+while (!existsSync(join(pandocRoot, 'package.json'))) pandocRoot = dirname(pandocRoot)
 const fromWeb = createRequire(join(web, 'package.json'))
 
 async function hashed(source: string, stem: string, ext: string) {
@@ -93,6 +97,10 @@ const manifest = {
     fonts: await Promise.all(typstFonts.map((file) => hashed(fromEngines.resolve(file), file.split('/').pop()!.replace('.woff', ''), 'woff'))),
     scripts: Object.fromEntries(await Promise.all(SCRIPT_FACES.map(async (id) => [id, await scriptFace(id)]))) as Record<string, Awaited<ReturnType<typeof scriptFace>>>,
   },
+  // Pandoc, which reads and writes RTF. Its package names its binary only through its main file.
+  pandoc: {
+    wasm: await hashed(join(pandocRoot, 'src', 'pandoc.wasm'), 'pandoc', 'wasm'),
+  },
   // LAME, which packs MP3. The decoder, mpg123, is carried inside its own script.
   mp3: {
     wasm: await hashed(fromEngines.resolve('wasm-media-encoders/wasm/mp3'), 'lame', 'wasm'),
@@ -118,6 +126,9 @@ await copyFile(
   join(dirname(fromEngines.resolve('@imagemagick/magick-wasm/magick.wasm')), '..', '..', 'NOTICE'),
   join(enginesDir, 'magick.NOTICE.txt'),
 )
+
+// Pandoc is GPL-2.0-or-later: its licence, and where its source is, go beside it.
+await copyFile(join(pandocRoot, 'LICENSE'), join(enginesDir, 'pandoc.LICENSE.txt'))
 
 for (const path of SAMPLES) await copyFile(join(repo, 'fixtures', path), join(web, 'public', `sample.${path.split('.').pop()}`))
 

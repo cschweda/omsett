@@ -34,6 +34,12 @@ const FROM_WORD = [{ id: 'word-kept', text: 'Headings, lists, tables, links and 
 const TO_WORD = [{ id: 'word-written', text: 'Pictures inside the page go into the document. A picture kept on a website is not fetched: its description and address are written in its place.' }]
 
 const FROM_OLD_SLIDES = [{ id: 'old-slides-kept', text: 'Each slide becomes a section, with its title as a heading. Text, lists, tables, links, and PNG and JPEG pictures with their descriptions are kept. A PPT does not mark which rows of a table are headings, so none are. Layout, animations and hidden slides are not kept, and speaker notes only if you choose to include them.' }]
+const FROM_RTF = [{ id: 'rtf-kept', text: 'Headings, lists, tables, links, bold, italic and pictures are kept. Fonts, colours, page layout, headers, footers, footnotes and comments are not, nor any text deleted with changes tracked. A picture comes without a description, as RTF has nowhere to keep one.' }]
+const FROM_TEXT = [
+  { id: 'text-as-paragraphs', text: 'Each block of lines, between blank lines, becomes a paragraph; the lines within it join into one.' },
+  { id: 'language-assumed', text: 'Plain text does not say what language it is in, and a web page should. Choose the language before converting.' },
+]
+const TO_TEXT = [{ id: 'text-only', text: 'Only the words are kept: headings, lists and tables are set out as lines, and pictures as their descriptions. Bold, italic, links and layout are not.' }]
 const FROM_SLIDES = [{ id: 'slides-kept', text: 'Each slide becomes a section, with its title as a heading. Text, lists, tables, links and pictures with their descriptions are kept. Layout, animations and hidden slides are not, and speaker notes only if you choose to include them.' }]
 
 // Screenplays.
@@ -107,6 +113,10 @@ export const overrides: EdgeOverride[] = [
   { from: 'png', to: 'pdf', warnings: PICTURE_PAGE },
   { from: 'html', to: 'docx', warnings: [...TO_WORD, ...CHECK_ACCESS] },
   { from: 'html', to: 'odt', warnings: [...TO_WORD, ...CHECK_ACCESS] },
+  { from: 'rtf', to: 'html', warnings: [...FROM_RTF, ...CHECK_ACCESS] },
+  { from: 'html', to: 'rtf', warnings: [...TO_WORD, ...CHECK_ACCESS] },
+  { from: 'txt', to: 'html', warnings: FROM_TEXT },
+  { from: 'html', to: 'txt', warnings: TO_TEXT },
   ...BESIDE_WORKBOOK.flatMap((other) => [
     { from: 'xlsx', to: other, warnings: WORKBOOK_READ },
     { from: other, to: 'xlsx', warnings: WORKBOOK_WRITTEN },

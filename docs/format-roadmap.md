@@ -96,7 +96,8 @@ When a format ships, update its row here, in the same change.
 | Footnotes, headers and footers; pictures saved as separate files; a score for the accessibility of the result | Browser | the same | Planned |
 | ODT, OTT to HTML, and through it to DOCX, Markdown, PDF and EPUB; read only | Browser | `markup` (Omsett's own reader, through the same `openOffice`) | **Done** (0.55.0) |
 | Writing ODT, from HTML and through it from every document, presentation and book | Browser | `markup` (Omsett's own writer, checked against OASIS's schema) | **Done** (0.58.0) |
-| RTF, TXT to and from these | Browser | Pandoc (WASM) | Planned |
+| RTF to and from every document format | Browser | read by Pandoc (WASM, fetched only for RTF) after Omsett's own walk of the file; written by Omsett's own writer | **Done** (0.60.0) |
+| Plain text (TXT) to and from every document format | Browser | `markup` (Omsett's own code) | **Done** (0.60.0) |
 | DOCM, DOTX, DOTM (read, macros ignored) | Browser | `markup`, as DOCX | **Done** (0.54.1) |
 | EML, Outlook MSG to HTML, TXT; MSG to EML | Browser | JavaScript | Planned |
 | DOCX to PDF, tagged | Desktop; Browser if the Typst route holds | LibreOffice; Typst | Planned |
@@ -153,7 +154,7 @@ When a format ships, update its row here, in the same change.
 | Markdown ↔ HTML | Browser | `markup` (unified: remark and rehype), cleaned with rehype-sanitize | **Shipped** (0.12.0) |
 | The page's language, chosen when converting Markdown to HTML | Browser | the same | **Shipped** (0.14.0) |
 | "The article only" from a web page, without its navigation and footer | Browser | the same | Planned |
-| TXT, reStructuredText, LaTeX, Org, AsciiDoc, Typst, MediaWiki, DocBook, Jupyter, Textile, man, OPML to each other and to Markdown and HTML, and to DOCX, EPUB, PPTX | Browser | Pandoc (WASM) | Planned |
+| reStructuredText, LaTeX, Org, AsciiDoc, Typst, MediaWiki, DocBook, Jupyter, Textile, man, OPML to each other and to Markdown and HTML, and to DOCX, EPUB, PPTX | Browser | Pandoc (WASM), already fetched for RTF | Planned |
 | Source files and logs, read as text (never run) | Browser | — | Planned |
 | MHTML (read) | Browser | JavaScript | Planned |
 

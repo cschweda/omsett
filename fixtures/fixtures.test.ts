@@ -106,7 +106,7 @@ describe('fixtures through every Node-capable engine', () => {
           // the one thing written at another size, and the registry says which.
           // Markdown and Fountain are plain text with no mark of their own, known by name alone,
           // so for those two the name is given.
-          const after = await detect(output.blob, registry.formats, ['md', 'fountain'].includes(to.id) ? output.name : undefined)
+          const after = await detect(output.blob, registry.formats, ['md', 'fountain', 'txt'].includes(to.id) ? output.name : undefined)
           expect(after.kind === 'known' && after.format.id).toBe(to.id)
           expect(after.kind === 'known' && after.dimensions).toEqual(
             writtenSize(candidate.defaultOptions, before.kind === 'known' ? before.dimensions : null),

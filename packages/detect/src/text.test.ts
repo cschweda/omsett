@@ -14,7 +14,8 @@ describe('telling text formats apart', () => {
   })
 
   it('does not take a bracket for JSON when the whole file is there to read', () => {
-    expect(sniff('[x] buy milk\n[ ] post letter\n', 'todo.txt')).toBeNull()
+    // Not JSON; with a .txt name it is plain text, which any text is.
+    expect(sniff('[x] buy milk\n[ ] post letter\n', 'todo.txt')).toBe('txt')
     expect(sniff('{not json at all}')).toBeNull()
     // Named as JSON, a broken file is JSON that is broken, and is reported as that.
     expect(sniff('{"a": ', 'cut-short.json')).toBe('json')
@@ -43,7 +44,8 @@ describe('telling text formats apart', () => {
     expect(sniff('title = "x"\n', 'readme.md')).toBe('md')
     // Without the name there is nothing to go on.
     expect(sniff('# Title\n\nWords.\n')).toBeNull()
-    expect(sniff('# Title\n\nWords.\n', 'readme.txt')).toBeNull()
+    // Marks or no marks, a .txt is plain text: only a Markdown name makes Markdown of it.
+    expect(sniff('# Title\n\nWords.\n', 'readme.txt')).toBe('txt')
     expect(sniff('', 'empty.md')).toBeNull()
   })
 
@@ -87,7 +89,8 @@ describe('telling text formats apart', () => {
   })
 
   it('offers nothing when the name says the text is something else', () => {
-    expect(sniff('id,name\n1,Ada\n', 'table.txt')).toBeNull()
+    // A .txt is not offered as data: its name says it is text, and plain text it is.
+    expect(sniff('id,name\n1,Ada\n', 'table.txt')).toBe('txt')
     expect(sniff('title = "x"\n', 'readme.rst')).toBeNull()
     expect(sniff('name: Ada\n', 'photo.png')).toBeNull()
     // No ending at all is no claim.
@@ -152,7 +155,7 @@ describe('telling text formats apart', () => {
     expect(sniff('[{"id":0,"text":"' + 'x'.repeat(1000), 'big.json', false)).toBe('json')
     expect(sniff('{"a":"' + 'x'.repeat(1000), undefined, false)).toBe('json')
     // Other text cut mid-line says nothing about what it is.
-    expect(sniff('x'.repeat(1000), 'big.txt', false)).toBeNull()
+    expect(sniff('x'.repeat(1000), 'big.txt', false)).toBe('txt')
   })
 
   it('knows a table whose first row has a line break inside a cell', () => {
