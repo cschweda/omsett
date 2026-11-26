@@ -47,6 +47,7 @@ const samples: Record<string, string> = {
   tsv: 'tsv/sample.tsv',
   xlsx: 'xlsx/sample.xlsx',
   xls: 'xls/sample.xls',
+  ods: 'ods/sample.ods',
   vcf: 'vcf/sample.vcf',
   ics: 'ics/sample.ics',
   srt: 'srt/sample.srt',
@@ -100,6 +101,7 @@ const particular: Record<string, string> = {
   'tsv>ics': 'tsv/events.tsv',
   'xlsx>ics': 'xlsx/events.xlsx',
   'xls>ics': 'xls/events.xls',
+  'ods>ics': 'ods/events.ods',
 }
 const path = (id: string, to?: string) =>
   fileURLToPath(new URL(`../fixtures/${particular[`${id}>${to}`] ?? samples[id]}`, import.meta.url))

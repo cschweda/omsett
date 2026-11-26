@@ -7,6 +7,46 @@ The paragraph that opens a version is its teaser: the home page shows its first 
 in the "What's new" banner, so keep it to two or three sentences on what a visitor will notice.
 A line beginning "Released" gives the date.
 
+## 0.56.0
+
+Released 26 November 2026.
+
+OpenDocument spreadsheets, the .ods files LibreOffice saves, can now be converted: to XLSX, CSV,
+JSON or any other data format, a sheet at a time or all at once. Numbers stay numbers, dates
+stay dates, and each formula gives the value it last showed; hidden sheets and comments stay
+behind.
+
+### Added
+
+- **ODS is read** (and OTS, its template), into the same shape an XLSX and an XLS are, so it
+  converts to everything they do: XLSX, CSV, TSV, JSON, YAML, XML and the rest, a web page and
+  through it PDF, a Word document and Markdown, and contacts and calendars where its columns
+  say so. Which sheet is converted is a choice, as for any workbook. Read only.
+- **Its cells are what they say they are**: numbers, money and percentages as numbers, dates
+  and moments as dates, times of day, truths, text in several paragraphs as lines, an error as
+  the error shown. Formulas are never worked out. A guide to how a word is said is not its text.
+- **What a conversion leaves behind**: hidden sheets, comments on cells, macros (never run),
+  and the author. The details before converting list the sheets and say which of the rest a
+  spreadsheet holds.
+- **17 trap files**, and a code trap: a row repeated a million times and a cell across two
+  million columns, both counted before anything is set aside; a bomb; a password; groups of
+  rows two hundred deep; a formula that asks another site for a page; a hidden sheet that says
+  in another vocabulary that it is shown, and one hidden by the style its style is based on; a
+  cell repeated one and a half times. An adversarial review of the reader found five problems
+  before release; each is fixed and has its trap or test.
+
+### Fixed
+
+- **A workbook whose first row is very long cells no longer runs the converter out of
+  memory.** Each cell of the first row names a column, and each name was made by copying the
+  cell: sixteen thousand cells of a million letters, from a file of a few kilobytes, asked for
+  sixteen gigabytes. A column's name is now kept to 255 letters. This held for XLSX and XLS
+  too.
+- **A part of an office file that declares shorthand of its own is refused wherever it does
+  so.** The check looked at the first four thousand letters, and a long comment could push the
+  declaration past it. Every office reader (DOCX, PPTX, ODT, XLSX, ODS) now looks at the whole
+  part.
+
 ## 0.55.0
 
 Released 26 November 2026.

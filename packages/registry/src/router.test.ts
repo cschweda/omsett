@@ -59,7 +59,7 @@ describe('router, real registry', () => {
     expect(ids).toEqual([
       'webp', 'jpeg', 'png', 'avif', 'gif', 'tiff', 'jxl', 'bmp', 'tga', 'qoi', 'pnm',
       'heic', 'apng', 'svg', 'svgz', 'psd', 'psb', 'ico', 'icns', 'cur', 'jp2', 'exr', 'hdr', 'dds', 'fits', 'dcm', 'dng', 'pcx', 'sgi', 'ras',
-      'json', 'yaml', 'csv', 'xlsx', 'xml', 'toml', 'jsonl', 'tsv', 'vcf', 'ics', 'xls',
+      'json', 'yaml', 'csv', 'xlsx', 'xml', 'toml', 'jsonl', 'tsv', 'vcf', 'ics', 'xls', 'ods',
       'srt', 'vtt', 'ass', 'ssa', 'ttml', 'lrc', 'sbv', 'smi', 'microdvd',
       'md', 'html', 'docx', 'pdf', 'pptx', 'doc', 'ppt', 'odt',
       'fountain', 'fdx', 'drafter',
@@ -69,7 +69,7 @@ describe('router, real registry', () => {
       'epub', 'azw3', 'mobi',
     ])
     const readOnly = new Set(everything.formats.filter((f) => f.readOnly).map((f) => f.id))
-    expect([...readOnly].sort()).toEqual(['apng', 'azw3', 'dcm', 'dng', 'doc', 'exr', 'fits', 'hdr', 'heic', 'mobi', 'odt', 'pcx', 'ppt', 'pptx', 'psb', 'psd', 'ras', 'sgi', 'svg', 'svgz', 'xls'])
+    expect([...readOnly].sort()).toEqual(['apng', 'azw3', 'dcm', 'dng', 'doc', 'exr', 'fits', 'hdr', 'heic', 'mobi', 'ods', 'odt', 'pcx', 'ppt', 'pptx', 'psb', 'psd', 'ras', 'sgi', 'svg', 'svgz', 'xls'])
     // Every pair of the same kind converts, directly or through a step in between; nothing is
     // written as HEIC. A picture never becomes data, nor data a picture.
     const kind = (id: string) => formatById(everything, id)!.category
@@ -85,7 +85,7 @@ describe('router, real registry', () => {
     // Data formats convert to each other in one step, and a file is offered only its own kind.
     expect(all.route('csv', 'yaml')!.edges.map((e) => e.candidates[0]!.engine)).toEqual(['data'])
     // A data file is offered data formats, and after them the ways of setting a table out to be read.
-    expect(all.targetsFor(['json']).map((t) => t.format.id)).toEqual(['json', 'yaml', 'csv', 'xlsx', 'xml', 'toml', 'jsonl', 'tsv', 'vcf', 'ics', 'xls', 'md', 'html', 'docx', 'pdf', 'doc', 'odt'])
+    expect(all.targetsFor(['json']).map((t) => t.format.id)).toEqual(['json', 'yaml', 'csv', 'xlsx', 'xml', 'toml', 'jsonl', 'tsv', 'vcf', 'ics', 'xls', 'ods', 'md', 'html', 'docx', 'pdf', 'doc', 'odt'])
     expect(all.route('csv', 'html')!.edges.map((e) => e.candidates[0]!.engine)).toEqual(['data'])
     expect(all.route('xlsx', 'pdf')!.edges.map((e) => `${e.from}>${e.to}`)).toEqual(['xlsx>html', 'html>pdf'])
     expect(all.route('xls', 'pdf')!.edges.map((e) => `${e.from}>${e.to}`)).toEqual(['xls>html', 'html>pdf'])

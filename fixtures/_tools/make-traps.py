@@ -2913,6 +2913,12 @@ docu(
     "docx", node="fails", note=NOT_DOC,
 )
 docu(
+    "shorthand-after-a-long-comment.docx",
+    doc({"word/document.xml": body_of(words("x"), before="<!--" + "x" * 5000 + '--><!DOCTYPE w:document [<!ENTITY s "words from nowhere">]>')}),
+    "A document whose text declares shorthand of its own after a comment five thousand letters long, past where the check once looked. Office files never declare any, and the whole part is looked at.",
+    "docx", node="fails", note="This file is not a valid DOCX document",
+)
+docu(
     "bomb-inside.docx",
     doc({"word/document.xml": body_of(words("x") + " " * (300 * 1024 * 1024))}),
     "A document whose text part is three hundred megabytes of spaces, packed to 290 kilobytes.",
@@ -4654,6 +4660,9 @@ trap("locked-with-a-password.odt", O.document(ODT_PLAIN, encrypted=True),
      "An OpenDocument text saved with a password. Its parts are scrambled, and are not guessed at.",
      "odt", node="fails", note="This document is locked with a password, and cannot be read without it", group=G)
 BOMB = '<!DOCTYPE lolz [<!ENTITY lol "lol"><!ENTITY lol2 "&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;"><!ENTITY lol3 "&lol2;&lol2;&lol2;&lol2;&lol2;&lol2;&lol2;&lol2;&lol2;&lol2;"><!ENTITY lol4 "&lol3;&lol3;&lol3;&lol3;&lol3;&lol3;&lol3;&lol3;&lol3;&lol3;">]>'
+trap("shorthand-after-a-long-comment.odt", O.document(ODT_PLAIN, prolog="<!--" + "x" * 5000 + '-->' + '<!DOCTYPE office:document-content [<!ENTITY s "words from nowhere">]>'),
+     "A document whose text part declares shorthand of its own after a comment five thousand letters long, past where the first check looked.",
+     "odt", node="fails", note=NOT_ODT, group=G)
 trap("entity-bomb.odt", O.document(O.p("&lol4;"), prolog=BOMB),
      'The "billion laughs" in the text of an open document.',
      "odt", node="fails", note=NOT_ODT, group=G)
@@ -4710,11 +4719,101 @@ trap("macro-in-an-open-document.odt", O.document(ODT_PLAIN + '<text:p><text:scri
      "An open document with a macro in it and a script in its text. Neither is run nor carried anywhere.",
      "odt", node="succeeds", group=G, absent="Shell")
 trap("spreadsheet-named-as-text.odt", O.document(ODT_PLAIN, mimetype="application/vnd.oasis.opendocument.spreadsheet"),
-     "A file that says, in the first thing it holds, that it is an OpenDocument spreadsheet, with the name of a text document. Omsett does not read OpenDocument spreadsheets yet, and does not take it for text.",
-     "unregistered", group="identity")
+     "A file that says, in the first thing it holds, that it is an OpenDocument spreadsheet, with the name of a text document, and that holds text and no sheets. It is not taken for text, and is refused as a spreadsheet with nothing in it.",
+     "ods", node="fails", mismatch=True, note="This file is not a valid ODS spreadsheet", group="identity")
 trap("open-document-named-as-word.docx", ODT,
      "An OpenDocument text with the name of a Word document. It is read as what it is.",
      "odt", node="succeeds", mismatch=True, group="identity")
+
+# --- OpenDocument spreadsheets: ODS -----------------------------------------------------------------
+# The same ZIP of XML, and a sheet that can say a cell or a row is repeated a million times. An
+# empty one repeated to the edge of the sheet is how every sheet ends, and costs nothing; a full
+# one is counted against the limits as if it had been written out.
+import ods as S2  # noqa: E402
+
+G = "workbooks"
+ODS = read("ods", "sample.ods")
+NOT_ODS = "This file is not a valid ODS spreadsheet"
+BOOK_TOO_LARGE = "This workbook is too large to convert in a browser"
+ODS_PLAIN = [S2.sheet("Sheet1", [S2.row(S2.text("name"), S2.text("value")), S2.row(S2.text("a"), S2.number(1))])]
+
+trap("truncated.ods", ODS[: len(ODS) // 2],
+     "An OpenDocument spreadsheet cut off half-way. Its type is still at the front, and it is refused as a damaged spreadsheet.",
+     "ods", node="fails", note=NOT_ODS, group=G)
+trap("locked-with-a-password.ods", S2.workbook(ODS_PLAIN, encrypted=True),
+     "An OpenDocument spreadsheet saved with a password. Its parts are scrambled, and are not guessed at.",
+     "ods", node="fails", note="This workbook is locked with a password, and cannot be read without it", group=G)
+trap("entity-bomb.ods", S2.workbook(ODS_PLAIN, prolog=BOMB),
+     'The "billion laughs" in an open spreadsheet.',
+     "ods", node="fails", note=NOT_ODS, group=G)
+trap("bomb-inside.ods", S2.workbook([S2.sheet("Sheet1", [S2.row(S2.text("x")) + " " * (300 * 1024 * 1024)])]),
+     "An open spreadsheet whose sheets are three hundred megabytes of spaces, packed small.",
+     "ods", node="fails", note=BOOK_TOO_LARGE, group=G)
+trap("a-row-a-million-times.ods", S2.workbook([S2.sheet("Sheet1", ['<table:table-row table:number-rows-repeated="1048576">%s</table:table-row>' % "".join(S2.text("x") for _ in range(8))])]),
+     "One row of eight cells, said to be repeated a million times: eight million cells from a file of a few hundred bytes. It is counted before any is set aside.",
+     "ods", node="fails", note=BOOK_TOO_LARGE, group=G)
+trap("a-cell-across-two-million-columns.ods", S2.workbook([S2.sheet("Sheet1", ['<table:table-row><table:table-cell table:number-columns-repeated="2000000" office:value-type="string"><text:p>x</text:p></table:table-cell></table:table-row>'])]),
+     "One cell said to be repeated across two million columns, more than any sheet has.",
+     "ods", node="fails", note=BOOK_TOO_LARGE, group=G)
+trap("row-groups-two-hundred-deep.ods", S2.workbook([S2.sheet("Sheet1", ["<table:table-row-group>" * 200 + S2.row(S2.text("deep")) + "</table:table-row-group>" * 200])]),
+     "A group of rows inside a group of rows, two hundred times over.",
+     "ods", node="fails", note=NOT_ODS, group=G)
+trap("comment-on-a-cell.ods", S2.workbook([S2.sheet("Sheet1", [S2.row(S2.text("name"), S2.text("pay")), S2.row(S2.text("Ada"), '<table:table-cell office:value-type="float" office:value="1"><text:p>1</text:p><office:annotation><text:p>Check before the review: overpaid</text:p></office:annotation></table:table-cell>')])]),
+     "A comment on a cell, which a spreadsheet shows only when asked. It is not the cell, and is not carried across.",
+     "ods", node="succeeds", group=G, absent="overpaid")
+trap("formula-that-runs-a-program.ods", S2.workbook([S2.sheet("Sheet1", [S2.row(S2.text("total")), S2.row('<table:table-cell table:formula="of:=WEBSERVICE(&quot;http://canary.invalid/&quot;)&amp;cmd|&apos; /C %s&apos;!A0" office:value-type="float" office:value="7"><text:p>7</text:p></table:table-cell>' % SHELL)])]),
+     "A formula that asks for a page from another site and to run a command. Formulas are never worked out: the value it last showed is the value.",
+     "ods", node="succeeds", group=G, absent="canary.invalid")
+trap("hidden-sheet-under-another-name.ods", S2.workbook([S2.sheet("Shown", [S2.row(S2.text("a")), S2.row(S2.text("b"))]), S2.sheet("Payroll", [S2.row(S2.text("name")), S2.row(S2.text("the salaries"))], hidden=True)],
+                                                   styles=S2.STYLES.replace('<style:table-properties table:display="false"/>', '<style:table-properties table:display="false" foo:display="true" xmlns:foo="urn:example:foo"/>')),
+     "A hidden sheet whose style also says, in a vocabulary of its own, that it is shown. OpenDocument's own words decide.",
+     "ods", node="succeeds", group=G, absent="salaries")
+trap("macro-in-an-open-spreadsheet.ods", S2.workbook(ODS_PLAIN, extra={"Basic/Standard/Module1.xml": b'<script:module script:name="Module1">Sub Main: Shell("' + SHELL.encode() + b'"): End Sub</script:module>'}),
+     "An open spreadsheet with a macro in it. It is neither run nor carried anywhere.",
+     "ods", node="succeeds", group=G, absent="Shell")
+LONG_NAME = "<text:s text:c=\"100\"/>" * 9990 + "x"
+trap("a-long-name-for-every-column.ods", S2.workbook([S2.sheet("Sheet1", [
+        '<table:table-row><table:table-cell table:number-columns-repeated="16384" office:value-type="string"><text:p>%s</text:p></table:table-cell></table:table-row>' % LONG_NAME,
+        S2.row(S2.number(1))])]),
+     "A first row of sixteen thousand cells, each a million letters long, in a file of a few kilobytes. Each cell names a column, and a name was once made for each by copying the million letters: sixteen gigabytes. A name is kept to a length a name has.",
+     "ods", node="succeeds", group=G)
+trap("shorthand-after-a-long-comment.ods", S2.workbook(ODS_PLAIN, prolog="<!--" + "x" * 5000 + '-->' + '<!DOCTYPE office:document-content [<!ENTITY s "words from nowhere">]>'),
+     "A spreadsheet whose text part declares shorthand of its own after a comment five thousand letters long, past where the first check looked. Office files never declare any, and the whole part is looked at.",
+     "ods", node="fails", note=NOT_ODS, group=G)
+trap("repeated-one-and-a-half-times.ods", S2.workbook([S2.sheet("Sheet1", [S2.row(S2.text("a"), S2.text("b")), '<table:table-row><table:table-cell table:number-columns-repeated="1.5" office:value-type="float" office:value="1"><text:p>1</text:p></table:table-cell>%s</table:table-row>' % S2.number(2)])]),
+     "A cell said to be repeated one and a half times. A count is a whole number; one that is not would put the cells after it nowhere.",
+     "ods", node="fails", note=NOT_ODS, group=G)
+trap("sheet-hidden-by-the-style-it-is-based-on.ods", S2.workbook([S2.sheet("Shown", [S2.row(S2.text("a")), S2.row(S2.text("b"))]), '<table:table table:name="Payroll" table:style-name="child">%s</table:table>' % "".join([S2.row(S2.text("name")), S2.row(S2.text("the salaries"))])],
+                                                                styles=S2.STYLES + '<style:style style:name="child" style:family="table" style:parent-style-name="ta2"/>'),
+     "A sheet whose own style says nothing of being shown, and is based on a style that hides it. It is hidden.",
+     "ods", node="succeeds", group=G, absent="salaries")
+def column_letters(n):
+    out = ""
+    n += 1
+    while n:
+        n, r = divmod(n - 1, 26)
+        out = chr(65 + r) + out
+    return out
+
+
+trap("a-long-name-for-every-column.xlsx", book({
+        "xl/sharedStrings.xml": ('<?xml version="1.0"?><sst xmlns="%s" count="1" uniqueCount="1"><si><t>%s</t></si></sst>' % (SHEET_NS, "x" * 1_000_000)).encode(),
+        "xl/worksheets/sheet2.xml": sheet('<row r="1">%s</row><row r="2"><c r="A2"><v>1</v></c></row>' % "".join('<c r="%s1" t="s"><v>0</v></c>' % column_letters(i) for i in range(16384)))}),
+     "A first row of sixteen thousand cells that all show one text a million letters long. Each cell names a column, and a name was once made for each by copying the million letters. A name is kept to a length a name has.",
+     "xlsx", node="succeeds", group=G)
+trap("shorthand-after-a-long-comment.xlsx", book({"xl/worksheets/sheet2.xml": sheet('<row r="1"><c r="A1" t="inlineStr"><is><t>a</t></is></c></row>', before="<!--" + "x" * 5000 + '--><!DOCTYPE worksheet [<!ENTITY s "words from nowhere">]>')}),
+     "A workbook whose sheet declares shorthand of its own after a comment five thousand letters long, past where the check once looked.",
+     "xlsx", node="fails", note="This file is not a valid XLSX workbook", group=G)
+trap("times-spaces-and-text-results.ods", S2.workbook([S2.sheet("Sheet1", [
+        S2.row(S2.text("late"), S2.text("words"), S2.text("result")),
+        S2.row('<table:table-cell office:value-type="time" office:time-value="-PT01H30M00S"><text:p>-01:30:00</text:p></table:table-cell>',
+               '<table:table-cell office:value-type="string"><text:p>  two <text:span> words </text:span> </text:p><text:p>  and<text:s text:c="2"/>more</text:p></table:table-cell>',
+               '<table:table-cell table:formula="of:=&quot;a&quot;&amp;&quot;b&quot;" office:value-type="string" office:string-value="ab"><text:p>ab</text:p></table:table-cell>')])]),
+     "A time before zero, text whose spaces fall between its runs and at the ends of its paragraphs, and a formula whose result is text. The time keeps its sign; spaces are one space, as the standard says, except those marked as spaces; a text result is the value.",
+     "ods", node="succeeds", group="unusual")
+trap("open-spreadsheet-named-as-excel.xlsx", ODS,
+     "An OpenDocument spreadsheet with the name of an Excel workbook. It is read as what it is.",
+     "ods", node="succeeds", mismatch=True, group="identity")
 
 # --- e-books: AZW3 and MOBI ----------------------------------------------------------------------
 # A Kindle book is a list of numbered records, and tables that say which stretch of text is
@@ -5202,6 +5301,11 @@ def code_slide(deck):
 code("code.odt", O.document(O.h(XML_CANARY.decode(), 1) + O.p(XML_CANARY.decode() + " " + O.link(XML_CANARY.decode(), "javascript:" + MARK) + " " + O.span(XML_CANARY.decode(), "T1")) + O.table([[XML_CANARY.decode(), "__proto__"], ["constructor", XML_CANARY.decode()]]) + O.p(O.picture("Pictures/x.png", XML_CANARY.decode())),
                           title=XML_CANARY.decode(), author=XML_CANARY.decode(), pictures={"Pictures/x.png": CB}),
      WHY % "as a heading, as text, as the words and the address of a link, in a table, as a picture's description and as the picture itself, and as the title and the author", "odt", node="succeeds")
+code("code.ods", S2.workbook(['<table:table table:name="%s">%s</table:table>' % (XML_CANARY.decode(), "".join([
+        S2.row(S2.text("name"), S2.text("__proto__"), S2.text("constructor")),
+        S2.row(S2.text(XML_CANARY.decode()), '<table:table-cell table:formula="of:=WEBSERVICE(&quot;http://canary.invalid/x&quot;)" office:value-type="string" office:string-value="%s"><text:p>%s</text:p></table:table-cell>' % (XML_CANARY.decode(), XML_CANARY.decode()), S2.text("polluted")),
+    ]))], extra={"Basic/Standard/Module1.xml": b'<script:module script:name="Module1">Sub Main: Shell("' + SHELL.encode() + b'"): End Sub</script:module>'}),
+     WHY % "in cells, as the name of a sheet, in a formula that asks another site for a page, beside column names meant to reach every object, and beside a macro", "ods", node="succeeds")
 code("code.ppt", P.presentation([code_slide], title=CB[:200], author=CB[:200], notes_text=CANARY, pictures=[CB + b" " * 64], extra=[("_VBA_PROJECT", b"Sub Auto_Open(): Shell \"" + SHELL.encode() + b"\": End Sub")]),
      WHY % "as a title, in a list, in a box drawn by hand, as a picture's description and as the picture itself, in a table, as the words and the address of a link, as speaker notes, as the title and the author, and beside a macro set to run on opening", "ppt", node="succeeds")
 code("code.xls", X.container([("Workbook", X.workbook([(CANARY[:28], X.text_cell(0, 0, 0) + X.text_cell(0, 1, 1) + X.text_cell(1, 0, 2) + X.text_cell(1, 1, 3) + X.rec(0x0204, X.cell(2, 0) + X.words(CANARY)) + X.formula(2, 1, "=cmd|' /C " + SHELL + "'!A0"))], ["name", "__proto__", CANARY, "polluted"])), ("\x05SummaryInformation", X.about(CB[:200], CB[:200], MARK.encode())), ("_VBA_PROJECT_CUR", b"Sub Auto_Open(): Shell \"" + SHELL.encode() + b"\": End Sub")], small=True),

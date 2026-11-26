@@ -73,7 +73,7 @@ const SUBTITLES = ['srt', 'vtt', 'ass', 'ssa', 'ttml', 'lrc', 'sbv', 'smi', 'mic
 const SUBTITLE_WRITES: WriteSpec[] = SUBTITLES.map((format) => ({ format, lossy: false, drops: ['styling'] }))
 
 const TABLES = ['csv', 'tsv', 'xlsx']
-const SHEETS = ['xlsx', 'xls']
+const SHEETS = ['xlsx', 'xls', 'ods']
 const SHAPED = ['json', 'yaml']
 // Any of these can also be set out as a web page: a real table, to read. A page says what
 // language it is in, and the file does not, so that is a choice.
