@@ -96,7 +96,7 @@ export async function openOffice(bytes: Uint8Array, invalid: () => Refusal, what
     const source = new TextDecoder('utf-8').decode(data)
     // An office file's XML never declares a document type. One that does is defining shorthand
     // of its own, which is how a small file is made to expand into a vast one.
-    if (/<!DOCTYPE/i.test(source.slice(0, 4096))) throw invalid()
+    if (/<!DOCTYPE/i.test(source)) throw invalid()
     // Counted before it is read: an empty tag costs as much to read as a full one.
     if (!withinTags(source)) throw tooLarge()
     let tree: Node[]
@@ -117,7 +117,7 @@ export async function openOffice(bytes: Uint8Array, invalid: () => Refusal, what
  * namespace's names lose their prefix, any other's become `foreign:local`. Done without
  * recursion, so a deep tree costs no stack.
  */
-function resolve(tree: Node[], known: ReadonlySet<string>): void {
+export function resolve(tree: Node[], known: ReadonlySet<string>): void {
   const stack: Array<{ nodes: Node[]; scope: Map<string, string> }> = [{ nodes: tree, scope: new Map([['xml', 'http://www.w3.org/XML/1998/namespace']]) }]
   const named = (name: string, scope: Map<string, string>, element: boolean): string => {
     const colon = name.indexOf(':')

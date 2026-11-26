@@ -125,3 +125,9 @@ python3 "$tools/ppt.py" >/dev/null
 python3 "$tools/odt.py" >/dev/null
 printf '%s' '<html><head><meta charset="utf-8"><title>Test pattern</title></head><body><h1>Heading one</h1><p>A paragraph with <b>bold</b> and <i>italic</i> words and a <a href="https://omsett.com/">link</a>.</p><ul><li>First</li><li>Second<ul><li>Inner</li></ul></li></ul><ol><li>One</li><li>Two</li></ol><table><tr><th>a</th><th>b</th></tr><tr><td>1</td><td>2</td></tr></table><p>Café 字幕</p></body></html>' > "$work/page.html"
 textutil -convert odt "$work/page.html" -output "$out/odt/from-macos.odt"
+
+# --- OpenDocument spreadsheets -------------------------------------------------------------------
+# ods/sample.ods and ods/events.ods are written by ods.py and hold what the XLSX samples hold.
+# ods/from-odfpy.ods is written by odfpy (ods-odfpy.py says how), a library that knows nothing
+# of Omsett; it is committed and made again only by hand.
+python3 "$tools/ods.py" >/dev/null

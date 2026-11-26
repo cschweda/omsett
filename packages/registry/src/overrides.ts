@@ -86,6 +86,8 @@ const KINDLE_BOOK = [{ id: 'book-kept', text: 'The pages, pictures, stylesheets,
 const TABLE_PAGE = [{ id: 'table-as-page', text: 'The rows are set out as one table on a page, to be read. The first row of the table names its columns. Lists and groups inside a row are written as text.' }]
 
 const TYPED = ['json', 'jsonl', 'yaml', 'toml']
+// Workbooks read and never written: from before 2007, and OpenDocument's.
+const READ_ONLY_BOOKS = ['xls', 'ods']
 
 export const overrides: EdgeOverride[] = [
   { from: 'fountain', to: 'fdx', warnings: SCRIPT_KEPT },
@@ -107,12 +109,14 @@ export const overrides: EdgeOverride[] = [
     { from: 'xlsx', to: other, warnings: WORKBOOK_READ },
     { from: other, to: 'xlsx', warnings: WORKBOOK_WRITTEN },
   ]),
-  ...[...DATA, 'xls'].map((from) => ({ from, to: 'html', warnings: ['xlsx', 'xls'].includes(from) ? [...WORKBOOK_READ, ...TABLE_PAGE] : TABLE_PAGE })),
-  // A workbook from before 2007 is read as the newer kind is, and says the same of itself.
-  { from: 'xls', to: 'vcf', warnings: CONTACT_COLUMNS },
-  { from: 'xls', to: 'ics', warnings: EVENT_COLUMNS },
-  ...BESIDE_WORKBOOK.map((other) => ({ from: 'xls', to: other, warnings: WORKBOOK_READ })),
-  { from: 'xls', to: 'xlsx', warnings: [...WORKBOOK_READ, ...WORKBOOK_WRITTEN] },
+  ...[...DATA, ...READ_ONLY_BOOKS].map((from) => ({ from, to: 'html', warnings: ['xlsx', ...READ_ONLY_BOOKS].includes(from) ? [...WORKBOOK_READ, ...TABLE_PAGE] : TABLE_PAGE })),
+  // A workbook from before 2007, or an OpenDocument one, is read as the newer kind is, and says the same of itself.
+  ...READ_ONLY_BOOKS.flatMap((from) => [
+    { from, to: 'vcf', warnings: CONTACT_COLUMNS },
+    { from, to: 'ics', warnings: EVENT_COLUMNS },
+    ...BESIDE_WORKBOOK.map((other) => ({ from, to: other, warnings: WORKBOOK_READ })),
+    { from, to: 'xlsx', warnings: [...WORKBOOK_READ, ...WORKBOOK_WRITTEN] },
+  ]),
   ...ARCHIVES.flatMap((from) => ARCHIVES.filter((to) => to !== from).map((to) => ({ from, to, warnings: ARCHIVE_NOTES }))),
   { from: 'vcf', to: 'ics', block: NOT_THE_SAME },
   { from: 'ics', to: 'vcf', block: NOT_THE_SAME },
@@ -144,7 +148,7 @@ export const overrides: EdgeOverride[] = [
       { id: 'content-only', text: 'Only the content is kept: headings, text, links, pictures, lists and tables. Layout, styles and scripts are not.' },
     ],
   },
-  ...['csv', 'tsv'].flatMap((to) => [...DATA, 'xls'].filter((from) => from !== to).map((from) => ({ from, to, warnings: FORMULAS }))),
+  ...['csv', 'tsv'].flatMap((to) => [...DATA, ...READ_ONLY_BOOKS].filter((from) => from !== to).map((from) => ({ from, to, warnings: FORMULAS }))),
   ...others('microdvd').flatMap((other) => [
     { from: 'microdvd', to: other, warnings: FRAMES },
     { from: other, to: 'microdvd', warnings: FRAMES },

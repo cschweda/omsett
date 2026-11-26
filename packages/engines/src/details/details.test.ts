@@ -53,6 +53,17 @@ describe('what a file carries', () => {
     expect(await details('_traps/macro-in-an-open-document.odt', 'odt')).toMatchObject({ Macros: 'Yes. They are never run and never carried over [removed]' })
   })
 
+  it('an OpenDocument spreadsheet: its sheets, formulas and comments', async () => {
+    expect(await details('ods/sample.ods', 'ods')).toEqual({
+      Title: 'Test pattern [removed]',
+      Author: 'SECRET-AUTHOR [removed]',
+      'Made with': 'fixtures/_tools/ods.py [removed]',
+      Sheets: '2 shown: People, Totals. The first is converted, unless you choose another. Hidden sheets never are',
+      Formulas: 'Yes. Each is replaced by the value it last showed [removed]',
+      Comments: 'Yes [removed]',
+    })
+  })
+
   it('an Office file saved with macros: the macros, which are never run and never carried over', async () => {
     const macros = 'Yes. They are never run and never carried over [removed]'
     expect(await details('_traps/with-a-macro.docm', 'docx')).toMatchObject({ Macros: macros })

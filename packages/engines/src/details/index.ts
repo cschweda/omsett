@@ -128,6 +128,29 @@ async function openDocument(blob: Blob): Promise<Detail[]> {
   return details
 }
 
+/** An OpenDocument spreadsheet: who wrote it, its sheets, and what a conversion leaves behind. */
+async function openSpreadsheet(blob: Blob): Promise<Detail[]> {
+  const bytes = new Uint8Array(await blob.arrayBuffer())
+  const entries = await readZip(bytes)
+  const part = (name: string) => {
+    const data = entries.find((entry) => entry.name.toLowerCase() === name)?.data
+    return data && data.length < 8 * 1024 * 1024 ? decode(data) : ''
+  }
+  const meta = part('meta.xml')
+  const content = part('content.xml')
+  const details: Detail[] = []
+  const add = (label: string, value: string | undefined, fate?: Detail['fate']) => value && details.push({ label, value, fate })
+  add('Title', inTag(meta, 'title'), 'removed')
+  add('Author', inTag(meta, 'initial-creator') ?? inTag(meta, 'creator'), 'removed')
+  add('Made with', inTag(meta, 'generator'), 'removed')
+  const sheets = await listSheets(bytes)
+  if (sheets.length) add('Sheets', `${sheets.length} shown: ${sheets.slice(0, 12).join(', ')}. The first is converted, unless you choose another. Hidden sheets never are`)
+  if (/\b[\w.-]+:formula=["']/.test(content)) add('Formulas', 'Yes. Each is replaced by the value it last showed', 'removed')
+  if (/<[\w.-]+:annotation\b/.test(content)) add('Comments', 'Yes', 'removed')
+  if (entries.some((entry) => /^(?:basic|scripts)\//i.test(entry.name))) add('Macros', 'Yes. They are never run and never carried over', 'removed')
+  return details
+}
+
 /** An Office file from before 2007: who wrote it and with what, and what it holds that a conversion leaves behind. */
 async function oldOffice(blob: Blob, format: string): Promise<Detail[]> {
   const bytes = new Uint8Array(await blob.arrayBuffer())
@@ -295,6 +318,7 @@ export async function describeFile(blob: Blob, format: Format): Promise<Detail[]
     if (['docx', 'xlsx', 'pptx'].includes(format.id)) return await office(blob, format.id)
     if (['xls', 'doc', 'ppt'].includes(format.id)) return await oldOffice(blob, format.id)
     if (format.id === 'odt') return await openDocument(blob)
+    if (format.id === 'ods') return await openSpreadsheet(blob)
     if (format.id === 'pdf') return await pdf(blob)
     if (format.id === 'azw3' || format.id === 'mobi') return await book(blob)
     if (format.id === 'epub') return await book(blob, true)

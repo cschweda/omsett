@@ -21,7 +21,7 @@ const MAX_SPACES = 100
 const MAX_COLUMNS = 16384
 
 /** OpenDocument's own vocabularies. A name in any other is foreign, and never taken for one of these. */
-const ODF = new Set(['office', 'style', 'text', 'table', 'drawing', 'xsl-fo-compatible', 'svg-compatible', 'meta', 'datastyle', 'presentation', 'chart', 'dr3d', 'form', 'script', 'smil', 'anim'].map((name) => `urn:oasis:names:tc:opendocument:xmlns:${name}:1.0`))
+export const ODF = new Set(['office', 'style', 'text', 'table', 'drawing', 'xsl-fo-compatible', 'svg-compatible', 'meta', 'datastyle', 'presentation', 'chart', 'dr3d', 'form', 'script', 'smil', 'anim'].map((name) => `urn:oasis:names:tc:opendocument:xmlns:${name}:1.0`))
 for (const uri of ['http://www.w3.org/1999/xlink', 'http://purl.org/dc/elements/1.1/', 'urn:oasis:names:tc:opendocument:xmlns:manifest:1.0']) ODF.add(uri)
 
 const TYPES = new Set(['application/vnd.oasis.opendocument.text', 'application/vnd.oasis.opendocument.text-template'])

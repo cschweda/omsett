@@ -111,7 +111,7 @@ When a format ships, update its row here, in the same change.
 | Whether the first row names the columns; the shape of the result (records, rows, columns) | Browser | the same | **Shipped** (0.20.0) |
 | Choosing which sheet; every sheet at once | Browser | the same | Done |
 | XLSM, XLTX, XLTM (read, macros ignored) | Browser | `data`, as XLSX | **Done** (0.54.1) |
-| ODS | Browser | the same approach: a ZIP of XML | Planned |
+| ODS, OTS (read) to XLSX and every data format | Browser | `data` (Omsett's own reader, into the shape XLSX and XLS are read into) | **Done** (0.56.0) |
 | XLS, XLT (the older binary form, from Excel 97 on) to XLSX and every data format; read only | Browser | `data` (Omsett's own reader, of the container and of the workbook) | **Done** (0.45.0) |
 | DOC (the older binary form, from Word 97 on) to DOCX, HTML and Markdown; read only | Browser | `markup` (Omsett's own reader, on the same container reader) | **Done** (0.46.0) |
 | PPT (the older binary form) to HTML, and through it to DOCX, Markdown, PDF and EPUB; read only | Browser | `markup` (Omsett's own reader, on the same container reader) | **Done** (0.54.0) |

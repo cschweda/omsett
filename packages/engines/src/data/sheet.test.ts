@@ -316,3 +316,53 @@ describe('workbooks from before 2007 (XLS)', () => {
     }
   })
 })
+
+describe('OpenDocument spreadsheets (ODS)', () => {
+  const refusal = (work: Promise<unknown>) => work.then(() => 'read', (error: Error) => `${error.name}: ${error.message}`)
+
+  it('reads what the other two read, cell for cell: the samples hold the same workbook', async () => {
+    const open = await fixture('ods/sample.ods')
+    const now = await fixture('xlsx/sample.xlsx')
+    expect(await listSheets(open)).toEqual(['People', 'Totals'])
+    expect(await readSheets(open, true, 'all')).toEqual(await readSheets(now, true, 'all'))
+    expect(await readWorkbook(open)).toEqual(await readWorkbook(now))
+    expect(await readWorkbook(open, false)).toEqual(await readWorkbook(now, false))
+    expect(await readSheets(await fixture('ods/events.ods'), true, 'all')).toEqual(await readSheets(await fixture('xlsx/events.xlsx'), true, 'all'))
+  })
+
+  it('reads a spreadsheet another program wrote', async () => {
+    const [people] = await readSheets(await fixture('ods/from-odfpy.ods'), true, 'all')
+    expect(people!.name).toBe('People')
+    expect(people!.rows).toEqual((await readWorkbook(await fixture('xlsx/sample.xlsx'))).slice(0, 2))
+  })
+
+  it('never converts a hidden sheet, a comment, a macro, or a formula', async () => {
+    for (const path of ['ods/sample.ods', 'ods/from-odfpy.ods', '_traps/comment-on-a-cell.ods', '_traps/formula-that-runs-a-program.ods', '_traps/hidden-sheet-under-another-name.ods', '_traps/macro-in-an-open-spreadsheet.ods']) {
+      const text = JSON.stringify(await readSheets(await fixture(path), true, 'all'))
+      expect(text, path).not.toMatch(/not shown|SECRET|overpaid|canary|salaries|Shell/)
+    }
+    expect(await readWorkbook(await fixture('_traps/formula-that-runs-a-program.ods'))).toEqual([{ total: 7 }])
+  })
+
+  it('reads a time before zero, spaces as the standard says, and a formula\'s text result', async () => {
+    expect(await readWorkbook(await fixture('_traps/times-spaces-and-text-results.ods'))).toEqual([{ late: '-01:30:00', words: 'two words\nand  more', result: 'ab' }])
+  })
+
+  it('names a column with no more than a name\'s length, however long the cell that names it', async () => {
+    for (const path of ['_traps/a-long-name-for-every-column.ods', '_traps/a-long-name-for-every-column.xlsx']) {
+      const [row] = await readWorkbook(await fixture(path))
+      expect(Object.keys(row!).length, path).toBe(16384)
+      expect(Math.max(...Object.keys(row!).map((name) => name.length)), path).toBeLessThan(300)
+    }
+  })
+
+  it('refuses what it cannot follow, in words about workbooks', async () => {
+    for (const name of ['truncated', 'entity-bomb', 'row-groups-two-hundred-deep', 'shorthand-after-a-long-comment', 'repeated-one-and-a-half-times']) {
+      expect(await refusal(readWorkbook(await fixture(`_traps/${name}.ods`))), name).toBe('Refusal: This file is not a valid ODS spreadsheet')
+    }
+    for (const name of ['a-row-a-million-times', 'a-cell-across-two-million-columns']) {
+      expect(await refusal(readWorkbook(await fixture(`_traps/${name}.ods`))), name).toBe('Refusal: This workbook is too large to convert in a browser')
+    }
+    expect(await refusal(readWorkbook(await fixture('_traps/locked-with-a-password.ods')))).toBe('Refusal: This workbook is locked with a password, and cannot be read without it')
+  })
+})

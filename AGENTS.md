@@ -163,7 +163,7 @@ build by `apps/web/scripts/write-headers.ts`.
   reads into the same `Contents`, so it gets the same limits.
 - **An office file is a ZIP of XML, and is read as both** (`packages/engines/src/data/sheet.ts`):
   through `readZip`, so the archive limits hold, and with any part that declares a DOCTYPE
-  refused. Formulas are never worked out and never written; macros and linked files are never
+  refused, wherever in the part it does so, never only near the start. Formulas are never worked out and never written; macros and linked files are never
   opened. DOCX and PPTX should be read the same way. A file saved with macros or as a template
   (DOCM, DOTX, PPTM, PPSX, XLSM and the rest) is its family's package under another label, and
   is that family's format in the registry, not one of its own: it is read by the same reader
@@ -204,10 +204,14 @@ build by `apps/web/scripts/write-headers.ts`.
   read, and so is everything between a field's opening mark and its separator. A reader that
   writes HTML writes tags from a fixed list and nothing else: words from a file (an address, a
   name) are escaped into text or an attribute, and never join the names of tags.
-- **The two workbook readers give the same shape and are held to the same answer.** XLS is
-  opened into the `Opened` that XLSX is, so sheets, limits, dates and the column names are one
-  piece of code. `xls/sample.xls` holds what `xlsx/sample.xlsx` holds; a change to either
-  sample is made to both.
+- **The three workbook readers give the same shape and are held to the same answer.** XLS and
+  ODS are opened into the `Opened` that XLSX is, so sheets, limits, dates and the column names
+  are one piece of code. `xls/sample.xls` and `ods/sample.ods` hold what `xlsx/sample.xlsx`
+  holds, and each `events` sample what the others do; a change to one sample is made to all.
+  An ODS is known by its first bytes (`looksLikeOds`), or by its type part where a writer
+  packed that against the rules. A column's name is kept to 255 letters (`rowsFrom`): every
+  name is made from a cell, and an uncut name is a copy of the cell for every column. A cell or row an ODS repeats is counted against the limits as
+  if written out; an empty one repeated to the edge of the sheet costs nothing.
 - **A Kindle book is read by the numbers it gives, each checked first** (`packages/engines/src/ebook`):
   where each record starts, how long the text is, which stretch is which page, where each piece
   goes. Its text is unpacked under a limit set by how many records it has, never by the length

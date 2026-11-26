@@ -2,6 +2,7 @@ import { isCfb } from '@omsett/detect'
 import { readZip, writeZip } from '../archive/zip'
 import type { Entry } from '../archive/entries'
 import { cellOf, MAX_TABLE_CELLS, Refusal, tableTooLarge, withinTags } from '../util'
+import { isOds, looksLikeOds, openOds } from './ods'
 import { openOldWorkbook } from './xls'
 import { text as escapeXml } from './xml'
 
@@ -22,6 +23,8 @@ const MAX_PART_BYTES = 64 * 1024 * 1024
 /** The limits of a sheet, which are Excel's own. */
 const MAX_ROWS = 1_048_576
 const MAX_COLUMNS = 16_384
+/** The longest a column's name is kept. */
+const MAX_NAME = 255
 const MAX_CELL_CHARACTERS = 32_767
 /** More cells than this is not read in a browser tab. */
 export const MAX_CELLS = 5_000_000
@@ -112,6 +115,8 @@ export interface Opened {
 async function openWorkbook(bytes: Uint8Array, named: boolean): Promise<Opened> {
   // A workbook from before 2007 is not a ZIP at all. It is opened by its own reader, into the same shape.
   if (isCfb(bytes)) return openOldWorkbook(bytes, named)
+  // An OpenDocument spreadsheet is a ZIP too, of other parts. It says so first, and has its own reader.
+  if (looksLikeOds(bytes)) return openOds(bytes, named)
   let entries: Entry[]
   try {
     entries = await readZip(bytes)
@@ -122,6 +127,8 @@ async function openWorkbook(bytes: Uint8Array, named: boolean): Promise<Opened> 
     throw invalid()
   }
   const parts = new Map(entries.filter((entry) => !entry.directory).map((entry) => [entry.name.toLowerCase(), entry.data]))
+  // One whose type was packed, as the standard says it must not be, is known by the part itself.
+  if (isOds(parts)) return openOds(bytes, named)
   const xml = await parser()
   const open = (path: string): Xml | null => {
     const data = parts.get(path.toLowerCase())
@@ -130,7 +137,7 @@ async function openWorkbook(bytes: Uint8Array, named: boolean): Promise<Opened> 
     const source = new TextDecoder('utf-8').decode(data)
     // A workbook's XML never declares a document type. One that does is defining shorthand of
     // its own, which is how a small file is made to expand into a vast one.
-    if (/<!DOCTYPE/i.test(source.slice(0, 4096))) throw invalid()
+    if (/<!DOCTYPE/i.test(source)) throw invalid()
     // Counted before it is read: empty rows and cells cost as much to read as full ones.
     if (!withinTags(source)) throw tooLarge()
     return record(xml.parse(source))
@@ -275,7 +282,9 @@ export function rowsFrom(grid: Cell[][], named: boolean): Row[] {
   const reached = new Map<string, number>()
   const names = Array.from({ length: width }, (_, i) => {
     const stated = named ? grid[0]![i] : null
-    const base = stated === null || stated === undefined || String(stated).trim() === '' ? `column_${columnName(i)}` : String(stated).trim()
+    // A name is cut to a length any column name has. Uncut, a cell of a million letters across
+    // sixteen thousand columns is sixteen thousand names of a million letters each.
+    const base = stated === null || stated === undefined || String(stated).trim() === '' ? `column_${columnName(i)}` : String(stated).trim().slice(0, MAX_NAME)
     let name = base
     let n = reached.get(base) ?? 1
     while (taken.has(name)) name = `${base}_${++n}`
