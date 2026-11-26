@@ -7,6 +7,43 @@ The paragraph that opens a version is its teaser: the home page shows its first 
 in the "What's new" banner, so keep it to two or three sentences on what a visitor will notice.
 A line beginning "Released" gives the date.
 
+## 0.54.0
+
+Released 26 November 2026.
+
+PowerPoint presentations from before 2007, the ones ending in .ppt, can now be converted: to a
+web page, a Word document, Markdown, a PDF or an EPUB. Each slide becomes a section with its
+title as a heading, and its bullets, tables, links and pictures come with it; speaker notes and
+hidden slides stay behind.
+
+### Added
+
+- **PPT is read** (and PPS and POT, its slide show and template). It becomes a web page, and
+  through one a Word document, Markdown, a PDF or an EPUB, the same page a PPTX becomes:
+  titles as headings, bullets as lists at their levels, bold, italic, links to web and mail
+  addresses, tables, and PNG and JPEG pictures with their descriptions. The language is taken
+  from the text, and the title from the file. Read only.
+- **What the audience was not shown is left behind**: speaker notes, hidden slides, shapes
+  hidden in the editor, the author's name, and the words of a slide as an earlier save left
+  them, which PowerPoint keeps in the file when it saves quickly. Macros are never run.
+- **A presentation locked with a password, or saved by PowerPoint 95 or earlier, is refused**
+  in words that say so.
+- **27 trap files** for the new reader, among them a chain of saves that leads back to itself,
+  directories and slides two gigabytes into a file of a few thousand bytes, a slide listed
+  twice or under two thousand names, groups of shapes two hundred deep, a table of 160,000
+  cells, a picture that is a script, a hidden group and a hidden placeholder whose words are
+  kept elsewhere, letters that would write a link each a billion characters long, and a code
+  trap. PPT is fuzzed on every run. An adversarial review of the reader found seven of these
+  before release; each is fixed and has its trap.
+
+### Known
+
+- **A table's heading row is not marked.** A PPT does not say which rows are headings, and
+  Omsett does not guess, so every cell is an ordinary cell. The accessibility check names this.
+- **Pictures other than PNG and JPEG are left out**, with their description kept in their place:
+  drawings kept as Windows metafiles, which old presentations often hold, among them. So are
+  charts, diagrams and embedded objects.
+
 ## 0.53.2
 
 Released 25 November 2026.

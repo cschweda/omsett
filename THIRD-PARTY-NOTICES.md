@@ -161,6 +161,14 @@ Kindle books (AZW3 and MOBI) are read, and EPUB is written, by Omsett's own code
 is used. The sample books in `fixtures/azw3` and `fixtures/mobi` are a few pages written for the
 tests by `fixtures/_tools/kindle.py`; nobody's book is in the repository.
 
+### markup (old PowerPoint presentations)
+
+PPT, the PowerPoint presentation from before 2007, is read by Omsett's own code, written from
+Microsoft's published descriptions of the format ([MS-PPT]) and of the drawings inside it
+([MS-ODRAW]). No library is used. Of the two samples in `fixtures/ppt`, one is written by
+`fixtures/_tools/ppt.py` and one by Apache POI (Apache License 2.0), run by hand through
+`fixtures/_tools/PptSample.java`. POI is not part of Omsett and is not shipped with it.
+
 ### icon
 
 Omsett's own reader for Mac icons (ICNS), using the compression built into every browser.

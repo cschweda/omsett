@@ -3147,7 +3147,7 @@ slides(
 slides(
     "older-powerpoint.ppt",
     b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1" + b"\0" * 16 + b"\x3e\x00\x03\x00\xfe\xff\x09\x00" + b"\0" * 480 + b"P\0o\0w\0e\0r\0P\0o\0i\0n\0t\0" + b"\0" * 480,
-    "The older kind of PowerPoint file, from before 2007, which is not a ZIP at all.",
+    "The opening of the container old Office files use, and the word PowerPoint, with no presentation inside: no directory of streams, and no stream named PowerPoint Document. It is not taken for a PPT.",
     "unregistered",
 )
 
@@ -4368,6 +4368,212 @@ trap("old-document-named-as-new.docx", DOC,
      "A Word document from before 2007 with the name of a newer one. It is read as what it is.",
      "doc", node="succeeds", mismatch=True, group="identity")
 
+# --- PowerPoint presentations from before 2007: PPT ------------------------------------------------
+# The same container again, and inside it a row of records, each a type and a length, some
+# holding others. Which record is which slide is said by a directory, and a file saved many
+# times keeps a directory for each save, each pointing to the one before: every one of those is
+# a number that can point anywhere, or back at itself. And a presentation keeps what its
+# presenter kept from the audience: speaker notes, hidden slides, shapes hidden in the editor,
+# and the words of a slide as an earlier save left them.
+import ppt as P  # noqa: E402
+
+G = "slides"
+PPT = read("ppt", "sample.ppt")
+NOT_PPT = "This file is not a valid PPT presentation"
+PPT_TOO_BIG = "This presentation is too large to convert in a browser"
+
+
+def one_slide(words="One slide of an old presentation.", title="A title", hidden=False, extra=()):
+    def make(deck):
+        return ([P.shape(1025, placeholder=P.P_TITLE, textbox=P.ref(0)), P.shape(1026, placeholder=P.P_BODY, textbox=P.ref(1)), *extra],
+                [P.text(deck, P.TITLE, [P.para(title)]), P.text(deck, P.BODY, [P.para(words)])], hidden)
+    return make
+
+
+PLAIN_DECK = [one_slide()]
+
+
+def edit_field(offset):
+    """Change a number in the record that says where the last save's directory is."""
+    def change(value):
+        def apply(parts):
+            struct.pack_into("<I", parts["stream"], parts["edit"] + 8 + offset, value(parts))
+        return apply
+    return change
+
+
+def directory_of(parts):
+    return struct.unpack_from("<I", parts["stream"], parts["edit"] + 8 + 12)[0]
+
+
+def slide_past_the_end(parts):
+    """The directory says the first slide is two gigabytes into the stream."""
+    struct.pack_into("<I", parts["stream"], directory_of(parts) + 8 + 8, 0x7FFFFF00)
+
+
+def document_longer_than_the_file(parts):
+    struct.pack_into("<I", parts["stream"], 4, 0x7FFFFFF0)
+
+
+def one_slide_named_twice(parts):
+    """The list of slides names the first slide again, in place of the second."""
+    head = struct.pack("<HHI", 0, 0x03F3, 20)
+    first = parts["stream"].find(head)
+    second = parts["stream"].find(head, first + 1)
+    struct.pack_into("<I", parts["stream"], second + 8, struct.unpack_from("<I", parts["stream"], first + 8)[0])
+
+
+def deep(depth):
+    def make(deck):
+        inner = P.shape(1100, textbox=P.text(deck, P.OTHER, [P.para("At the bottom.")]))
+        for n in range(depth):
+            inner = P.group(1200 + n, [inner])
+        return ([P.shape(1025, placeholder=P.P_TITLE, textbox=P.ref(0)), inner], [P.text(deck, P.TITLE, [P.para("Groups")])], False)
+    return make
+
+
+def slanting_table(deck):
+    """A table of four hundred cells, each in a row and a column of its own: 160,000 places."""
+    cells = [P.shape(1100 + n, anchor=(n * 10, n * 10, n * 10 + 10, n * 10 + 10), textbox=P.text(deck, P.OTHER, [P.para("x")])) for n in range(400)]
+    return ([P.shape(1025, placeholder=P.P_TITLE, textbox=P.ref(0)), P.group(1099, cells, table=True)], [P.text(deck, P.TITLE, [P.para("A table")])], False)
+
+
+def picture_slide(alt):
+    def make(deck):
+        return ([P.shape(1025, placeholder=P.P_TITLE, textbox=P.ref(0)), P.shape(1026, kind=75, props=[(0x4104, 1)], alt=alt)],
+                [P.text(deck, P.TITLE, [P.para("A chart")])], False)
+    return make
+
+
+def linked(address):
+    def make(deck):
+        return ([P.shape(1025, placeholder=P.P_TITLE, textbox=P.ref(0)), P.shape(1026, placeholder=P.P_BODY, textbox=P.ref(1))],
+                [P.text(deck, P.TITLE, [P.para("Links")]), P.text(deck, P.BODY, [P.para("Please ", P.run("read the report", link=address), " today.")])], False)
+    return make
+
+
+trap("truncated.ppt", PPT[:-512],
+     "An old PowerPoint file that lost its last few hundred bytes, and with them the table that says which part of the file follows which. Its name is still written in what is left, and it is refused as a damaged presentation.",
+     "ppt", node="fails", note=NOT_PPT, group=G)
+trap("locked-with-a-password.ppt", P.presentation(PLAIN_DECK, locked=True),
+     "An old presentation locked with a password. Its slides are scrambled, and are not guessed at.",
+     "ppt", node="fails", note="This presentation is locked with a password, and cannot be read without it", group=G)
+trap("from-powerpoint-95.ppt", P.presentation(PLAIN_DECK, version=0x03F3),
+     "A presentation that says it was saved in the form PowerPoint used before 1997, which keeps its slides another way.",
+     "ppt", node="fails", note="This presentation was saved by PowerPoint 95 or earlier, in a form Omsett cannot read yet. Opening it in a presentation program and saving it again will bring it up to date", group=G)
+trap("saves-in-a-circle.ppt", P.presentation(PLAIN_DECK, change=edit_field(8)(lambda parts: parts["edit"])),
+     "Each save of a presentation says where the save before it is. This one says the save before it is itself: followed without care, that never ends.",
+     "ppt", node="fails", note=NOT_PPT, group=G)
+trap("directory-two-gigabytes-in.ppt", P.presentation(PLAIN_DECK, change=edit_field(12)(lambda parts: 0x7FFFFFF0)),
+     "The directory that says where each slide is, said to be two gigabytes into a file of a few thousand bytes.",
+     "ppt", node="fails", note=NOT_PPT, group=G)
+trap("slide-two-gigabytes-in.ppt", P.presentation(PLAIN_DECK, change=slide_past_the_end),
+     "A directory that sends the reader two gigabytes into the file for the first slide.",
+     "ppt", node="fails", note=NOT_PPT, group=G)
+trap("record-longer-than-the-file.ppt", P.presentation(PLAIN_DECK, change=document_longer_than_the_file),
+     "The record that holds the whole presentation says it is two gigabytes long.",
+     "ppt", node="fails", note=NOT_PPT, group=G)
+trap("one-slide-named-twice.ppt", P.presentation([one_slide(), one_slide("A second slide.")], change=one_slide_named_twice),
+     "The list of slides names one slide twice. A slide is shown once; a list that names one again and again is asking for it to be read again and again.",
+     "ppt", node="fails", note=NOT_PPT, group=G)
+trap("groups-two-hundred-deep.ppt", P.presentation([deep(200)]),
+     "A group of shapes inside a group of shapes, two hundred times over.",
+     "ppt", node="fails", note=NOT_PPT, group=G)
+trap("table-drawn-on-a-slant.ppt", P.presentation([slanting_table]),
+     "A table is kept as boxes, each set where its cell is. Here four hundred boxes each sit in a row and a column of their own, a table of 160,000 cells. It is refused before any is set aside.",
+     "ppt", node="fails", note=PPT_TOO_BIG, group=G)
+trap("every-slide-hidden.ppt", P.presentation([one_slide(hidden=True), one_slide("Another.", hidden=True)]),
+     "A presentation whose every slide is marked not to be shown. Nothing of it was meant for the audience, so there is nothing to convert.",
+     "ppt", node="fails", note="This presentation has no text in it to convert", group=G)
+
+def every_letter_its_own_way(deck):
+    """Forty thousand letters, each a run of its own, under four thousand links that each cover them all."""
+    runs = [P.run("x", P.BOLD if n % 2 else 0) for n in range(40000)]
+    words = P.text(deck, P.OTHER, [P.para(*runs)])
+    cover = deck.link("https://example.com/")
+    extra = b"".join(P.box(0x0FF2, P.rec(0x0FF3, struct.pack("<IIBBBBB3x", 0, cover, 4, 0, 0, 0, 8))) + P.rec(0x0FDF, struct.pack("<II", 0, 40000)) for _ in range(4000))
+    return ([P.shape(1025, placeholder=P.P_TITLE, textbox=P.ref(0)), P.shape(1026, textbox=words + extra)], [P.text(deck, P.TITLE, [P.para("Runs")])], False)
+
+
+trap("every-letter-set-its-own-way.ppt", P.presentation([every_letter_its_own_way]),
+     "Forty thousand letters, each set differently from the one before, under four thousand links that each cover all of them. A reader that looked up every letter in every run and every link would do some hundreds of millions of steps; this one reads it in one pass.",
+     "ppt", node="succeeds", group=G)
+def hidden_placeholder(deck):
+    return ([P.shape(1025, placeholder=P.P_TITLE, textbox=P.ref(0)), P.shape(1026, placeholder=P.P_BODY, textbox=P.ref(1), props=[(0x03BF, 0x00020002)])],
+            [P.text(deck, P.TITLE, [P.para("A title")]), P.text(deck, P.BODY, [P.para("Redundancies in March")])], False)
+
+
+def hidden_group(deck):
+    inside = P.shape(1101, textbox=P.text(deck, P.OTHER, [P.para("Redundancies in March")]))
+    own = P.rec(0xF009, b"\0" * 16, 0, 1) + P.rec(0xF00A, struct.pack("<II", 1100, 0x201), 0, 2) + P.properties([(0x03BF, 0x00000002)])
+    return ([P.shape(1025, placeholder=P.P_TITLE, textbox=P.ref(0)), P.box(0xF003, P.box(0xF004, own), inside)], [P.text(deck, P.TITLE, [P.para("A title")])], False)
+
+
+def letters_under_a_long_link(deck):
+    """Twenty thousand letters, each set differently from the last, under one link of 64,000 letters."""
+    address = "https://x.example/" + "a" * 64000
+    words = P.text(deck, P.OTHER, [P.para(*[P.run("x", P.BOLD if n % 2 else 0, link=address if n == 0 else None) for n in range(20000)])])
+    cover = deck.link(address)
+    words += P.box(0x0FF2, P.rec(0x0FF3, struct.pack("<IIBBBBB3x", 0, cover, 4, 0, 0, 0, 8))) + P.rec(0x0FDF, struct.pack("<II", 0, 20000))
+    return ([P.shape(1025, placeholder=P.P_TITLE, textbox=P.ref(0)), P.shape(1026, textbox=words)], [P.text(deck, P.TITLE, [P.para("A link")])], False)
+
+
+def every_name_one_slide(parts):
+    """A directory in which two thousand numbers all name the first slide's place."""
+    at = parts["objects"][2]
+    entries = struct.pack("<I", 2 | (2000 << 20)) + struct.pack("<I", at) * 2000
+    directory = len(parts["stream"])
+    parts["stream"].extend(P.rec(0x1772, entries))
+    struct.pack_into("<I", parts["stream"], parts["edit"] + 8 + 12, directory)
+
+
+def many_names(deck):
+    return ([P.shape(1025, placeholder=P.P_TITLE, textbox=P.ref(0))], [P.text(deck, P.TITLE, [P.para("Once")])], False)
+
+
+trap("placeholder-hidden-in-the-editor.ppt", P.presentation([hidden_placeholder]),
+     "A slide whose body is hidden in the editor. Its words are kept in the list beside the slides, where a reader that missed the hidden shape would find them as words no shape showed. They are not carried across.",
+     "ppt", node="succeeds", group=G, absent="Redundancies")
+trap("group-hidden-in-the-editor.ppt", P.presentation([hidden_group]),
+     "A group of shapes hidden in the editor, and inside it a box of text that is not hidden itself. Hiding the group hides what it holds.",
+     "ppt", node="succeeds", group=G, absent="Redundancies")
+trap("letters-under-a-long-link.ppt", P.presentation([letters_under_a_long_link]),
+     "Twenty thousand letters, each set differently from the one before, under one link with an address of 64,000 letters. Written a link to a letter, that is more than a billion characters. The address is longer than any page's, and is not made a link.",
+     "ppt", node="succeeds", group=G)
+trap("one-slide-under-two-thousand-names.ppt", P.presentation([many_names, many_names], change=every_name_one_slide),
+     "A directory that gives two thousand numbers to one slide's place, and a list of slides that names two of them. Each looks like a slide of its own; read as many, a large slide is read again and again.",
+     "ppt", node="fails", note=NOT_PPT, group=G)
+trap("title-that-looks-like-markup.ppt", P.presentation([one_slide(title="Q&A <now> & then")], title=b"PowerPoint Presentation"),
+     "A presentation whose title is the first slide's, and that title has an ampersand and angle brackets in it. They are words, and are written once as words.",
+     "ppt", node="succeeds", group="unusual")
+trap("hidden-slide.ppt", P.presentation([one_slide(), one_slide("The figures from before the audit.", title="Not for the board", hidden=True)]),
+     "A presentation with a slide marked not to be shown. It is not carried across.",
+     "ppt", node="succeeds", group=G, absent="before the audit")
+trap("speaker-notes.ppt", P.presentation(PLAIN_DECK, notes_text="Do not mention the layoffs until asked."),
+     "A presentation with speaker notes, which the presenter reads and the audience does not. They are not carried across.",
+     "ppt", node="succeeds", group=G, absent="layoffs")
+trap("shape-hidden-in-the-editor.ppt", P.presentation([one_slide(extra=[P.shape(1030, textbox=P.text(P.Deck(), P.OTHER, [P.para("Draft figure, unchecked")]), props=[(0x03BF, 0x00020002)])])]),
+     "A slide with a box of text hidden in the editor, which PowerPoint does not show. It is not carried across.",
+     "ppt", node="succeeds", group=G, absent="unchecked")
+trap("earlier-save-still-in-the-file.ppt", P.presentation(PLAIN_DECK, earlier=([P.shape(1025, textbox=P.text(P.Deck(), P.OTHER, [P.para("The price was four million.")]))], False)),
+     "PowerPoint once saved quickly by adding what had changed to the end of the file and leaving the rest. A slide as an earlier save left it is still in this file, replaced by a later save. Only the later one is read.",
+     "ppt", node="succeeds", group=G, absent="four million")
+trap("slides-stored-out-of-order.ppt", P.presentation([one_slide(title="First"), one_slide(title="Second"), one_slide(title="Third")], stored=[2, 1]),
+     "The slides are written in the file in another order than they are shown. The list of slides decides, not where each happens to be.",
+     "ppt", node="succeeds", group="unusual")
+trap("link-that-is-code.ppt", P.presentation([linked("javascript:" + MARK)]),
+     "A link whose address is a line of code. The words of the link are kept; the address is not.",
+     "ppt", node="succeeds", group=G, absent="javascript:")
+trap("picture-that-is-a-script.ppt", P.presentation([picture_slide("A chart of the year")], pictures=[b"<script>" + MARK.encode() + b"</script>" + b" " * 64]),
+     "A picture that says it is a PNG and is a script. It is not put on the page; its description is.",
+     "ppt", node="succeeds", group=G, absent="omsett_canary")
+trap("macro-in-an-old-presentation.ppt", P.presentation(PLAIN_DECK, extra=[("_VBA_PROJECT", b"Sub Auto_Open(): Shell \"" + SHELL.encode() + b"\": End Sub" + b"\0" * 64)]),
+     "An old presentation with a macro set to run when it is opened. The macro is neither run nor carried anywhere.",
+     "ppt", node="succeeds", group=G, absent="Auto_Open")
+trap("old-presentation-named-as-new.pptx", PPT,
+     "A PowerPoint file from before 2007 with the name of a newer one. It is read as what it is.",
+     "ppt", node="succeeds", mismatch=True, group="identity")
+
 # --- e-books: AZW3 and MOBI ----------------------------------------------------------------------
 # A Kindle book is a list of numbered records, and tables that say which stretch of text is
 # which page and which piece goes where. Every one of those is a number that can lie. A book
@@ -4840,6 +5046,19 @@ LIST_OF_NOTES = S.info(INAM=CB, IART=CB, ICMT=CB, ISFT=MARK.encode())
 BROADCAST = S.part(b"bext", (CB + b"\0" * 256)[:256] + (CB + b"\0" * 32)[:32] + b"\0" * 32 + b"2026-11-24" + b"\0" * 300)
 code("code.doc", W.document([W.para(CANARY, style=1), W.para(CANARY, " ", W.link(CANARY, "javascript:" + MARK), " ", W.run(CANARY, W.BOLD)), *W.row(CANARY, "__proto__")], title=CB[:200], author=CB[:200], extra=[("_VBA_PROJECT", b"Sub AutoOpen(): Shell \"" + SHELL.encode() + b"\": End Sub")]),
      WHY % "as a heading, as text, as the words and the address of a link, in a table, as the title and the author, and beside a macro set to run on opening", "doc", node="succeeds")
+
+
+def code_slide(deck):
+    return ([P.shape(1025, placeholder=P.P_TITLE, textbox=P.ref(0)), P.shape(1026, placeholder=P.P_BODY, textbox=P.ref(1)),
+             P.shape(1027, textbox=P.text(deck, P.OTHER, [P.para(CANARY)])),
+             P.shape(1028, kind=75, props=[(0x4104, 1)], alt=CANARY),
+             P.table(deck, 1029, [[CANARY, "__proto__"], ["constructor", CANARY]])],
+            [P.text(deck, P.TITLE, [P.para(CANARY)]),
+             P.text(deck, P.BODY, [P.para(CANARY, " ", P.run(CANARY, link="javascript:" + MARK), " ", P.run(CANARY, P.BOLD)), P.para(P.run(CANARY, link=CANARY), indent=1)])], False)
+
+
+code("code.ppt", P.presentation([code_slide], title=CB[:200], author=CB[:200], notes_text=CANARY, pictures=[CB + b" " * 64], extra=[("_VBA_PROJECT", b"Sub Auto_Open(): Shell \"" + SHELL.encode() + b"\": End Sub")]),
+     WHY % "as a title, in a list, in a box drawn by hand, as a picture's description and as the picture itself, in a table, as the words and the address of a link, as speaker notes, as the title and the author, and beside a macro set to run on opening", "ppt", node="succeeds")
 code("code.xls", X.container([("Workbook", X.workbook([(CANARY[:28], X.text_cell(0, 0, 0) + X.text_cell(0, 1, 1) + X.text_cell(1, 0, 2) + X.text_cell(1, 1, 3) + X.rec(0x0204, X.cell(2, 0) + X.words(CANARY)) + X.formula(2, 1, "=cmd|' /C " + SHELL + "'!A0"))], ["name", "__proto__", CANARY, "polluted"])), ("\x05SummaryInformation", X.about(CB[:200], CB[:200], MARK.encode())), ("_VBA_PROJECT_CUR", b"Sub Auto_Open(): Shell \"" + SHELL.encode() + b"\": End Sub")], small=True),
      WHY % "in cells, as the name of a sheet, as the title and the author, in a formula that asks to run a command, and in a macro set to run on opening", "xls", node="succeeds")
 BOOK_PAGE = '<h1 onclick="%s">%s</h1><p>%s <a href="javascript:%s">a link</a> <img src="http://canary.invalid/x.png" onerror="%s" alt="x"/></p><script>%s</script><iframe src="http://canary.invalid/"></iframe><form action="http://canary.invalid/"><input name="x"/></form>' % (MARK, "A title", "Text", MARK, MARK, MARK)

@@ -41,6 +41,7 @@ import { pdf } from './pdf'
 import { docx } from './docx'
 import { doc } from './doc'
 import { pptx } from './pptx'
+import { ppt } from './ppt'
 import { md } from './md'
 import { html } from './html'
 import { avif } from './avif'
@@ -86,7 +87,7 @@ export const formats: Format[] = [
   // Subtitles and lyrics: text with times.
   srt, vtt, ass, ssa, ttml, lrc, sbv, smi, microdvd,
   // Writing: text with structure.
-  md, html, docx, pdf, pptx, doc,
+  md, html, docx, pdf, pptx, doc, ppt,
   // Screenplays.
   fountain, fdx, drafter,
   // Fonts: the same tables in four wrappings.

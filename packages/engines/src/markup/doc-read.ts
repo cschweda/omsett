@@ -21,7 +21,7 @@ const MAX_PAGES = 200_000
 const MAX_WRITTEN = 64 * 1024 * 1024
 
 /** Languages by the number Windows gives them, for the few most documents are written in. */
-const LANGUAGES: Record<number, string> = {
+export const LANGUAGES: Record<number, string> = {
   0x0409: 'en-US', 0x0809: 'en-GB', 0x0C09: 'en-AU', 0x1009: 'en-CA', 0x040C: 'fr', 0x0C0C: 'fr-CA', 0x0407: 'de', 0x040A: 'es', 0x0C0A: 'es', 0x080A: 'es-MX',
   0x0410: 'it', 0x0413: 'nl', 0x0414: 'nb', 0x0814: 'nn', 0x041D: 'sv', 0x0406: 'da', 0x040B: 'fi', 0x0416: 'pt-BR', 0x0816: 'pt', 0x0415: 'pl',
   0x0419: 'ru', 0x0422: 'uk', 0x0405: 'cs', 0x040E: 'hu', 0x0408: 'el', 0x041F: 'tr', 0x040D: 'he', 0x0401: 'ar', 0x0411: 'ja', 0x0412: 'ko', 0x0804: 'zh-CN', 0x0404: 'zh-TW',

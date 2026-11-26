@@ -111,3 +111,10 @@ ff -i "$out/wav/sample.wav" -fflags +bitexact -ar 22050 -ac 1 -c:a libmp3lame -q
 python3 "$tools/doc.py" >/dev/null
 printf '%s' '<html><head><meta charset="utf-8"><title>Test pattern</title></head><body><h1>Heading one</h1><p>A paragraph with <b>bold</b> and <i>italic</i> words.</p><ul><li>First</li><li>Second</li></ul><table><tr><th>a</th><th>b</th></tr><tr><td>1</td><td>2</td></tr></table><p>Café 字幕</p></body></html>' > "$work/page.html"
 textutil -convert doc "$work/page.html" -output "$out/doc/from-macos.doc"
+
+# --- old PowerPoint presentations ----------------------------------------------------------------
+# ppt/sample.ppt is written by ppt.py, laid out as PowerPoint lays one out. The other,
+# ppt/from-poi.ppt, is written by Apache POI (PptSample.java, which says how to run it), a
+# program that knows nothing of Omsett. It needs Java and POI's jars, so it is committed and
+# made again only by hand.
+python3 "$tools/ppt.py" >/dev/null
