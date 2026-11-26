@@ -5,7 +5,9 @@ export const opus: Format = {
   name: 'Opus',
   category: 'audio',
   extensions: ['opus'],
-  mime: ['audio/opus'],
+  // An Opus file is Ogg, and audio/ogg is its type (RFC 7845). Firefox knows no audio/opus: given
+  // it, it names the download .ogx. Under audio/ogg, .opus is a name it keeps.
+  mime: ['audio/ogg', 'audio/opus'],
   detect: ['opus'],
   explain:
     'Opus is the newest open sound format: free of patents, used for calls and voice messages by WhatsApp, Discord and most video-call apps. It leaves out sound to stay small, and sounds better at a small size than any other format.',
