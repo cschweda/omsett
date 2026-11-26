@@ -8228,7 +8228,7 @@
     "guard": "ok",
     "node": "fails",
     "browser": "fails",
-    "note": "This file is not a valid Ogg Vorbis file",
+    "note": "This sound file holds less sound than it says. It may have been cut short",
     "absent": null
   },
   {
@@ -8240,7 +8240,7 @@
     "guard": "ok",
     "node": "fails",
     "browser": "fails",
-    "note": "This file is not a valid Opus file",
+    "note": "This sound file holds less sound than it says. It may have been cut short",
     "absent": null
   },
   {
@@ -8337,6 +8337,78 @@
     "node": "fails",
     "browser": "fails",
     "note": "This sound file is damaged: part of it could not be read",
+    "absent": null
+  },
+  {
+    "file": "damaged-in-the-middle.ogg",
+    "group": "sound",
+    "why": "An Ogg file with one byte of its sound changed. The page's own checksum no longer matches, and it is refused, not played.",
+    "detect": "ogg",
+    "mismatch": false,
+    "guard": "ok",
+    "node": "fails",
+    "browser": "fails",
+    "note": "This sound file is damaged: part of it could not be read",
+    "absent": null
+  },
+  {
+    "file": "cut-between-pages.ogg",
+    "group": "sound",
+    "why": "An Ogg file cut exactly between two pages, so that every page left is whole. Its end was never marked, and it is refused as cut short.",
+    "detect": "ogg",
+    "mismatch": false,
+    "guard": "ok",
+    "node": "fails",
+    "browser": "fails",
+    "note": "This sound file holds less sound than it says. It may have been cut short",
+    "absent": null
+  },
+  {
+    "file": "damaged-in-the-middle.opus",
+    "group": "sound",
+    "why": "An Ogg file with one byte of its sound changed. The page's own checksum no longer matches, and it is refused, not played.",
+    "detect": "opus",
+    "mismatch": false,
+    "guard": "ok",
+    "node": "fails",
+    "browser": "fails",
+    "note": "This sound file is damaged: part of it could not be read",
+    "absent": null
+  },
+  {
+    "file": "cut-between-pages.opus",
+    "group": "sound",
+    "why": "An Ogg file cut exactly between two pages, so that every page left is whole. Its end was never marked, and it is refused as cut short.",
+    "detect": "opus",
+    "mismatch": false,
+    "guard": "ok",
+    "node": "fails",
+    "browser": "fails",
+    "note": "This sound file holds less sound than it says. It may have been cut short",
+    "absent": null
+  },
+  {
+    "file": "two-tracks.m4a",
+    "group": "sound",
+    "why": "An M4A with two tracks of sound. Converting the first would drop the second without a word, so it is refused.",
+    "detect": "m4a",
+    "mismatch": false,
+    "guard": "ok",
+    "node": "fails",
+    "browser": "fails",
+    "note": "This file holds more than one track. Omsett converts a file with one track of sound",
+    "absent": null
+  },
+  {
+    "file": "film-named-as-sound.m4a",
+    "group": "identity",
+    "why": "A film in an MPEG-4 container with the name of a sound file. Its own label says it is a film, and it is known as one, not as sound.",
+    "detect": "unregistered",
+    "mismatch": true,
+    "guard": "ok",
+    "node": "none",
+    "browser": "none",
+    "note": null,
     "absent": null
   },
   {

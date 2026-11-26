@@ -479,7 +479,18 @@ build by `apps/web/scripts/write-headers.ts`.
   so those stay inside it as pointers until the filter has turned them into a format it can.
   A sample format is named to the filter by its name, never its number: libav.js reads 0
   (unsigned 8-bit) as none given. Surround sound is moved onto Opus's and Apple Lossless's own
-  layouts, which are the only ones they take.
+  layouts, which are the only ones they take. `ff_filter_multi` frees a frame given to it as a
+  pointer; free one yourself only if the filter never took it. Everything else made inside
+  libav.js is freed in `finally`, refused or not, because the worker converts again.
+- **An Ogg file is walked by Omsett before FFmpeg reads it** (`oggProblem` in
+  `audio-libav/ogg.ts`): libav.js's Ogg reader ignores `err_detect` and plays a page whose
+  checksum fails, and reads a file cut between pages as a shorter whole. Every page's checksum,
+  its place in the count, one stream, and the end mark on the last page. A file with a second
+  track or a film is refused, never converted in part. A lossless target is written at the
+  sound's own depth or refused (`lossless` in `TARGETS`); never pack 32 bits into 16.
+- **FFmpeg 9.0.2 cannot read 32-bit whole-number WavPack with its checks on** (its extra-bits
+  check is wrong; `wvunpack -v` accepts the same files). Such a file is refused in its own words.
+  Do not turn `crccheck` off for WavPack to read one.
 - **A choice of how much sound to leave out is `soundQuality`** (`smaller`, `standard`, `best`),
   a key in the capability's `defaultOptions` like any other choice. The engine maps it to the
   encoder's settings; the page names no format and no bitrate.

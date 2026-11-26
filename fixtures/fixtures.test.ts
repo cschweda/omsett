@@ -18,6 +18,12 @@ const UNWRAPS_TO_THE_OTHER = [
   'No contacts found. A contact needs a column called name, email or phone',
   // MP3 holds one or two channels, and one sample of sound has six.
   'MP3 holds one or two channels of sound, and this file has 6. Choose FLAC or WAV',
+  // A lossless format is refused a sound it would change: fractions where it holds whole
+  // numbers, numbers deeper than it holds.
+  'This sound is stored as fractions, which M4A cannot hold without changing them',
+  "This sound's numbers are more exact than M4A can hold, so some would be lost",
+  "This sound's numbers are more exact than WavPack can hold, so some would be lost",
+  'This sound uses 32 bits to a number, more than M4A can hold, so some would be lost',
 ]
 const derived = deriveEdges(registry)
 

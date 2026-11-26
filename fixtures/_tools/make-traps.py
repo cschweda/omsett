@@ -4981,8 +4981,10 @@ LONG = {"m4a": read("m4a", "sample.m4a"), "wma": read("wma", "sample.wma"), "ogg
         "wv": read("wv", "sample.wv"), "tta": read("tta", "sample.tta"), "aac": read("aac", "sample.aac"), "ac3": read("ac3", "sample.ac3")}
 DAMAGED = "This sound file is damaged: part of it could not be read"
 # Each is refused where the cut is first noticed: a container that names a part past the end is
-# not a valid file; a stream cut inside a stretch is damaged; AC-3, which has no container, is short.
-CUT_NOTES = {"m4a": "This file is not a valid M4A file", "ogg": "This file is not a valid Ogg Vorbis file", "opus": "This file is not a valid Opus file",
+# not a valid file; a stream cut inside a stretch is damaged; Ogg, walked page by page, and AC-3,
+# which has no container, are short.
+CUT_NOTES = {"m4a": "This file is not a valid M4A file", "ogg": "This sound file holds less sound than it says. It may have been cut short",
+             "opus": "This sound file holds less sound than it says. It may have been cut short",
              "wv": "This WavPack file has no sound in it", "ac3": "This sound file holds less sound than it says. It may have been cut short",
              "aac": DAMAGED, "wma": DAMAGED, "tta": DAMAGED}
 for ext, data in LONG.items():
@@ -4997,6 +4999,25 @@ for ext in ["m4a", "wv", "tta", "ac3"]:
     trap("damaged-in-the-middle." + ext, bytes(damaged),
          "A sound file with sixty-four bytes in the middle of its sound changed. Its own checks catch it, and it is refused, not played as noise.",
          ext, node="fails", note=DAMAGED, group=G)
+# Ogg is walked by Omsett before FFmpeg reads it: FFmpeg plays a page whose checksum fails, and
+# reads a file cut between two pages as a shorter whole one.
+for ext in ["ogg", "opus"]:
+    data = LONG[ext]
+    damaged = bytearray(data)
+    damaged[len(data) - 5] ^= 0x01
+    trap("damaged-in-the-middle." + ext, bytes(damaged),
+         "An Ogg file with one byte of its sound changed. The page's own checksum no longer matches, and it is refused, not played.",
+         ext, node="fails", note=DAMAGED, group=G)
+    trap("cut-between-pages." + ext, data[: data.rfind(b"OggS")],
+         "An Ogg file cut exactly between two pages, so that every page left is whole. Its end was never marked, and it is refused as cut short.",
+         ext, node="fails", note="This sound file holds less sound than it says. It may have been cut short", group=G)
+TRACKS = "This file holds more than one track. Omsett converts a file with one track of sound"
+trap("two-tracks.m4a", ffmpeg_made("m4a", "-i", SOUND_WAV, "-i", SOUND_WAV, "-map", "0:a", "-map", "1:a", "-c:a", "alac"),
+     "An M4A with two tracks of sound. Converting the first would drop the second without a word, so it is refused.",
+     "m4a", node="fails", note=TRACKS, group=G)
+trap("film-named-as-sound.m4a", ffmpeg_made("m4a", "-f", "lavfi", "-i", "testsrc=size=64x48:rate=5:duration=1", "-i", SOUND_WAV, "-shortest", "-c:v", "mpeg4", "-c:a", "alac"),
+     "A film in an MPEG-4 container with the name of a sound file. Its own label says it is a film, and it is known as one, not as sound.",
+     "unregistered", mismatch=True, group="identity")
 trap("film-named-as-sound.wma", ffmpeg_made("wma", "-f", "lavfi", "-i", "testsrc=size=64x48:rate=5:duration=1", "-i", SOUND_WAV, "-shortest", "-c:v", "wmv2", "-c:a", "wmav2"),
      "A film in Windows Media's container with the name of a sound file. It is not a sound file, and is refused as a film.",
      "wma", node="fails", note="This file holds a film, not only sound. Omsett converts sound files", group="identity")

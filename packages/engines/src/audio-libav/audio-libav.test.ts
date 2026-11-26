@@ -27,6 +27,32 @@ const numbers = (wav: Uint8Array) => {
   return { sound, data: wav.subarray(sound.at, sound.at + sound.frames * sound.channels * sound.bytes) }
 }
 
+/** A WAV of a rising and falling line in two channels, as 32-bit whole numbers or 32-bit fractions. */
+function madeWav(kind: 'int32' | 'float', frames = 4000): Uint8Array {
+  const out = new Uint8Array(44 + frames * 8)
+  const view = new DataView(out.buffer)
+  const tag = (at: number, text: string) => [...text].forEach((letter, i) => (out[at + i] = letter.charCodeAt(0)))
+  tag(0, 'RIFF')
+  view.setUint32(4, 36 + frames * 8, true)
+  tag(8, 'WAVEfmt ')
+  view.setUint32(16, 16, true)
+  view.setUint16(20, kind === 'float' ? 3 : 1, true)
+  view.setUint16(22, 2, true)
+  view.setUint32(24, 44100, true)
+  view.setUint32(28, 44100 * 8, true)
+  view.setUint16(32, 8, true)
+  view.setUint16(34, 32, true)
+  tag(36, 'data')
+  view.setUint32(40, frames * 8, true)
+  for (let i = 0; i < frames * 2; i++) {
+    const wave = Math.sin(i / 7) * 0.9
+    // Whole numbers that use every bit, down to the last: odd numbers, all of them.
+    if (kind === 'int32') view.setInt32(44 + i * 4, Math.round(wave * 2 ** 30) * 2 + 1, true)
+    else view.setFloat32(44 + i * 4, wave, true)
+  }
+  return out
+}
+
 describe('the long tail of sound', () => {
   it('unpacks what is kept whole to exactly the numbers it was made from', async () => {
     const original = numbers(await fixture('wav/sample.wav'))
@@ -54,6 +80,41 @@ describe('the long tail of sound', () => {
     for (const to of ['wv', 'm4a']) {
       const back = numbers(await convert(await convert(wav, 'wav', to), to, 'wav'))
       expect(Buffer.from(back.data).equals(Buffer.from(original.data)), to).toBe(true)
+    }
+  })
+
+  it('keeps fractions exactly in WavPack, and refuses fractions and 32-bit numbers for Apple Lossless, which would change them', async () => {
+    const float = madeWav('float')
+    const original = numbers(float)
+    const back = numbers(await convert(await convert(float, 'wav', 'wv'), 'wv', 'wav'))
+    expect(back.sound.coding).toBe(original.sound.coding)
+    expect(Buffer.from(back.data).equals(Buffer.from(original.data))).toBe(true)
+    await expect(convert(float, 'wav', 'm4a')).rejects.toThrow(/fractions/)
+    await expect(convert(madeWav('int32'), 'wav', 'm4a')).rejects.toThrow(/32 bits/)
+  })
+
+  it('writes 32-bit numbers into WavPack, and refuses to read them back, in words that say why', async () => {
+    // FFmpeg's reader fails its own check on such a file. The reference tool accepts what is
+    // written here (`wvunpack -v`, run by hand); Omsett will not read it without that check.
+    const packed = await convert(madeWav('int32'), 'wav', 'wv')
+    await expect(convert(packed, 'wv', 'wav')).rejects.toThrow(/32-bit whole numbers, which Omsett cannot yet check/)
+  })
+
+  it('goes on converting after refusals, with nothing left behind to spoil the next', async () => {
+    const wav = await fixture('wav/sample.wav')
+    const cut = (await fixture('ogg/sample.ogg')).slice(0, 3430)
+    for (let i = 0; i < 20; i++) {
+      await expect(convert(madeWav('float'), 'wav', 'm4a')).rejects.toThrow()
+      await expect(convert(cut, 'ogg', 'wav')).rejects.toThrow()
+      await expect(convert(new Uint8Array(100), 'm4a', 'wav')).rejects.toThrow()
+    }
+    expect(numbers(await convert(await convert(wav, 'wav', 'wv'), 'wv', 'wav')).data.length).toBe(numbers(wav).data.length)
+  })
+
+  it('writes nothing about the program that wrote it', async () => {
+    const wav = await fixture('wav/sample.wav')
+    for (const to of ['opus', 'ogg', 'wv', 'm4a']) {
+      expect(Buffer.from(await convert(wav, 'wav', to)).toString('latin1'), to).not.toMatch(/Lavf|Lavc|encoder/i)
     }
   })
 
