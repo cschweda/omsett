@@ -4856,6 +4856,29 @@ trap("shapes-not-shown.odp", P2.presentation([P2.page("One", [P2.box(O.p("A titl
 trap("placeholder-never-filled-in.odp", P2.presentation([P2.page("One", [P2.box(O.p("A title"), "title"), P2.box(O.p("Click to add Text"), "outline", placeholder=True)])]),
      "A slide with a placeholder that was never filled in, showing its prompt. The prompt is the program's words, not the presentation's.",
      "odp", node="succeeds", group=G, absent="Click to add")
+HIDDEN_ELSEWHERE = P2.DEFAULTS.replace("</office:styles>", '<style:style style:name="Concealed" style:family="drawing-page"><style:drawing-page-properties presentation:visibility="hidden"/></style:style></office:styles>')
+trap("slide-hidden-by-a-style-kept-elsewhere.odp", P2.presentation(ODP_PLAIN + [
+        '<draw:page draw:name="Two" draw:style-name="Concealed">%s</draw:page>' % P2.box(O.p("The figures from before the audit."), "title"),
+        '<draw:page draw:name="Three" draw:style-name="child">%s</draw:page>' % P2.box(O.p("The figures from before the audit, again."), "title")],
+        defaults=HIDDEN_ELSEWHERE, styles=P2.STYLES + '<style:style style:name="child" style:family="drawing-page" style:parent-style-name="Concealed"/>'),
+     "Two hidden slides: one whose style, kept with the named styles and not beside the slides, hides it, and one whose style says nothing and is based on that one. Neither is carried across.",
+     "odp", node="succeeds", group=G, absent="before the audit")
+trap("shape-on-a-hidden-layer.odp", P2.presentation([P2.page("One", [P2.box(O.p("A title"), "title"), P2.box(O.p("Draft figure, unchecked")).replace("<draw:frame ", '<draw:frame draw:layer="drafts" ', 1)])],
+                                                    masters='<office:master-styles><draw:layer-set><draw:layer draw:name="layout"/><draw:layer draw:name="drafts" draw:display="none"/></draw:layer-set></office:master-styles>'),
+     "A box on a layer the presentation does not show. It is not on the slide the audience saw, and is not carried across.",
+     "odp", node="succeeds", group=G, absent="unchecked")
+trap("hidden-in-one-vocabulary-shown-in-another.odp", P2.presentation([P2.page("One", [P2.box(O.p("A title"), "title"), P2.box(O.p("Draft figure, unchecked")).replace("<draw:frame ", '<draw:frame draw:display="none" text:display="always" ', 1)]),
+                                                                     '<draw:page draw:name="Two" draw:style-name="dp2" presentation:style-name="dp1">%s</draw:page>' % P2.box(O.p("A hidden slide, unchecked"), "title")]),
+     "A box hidden by drawing's own word and shown by another vocabulary's word of the same name, and a hidden slide given a shown style by another vocabulary. Each word is read in the vocabulary it belongs to: both are hidden.",
+     "odp", node="succeeds", group=G, absent="unchecked")
+trap("notes-and-hidden-frames-inside-text.odp", P2.presentation([P2.page("One", [P2.box(O.p("A title"), "title"),
+        P2.box(O.p("Shown.<presentation:notes><draw:frame><draw:text-box>%s</draw:text-box></draw:frame></presentation:notes>" % O.p("Unchecked notes")) + P2.box(O.p("A printed copy, unchecked"), display="printer") + P2.box(O.p("7, unchecked"), "page-number")),
+        P2.box(O.p('<text:hidden-paragraph text:is-hidden="true"/>A hidden line, unchecked'), "title")])]),
+     "Speaker notes put inside a paragraph, a box shown only in print and a slide number inside a box of text, and a second title that is hidden. None is carried across.",
+     "odp", node="succeeds", group=G, absent="unchecked")
+trap("shape-made-a-link.odp", P2.presentation([P2.page("One", [P2.box(O.p("A title"), "title"), '<draw:a xlink:href="https://omsett.com/">%s</draw:a>' % P2.box(O.p("A box that is a link"))])]),
+     "A box of text made into a link, so that clicking it opens a page. Its words are on the slide, and are kept.",
+     "odp", node="succeeds", group="unusual")
 trap("link-that-is-code.odp", P2.presentation([P2.page("One", [P2.box(O.p("Links"), "title"), P2.box(O.p("Please " + O.link("read the report", "javascript:" + MARK) + " today."))])]),
      "A link whose address is a line of code. The words of the link are kept; the address is not.",
      "odp", node="succeeds", group=G, absent="javascript:")

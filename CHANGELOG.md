@@ -26,7 +26,26 @@ kinds are read.
   hidden outright or shown only when printed, groups hidden whole, placeholders never filled in
   (and their "Click to add" prompts), the slide's number, date and footer, and the author. The
   details before converting count the slides and say which of these a presentation holds.
-- **15 trap files**, and a code trap.
+- **20 trap files**, and a code trap. An adversarial review of the reader found six ways
+  something hidden could get through, a kind of shape that was dropped, and counts in the
+  details that were wrong, before release; each is fixed and has its trap or test.
+
+### Fixed
+
+- **In every OpenDocument reader, a word is read in the vocabulary it belongs to.** Two
+  attributes of one name in two vocabularies, a drawing's `display` and a text's `display`,
+  were taken for one, and the second could undo the first. Each is now read as itself, in ODT
+  and ODS as in ODP.
+- **Hidden is hidden wherever it is said.** A slide's style that hides it is found among the
+  named styles as well as the slide's own, and through the style it is based on; a layer that is
+  not shown hides what is on it; and a box inside a box of text is held to the same rules as one
+  on the slide.
+
+### Known
+
+- **Every slide that is not hidden is converted, whichever slide show the presentation is set
+  to play.** A presentation can name a custom show of some of its slides; Omsett does not yet
+  choose by it.
 
 ## 0.56.0
 

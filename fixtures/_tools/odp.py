@@ -46,10 +46,10 @@ def page(name, shapes, hidden=False, notes=None):
     return out + "</draw:page>"
 
 
-def presentation(pages, title="About Omsett", author="SECRET-AUTHOR", pictures=None, mimetype=PRESENTATION, encrypted=False, prolog="", extra=None, styles=STYLES):
+def presentation(pages, title="About Omsett", author="SECRET-AUTHOR", pictures=None, mimetype=PRESENTATION, encrypted=False, prolog="", extra=None, styles=STYLES, defaults=DEFAULTS, masters=""):
     content = ('<?xml version="1.0" encoding="UTF-8"?>%s<office:document-content %s><office:automatic-styles>%s</office:automatic-styles>'
                '<office:body><office:presentation>%s</office:presentation></office:body></office:document-content>' % (prolog, NS, styles, "".join(pages)))
-    styled = '<?xml version="1.0" encoding="UTF-8"?><office:document-styles %s>%s</office:document-styles>' % (NS, DEFAULTS)
+    styled = '<?xml version="1.0" encoding="UTF-8"?><office:document-styles %s>%s%s</office:document-styles>' % (NS, defaults, masters)
     meta = ('<?xml version="1.0" encoding="UTF-8"?><office:document-meta %s><office:meta><dc:title>%s</dc:title>'
             '<meta:initial-creator>%s</meta:initial-creator><meta:generator>fixtures/_tools/odp.py</meta:generator></office:meta></office:document-meta>' % (NS, title, author))
     pictures = pictures or {}

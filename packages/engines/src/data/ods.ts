@@ -96,9 +96,9 @@ export async function openOds(bytes: Uint8Array, named: boolean): Promise<Opened
   const tableStyles = new Map<string, { parent?: string; hidden?: boolean }>()
   for (const holder of [find(styled, 'styles'), find(styled, 'automatic-styles'), find(content, 'automatic-styles')]) {
     for (const style of kids(holder ?? {})) {
-      if (tagOf(style) !== 'style' || attrs(style)['@family'] !== 'table' || !attrs(style)['@name']) continue
-      const said = kids(style).filter((part) => tagOf(part) === 'table-properties').map((part) => attrs(part)['@display'])
-      tableStyles.set(attrs(style)['@name']!, { parent: attrs(style)['@parent-style-name'], hidden: said.includes('false') ? true : said.includes('true') ? false : undefined })
+      if (tagOf(style) !== 'style' || attrs(style)['@style:family'] !== 'table' || !attrs(style)['@style:name']) continue
+      const said = kids(style).filter((part) => tagOf(part) === 'table-properties').map((part) => attrs(part)['@table:display'])
+      tableStyles.set(attrs(style)['@style:name']!, { parent: attrs(style)['@style:parent-style-name'], hidden: said.includes('false') ? true : said.includes('true') ? false : undefined })
     }
   }
   const hidden = (name: string | undefined): boolean => {
@@ -117,8 +117,8 @@ export async function openOds(bytes: Uint8Array, named: boolean): Promise<Opened
   if (tables.length > MAX_SHEETS * 4) throw tooLarge()
   const shown: Opened['shown'] = []
   for (const [index, table] of tables.entries()) {
-    if (hidden(attrs(table)['@style-name'])) continue
-    shown.push({ name: (attrs(table)['@name'] ?? `Sheet ${shown.length + 1}`).slice(0, 64), path: String(index) })
+    if (hidden(attrs(table)['@table:style-name'])) continue
+    shown.push({ name: (attrs(table)['@table:name'] ?? `Sheet ${shown.length + 1}`).slice(0, 64), path: String(index) })
     if (shown.length > MAX_SHEETS) throw tooLarge()
   }
   if (tables.length === 0) throw notOds()
@@ -153,7 +153,7 @@ function gridOf(table: Node): Cell[][] {
     for (const cell of kids(row)) {
       const tag = tagOf(cell)
       if (tag !== 'table-cell' && tag !== 'covered-table-cell') continue
-      const repeat = times(attrs(cell)['@number-columns-repeated'])
+      const repeat = times(attrs(cell)['@table:number-columns-repeated'])
       const value = tag === 'table-cell' ? valueOf(cell) : null
       if (value !== null) {
         if (column + repeat > MAX_COLUMNS) throw tooLarge()
@@ -163,7 +163,7 @@ function gridOf(table: Node): Cell[][] {
       column += repeat
     }
     if (line.length === 0) continue
-    const many = times(attrs(row)['@number-rows-repeated'])
+    const many = times(attrs(row)['@table:number-rows-repeated'])
     // Counted as the room the cells take, as an XLSX's are.
     if (many > MAX_ROWS || grid.length + many > MAX_ROWS) throw tooLarge()
     cells += line.length * many
@@ -177,25 +177,25 @@ function gridOf(table: Node): Cell[][] {
 /** What a cell holds: its value where it gives one, or the text it shows. */
 function valueOf(cell: Node): Cell {
   const a = attrs(cell)
-  const type = a['@value-type']
+  const type = a['@office:value-type']
   // A formula that failed is stored as a number it does not mean; LibreOffice's own mark says so,
   // and the error it shows ("#DIV/0!") is the value, as an XLSX gives it.
   if (a['@foreign:value-type'] === 'error') return textOf(cell) || null
   if (type === 'float' || type === 'percentage' || type === 'currency') {
-    const number = Number(a['@value'])
-    if (a['@value'] !== undefined && Number.isFinite(number)) return number
-  } else if (type === 'string' && a['@string-value'] !== undefined) {
+    const number = Number(a['@office:value'])
+    if (a['@office:value'] !== undefined && Number.isFinite(number)) return number
+  } else if (type === 'string' && a['@office:string-value'] !== undefined) {
     // A formula's text result is kept here, and is the value, as a number's is.
-    return a['@string-value'] === '' ? null : a['@string-value'].slice(0, MAX_TEXT)
+    return a['@office:string-value'] === '' ? null : a['@office:string-value'].slice(0, MAX_TEXT)
   } else if (type === 'boolean') {
-    if (a['@boolean-value'] !== undefined) return a['@boolean-value'] === 'true'
+    if (a['@office:boolean-value'] !== undefined) return a['@office:boolean-value'] === 'true'
   } else if (type === 'date') {
     // "2026-11-23" or "2026-11-23T14:30:00.5": a day, or a moment to the second. Midnight is the day.
-    const found = /^(\d{4}-\d{2}-\d{2})(?:T(\d{2}:\d{2}:\d{2}))?/.exec(a['@date-value'] ?? '')
+    const found = /^(\d{4}-\d{2}-\d{2})(?:T(\d{2}:\d{2}:\d{2}))?/.exec(a['@office:date-value'] ?? '')
     if (found) return found[2] && found[2] !== '00:00:00' ? `${found[1]}T${found[2]}` : found[1]!
   } else if (type === 'time') {
     // "PT14H30M00S": a time of day, written as one.
-    const found = /^(-?)PT(\d{1,4})H(\d{1,2})M(\d{1,2})(?:[.,]\d+)?S$/.exec(a['@time-value'] ?? '')
+    const found = /^(-?)PT(\d{1,4})H(\d{1,2})M(\d{1,2})(?:[.,]\d+)?S$/.exec(a['@office:time-value'] ?? '')
     if (found) return `${found[1]}${found[2]!.padStart(2, '0')}:${found[3]!.padStart(2, '0')}:${found[4]!.padStart(2, '0')}`
   }
   const text = textOf(cell)
@@ -230,7 +230,7 @@ function textOf(cell: Node): string {
             loose = letter === ' '
           }
         } else if (tag === 's') {
-          add(' '.repeat(Math.min(100, Math.max(1, Number(attrs(node)['@c']) || 1))))
+          add(' '.repeat(Math.min(100, Math.max(1, Number(attrs(node)['@text:c']) || 1))))
           loose = false
         } else if (tag === 'tab' || tag === 'line-break') {
           add(tag === 'tab' ? '\t' : '\n')
@@ -238,7 +238,7 @@ function textOf(cell: Node): string {
         }
         // A comment, a note and the guide to how a word is said are not the cell's text.
         else if (tag === 'annotation' || tag === 'note' || tag === 'ruby-text' || tag.startsWith('foreign:')) continue
-        else if (['none', 'condition'].includes(attrs(node)['@display'] ?? '')) continue
+        else if (['none', 'condition'].includes(attrs(node)['@text:display'] ?? '')) continue
         else words(kids(node), depth + 1)
       }
     }

@@ -71,7 +71,7 @@ describe('what a file carries', () => {
       'Made with': 'fixtures/_tools/odp.py [removed]',
       Slides: '4',
       'Speaker notes': 'On 1 slide [removed]',
-      'Hidden slides': 'Yes [removed]',
+      'Hidden slides': '1. They are never converted [removed]',
     })
   })
 

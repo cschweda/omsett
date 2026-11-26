@@ -9,6 +9,7 @@ import { readFountain } from '../script/fountain'
 import { readCues } from '../subtitle/read'
 import { readCfb } from '@omsett/detect'
 import { listSheets } from '../data/sheet'
+import { describeSlides } from '../markup/odp-read'
 import { readExif } from './exif'
 import { hasMacros, writtenBy } from './ole'
 
@@ -136,17 +137,16 @@ async function openPresentation(blob: Blob): Promise<Detail[]> {
     return data && data.length < 8 * 1024 * 1024 ? decode(data) : ''
   }
   const meta = part('meta.xml')
-  const content = part('content.xml')
   const details: Detail[] = []
   const add = (label: string, value: string | undefined, fate?: Detail['fate']) => value && details.push({ label, value, fate })
   add('Title', inTag(meta, 'title'), 'kept')
   add('Author', inTag(meta, 'initial-creator') ?? inTag(meta, 'creator'), 'removed')
   add('Made with', inTag(meta, 'generator'), 'removed')
-  const slides = (content.match(/<[\w.-]+:page\b/g) ?? []).length
-  if (slides) add('Slides', String(slides))
-  const notes = (content.match(/<[\w.-]+:notes\b/g) ?? []).length
-  if (notes) add('Speaker notes', `On ${count(notes, 'slide')}`, 'removed')
-  if (/:visibility="hidden"/.test(content)) add('Hidden slides', 'Yes', 'removed')
+  // Counted as a conversion counts them, from the same reading of the file.
+  const counted = await describeSlides(new Uint8Array(await blob.arrayBuffer())).catch(() => null)
+  if (counted?.slides) add('Slides', String(counted.slides))
+  if (counted?.notes) add('Speaker notes', `On ${count(counted.notes, 'slide')}`, 'removed')
+  if (counted?.hidden) add('Hidden slides', `${counted.hidden}. They are never converted`, 'removed')
   if (entries.some((entry) => /^(?:basic|scripts)\//i.test(entry.name))) add('Macros', 'Yes. They are never run and never carried over', 'removed')
   return details
 }

@@ -61,12 +61,14 @@ export interface OfficeFile {
  * @param bytes   the file
  * @param invalid the refusal for a file that is not one of these
  * @param what    what to call it when it is too large: "document", "presentation"
- * @param namespaces where given, the namespaces the reader knows. Names in them lose their
- *                prefix, whatever prefix the file chose; names in any other keep theirs, behind
- *                `foreign:`, so that something of another vocabulary is never taken for
- *                something of this one. Without it every prefix is dropped.
+ * @param namespaces where given, the namespaces the reader knows, each with the prefix the reader
+ *                calls it by. Elements in them lose their prefix; attributes in them are named
+ *                by that prefix, whatever prefix the file chose, so that two attributes of one
+ *                name in two vocabularies (draw:display, text:display) stay two. Names in any
+ *                other namespace become `foreign:…`, never taken for one of these. Without it
+ *                every prefix is dropped.
  */
-export async function openOffice(bytes: Uint8Array, invalid: () => Refusal, what: string, namespaces?: ReadonlySet<string>): Promise<OfficeFile> {
+export async function openOffice(bytes: Uint8Array, invalid: () => Refusal, what: string, namespaces?: ReadonlyMap<string, string>): Promise<OfficeFile> {
   const tooLarge = () => new Refusal(`This ${what} is too large to convert in a browser`)
   let entries: Entry[]
   try {
@@ -114,10 +116,10 @@ export async function openOffice(bytes: Uint8Array, invalid: () => Refusal, what
 
 /**
  * Name every element and attribute by its namespace, as the file declares it, in place: a known
- * namespace's names lose their prefix, any other's become `foreign:local`. Done without
- * recursion, so a deep tree costs no stack.
+ * namespace's elements lose their prefix and its attributes take the reader's own; any other's
+ * become `foreign:local`. Done without recursion, so a deep tree costs no stack.
  */
-export function resolve(tree: Node[], known: ReadonlySet<string>): void {
+export function resolve(tree: Node[], known: ReadonlyMap<string, string>): void {
   const stack: Array<{ nodes: Node[]; scope: Map<string, string> }> = [{ nodes: tree, scope: new Map([['xml', 'http://www.w3.org/XML/1998/namespace']]) }]
   const named = (name: string, scope: Map<string, string>, element: boolean): string => {
     const colon = name.indexOf(':')
@@ -126,7 +128,9 @@ export function resolve(tree: Node[], known: ReadonlySet<string>): void {
     // An attribute without a prefix is in no namespace, and an element without one in the default.
     if (prefix === '' && !element) return local
     const uri = scope.get(prefix)
-    return uri !== undefined && known.has(uri) ? local : `foreign:${local}`
+    const ours = uri === undefined ? undefined : known.get(uri)
+    if (ours === undefined) return `foreign:${local}`
+    return element ? local : `${ours}:${local}`
   }
   while (stack.length) {
     const { nodes, scope: outer } = stack.pop()!
@@ -144,9 +148,7 @@ export function resolve(tree: Node[], known: ReadonlySet<string>): void {
       const attributes: Record<string, string> = {}
       for (const [key, value] of Object.entries(old)) {
         if (key === '@xmlns' || key.startsWith('@xmlns:')) continue
-        const name = `@${named(key.slice(1), scope, false)}`
-        // Of two attributes that come to the same name, the one in a known namespace stands.
-        if (!name.startsWith('@foreign:') || !(name in attributes)) attributes[name] = value
+        attributes[`@${named(key.slice(1), scope, false)}`] = value
       }
       const inner = node[tag]
       const renamed: Node = { [named(tag, scope, true)]: inner }

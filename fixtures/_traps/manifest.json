@@ -7896,6 +7896,66 @@
     "absent": "Click to add"
   },
   {
+    "file": "slide-hidden-by-a-style-kept-elsewhere.odp",
+    "group": "slides",
+    "why": "Two hidden slides: one whose style, kept with the named styles and not beside the slides, hides it, and one whose style says nothing and is based on that one. Neither is carried across.",
+    "detect": "odp",
+    "mismatch": false,
+    "guard": "ok",
+    "node": "succeeds",
+    "browser": "succeeds",
+    "note": null,
+    "absent": "before the audit"
+  },
+  {
+    "file": "shape-on-a-hidden-layer.odp",
+    "group": "slides",
+    "why": "A box on a layer the presentation does not show. It is not on the slide the audience saw, and is not carried across.",
+    "detect": "odp",
+    "mismatch": false,
+    "guard": "ok",
+    "node": "succeeds",
+    "browser": "succeeds",
+    "note": null,
+    "absent": "unchecked"
+  },
+  {
+    "file": "hidden-in-one-vocabulary-shown-in-another.odp",
+    "group": "slides",
+    "why": "A box hidden by drawing's own word and shown by another vocabulary's word of the same name, and a hidden slide given a shown style by another vocabulary. Each word is read in the vocabulary it belongs to: both are hidden.",
+    "detect": "odp",
+    "mismatch": false,
+    "guard": "ok",
+    "node": "succeeds",
+    "browser": "succeeds",
+    "note": null,
+    "absent": "unchecked"
+  },
+  {
+    "file": "notes-and-hidden-frames-inside-text.odp",
+    "group": "slides",
+    "why": "Speaker notes put inside a paragraph, a box shown only in print and a slide number inside a box of text, and a second title that is hidden. None is carried across.",
+    "detect": "odp",
+    "mismatch": false,
+    "guard": "ok",
+    "node": "succeeds",
+    "browser": "succeeds",
+    "note": null,
+    "absent": "unchecked"
+  },
+  {
+    "file": "shape-made-a-link.odp",
+    "group": "unusual",
+    "why": "A box of text made into a link, so that clicking it opens a page. Its words are on the slide, and are kept.",
+    "detect": "odp",
+    "mismatch": false,
+    "guard": "ok",
+    "node": "succeeds",
+    "browser": "succeeds",
+    "note": null,
+    "absent": null
+  },
+  {
     "file": "link-that-is-code.odp",
     "group": "slides",
     "why": "A link whose address is a line of code. The words of the link are kept; the address is not.",

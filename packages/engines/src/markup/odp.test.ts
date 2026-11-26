@@ -57,6 +57,14 @@ describe('OpenDocument presentations (ODP)', () => {
     expect((await readOdp(await fixture('_traps/shapes-not-shown.odp'))).body).not.toContain('unchecked')
   })
 
+  it('leave out what is hidden wherever and however it is said, and read a shape made a link', async () => {
+    for (const trap of ['slide-hidden-by-a-style-kept-elsewhere', 'shape-on-a-hidden-layer', 'hidden-in-one-vocabulary-shown-in-another', 'notes-and-hidden-frames-inside-text']) {
+      const { body, title } = await readOdp(await fixture(`_traps/${trap}.odp`))
+      expect(`${title} ${body}`, trap).not.toMatch(/unchecked|before the audit/i)
+    }
+    expect((await readOdp(await fixture('_traps/shape-made-a-link.odp'))).body).toContain('<p>A box that is a link</p>')
+  })
+
   it('become Markdown by way of a page', async () => {
     const md = await convert(await convert(await fixture('odp/sample.odp'), 'odp', 'html'), 'html', 'md')
     expect(md).toContain('# About Omsett\n\n## Omsett')
