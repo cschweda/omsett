@@ -1,7 +1,7 @@
 import { existsSync } from 'node:fs'
 import { readFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
-import { pathToFileURL } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 import { createRequire } from 'node:module'
 import { createDataEngine } from './data'
 import { createSubtitleEngine } from './subtitle'
@@ -17,6 +17,7 @@ import { createHeifEngine, type HeifModule } from './heif'
 import { engineInfo, resvgFonts, typstFonts, vipsModules } from './info'
 import { createTypstEngine, SCRIPTS } from './typst'
 import { createPandocEngine } from './pandoc'
+import { createAudioLibavEngine } from './audio-libav'
 import { createResvgEngine, type ResvgHost } from './resvg'
 import { createMagickEngine, type MagickApi } from './magick'
 import { createVipsEngine, type VipsModule } from './vips'
@@ -86,6 +87,14 @@ export function createNodeEngines(): Record<string, Engine> {
   engines.pandoc = createPandocEngine({
     wasm: async () => new Uint8Array(await readFile(join(pandocDir, 'src', 'pandoc.wasm'))),
     core: () => import(pathToFileURL(join(pandocDir, 'src', 'core.js')).href),
+  })
+  // The long tail of sound: libav.js, loaded from its own folder, where it finds its binary itself.
+  const libavDir = fileURLToPath(new URL('../vendor/libav/', import.meta.url))
+  engines['audio-libav'] = createAudioLibavEngine({
+    async libav() {
+      const { default: LibAV } = (await import(pathToFileURL(join(libavDir, 'libav-omsett-audio.mjs')).href)) as { default: { LibAV(options: object): Promise<Record<string, never>> } }
+      return LibAV.LibAV({ noworker: true, nothreads: true, base: libavDir.replace(/\/$/, ''), variant: 'omsett-audio' })
+    },
   })
   engines.ebook = createEbookEngine()
   engines.audio = createAudioEngine()

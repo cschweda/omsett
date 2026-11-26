@@ -4958,6 +4958,76 @@ trap("not-utf8.txt", "Caf\u00e9 au lait, in the encoding Windows once used.\n".e
      "Text in an older encoding than UTF-8. It is not read as text, as it cannot be read correctly.",
      "unknown", group="identity")
 
+# --- the long tail of sound: M4A, AAC, AC-3, WMA, Ogg, Opus, WavPack, TTA ----------------------------
+# Read by FFmpeg (libav.js), which forgives: it is told to stop at damage, and Omsett refuses a
+# file that holds less than it says. What cannot be checked is said: AAC, WMA and Opus carry no
+# checksum over their sound, so damage inside them is played, as any player plays it.
+import subprocess as _subprocess  # noqa: E402
+import tempfile as _tempfile  # noqa: E402
+
+
+def ffmpeg_made(ext, *args):
+    """A file made by ffmpeg from the WAV sample, with these arguments. Needs ffmpeg, as make-samples.sh does."""
+    with _tempfile.TemporaryDirectory() as folder:
+        out = os.path.join(folder, "made." + ext)
+        _subprocess.run(["ffmpeg", "-hide_banner", "-loglevel", "error", "-y", *args, "-fflags", "+bitexact", out], check=True)
+        with open(out, "rb") as f:
+            return f.read()
+
+
+G = "sound"
+SOUND_WAV = os.path.join(FIXTURES, "wav", "sample.wav")
+LONG = {"m4a": read("m4a", "sample.m4a"), "wma": read("wma", "sample.wma"), "ogg": read("ogg", "sample.ogg"), "opus": read("opus", "sample.opus"),
+        "wv": read("wv", "sample.wv"), "tta": read("tta", "sample.tta"), "aac": read("aac", "sample.aac"), "ac3": read("ac3", "sample.ac3")}
+DAMAGED = "This sound file is damaged: part of it could not be read"
+# Each is refused where the cut is first noticed: a container that names a part past the end is
+# not a valid file; a stream cut inside a stretch is damaged; Ogg, walked page by page, and AC-3,
+# which has no container, are short.
+CUT_NOTES = {"m4a": "This file is not a valid M4A file", "ogg": "This sound file holds less sound than it says. It may have been cut short",
+             "opus": "This sound file holds less sound than it says. It may have been cut short",
+             "wv": "This WavPack file has no sound in it", "ac3": "This sound file holds less sound than it says. It may have been cut short",
+             "aac": DAMAGED, "wma": DAMAGED, "tta": DAMAGED}
+for ext, data in LONG.items():
+    # Cut through the middle of a frame, not on the edge of one.
+    trap("truncated." + ext, data[: len(data) // 2 + 101],
+         "A sound file cut off part-way, through the middle of a stretch of sound. It is refused, not handed back short.",
+         ext, node="fails", note=CUT_NOTES[ext], group=G)
+for ext in ["m4a", "wv", "tta", "ac3"]:
+    damaged = bytearray(LONG[ext])
+    for i in range(len(damaged) // 2, len(damaged) // 2 + 64):
+        damaged[i] ^= 0x5A
+    trap("damaged-in-the-middle." + ext, bytes(damaged),
+         "A sound file with sixty-four bytes in the middle of its sound changed. Its own checks catch it, and it is refused, not played as noise.",
+         ext, node="fails", note=DAMAGED, group=G)
+# Ogg is walked by Omsett before FFmpeg reads it: FFmpeg plays a page whose checksum fails, and
+# reads a file cut between two pages as a shorter whole one.
+for ext in ["ogg", "opus"]:
+    data = LONG[ext]
+    damaged = bytearray(data)
+    damaged[len(data) - 5] ^= 0x01
+    trap("damaged-in-the-middle." + ext, bytes(damaged),
+         "An Ogg file with one byte of its sound changed. The page's own checksum no longer matches, and it is refused, not played.",
+         ext, node="fails", note=DAMAGED, group=G)
+    trap("cut-between-pages." + ext, data[: data.rfind(b"OggS")],
+         "An Ogg file cut exactly between two pages, so that every page left is whole. Its end was never marked, and it is refused as cut short.",
+         ext, node="fails", note="This sound file holds less sound than it says. It may have been cut short", group=G)
+TRACKS = "This file holds more than one track. Omsett converts a file with one track of sound"
+trap("two-tracks.m4a", ffmpeg_made("m4a", "-i", SOUND_WAV, "-i", SOUND_WAV, "-map", "0:a", "-map", "1:a", "-c:a", "alac"),
+     "An M4A with two tracks of sound. Converting the first would drop the second without a word, so it is refused.",
+     "m4a", node="fails", note=TRACKS, group=G)
+trap("film-named-as-sound.m4a", ffmpeg_made("m4a", "-f", "lavfi", "-i", "testsrc=size=64x48:rate=5:duration=1", "-i", SOUND_WAV, "-shortest", "-c:v", "mpeg4", "-c:a", "alac"),
+     "A film in an MPEG-4 container with the name of a sound file. Its own label says it is a film, and it is known as one, not as sound.",
+     "unregistered", mismatch=True, group="identity")
+trap("film-named-as-sound.wma", ffmpeg_made("wma", "-f", "lavfi", "-i", "testsrc=size=64x48:rate=5:duration=1", "-i", SOUND_WAV, "-shortest", "-c:v", "wmv2", "-c:a", "wmav2"),
+     "A film in Windows Media's container with the name of a sound file. It is not a sound file, and is refused as a film.",
+     "wma", node="fails", note="This file holds a film, not only sound. Omsett converts sound files", group="identity")
+trap("six-channels.ac3", ffmpeg_made("ac3", "-f", "lavfi", "-i", "sine=frequency=440:duration=0.5:sample_rate=48000", "-af", "pan=5.1|c0=c0|c1=c0|c2=c0|c3=c0|c4=c0|c5=c0", "-c:a", "ac3"),
+     "Dolby Digital in six channels, as a film's sound is. Every channel is kept where the format can hold it.",
+     "ac3", node="succeeds", group="unusual")
+trap("sound-named-as-video.m4a", LONG["opus"],
+     "An Opus file with an M4A's name. It is read as what it is.",
+     "opus", node="succeeds", mismatch=True, group="identity")
+
 # --- e-books: AZW3 and MOBI ----------------------------------------------------------------------
 # A Kindle book is a list of numbered records, and tables that say which stretch of text is
 # which page and which piece goes where. Every one of those is a number that can lie. A book
@@ -5459,6 +5529,9 @@ code("code.rtf", RT.document(RT.heading(CANARY, 0) + RT.para(RT.letters(CANARY) 
      WHY % "as a heading, as text, as the words and the address of a link, in a table, and as the title and the author", "rtf", node="succeeds")
 code("code.txt", (CANARY + "\n\n" + CANARY + "\n").encode(),
      WHY % "as the words of a plain text file", "txt", node="succeeds")
+for ext, codec in [("m4a", ["-c:a", "aac", "-b:a", "64k"]), ("ogg", ["-c:a", "vorbis", "-strict", "-2", "-ac", "2"]), ("opus", ["-c:a", "libopus"]), ("wv", ["-c:a", "wavpack"]), ("wma", ["-c:a", "wmav2"])]:
+    code("code." + ext, ffmpeg_made(ext, "-i", SOUND_WAV, *codec, "-metadata", "title=" + CANARY, "-metadata", "artist=" + CANARY, "-metadata", "comment=" + CANARY),
+         WHY % "as the title, the artist and a comment", ext, node="succeeds", absent="omsett_canary")
 code("code.ppt", P.presentation([code_slide], title=CB[:200], author=CB[:200], notes_text=CANARY, pictures=[CB + b" " * 64], extra=[("_VBA_PROJECT", b"Sub Auto_Open(): Shell \"" + SHELL.encode() + b"\": End Sub")]),
      WHY % "as a title, in a list, in a box drawn by hand, as a picture's description and as the picture itself, in a table, as the words and the address of a link, as speaker notes, as the title and the author, and beside a macro set to run on opening", "ppt", node="succeeds")
 code("code.xls", X.container([("Workbook", X.workbook([(CANARY[:28], X.text_cell(0, 0, 0) + X.text_cell(0, 1, 1) + X.text_cell(1, 0, 2) + X.text_cell(1, 1, 3) + X.rec(0x0204, X.cell(2, 0) + X.words(CANARY)) + X.formula(2, 1, "=cmd|' /C " + SHELL + "'!A0"))], ["name", "__proto__", CANARY, "polluted"])), ("\x05SummaryInformation", X.about(CB[:200], CB[:200], MARK.encode())), ("_VBA_PROJECT_CUR", b"Sub Auto_Open(): Shell \"" + SHELL.encode() + b"\": End Sub")], small=True),

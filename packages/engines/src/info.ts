@@ -179,6 +179,18 @@ export const typstInfo: EngineInfo = {
   sourceUrl: 'https://github.com/Myriad-Dreamin/typst.ts',
 }
 
+// The long tail of sound formats: FFmpeg, built to WebAssembly by libav.js in a variant Omsett
+// makes itself (packages/engines/vendor/libav, from its own Dockerfile). The size is the binary
+// and its glue as shipped; packed with gzip, as omsett.com sends it, about 1.3 MB.
+export const audioLibavInfo: EngineInfo = {
+  id: 'audio-libav',
+  sizeBytes: 2_991_713 + 299_758 + 28_385,
+  runtimes: ['browser', 'node'],
+  // libav.js and FFmpeg are LGPL-2.1-or-later; Opus, libvorbis and libogg are BSD-3-Clause.
+  license: 'LGPL-2.1-or-later AND BSD-3-Clause',
+  sourceUrl: 'https://github.com/cschweda/omsett/tree/main/packages/engines/vendor/libav',
+}
+
 // RTF: Pandoc, the document converter, built to WebAssembly by the Pandoc project and shipped
 // unchanged. It is the second-largest thing Omsett fetches, and only when an RTF is converted.
 // The size is the binary as shipped; packed with gzip, as omsett.com sends it, about 16 MB.
@@ -262,5 +274,6 @@ export const engineInfo: Record<string, EngineInfo> = {
   [audioMp3Info.id]: audioMp3Info,
   [typstInfo.id]: typstInfo,
   [pandocInfo.id]: pandocInfo,
+  [audioLibavInfo.id]: audioLibavInfo,
   [ebookInfo.id]: ebookInfo,
 }

@@ -14,7 +14,7 @@
 
 **Drop a file. Pick a format. Nothing leaves your device.**
 
-Omsett is a free, open-source file converter. Every conversion runs in your browser, on your own device, so your files are never uploaded: there is no server for them to go to. Pictures, documents, spreadsheets, data, subtitles, screenplays, fonts, archives, sound (MP3, WAV, FLAC, AIFF) and e-books (EPUB and Kindle) convert today; more sound formats, video and a desktop app are ahead.
+Omsett is a free, open-source file converter. Every conversion runs in your browser, on your own device, so your files are never uploaded: there is no server for them to go to. Pictures, documents, spreadsheets, data, subtitles, screenplays, fonts, archives, sound (MP3, M4A, Ogg, Opus, WAV, FLAC and more) and e-books (EPUB and Kindle) convert today; video and a desktop app are ahead.
 
 *Omsett* is Norwegian: to translate; to convert.
 
@@ -29,7 +29,7 @@ Omsett is a free, open-source file converter. Every conversion runs in your brow
 <!-- facts:start -->
 <!-- Generated from the registry by `pnpm readme:facts`. Do not edit by hand. -->
 
-**80 formats, 334 conversions**, every one of them run in your browser, on your device, and tested against 805 files made on purpose to be broken, hostile or dishonest. How many tests there are today is on the site's [Trust](https://omsett.com/trust) page, counted at every build.
+**88 formats, 382 conversions**, every one of them run in your browser, on your device, and tested against 831 files made on purpose to be broken, hostile or dishonest. How many tests there are today is on the site's [Trust](https://omsett.com/trust) page, counted at every build.
 
 | Kind | Converts to and from | Reads only |
 | --- | --- | --- |
@@ -44,7 +44,7 @@ Omsett is a free, open-source file converter. Every conversion runs in your brow
 | Subtitles | SRT, WebVTT, ASS, SSA, TTML, LRC, SBV, SAMI, MicroDVD | — |
 | Screenplays | Fountain, Final Draft, Drafter | — |
 | Fonts | WOFF2, WOFF, TTF, OTF | — |
-| Sound | MP3, WAV, FLAC, AIFF, AU | — |
+| Sound | MP3, WAV, FLAC, AIFF, AU, M4A, Ogg Vorbis, Opus, WavPack | AAC, AC-3, WMA, TTA |
 | E-books | EPUB | AZW3, MOBI |
 | Archives | ZIP, TAR.GZ, TAR | — |
 
@@ -73,6 +73,7 @@ A file is offered the formats of its own kind: a picture becomes another picture
 - **Converts a medical scan (DICOM) to a picture without the patient**: only the picture is read; the name, date of birth and notes never reach the converter.
 - **Converts sound with nothing lost**: WAV, FLAC, AIFF and AU to one another, with not one number of the sound changed. A FLAC is checked against its own checksums as it is read, and one that does not match is refused.
 - **Packs and unpacks MP3**, at a quality you choose, and refuses an MP3 with part of its sound missing, where a player would skip the gap and say nothing.
+- **Reads the rest of the sound you are likely to have**: M4A, AAC, AC-3, WMA, Ogg Vorbis, Opus, WavPack and TTA, and writes Opus, Ogg Vorbis, WavPack and Apple Lossless. It uses Omsett's own audio-only build of FFmpeg, fetched only when needed, and refuses a file that is damaged or cut short.
 - **Says how long a recording runs** and how it is stored, before you start, and what title and artist a conversion leaves behind.
 - **Try it without a file of your own**: a sample picture, PDF and Word document are in the drop zone.
 - **See the result before you convert**: choose a picture and a format, and the original and what it will become are shown side by side, with a divider to drag and the quality to move. Nothing is fetched or saved to do it.

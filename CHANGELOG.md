@@ -7,6 +7,47 @@ The paragraph that opens a version is its teaser: the home page shows its first 
 in the "What's new" banner, so keep it to two or three sentences on what a visitor will notice.
 A line beginning "Released" gives the date.
 
+## 0.61.0
+
+Released 26 November 2026.
+
+M4A, AAC, AC-3, WMA, Ogg Vorbis, Opus, WavPack and TTA can now be converted. Sound can be
+packed small as Opus or Ogg Vorbis, at a quality you choose, or kept whole as WavPack or Apple
+Lossless. The engine, a 3 MB build of FFmpeg made for Omsett, is fetched only when one of these
+is converted.
+
+### Added
+
+- **The long tail of sound.** Read: M4A (AAC and Apple Lossless), AAC on its own, AC-3 and
+  E-AC-3, WMA (all four kinds), Ogg Vorbis, Opus, WavPack and TTA. Written: Opus and Ogg Vorbis
+  (smaller, standard or best), WavPack, and M4A as Apple Lossless. Each converts to WAV, FLAC,
+  AIFF, AU and MP3 as well, and those to it. AAC, AC-3 and WMA are read only: their encoders are
+  covered by patents and are not in the build.
+- **The engine is Omsett's own build of libav.js** (FFmpeg 9.0.2, LGPL-2.1-or-later, with Opus
+  and libvorbis, BSD-3-Clause), audio only, with nothing GPL in it. The script that builds it is
+  in `packages/engines/vendor/libav/build`, and building again gives the same bytes.
+- **A damaged or cut-short sound file is refused**, where a player would play what it could
+  find. FFmpeg is told to stop at damage; a file that holds less sound than its container says,
+  or a stream whose last stretch is cut off, is refused. An Ogg file (Vorbis, Opus) is walked by
+  Omsett page by page first, every checksum checked and its end required to be marked, because
+  FFmpeg's reader plays a damaged page. A file that holds a film, or more than one track of
+  sound, is refused rather than converted in part. Titles, artists, comments and cover pictures
+  are never carried across, and nothing about the program that wrote a file is written into it.
+- **What keeps every bit keeps every bit.** WavPack is written at the sound's own depth, 32-bit
+  numbers and fractions included. Apple Lossless cannot hold fractions or numbers past 24 bits,
+  so such a sound is refused for M4A rather than cut down.
+- 26 trap files, five code traps, and a sample of each format, all made by ffmpeg from the
+  test notes.
+
+### Known
+
+- AAC on its own, WMA and Opus carry no checksum over their sound, so damage inside a stretch
+  of their sound cannot be told from sound, and is played as any player plays it. A file cut
+  short is still refused.
+- A WavPack file of 32-bit whole numbers is written correctly (the reference tool verifies it)
+  but cannot be read: FFmpeg's reader fails its own check on every such file, and Omsett will not
+  read one with that check turned off. It is refused in words that say so.
+
 ## 0.60.0
 
 Released 26 November 2026.

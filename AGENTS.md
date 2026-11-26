@@ -468,6 +468,29 @@ build by `apps/web/scripts/write-headers.ts`.
 - **Import one thing from `wasm-media-encoders`, through `app/workers/lame.ts`.** The package
   carries LAME and an Ogg encoder inside its own script; imported whole it adds 780 KB that
   never runs, and would start LAME from a copy the app has not verified.
+- **The long tail of sound is Omsett's own build of FFmpeg** (`packages/engines/vendor/libav`,
+  libav.js, variant `omsett-audio`). What is in it is said by `build/fragments.json` and nothing
+  else; rebuild with `build/build.sh` (Docker) and the bytes come out the same, as the table in
+  its README records. Nothing GPL goes in, and no AAC or AC-3 encoder: those formats are read
+  only. Its readers are told to stop at damage (`err_detect`, on the reader and on each
+  decoder), and the engine refuses what FFmpeg would forgive: a file that holds less sound than
+  its container says, bytes in an AAC or AC-3 stream that no frame takes, an AC-3 whose last
+  frame is short, and a WMA that holds a film. libav.js copies no 64-bit samples out of itself,
+  so those stay inside it as pointers until the filter has turned them into a format it can.
+  A sample format is named to the filter by its name, never its number: libav.js reads 0
+  (unsigned 8-bit) as none given. Surround sound is moved onto Opus's and Apple Lossless's own
+  layouts, which are the only ones they take. `ff_filter_multi` frees a frame given to it as a
+  pointer; free one yourself only if the filter never took it. Everything else made inside
+  libav.js is freed in `finally`, refused or not, because the worker converts again.
+- **An Ogg file is walked by Omsett before FFmpeg reads it** (`oggProblem` in
+  `audio-libav/ogg.ts`): libav.js's Ogg reader ignores `err_detect` and plays a page whose
+  checksum fails, and reads a file cut between pages as a shorter whole. Every page's checksum,
+  its place in the count, one stream, and the end mark on the last page. A file with a second
+  track or a film is refused, never converted in part. A lossless target is written at the
+  sound's own depth or refused (`lossless` in `TARGETS`); never pack 32 bits into 16.
+- **FFmpeg 9.0.2 cannot read 32-bit whole-number WavPack with its checks on** (its extra-bits
+  check is wrong; `wvunpack -v` accepts the same files). Such a file is refused in its own words.
+  Do not turn `crccheck` off for WavPack to read one.
 - **A choice of how much sound to leave out is `soundQuality`** (`smaller`, `standard`, `best`),
   a key in the capability's `defaultOptions` like any other choice. The engine maps it to the
   encoder's settings; the page names no format and no bitrate.

@@ -81,6 +81,12 @@ const OUTLINES = [{ id: 'font-outlines', text: 'A web font unwraps to TTF or to 
 
 // Sound.
 const KEPT_WHOLE = ['wav', 'flac', 'aiff', 'au']
+// Sound that leaves some out, and sound that keeps every bit.
+const SMALLER_SOUND = ['opus', 'ogg']
+const ALREADY_LEFT_OUT = ['aac', 'ac3', 'wma', 'opus', 'ogg']
+const SMALL_LEFT_OUT = [{ id: 'sound-left-out-small', text: 'Opus and Ogg Vorbis leave out sound to make the file small. It cannot be put back, so keep the original.' }]
+const ALREADY_GONE = [{ id: 'sound-already-left-out', text: 'This kind of file has already left sound out. Converting it does not bring that back; a file that keeps every bit only gets larger.' }]
+const M4A_LOSSLESS = [{ id: 'm4a-lossless', text: 'Omsett writes M4A as Apple Lossless, which keeps every bit of the sound and is much larger than an M4A from a phone. AAC is not written: its encoders are covered by patents.' }]
 const LEFT_OUT = [{ id: 'sound-left-out', text: 'MP3 leaves out sound to make the file small. It cannot be put back, so keep the original.' }]
 const NOT_RESTORED = [{ id: 'sound-not-restored', text: 'An MP3 has already left sound out. Converting it does not bring that back; the file only gets larger.' }]
 
@@ -178,6 +184,9 @@ export const overrides: EdgeOverride[] = [
   { from: 'html', to: 'epub', warnings: [...PAGE_AS_BOOK, ...CHECK_ACCESS] },
   { from: 'azw3', to: 'epub', warnings: [...KINDLE_BOOK, ...AS_PUBLISHED] },
   { from: 'mobi', to: 'epub', warnings: [...KINDLE_BOOK, ...AS_PUBLISHED] },
+  ...[...KEPT_WHOLE, 'm4a', 'aac', 'ac3', 'wma', 'wv', 'tta'].flatMap((from) => SMALLER_SOUND.filter((to) => to !== from).map((to) => ({ from, to, warnings: SMALL_LEFT_OUT }))),
+  ...ALREADY_LEFT_OUT.flatMap((from) => ['wav', 'wv', 'm4a'].filter((to) => to !== from).map((to) => ({ from, to, warnings: to === 'm4a' ? [...ALREADY_GONE, ...M4A_LOSSLESS] : ALREADY_GONE }))),
+  ...[...KEPT_WHOLE, 'wv', 'tta'].map((from) => ({ from, to: 'm4a', warnings: M4A_LOSSLESS })),
   ...KEPT_WHOLE.flatMap((other) => [
     { from: other, to: 'mp3', warnings: LEFT_OUT },
     { from: 'mp3', to: other, warnings: NOT_RESTORED },

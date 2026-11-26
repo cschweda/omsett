@@ -97,6 +97,10 @@ const manifest = {
     fonts: await Promise.all(typstFonts.map((file) => hashed(fromEngines.resolve(file), file.split('/').pop()!.replace('.woff', ''), 'woff'))),
     scripts: Object.fromEntries(await Promise.all(SCRIPT_FACES.map(async (id) => [id, await scriptFace(id)]))) as Record<string, Awaited<ReturnType<typeof scriptFace>>>,
   },
+  // The long tail of sound: the binary of Omsett's own build of libav.js.
+  libav: {
+    wasm: await hashed(join(repo, 'packages', 'engines', 'vendor', 'libav', 'libav-6.11.9.0.2-omsett-audio.wasm.wasm'), 'libav', 'wasm'),
+  },
   // Pandoc, which reads and writes RTF. Its package names its binary only through its main file.
   pandoc: {
     wasm: await hashed(join(pandocRoot, 'src', 'pandoc.wasm'), 'pandoc', 'wasm'),
@@ -127,6 +131,8 @@ await copyFile(
   join(enginesDir, 'magick.NOTICE.txt'),
 )
 
+// libav.js and FFmpeg are LGPL: their licence goes beside the binary.
+await copyFile(join(repo, 'packages', 'engines', 'vendor', 'libav', 'LICENSE.md'), join(enginesDir, 'libav.LICENSE.txt'))
 // Pandoc is GPL-2.0-or-later: its licence, and where its source is, go beside it.
 await copyFile(join(pandocRoot, 'LICENSE'), join(enginesDir, 'pandoc.LICENSE.txt'))
 

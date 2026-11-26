@@ -196,10 +196,11 @@ When a format ships, update its row here, in the same change.
 | WAV, AIFF (and AIFF-C), AU to each other, unpacked sound only | Browser | Omsett's own code | **Done** |
 | FLAC to and from those three | Browser | Omsett's own code | **Done** |
 | MP3 to and from those four, at three qualities | Browser | mpg123 (unpacking) and LAME (packing), small WASM builds, 217 KB together | **Done** |
-| M4A, AAC, OGG, Opus, WavPack, TTA, AC3, E-AC3, ALAC to each other; M4R | Browser | FFmpeg, audio-only build (WASM), decided 24 November 2026 for this long tail. To settle first: its size (about 30 MB in the usual build) and its licence (GPL in the usual build; an LGPL build means building it ourselves) | Planned |
+| M4A (AAC, ALAC), AAC, AC-3, E-AC-3, WMA, Ogg Vorbis, Opus, WavPack, TTA; AAC, AC-3 and WMA read only | Browser | Omsett's own libav.js build of FFmpeg, audio only, LGPL, 3.3 MB (decided 26 November 2026: read only for the patented codecs) | **Done** |
+| M4R (ringtones) | Browser | the same | Planned |
 | W64, RF64 (WAV past four gigabytes) | Browser | Omsett's own code | Planned |
 | Changing the rate, the channels or the bit depth | Browser | — | Planned |
-| WMA, AMR, APE, DSD (DSF, DFF), DTS (read) | Browser | the same | Planned |
+| AMR, APE, DSD (DSF, DFF), DTS (read) | Browser | the same | Planned |
 | Tracker modules (XM, IT, S3M) | Declined | — | Niche. libopenmpt could do it |
 
 ## Subtitles
@@ -325,7 +326,7 @@ with [audit.icjia.app](https://audit.icjia.app).
 
 1. Images are largely done: 31 formats. Left: the camera makers' own RAW formats, carrying animation across, and the packed kinds of DDS.
 2. Data and subtitles are done: seven data formats, nine subtitle formats. The side-by-side view for text formats is done too, and Markdown ↔ HTML. Fonts are done as well, vCard and iCalendar, and the first archives. XLSX, DOCX, PPTX, the screenwriting formats and reading PDF are done. Details of a file before converting are done too. Next: the remaining image formats; then audio. All three are ZIPs of XML, and Omsett reads both itself. Then the screenwriting formats, Fountain, Final Draft (FDX) and Drafter. Small JavaScript libraries, no large downloads.
-3. Archives are done. Audio has begun: WAV, AIFF, AU and FLAC convert to each other with nothing lost, and MP3 to and from all four. Next for audio: the long tail (AAC, Ogg, Opus and the rest) through an audio-only FFmpeg build.
+3. Archives are done. Audio has begun: WAV, AIFF, AU and FLAC convert to each other with nothing lost, and MP3 to and from all four. The long tail (M4A, AAC, AC-3, WMA, Ogg, Opus, WavPack, TTA) is done too, through Omsett's own audio-only FFmpeg build. Next for audio: W64 and RF64, and changing the rate or channels.
 4. Documents and e-books through Pandoc; then the PDF tools. A converted document must not score lower for accessibility than its original (see "Accessibility of converted documents").
 5. Video in the browser.
 6. The desktop app, which unlocks everything marked Desktop at once.
