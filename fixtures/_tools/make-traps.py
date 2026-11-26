@@ -4574,6 +4574,67 @@ trap("old-presentation-named-as-new.pptx", PPT,
      "A PowerPoint file from before 2007 with the name of a newer one. It is read as what it is.",
      "ppt", node="succeeds", mismatch=True, group="identity")
 
+# --- Office files with macros, and templates: DOCM, DOTX, PPTM, PPSX, XLSM and the rest ------------
+# Each is its family's package under another label: the same parts, with one line of the list
+# of what the package holds saying "with macros", "a template" or "a slide show". They are read
+# as the family is. A macro is a program; it is never run and never carried across.
+MAIN = {
+    "docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml",
+    "pptx": "application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml",
+    "xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml",
+}
+MACRO = b"Attribute VB_Name = \"ThisDocument\"\r\nSub AutoOpen(): Shell \"" + SHELL.encode() + b"\": End Sub\r\n"
+
+
+def labelled(family, label, folder=None):
+    """The family's sample, saying it is something else, with a macro project in `folder` if one is given."""
+    parts = {"docx": doc_parts, "pptx": deck_parts, "xlsx": book_parts}[family]()
+    types = parts["[Content_Types].xml"].decode()
+    assert MAIN[family] in types, family
+    types = types.replace(MAIN[family], label)
+    if folder:
+        types = types.replace("</Types>", '<Override PartName="/%s/vbaProject.bin" ContentType="application/vnd.ms-office.vbaProject"/></Types>' % folder)
+        parts["%s/vbaProject.bin" % folder] = MACRO
+    parts["[Content_Types].xml"] = types.encode()
+    out = _io.BytesIO()
+    with _zipfile.ZipFile(out, "w", _zipfile.ZIP_DEFLATED) as z:
+        for name, body in parts.items():
+            info = _zipfile.ZipInfo(name, (2026, 11, 26, 12, 0, 0))
+            info.compress_type = _zipfile.ZIP_DEFLATED
+            z.writestr(info, body)
+    return out.getvalue()
+
+
+VARIANTS = [
+    ("with-a-macro.docm", "docx", "application/vnd.ms-word.document.macroEnabled.main+xml", "word",
+     "A Word document saved with macros, and a macro in it set to run when it is opened. It is read as a Word document; the macro is neither run nor carried across."),
+    ("a-template.dotx", "docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.template.main+xml", None,
+     "A Word template. It is a Word document that opens as a new one, and is read as one."),
+    ("a-template-with-a-macro.dotm", "docx", "application/vnd.ms-word.template.macroEnabledTemplate.main+xml", "word",
+     "A Word template saved with macros. The macro is neither run nor carried across."),
+    ("with-a-macro.pptm", "pptx", "application/vnd.ms-powerpoint.presentation.macroEnabled.main+xml", "ppt",
+     "A presentation saved with macros, and a macro in it. It is read as a presentation; the macro is neither run nor carried across."),
+    ("a-slide-show.ppsx", "pptx", "application/vnd.openxmlformats-officedocument.presentationml.slideshow.main+xml", None,
+     "A presentation saved to open straight into the slide show. It is read as a presentation."),
+    ("a-slide-show-with-a-macro.ppsm", "pptx", "application/vnd.ms-powerpoint.slideshow.macroEnabled.main+xml", "ppt",
+     "A slide show saved with macros. The macro is neither run nor carried across."),
+    ("a-template.potx", "pptx", "application/vnd.openxmlformats-officedocument.presentationml.template.main+xml", None,
+     "A presentation template, read as a presentation."),
+    ("a-template-with-a-macro.potm", "pptx", "application/vnd.ms-powerpoint.template.macroEnabled.main+xml", "ppt",
+     "A presentation template saved with macros. The macro is neither run nor carried across."),
+    ("with-a-macro.xlsm", "xlsx", "application/vnd.ms-excel.sheet.macroEnabled.main+xml", "xl",
+     "A workbook saved with macros, and a macro in it set to run when it is opened. It is read as a workbook; the macro is neither run nor carried across."),
+    ("a-template.xltx", "xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.template.main+xml", None,
+     "A workbook template, read as a workbook."),
+    ("a-template-with-a-macro.xltm", "xlsx", "application/vnd.ms-excel.template.macroEnabled.main+xml", "xl",
+     "A workbook template saved with macros. The macro is neither run nor carried across."),
+]
+for name, family, label, folder, why in VARIANTS:
+    trap(name, labelled(family, label, folder), why, family, node="succeeds", group={"docx": "documents", "pptx": "slides", "xlsx": "workbooks"}[family], absent="AutoOpen" if folder else None)
+trap("presentation-with-a-macro-named-as-a-document.docm", labelled("pptx", VARIANTS[3][2], "ppt"),
+     "A presentation saved with macros, with the name of a Word document saved with macros. It is read as what it is.",
+     "pptx", node="succeeds", mismatch=True, group="identity", absent="AutoOpen")
+
 # --- e-books: AZW3 and MOBI ----------------------------------------------------------------------
 # A Kindle book is a list of numbered records, and tables that say which stretch of text is
 # which page and which piece goes where. Every one of those is a number that can lie. A book

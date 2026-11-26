@@ -7,6 +7,24 @@ The paragraph that opens a version is its teaser: the home page shows its first 
 in the "What's new" banner, so keep it to two or three sentences on what a visitor will notice.
 A line beginning "Released" gives the date.
 
+## 0.54.1
+
+Released 26 November 2026.
+
+Office files saved with macros, as templates or as slide shows (.docm, .dotx, .pptm, .ppsx,
+.xlsm and the rest) now convert as the documents, presentations and workbooks they are. Their
+macros are never run and never carried over.
+
+### Added
+
+- **DOCM, DOTX and DOTM are read as Word documents; PPTM, PPSX, PPSM, POTX and POTM as
+  presentations; XLSM, XLTX and XLTM as workbooks.** Each is its family's package under another
+  label, and was refused as a format Omsett does not know. Now it is read by its family's
+  reader, under the same limits. The details before converting say when a file holds macros,
+  and that they are removed.
+- **12 trap files**, one for each label, those that may hold macros carrying one set to run on
+  opening, and a presentation with macros named as a Word document.
+
 ## 0.54.0
 
 Released 26 November 2026.

@@ -40,6 +40,14 @@ describe('what a file carries', () => {
     expect(await details('pptx/sample.pptx', 'pptx')).toMatchObject({ Title: 'About Omsett [kept]', 'Speaker notes': 'On 1 slide [removed]' })
   })
 
+  it('an Office file saved with macros: the macros, which are never run and never carried over', async () => {
+    const macros = 'Yes. They are never run and never carried over [removed]'
+    expect(await details('_traps/with-a-macro.docm', 'docx')).toMatchObject({ Macros: macros })
+    expect(await details('_traps/with-a-macro.pptm', 'pptx')).toMatchObject({ Macros: macros })
+    expect(await details('_traps/with-a-macro.xlsm', 'xlsx')).toMatchObject({ Macros: macros })
+    expect(await details('_traps/a-template.dotx', 'docx')).not.toHaveProperty('Macros')
+  })
+
   it('a PDF: what made it, how many pages, and whether it is tagged', async () => {
     expect(await details('pdf/sample.pdf', 'pdf')).toEqual({
       Title: 'About Omsett [kept]',
