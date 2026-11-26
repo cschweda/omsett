@@ -28,10 +28,13 @@ hidden slides stay behind.
   them, which PowerPoint keeps in the file when it saves quickly. Macros are never run.
 - **A presentation locked with a password, or saved by PowerPoint 95 or earlier, is refused**
   in words that say so.
-- **22 trap files** for the new reader, among them a chain of saves that leads back to itself,
+- **27 trap files** for the new reader, among them a chain of saves that leads back to itself,
   directories and slides two gigabytes into a file of a few thousand bytes, a slide listed
-  twice, groups of shapes two hundred deep, a table of 160,000 cells, a picture that is a
-  script, and a code trap. PPT is fuzzed on every run.
+  twice or under two thousand names, groups of shapes two hundred deep, a table of 160,000
+  cells, a picture that is a script, a hidden group and a hidden placeholder whose words are
+  kept elsewhere, letters that would write a link each a billion characters long, and a code
+  trap. PPT is fuzzed on every run. An adversarial review of the reader found seven of these
+  before release; each is fixed and has its trap.
 
 ### Known
 

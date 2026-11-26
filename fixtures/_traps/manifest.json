@@ -6948,6 +6948,66 @@
     "absent": null
   },
   {
+    "file": "placeholder-hidden-in-the-editor.ppt",
+    "group": "slides",
+    "why": "A slide whose body is hidden in the editor. Its words are kept in the list beside the slides, where a reader that missed the hidden shape would find them as words no shape showed. They are not carried across.",
+    "detect": "ppt",
+    "mismatch": false,
+    "guard": "ok",
+    "node": "succeeds",
+    "browser": "succeeds",
+    "note": null,
+    "absent": "Redundancies"
+  },
+  {
+    "file": "group-hidden-in-the-editor.ppt",
+    "group": "slides",
+    "why": "A group of shapes hidden in the editor, and inside it a box of text that is not hidden itself. Hiding the group hides what it holds.",
+    "detect": "ppt",
+    "mismatch": false,
+    "guard": "ok",
+    "node": "succeeds",
+    "browser": "succeeds",
+    "note": null,
+    "absent": "Redundancies"
+  },
+  {
+    "file": "letters-under-a-long-link.ppt",
+    "group": "slides",
+    "why": "Twenty thousand letters, each set differently from the one before, under one link with an address of 64,000 letters. Written a link to a letter, that is more than a billion characters. The address is longer than any page's, and is not made a link.",
+    "detect": "ppt",
+    "mismatch": false,
+    "guard": "ok",
+    "node": "succeeds",
+    "browser": "succeeds",
+    "note": null,
+    "absent": null
+  },
+  {
+    "file": "one-slide-under-two-thousand-names.ppt",
+    "group": "slides",
+    "why": "A directory that gives two thousand numbers to one slide's place, and a list of slides that names two of them. Each looks like a slide of its own; read as many, a large slide is read again and again.",
+    "detect": "ppt",
+    "mismatch": false,
+    "guard": "ok",
+    "node": "fails",
+    "browser": "fails",
+    "note": "This file is not a valid PPT presentation",
+    "absent": null
+  },
+  {
+    "file": "title-that-looks-like-markup.ppt",
+    "group": "unusual",
+    "why": "A presentation whose title is the first slide's, and that title has an ampersand and angle brackets in it. They are words, and are written once as words.",
+    "detect": "ppt",
+    "mismatch": false,
+    "guard": "ok",
+    "node": "succeeds",
+    "browser": "succeeds",
+    "note": null,
+    "absent": null
+  },
+  {
     "file": "hidden-slide.ppt",
     "group": "slides",
     "why": "A presentation with a slide marked not to be shown. It is not carried across.",

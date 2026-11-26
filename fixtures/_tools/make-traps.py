@@ -4498,6 +4498,54 @@ def every_letter_its_own_way(deck):
 trap("every-letter-set-its-own-way.ppt", P.presentation([every_letter_its_own_way]),
      "Forty thousand letters, each set differently from the one before, under four thousand links that each cover all of them. A reader that looked up every letter in every run and every link would do some hundreds of millions of steps; this one reads it in one pass.",
      "ppt", node="succeeds", group=G)
+def hidden_placeholder(deck):
+    return ([P.shape(1025, placeholder=P.P_TITLE, textbox=P.ref(0)), P.shape(1026, placeholder=P.P_BODY, textbox=P.ref(1), props=[(0x03BF, 0x00020002)])],
+            [P.text(deck, P.TITLE, [P.para("A title")]), P.text(deck, P.BODY, [P.para("Redundancies in March")])], False)
+
+
+def hidden_group(deck):
+    inside = P.shape(1101, textbox=P.text(deck, P.OTHER, [P.para("Redundancies in March")]))
+    own = P.rec(0xF009, b"\0" * 16, 0, 1) + P.rec(0xF00A, struct.pack("<II", 1100, 0x201), 0, 2) + P.properties([(0x03BF, 0x00000002)])
+    return ([P.shape(1025, placeholder=P.P_TITLE, textbox=P.ref(0)), P.box(0xF003, P.box(0xF004, own), inside)], [P.text(deck, P.TITLE, [P.para("A title")])], False)
+
+
+def letters_under_a_long_link(deck):
+    """Twenty thousand letters, each set differently from the last, under one link of 64,000 letters."""
+    address = "https://x.example/" + "a" * 64000
+    words = P.text(deck, P.OTHER, [P.para(*[P.run("x", P.BOLD if n % 2 else 0, link=address if n == 0 else None) for n in range(20000)])])
+    cover = deck.link(address)
+    words += P.box(0x0FF2, P.rec(0x0FF3, struct.pack("<IIBBBBB3x", 0, cover, 4, 0, 0, 0, 8))) + P.rec(0x0FDF, struct.pack("<II", 0, 20000))
+    return ([P.shape(1025, placeholder=P.P_TITLE, textbox=P.ref(0)), P.shape(1026, textbox=words)], [P.text(deck, P.TITLE, [P.para("A link")])], False)
+
+
+def every_name_one_slide(parts):
+    """A directory in which two thousand numbers all name the first slide's place."""
+    at = parts["objects"][2]
+    entries = struct.pack("<I", 2 | (2000 << 20)) + struct.pack("<I", at) * 2000
+    directory = len(parts["stream"])
+    parts["stream"].extend(P.rec(0x1772, entries))
+    struct.pack_into("<I", parts["stream"], parts["edit"] + 8 + 12, directory)
+
+
+def many_names(deck):
+    return ([P.shape(1025, placeholder=P.P_TITLE, textbox=P.ref(0))], [P.text(deck, P.TITLE, [P.para("Once")])], False)
+
+
+trap("placeholder-hidden-in-the-editor.ppt", P.presentation([hidden_placeholder]),
+     "A slide whose body is hidden in the editor. Its words are kept in the list beside the slides, where a reader that missed the hidden shape would find them as words no shape showed. They are not carried across.",
+     "ppt", node="succeeds", group=G, absent="Redundancies")
+trap("group-hidden-in-the-editor.ppt", P.presentation([hidden_group]),
+     "A group of shapes hidden in the editor, and inside it a box of text that is not hidden itself. Hiding the group hides what it holds.",
+     "ppt", node="succeeds", group=G, absent="Redundancies")
+trap("letters-under-a-long-link.ppt", P.presentation([letters_under_a_long_link]),
+     "Twenty thousand letters, each set differently from the one before, under one link with an address of 64,000 letters. Written a link to a letter, that is more than a billion characters. The address is longer than any page's, and is not made a link.",
+     "ppt", node="succeeds", group=G)
+trap("one-slide-under-two-thousand-names.ppt", P.presentation([many_names, many_names], change=every_name_one_slide),
+     "A directory that gives two thousand numbers to one slide's place, and a list of slides that names two of them. Each looks like a slide of its own; read as many, a large slide is read again and again.",
+     "ppt", node="fails", note=NOT_PPT, group=G)
+trap("title-that-looks-like-markup.ppt", P.presentation([one_slide(title="Q&A <now> & then")], title=b"PowerPoint Presentation"),
+     "A presentation whose title is the first slide's, and that title has an ampersand and angle brackets in it. They are words, and are written once as words.",
+     "ppt", node="succeeds", group="unusual")
 trap("hidden-slide.ppt", P.presentation([one_slide(), one_slide("The figures from before the audit.", title="Not for the board", hidden=True)]),
      "A presentation with a slide marked not to be shown. It is not carried across.",
      "ppt", node="succeeds", group=G, absent="before the audit")

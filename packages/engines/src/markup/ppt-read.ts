@@ -32,6 +32,8 @@ const MAX_PERSIST = 1_000_000
 const MAX_LISTED = 4_000_000
 /** The most HTML a presentation may become, pictures included. */
 const MAX_WRITTEN = 64 * 1024 * 1024
+/** The longest address made a link. */
+const MAX_ADDRESS = 2048
 
 // The records that matter, by the number the format gives each.
 const DOCUMENT = 0x03E8
@@ -117,10 +119,12 @@ export function readPpt(bytes: Uint8Array): ReadDocument {
   let file: Cfb
   let stream: Uint8Array | null
   let current: Uint8Array | null
+  let pictures: Uint8Array | null
   try {
     file = readCfb(bytes)
     stream = file.stream('PowerPoint Document')
     current = file.stream('Current User')
+    pictures = file.stream('Pictures')
   } catch {
     throw notOldPresentation()
   }
@@ -232,7 +236,6 @@ export function readPpt(bytes: Uint8Array): ReadDocument {
   const blips: Rec[] = []
   const store = childOf(childOf(parts.find((record) => record.type === DRAWING_GROUP), DGG), BSTORE)
   if (store) blips.push(...children(store).filter((record) => record.type === BSE))
-  const pictures = file.stream('Pictures')
   const picture = (index: number): Blip => {
     const entry = blips[index - 1]
     if (!entry || entry.length < 36) return null
@@ -324,19 +327,29 @@ export function readPpt(bytes: Uint8Array): ReadDocument {
     return html
   }
 
-  /** The letters from one place to another, with their emphasis and links. */
+  /**
+   * The letters from one place to another, with their emphasis and links. A link is opened once
+   * for all the letters under it, however their emphasis changes; and everything written is
+   * counted as it is written, so that letters set each their own way cannot make a page larger
+   * than any is allowed to be before the count is looked at.
+   */
+  let spent = 0
+  const spend = (html: string) => {
+    spent += html.length
+    if (spent > MAX_WRITTEN) throw tooLarge()
+    return html
+  }
   const inline = (text: Text, from: number, to: number): string => {
     let html = ''
     let piece = ''
-    let marks = ''
+    let style = ''
+    let link = ''
     const flush = () => {
       if (piece === '') return
-      const [bold, italic, href] = marks.split('\u0000')
       let out = escapeHtml(piece)
-      if (italic) out = `<em>${out}</em>`
-      if (bold) out = `<strong>${out}</strong>`
-      if (href) out = `<a href="${escapeHtml(href)}">${out}</a>`
-      html += out
+      if (style.includes('i')) out = `<em>${out}</em>`
+      if (style.includes('b')) out = `<strong>${out}</strong>`
+      html += spend(out)
       piece = ''
     }
     for (let i = from; i < to; i++) {
@@ -351,15 +364,23 @@ export function readPpt(bytes: Uint8Array): ReadDocument {
       const set = find(text.letters, i)
       const address = text.linked[i] ? hyperlinks.get(text.linked[i]!)?.trim() : undefined
       // Only an address a browser would open or write to is made a link; any other is its words.
-      const href = address !== undefined && /^(?:https?:|mailto:)/i.test(address) ? address : ''
-      const wanted = `${set?.bold ? 'b' : ''}\u0000${set?.italic ? 'i' : ''}\u0000${href}`
-      if (wanted !== marks) {
+      // So is an address longer than any page's.
+      const href = address !== undefined && address.length <= MAX_ADDRESS && /^(?:https?:|mailto:)/i.test(address) ? address : ''
+      const wanted = `${set?.bold ? 'b' : ''}${set?.italic ? 'i' : ''}`
+      if (href !== link) {
         flush()
-        marks = wanted
+        if (link) html += '</a>'
+        if (href) html += spend(`<a href="${escapeHtml(href)}">`)
+        link = href
+      }
+      if (wanted !== style) {
+        flush()
+        style = wanted
       }
       piece += out
     }
     flush()
+    if (link) html += '</a>'
     return html.replace(/\n/g, '<br>')
   }
 
@@ -378,7 +399,11 @@ export function readPpt(bytes: Uint8Array): ReadDocument {
   let written = ''
   let first: string | null = null
   let shown = 0
+  // Two numbers in a directory may name one place. A slide is read once, whatever it is called.
+  const read = new Set<number>()
   for (const entry of slides) {
+    if (read.has(persist.get(entry.id) ?? -1)) throw notOldPresentation()
+    read.add(persist.get(entry.id) ?? -1)
     const slide = object(entry.id, SLIDE)
     const inside = children(slide)
     // A slide marked not to be shown is not part of the presentation as given.
@@ -387,7 +412,11 @@ export function readPpt(bytes: Uint8Array): ReadDocument {
     shown++
     const texts = entry.texts.map(readText)
     const used = new Set<number>()
+    // Which of the list's texts a shape on the slide refers to, shown or hidden. A text a hidden
+    // shape refers to is hidden with it, and is not read as a text that no shape showed.
+    const claimed = new Set<number>()
     let title = ''
+    let plain = ''
     let content = ''
 
     /** A stretch of text, put where its kind says: the title, a list, or paragraphs. */
@@ -395,13 +424,17 @@ export function readPpt(bytes: Uint8Array): ReadDocument {
       if (!text) return
       language ??= text.language
       // The slide's number, date, footer and header are furniture, the same on every slide.
-      if (placeholder !== undefined && placeholder >= 0x07 && placeholder <= 0x0A) return
+      // Nor is anything of the notes page: its picture of the slide, and the notes.
+      if (placeholder !== undefined && placeholder >= 0x05 && placeholder <= 0x0C) return
       if (text.kind === 2) return
       const isTitle = placeholder !== undefined && placeholder !== 0 ? [0x0D, 0x0F, 0x11].includes(placeholder) : text.kind === 0 || text.kind === 6
       if (isTitle) {
-        title ||= linesOf(text)
+        if (title) return
+        title = linesOf(text)
           .filter((line) => line.trim() !== '')
           .join(' ')
+        // eslint-disable-next-line no-control-regex -- control characters are exactly what this removes
+        plain = text.chars.replace(/[\u0000-\u001F\u007F-\u009F]+/g, ' ').replace(/\s+/g, ' ').trim()
         return
       }
       // The body of a slide makes bullets; a subtitle or a box drawn by hand does not.
@@ -422,6 +455,17 @@ export function readPpt(bytes: Uint8Array): ReadDocument {
       return readText(records)
     }
 
+    const claim = (group: Rec, depth: number): void => {
+      if (depth > MAX_DEPTH) throw notOldPresentation()
+      for (const shape of children(group)) {
+        if (shape.type === SPGR && shape.container) claim(shape, depth + 1)
+        else if (shape.type === SP && shape.container) {
+          const ref = childOf(children(shape).find((record) => record.type === CLIENT_TEXTBOX), OUTLINE_TEXT_REF)
+          if (ref) claimed.add(u32(ref, 0))
+        }
+      }
+    }
+
     // Shapes are read in the order they are stored, which is the order a screen reader takes them.
     const walk = (group: Rec, depth: number): void => {
       if (depth > MAX_DEPTH) throw notOldPresentation()
@@ -429,14 +473,16 @@ export function readPpt(bytes: Uint8Array): ReadDocument {
       for (const [n, shape] of shapes.entries()) {
         if (shape.type === SPGR && shape.container) {
           const own = children(shape)[0]
+          // A group hidden in the editor hides all it holds.
+          if (own?.type === SP && own.container && isHidden(own)) continue
           if (own && isTable(own)) content += table(shape)
           else walk(shape, depth + 1)
           continue
         }
         // The first shape of a group stands for the group itself.
         if (shape.type !== SP || !shape.container || n === 0) continue
+        if (isHidden(shape)) continue
         const properties = propertiesOf(shape)
-        if (hidden(properties)) continue
         const records = children(shape)
         // Apache POI writes the atom after a placeholder's as eight bytes long when it is one, and
         // files it made are common. Only the placeholder is wanted from here, and it comes first.
@@ -465,7 +511,7 @@ export function readPpt(bytes: Uint8Array): ReadDocument {
     const table = (group: Rec): string => {
       const cells: Array<{ top: number; left: number; html: string }> = []
       for (const [n, shape] of children(group).entries()) {
-        if (n === 0 || shape.type !== SP || !shape.container) continue
+        if (n === 0 || shape.type !== SP || !shape.container || isHidden(shape)) continue
         const records = children(shape)
         // Lines are the table's rules; only the cells have a place of their own and text.
         if (records.find((record) => record.type === FSP)?.instance === 20) continue
@@ -490,14 +536,17 @@ export function readPpt(bytes: Uint8Array): ReadDocument {
     }
 
     const drawing = childOf(childOf(inside.find((record) => record.type === DRAWING), DG), SPGR)
-    if (drawing) walk(drawing, 0)
-    // Text of the slide's list that no shape showed, as older files keep it, is read after.
-    for (const [index, text] of texts.entries()) if (!used.has(index)) place(text, undefined)
+    if (drawing) {
+      claim(drawing, 0)
+      walk(drawing, 0)
+    }
+    // Text of the slide's list that no shape refers to, as older files keep it, is read after.
+    for (const [index, text] of texts.entries()) if (!claimed.has(index)) place(text, undefined)
 
     if (title === '' && content === '') continue
     // Every slide is a section with a heading, so the page can be moved through slide by slide.
     const heading = title || `Slide ${shown}`
-    first ??= title ? heading.replace(/<[^>]*>/g, '') : null
+    first ??= plain || null
     written += `<section><h2>${heading}</h2>${content}</section>`
     if (written.length > MAX_WRITTEN) throw tooLarge()
   }
@@ -510,6 +559,15 @@ export function readPpt(bytes: Uint8Array): ReadDocument {
     body: title ? `<h1>${escapeHtml(title)}</h1>${written}` : written,
     title: title ?? null,
     language: (language !== undefined && LANGUAGES[language]) || null,
+  }
+
+  /**
+   * Hidden in the editor. The flag may be in either of a shape's two tables of properties, and
+   * counts whether or not the bit that says it is in use is set: a shape is shown only when
+   * nothing says it is hidden.
+   */
+  function isHidden(shape: Rec): boolean {
+    return [OPT, TERTIARY_OPT].some((type) => ((propertiesOf(shape, type).simple.get(0x03BF) ?? 0) & 0x0002) !== 0)
   }
 
   /** A shape's properties: numbers by what they set, and the longer ones (text) by the same. */
@@ -537,11 +595,6 @@ export function readPpt(bytes: Uint8Array): ReadDocument {
   }
 }
 
-/** Hidden in the editor: fHidden, where fUsefHidden says that it counts. */
-const hidden = (properties: { simple: Map<number, number> }): boolean => {
-  const flags = properties.simple.get(0x03BF) ?? 0
-  return (flags & 0x00020000) !== 0 && (flags & 0x0002) !== 0
-}
 
 function utf16(bytes: Uint8Array, at: number, length: number): string {
   let out = ''
@@ -639,13 +692,13 @@ function styleOf(view: DataView, record: Rec, length: number): { paragraphs: Arr
       if (count === 0) break
       let style = 0
       if (masks & 0x3EB7) style = read16()
-      if (masks & 0x8000) at += 2 // font
-      if (masks & 0x100000) at += 2 // East Asian font
-      if (masks & 0x200000) at += 2 // the plain font
-      if (masks & 0x400000) at += 2 // symbol font
-      if (masks & 0x10000) at += 2 // size
-      if (masks & 0x20000) at += 4 // colour
-      if (masks & 0x40000) at += 2 // raised or lowered
+      if (masks & 0x10000) at += 2 // font
+      if (masks & 0x200000) at += 2 // East Asian font
+      if (masks & 0x400000) at += 2 // the plain font
+      if (masks & 0x800000) at += 2 // symbol font
+      if (masks & 0x20000) at += 2 // size
+      if (masks & 0x40000) at += 4 // colour
+      if (masks & 0x80000) at += 2 // raised or lowered
       if (at > end) throw new RangeError(PAST_THE_RECORD)
       done += count
       runs.push({ end: done, value: { bold: (masks & 0x1) !== 0 && (style & 0x1) !== 0, italic: (masks & 0x2) !== 0 && (style & 0x2) !== 0 } })

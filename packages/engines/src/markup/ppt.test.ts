@@ -69,6 +69,24 @@ describe('old PowerPoint presentations (PPT)', () => {
     for (const gone of ['SECRET-HIDDEN-SLIDE', 'SECRET-HIDDEN-SHAPE', 'SECRET-SPEAKER-NOTES', 'not for the audience', 'SECRET-AUTHOR', 'SECRET-EARLIER-SAVE']) expect(html.includes(gone), gone).toBe(false)
   })
 
+  it('hides what a hidden shape or group refers to, wherever its words are kept', async () => {
+    for (const trap of ['placeholder-hidden-in-the-editor', 'group-hidden-in-the-editor']) {
+      expect(readPpt(await fixture(`_traps/${trap}.ppt`)).body, trap).not.toContain('Redundancies')
+    }
+  })
+
+  it('takes the title from the first slide as words, written once', async () => {
+    const { body, title } = readPpt(await fixture('_traps/title-that-looks-like-markup.ppt'))
+    expect(title).toBe('Q&A <now> & then')
+    expect(body.startsWith('<h1>Q&amp;A &lt;now&gt; &amp; then</h1>')).toBe(true)
+  })
+
+  it('opens a link once for all the letters under it, and makes no link of an address longer than a page', async () => {
+    const { body } = readPpt(await fixture('_traps/every-letter-set-its-own-way.ppt'))
+    expect(body.match(/<a /g)).toHaveLength(1)
+    expect(readPpt(await fixture('_traps/letters-under-a-long-link.ppt')).body).not.toContain('<a ')
+  })
+
   it('reads the slide as the last save left it, though an earlier one is still in the file', async () => {
     const bytes = await fixture('ppt/sample.ppt')
     expect(new TextDecoder('latin1').decode(bytes)).toContain('SECRET-EARLIER-SAVE')

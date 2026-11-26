@@ -41,9 +41,9 @@ def box(kind, *children, instance=0):
     return rec(kind, b"".join(children), instance, 0xF)
 
 
-def run(text, *marks, link=None):
-    """Letters, how they are set (BOLD, ITALIC), and the address they lead to, if any."""
-    return (text, sum(marks), link)
+def run(text, *marks, link=None, coloured=False):
+    """Letters, how they are set (BOLD, ITALIC; `coloured` adds a colour and a raised position), and the address they lead to, if any."""
+    return (text, sum(marks) | (0x100 if coloured else 0), link)
 
 
 def para(*runs, indent=0, bullet=None):
@@ -78,7 +78,11 @@ def text(deck, kind, paragraphs, language=None, wide=None):
                 links.append((deck.link(address), len(chars), len(chars) + len(letters)))
             chars += letters
             count = len(letters) + (1 if i == len(runs) - 1 else 0)
-            cf += struct.pack("<II", count, 0x3 if marks else 0) + (struct.pack("<H", marks) if marks else b"")
+            style = marks & 0x3
+            # A colour and a position are written after the style, four bytes and two.
+            extra = struct.pack("<IH", 0xFE0000FF, 0x0010) if marks & 0x100 else b""
+            mask = (0x3 if style else 0) | (0xC0000 if extra else 0)
+            cf += struct.pack("<II", count, mask) + (struct.pack("<H", style) if style else b"") + extra
         if not last:
             chars += "\r"
         count = len(chars) - start + (1 if last else 0)
@@ -253,7 +257,7 @@ def sample_slides():
     def two(deck):
         body = [
             para("Pictures"),
-            para("Data, such as ", run("JSON", BOLD), " and ", run("CSV", ITALIC)),
+            para("Data, such as ", run("JSON", BOLD, coloured=True), run(" and ", coloured=True), run("CSV", ITALIC)),
             para("Workbooks", indent=1),
             para("Contacts", indent=1),
             para("See ", run("omsett.com", link="https://omsett.com")),
