@@ -16,6 +16,7 @@ import {
   createEbookEngine,
   createAudioMp3Engine,
   createTypstEngine,
+  createPandocEngine,
   type Mp3Decoder,
   type Mp3Encoder,
   createIconEngine,
@@ -154,6 +155,12 @@ const engines: Record<string, Engine> = Object.fromEntries(
         if (!found) throw new Error('No such piece of the typeface')
         return new Uint8Array(await verified(found))
       },
+    }),
+    // Pandoc, which reads and writes RTF: fetched and verified, and only when an RTF is converted.
+    // Its package's own loader starts it from those bytes and fetches nothing.
+    createPandocEngine({
+      wasm: async () => new Uint8Array(await verified(assets.pandoc.wasm)),
+      core: () => import('pandoc-wasm/core'),
     }),
     createEbookEngine(),
     createAudioEngine(),

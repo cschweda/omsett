@@ -202,6 +202,14 @@ export const capabilities: Capability[] = [
   { engine: 'markup', tier: 'browser', reads: ['pptx'], writes: [{ format: 'html', lossy: false, defaultOptions: { speakerNotes: false } }], priority: 20 },
   // A presentation from before 2007 is read to a page as the newer kind is. It is never written.
   { engine: 'markup', tier: 'browser', reads: ['ppt'], writes: [{ format: 'html', lossy: false, defaultOptions: { speakerNotes: false } }], priority: 20 },
+  // RTF is read to a page by Pandoc, fetched only for this; Omsett's own code walks the RTF
+  // first, and cleans the page Pandoc makes. It is written from a page by Omsett's own code,
+  // with real lists and headings, which Pandoc's writer does not make.
+  { engine: 'pandoc', tier: 'browser', reads: ['rtf'], writes: [{ format: 'html', lossy: false }], priority: 30 },
+  { engine: 'markup', tier: 'browser', reads: ['html'], writes: [{ format: 'rtf', lossy: false }], priority: 20 },
+  // Plain text is read as paragraphs and written as lines, by Omsett's own code.
+  { engine: 'markup', tier: 'browser', reads: ['txt'], writes: [{ format: 'html', lossy: false, defaultOptions: { language: 'en' } }], priority: 20 },
+  { engine: 'markup', tier: 'browser', reads: ['html'], writes: [{ format: 'txt', lossy: false }], priority: 20 },
   // An OpenDocument presentation is read to a page as a PowerPoint one is. It is not written yet.
   { engine: 'markup', tier: 'browser', reads: ['odp'], writes: [{ format: 'html', lossy: false, defaultOptions: { speakerNotes: false } }], priority: 20 },
   // An OpenDocument text is read to a page as a Word document is, and written from one.

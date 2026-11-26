@@ -39,7 +39,7 @@ describe('router, real registry', () => {
     for (const edge of deriveEdges(registry).edges) {
       const engines = edge.candidates.map((c) => c.engine)
       if (edge.from !== 'png') expect(engines, `${edge.from} → ${edge.to}`).not.toContain('canvas')
-      for (const engine of engines) expect(engine === 'canvas' || ['heif', 'resvg', 'magick', 'data', 'subtitle', 'markup', 'font', 'font-woff2', 'icon', 'archive', 'script', 'pdf', 'audio', 'audio-mp3', 'typst', 'ebook'].includes(engine) || engine.startsWith('vips')).toBe(true)
+      for (const engine of engines) expect(engine === 'canvas' || ['heif', 'resvg', 'magick', 'data', 'subtitle', 'markup', 'font', 'font-woff2', 'icon', 'archive', 'script', 'pdf', 'audio', 'audio-mp3', 'typst', 'ebook', 'pandoc'].includes(engine) || engine.startsWith('vips')).toBe(true)
       // The data engine reads data and nothing else, and writes data or a page that sets a
       // table out to be read; nothing but the data engine reads data, and no picture engine touches it.
       const data = [edge.from, edge.to].map((id) => ['data', 'spreadsheet'].includes(formatById(registry, id)!.category))
@@ -61,7 +61,7 @@ describe('router, real registry', () => {
       'heic', 'apng', 'svg', 'svgz', 'psd', 'psb', 'ico', 'icns', 'cur', 'jp2', 'exr', 'hdr', 'dds', 'fits', 'dcm', 'dng', 'pcx', 'sgi', 'ras',
       'json', 'yaml', 'csv', 'xlsx', 'xml', 'toml', 'jsonl', 'tsv', 'vcf', 'ics', 'xls', 'ods',
       'srt', 'vtt', 'ass', 'ssa', 'ttml', 'lrc', 'sbv', 'smi', 'microdvd',
-      'md', 'html', 'docx', 'pdf', 'pptx', 'doc', 'ppt', 'odt', 'odp',
+      'md', 'html', 'docx', 'pdf', 'pptx', 'doc', 'ppt', 'odt', 'odp', 'rtf', 'txt',
       'fountain', 'fdx', 'drafter',
       'woff2', 'woff', 'ttf', 'otf',
       'zip', 'tgz', 'tar',
@@ -85,7 +85,7 @@ describe('router, real registry', () => {
     // Data formats convert to each other in one step, and a file is offered only its own kind.
     expect(all.route('csv', 'yaml')!.edges.map((e) => e.candidates[0]!.engine)).toEqual(['data'])
     // A data file is offered data formats, and after them the ways of setting a table out to be read.
-    expect(all.targetsFor(['json']).map((t) => t.format.id)).toEqual(['json', 'yaml', 'csv', 'xlsx', 'xml', 'toml', 'jsonl', 'tsv', 'vcf', 'ics', 'xls', 'ods', 'md', 'html', 'docx', 'pdf', 'doc', 'odt'])
+    expect(all.targetsFor(['json']).map((t) => t.format.id)).toEqual(['json', 'yaml', 'csv', 'xlsx', 'xml', 'toml', 'jsonl', 'tsv', 'vcf', 'ics', 'xls', 'ods', 'md', 'html', 'docx', 'pdf', 'doc', 'odt', 'rtf', 'txt'])
     expect(all.route('csv', 'html')!.edges.map((e) => e.candidates[0]!.engine)).toEqual(['data'])
     expect(all.route('xlsx', 'pdf')!.edges.map((e) => `${e.from}>${e.to}`)).toEqual(['xlsx>html', 'html>pdf'])
     expect(all.route('xls', 'pdf')!.edges.map((e) => `${e.from}>${e.to}`)).toEqual(['xls>html', 'html>pdf'])
@@ -117,7 +117,7 @@ describe('router, real registry', () => {
     expect(all.route('otf', 'woff2')!.warnings.map((w) => w.id)).toEqual(['font-licence'])
     // Markdown and HTML become each other and nothing else.
     expect(all.route('md', 'html')!.edges.map((e) => e.candidates[0]!.engine)).toEqual(['markup'])
-    expect(all.targetsFor(['html']).map((t) => t.format.id)).toEqual(['md', 'html', 'docx', 'pdf', 'pptx', 'doc', 'ppt', 'odt', 'odp', 'epub', 'azw3', 'mobi'])
+    expect(all.targetsFor(['html']).map((t) => t.format.id)).toEqual(['md', 'html', 'docx', 'pdf', 'pptx', 'doc', 'ppt', 'odt', 'odp', 'rtf', 'txt', 'epub', 'azw3', 'mobi'])
     // PDF is written from a page, by the engine fetched for that alone; everything else reaches it through a page.
     expect(all.route('html', 'pdf')!.edges.map((e) => e.candidates[0]!.engine)).toEqual(['typst'])
     expect(all.route('docx', 'pdf')!.edges.map((e) => `${e.from}>${e.to}`)).toEqual(['docx>html', 'html>pdf'])
@@ -146,6 +146,11 @@ describe('router, real registry', () => {
     expect(all.route('odp', 'md')!.warnings.map((w) => w.id)).toEqual(expect.arrayContaining(['slides-kept', 'accessibility-check']))
     // A presentation offers its speaker notes where it is read, the first step, however far the route goes.
     for (const from of ['pptx', 'ppt', 'odp']) expect(all.route(from, 'docx')!.edges[0]!.candidates[0]!.defaultOptions).toMatchObject({ speakerNotes: false })
+    // RTF is read and written by Pandoc, by way of a page; plain text by Omsett's own code.
+    expect(all.route('rtf', 'docx')!.edges.map((e) => `${e.from}>${e.to}:${e.candidates[0]!.engine}`)).toEqual(['rtf>html:pandoc', 'html>docx:markup'])
+    expect(all.route('docx', 'rtf')!.edges.map((e) => `${e.from}>${e.to}:${e.candidates[0]!.engine}`)).toEqual(['docx>html:markup', 'html>rtf:markup'])
+    expect(all.route('md', 'txt')!.edges.map((e) => `${e.from}>${e.to}:${e.candidates[0]!.engine}`)).toEqual(['md>html:markup', 'html>txt:markup'])
+    expect(all.route('txt', 'pdf')!.edges.map((e) => e.to)).toEqual(['html', 'pdf'])
     // An OpenDocument text is written from a page, so every document reaches one by way of a page.
     for (const from of ['md', 'docx', 'doc', 'pdf', 'pptx', 'odp']) {
       expect(all.route(from, 'odt')!.edges.map((e) => e.to).slice(-2), from).toEqual(['html', 'odt'])
@@ -204,7 +209,7 @@ describe('router, real registry', () => {
     // Every conversion of a book says that it is only as accessible as its publisher made it.
     for (const to of ['pdf', 'docx', 'md', 'html']) expect(all.route('epub', to)!.warnings.map((w) => w.id), to).toContain('book-as-published')
     // For a book, the formats of books are offered first, and then what else a book can become.
-    expect(all.targetsFor(['azw3']).map((t) => t.format.id)).toEqual(['epub', 'azw3', 'mobi', 'md', 'html', 'docx', 'pdf', 'pptx', 'doc', 'ppt', 'odt', 'odp'])
+    expect(all.targetsFor(['azw3']).map((t) => t.format.id)).toEqual(['epub', 'azw3', 'mobi', 'md', 'html', 'docx', 'pdf', 'pptx', 'doc', 'ppt', 'odt', 'odp', 'rtf', 'txt'])
     expect(all.targetsFor(['azw3', 'docx']).map((t) => t.format.id).slice(0, 4)).toEqual(['md', 'html', 'docx', 'pdf'])
     expect(all.targetsFor(['azw3']).find((t) => t.format.id === 'mobi')!.reason).toBe('MOBI can be read but not written')
     // HEIC is decoded to PNG first, without loss, and goes on from there.

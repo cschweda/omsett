@@ -1,5 +1,14 @@
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
+import { createRequire } from 'node:module'
+import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
+
+/** The top of Pandoc's package, found from its main file, wherever in the package that is. */
+function pandocRoot(): string {
+  let at = dirname(createRequire(fileURLToPath(new URL('../../packages/engines/package.json', import.meta.url))).resolve('pandoc-wasm'))
+  while (!existsSync(join(at, 'package.json'))) at = dirname(at)
+  return at
+}
 const isolation = {
   'Cross-Origin-Opener-Policy': 'same-origin',
   'Cross-Origin-Embedder-Policy': 'require-corp',
@@ -121,6 +130,9 @@ export default defineNuxtConfig({
         // The Markdown parser decodes "&amp;" and its kind with this package, whose build for
         // browsers asks the page to do it (document.createElement). Engines run in a worker,
         // where there is no page, so the plain build is used everywhere.
+        // Pandoc's own loader, which starts it from bytes it is given and fetches nothing. The
+        // package's browser entry fetches the binary itself, past the check every engine is given.
+        'pandoc-wasm/core': join(pandocRoot(), 'src', 'core.js'),
         'decode-named-character-reference': fileURLToPath(
           new URL('./node_modules/decode-named-character-reference/index.js', import.meta.url),
         ),

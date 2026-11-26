@@ -42,8 +42,9 @@ These are invariants. A change that breaks one is wrong even if it works.
 5. **Detection by content, not name.** `packages/detect` reads magic bytes; the detected format
    wins over the extension. Two exceptions, both in `packages/detect/src/text.ts`: YAML, TOML,
    CSV and TSV are plain text that cannot always be told apart, so among those four the name
-   settles it; and Markdown and Fountain are any text at all, so only a name can say that a
-   file is one of them. A name never makes text of something that is not.
+   settles it; and Markdown, Fountain and plain text are any text at all, so only a name can
+   say that a file is one of them (`.txt` is asked last, so that a `.txt` that is JSON or
+   subtitles is that). A name never makes text of something that is not.
 6. **Nothing leaves the origin.** No request to another origin, ever; no request carrying file
    bytes to its own, with one exception that the person must ask for each time: checking a
    document's accessibility (`app/utils/accessibility.ts`, `useAccessibilityCheck`). That is
@@ -188,6 +189,20 @@ build by `apps/web/scripts/write-headers.ts`.
   attribute is named by its vocabulary's fixed prefix (`@draw:display`, `@text:display`),
   whatever prefix the file chose; ask for the one you mean, never a bare name. `sample.odp` reads to exactly the page
   `pptx/sample.pptx` does, and a test holds them to it.
+- **RTF is read by Pandoc, and never trusted** (`packages/engines/src/pandoc`). Pandoc is the
+  project's own WebAssembly build, shipped unchanged (GPL-2.0-or-later), fetched only for an
+  RTF, and started by its package's own loader (`pandoc-wasm/core`, an alias in
+  `nuxt.config.ts`) from bytes the worker has verified; its browser entry, which fetches the
+  binary itself, is never imported. Before Pandoc sees an RTF, `prepareRtf` walks it once: it
+  takes out words deleted with changes tracked (Pandoc keeps them, struck out), refuses
+  nesting past 200 groups, raw bytes past the end, a brace that closes nothing, and anything
+  after the document's end, and mends two of Pandoc 3.10's slips (a letter by number loses the
+  next character; a list just before a table moves to the top). After it, the page goes through
+  `officeToHtml` like any other: Pandoc's title block, which names the author, is dropped; the
+  description "image" it makes up is dropped; a picture's bytes are checked; a list Pandoc
+  split is joined; a table's heading row, which Pandoc forgets, is marked from the RTF. RTF is
+  written by Omsett's own writer (`markup/rtf-write.ts`), with real lists, which Pandoc's
+  writer does not make. Plain text is read and written by Omsett's own code.
 - **A picture inside an office file is believed by its bytes, never its name**
   (`pictureAddress` in `docx-read.ts`). A part named `.png` that does not begin as a PNG is
   described, not carried. Every reader that carries pictures goes through it.
@@ -347,8 +362,8 @@ build by `apps/web/scripts/write-headers.ts`.
 - **A package's "browser" build may assume a page.** Engines run in a worker, which has no
   `document`. `decode-named-character-reference` (under the Markdown parser) did; it is aliased
   to its plain build in `nuxt.config.ts`. Node tests cannot catch this; the browser tests do.
-- **Data outputs must be recognisable without a name.** Markdown and Fountain are the two
-  formats that cannot be; the tests give their names, and only theirs. The tests identify every output from
+- **Data outputs must be recognisable without a name.** Markdown, Fountain and plain text are
+  the three formats that cannot be; the tests give their names, and only theirs. The tests identify every output from
   its bytes alone, so what the data engine writes has to read unmistakably as its format.
 - **Never rely on a reader running out of stack to refuse a file.** How deep that is differs by
   browser and by operating system; WebKit on Linux read what every other browser refused. State

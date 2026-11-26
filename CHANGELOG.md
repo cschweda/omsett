@@ -7,6 +7,41 @@ The paragraph that opens a version is its teaser: the home page shows its first 
 in the "What's new" banner, so keep it to two or three sentences on what a visitor will notice.
 A line beginning "Released" gives the date.
 
+## 0.60.0
+
+Released 26 November 2026.
+
+RTF documents and plain text can now be converted, to and from Word, ODT, Markdown, a PDF and
+the rest. RTF is read by Pandoc, fetched only when an RTF is converted, after Omsett has taken
+out anything the author deleted; it is written by Omsett itself, with real headings, lists and
+tables.
+
+### Added
+
+- **RTF is read and written.** Reading uses Pandoc, the document converter, in the Pandoc
+  project's own WebAssembly build (GPL-2.0-or-later), fetched once and only for an RTF, its size
+  shown first. Omsett walks every RTF before Pandoc does: words deleted with changes tracked are
+  taken out, which Pandoc would keep; nesting deeper than any document, raw data longer than the
+  file, and a file cut short or with words after its end are refused. Headings, bold and italic,
+  links, lists at their levels, tables with their heading rows, footnotes, pictures and the
+  title and language come across; hidden words, comments, the instructions behind fields,
+  embedded objects and the author do not. Writing RTF is Omsett's own: real headings, real
+  lists (not lines that begin with a bullet), tables with their heading rows marked, and the
+  title and language stated.
+- **Plain text is read and written.** A `.txt` becomes a page a paragraph to each block of
+  lines; a document becomes text with its headings, lists and tables set out as lines and its
+  pictures as their descriptions. A `.txt` that is JSON, a table or subtitles is still read as
+  that.
+- **15 trap files**, and a code trap for each format.
+
+### Known
+
+- **A picture in an RTF comes without a description**, as RTF has nowhere to keep one; a
+  written RTF puts a picture's description after it as words.
+- **Pandoc 3.10 is shipped, not 3.14**, because 3.10 is what the Pandoc project publishes on
+  npm, where every other engine comes from. Two of its slips with RTF are mended by Omsett
+  (letters given by number, and a list before a table); a newer Pandoc is a version change.
+
 ## 0.59.0
 
 Released 26 November 2026.

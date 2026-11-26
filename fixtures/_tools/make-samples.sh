@@ -136,3 +136,12 @@ python3 "$tools/ods.py" >/dev/null
 # odp/sample.odp is written by odp.py and holds what pptx/sample.pptx holds. odp/from-odfpy.odp is
 # written by odfpy (odp-odfpy.py says how); it is committed and made again only by hand.
 python3 "$tools/odp.py" >/dev/null
+
+# --- RTF and plain text --------------------------------------------------------------------------
+# rtf/sample.rtf is written by rtf.py, laid out as Word lays one out; rtf/from-macos.rtf by macOS's
+# textutil, which knows nothing of Omsett. txt/sample.txt is written here.
+python3 "$tools/rtf.py" >/dev/null
+printf '%s' '<html><head><meta charset="utf-8"><title>Test pattern</title></head><body><h1>Heading one</h1><p>A paragraph with <b>bold</b> and <i>italic</i> words and a <a href="https://omsett.com/">link</a>.</p><ul><li>First</li><li>Second<ul><li>Inner</li></ul></li></ul><ol><li>One</li><li>Two</li></ol><table><tr><th>a</th><th>b</th></tr><tr><td>1</td><td>2</td></tr></table><p>Café 字幕</p></body></html>' > "$work/page.html"
+textutil -convert rtf "$work/page.html" -output "$out/rtf/from-macos.rtf"
+mkdir -p "$out/txt"
+printf 'About Omsett\n\nOmsett converts files in the browser.\nNothing leaves the device:\nevery file is converted in the tab.\n\nCaf\xc3\xa9 \xe5\xad\x97\xe5\xb9\x95, & <not a tag>.\n' > "$out/txt/sample.txt"

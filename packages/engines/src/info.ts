@@ -179,6 +179,18 @@ export const typstInfo: EngineInfo = {
   sourceUrl: 'https://github.com/Myriad-Dreamin/typst.ts',
 }
 
+// RTF: Pandoc, the document converter, built to WebAssembly by the Pandoc project and shipped
+// unchanged. It is the second-largest thing Omsett fetches, and only when an RTF is converted.
+// The size is the binary as shipped; packed with gzip, as omsett.com sends it, about 16 MB.
+export const pandocInfo: EngineInfo = {
+  id: 'pandoc',
+  sizeBytes: 58_580_800,
+  runtimes: ['browser', 'node'],
+  // Pandoc is GPL-2.0-or-later; the WASI layer it runs on (@bjorn3/browser_wasi_shim) is MIT or Apache-2.0.
+  license: 'GPL-2.0-or-later AND (MIT OR Apache-2.0)',
+  sourceUrl: 'https://github.com/pandoc/pandoc-wasm',
+}
+
 // E-books: Kindle books read and EPUB written, by Omsett's own code.
 export const ebookInfo: EngineInfo = {
   id: 'ebook',
@@ -249,5 +261,6 @@ export const engineInfo: Record<string, EngineInfo> = {
   [audioInfo.id]: audioInfo,
   [audioMp3Info.id]: audioMp3Info,
   [typstInfo.id]: typstInfo,
+  [pandocInfo.id]: pandocInfo,
   [ebookInfo.id]: ebookInfo,
 }

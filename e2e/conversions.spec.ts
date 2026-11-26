@@ -66,6 +66,8 @@ const samples: Record<string, string> = {
   ppt: 'ppt/sample.ppt',
   odt: 'odt/sample.odt',
   odp: 'odp/sample.odp',
+  rtf: 'rtf/sample.rtf',
+  txt: 'txt/sample.txt',
   pptx: 'pptx/sample.pptx',
   pdf: 'pdf/sample.pdf',
   fountain: 'fountain/sample.fountain',

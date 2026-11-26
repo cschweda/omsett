@@ -573,7 +573,7 @@ Electron has no mobile build and bundling ffmpeg or LibreOffice into a phone app
 
 | Engine | License | Consequence |
 | --- | --- | --- |
-| Pandoc (`pandoc-wasm`) | GPL-2.0-or-later | Ship an unmodified build; link its source and version in the notices |
+| Pandoc (`pandoc-wasm`) | GPL-2.0-or-later | Shipped unmodified since 0.60.0: the Pandoc project's own WebAssembly build, from npm `pandoc-wasm` 1.1.0 (Pandoc 3.10), its licence beside the binary and its source linked in the notices. Runs on `@bjorn3/browser_wasi_shim` (MIT OR Apache-2.0) |
 | FFmpeg | LGPL-2.1-or-later by default; GPL when built with x264/x265 | Browser audio build stays LGPL-only. The desktop bundle is an open decision (below) |
 | Ghostscript | AGPL-3.0 (commercial license available) | Rule 5 |
 | Calibre | GPL-3.0 | Never bundled; invoked as a separate installed program |

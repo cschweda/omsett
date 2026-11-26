@@ -9,6 +9,7 @@ import { readPpt } from './ppt-read'
 import { readPptx } from './pptx-read'
 import { writeDocx } from './docx-write'
 import { writeOdt } from './odt-write'
+import { writeRtf } from './rtf-write'
 
 // Markdown and HTML, each to the other. Both are read into a tree of headings, paragraphs,
 // lists, tables and links, cleaned, and written out from the tree. Nothing a file holds is run,
@@ -354,6 +355,114 @@ async function htmlToDocx(text: string, name: string): Promise<Uint8Array> {
   return writeDocx(page.tree, page.title, page.language)
 }
 
+/**
+ * Plain text → a page. Text says nothing of its structure, so each block of lines between blank
+ * lines is a paragraph, its lines joined into one, and every letter is written as a letter.
+ */
+function textToHtml(text: string, name: string, language: string): string {
+  const blocks = text
+    .replace(/^\uFEFF/, '')
+    .split(/\r?\n[ \t]*\r?\n|\r[ \t]*\r/)
+    .map((block) => block.replace(/\s+/g, ' ').trim())
+    .filter((block) => block !== '')
+  return page(blocks.map((block) => `<p>${escapeText(block)}</p>`).join('\n'), safeBaseName(name), language)
+}
+
+interface TextNode {
+  type: string
+  tagName?: string
+  value?: string
+  properties?: Record<string, unknown>
+  children?: TextNode[]
+}
+
+/**
+ * A page → plain text: its words, with headings, paragraphs, lists and tables set out as lines,
+ * and a picture as its description. Nothing of the page's markup is written.
+ */
+function writeText(tree: TextNode): string {
+  const blocks: string[] = []
+  const words = (nodes: TextNode[], depth: number, keepSpace = false): string => {
+    if (depth > MAX_DEPTH) throw new Refusal(TOO_DEEP)
+    let out = ''
+    for (const node of nodes) {
+      if (node.type === 'text') out += keepSpace ? (node.value ?? '') : (node.value ?? '').replace(/\s+/g, ' ')
+      else if (node.type !== 'element') continue
+      else if (node.tagName === 'br') out += '\n'
+      else if (node.tagName === 'img') {
+        const alt = String(node.properties?.alt ?? '').trim()
+        if (alt) out += `[Picture: ${alt}]`
+      } else out += words(node.children ?? [], depth + 1, keepSpace)
+    }
+    return out
+  }
+  const walk = (nodes: TextNode[], depth: number, indent: string): void => {
+    if (depth > MAX_DEPTH) throw new Refusal(TOO_DEEP)
+    for (const node of nodes) {
+      if (node.type !== 'element') {
+        const loose = node.type === 'text' ? (node.value ?? '').trim() : ''
+        if (loose) blocks.push(indent + loose.replace(/\s+/g, ' '))
+        continue
+      }
+      const tag = node.tagName ?? ''
+      const kids = node.children ?? []
+      if (/^h[1-6]$|^p$/.test(tag)) {
+        const line = words(kids, depth + 1).trim()
+        if (line) blocks.push(indent + line.replace(/\n/g, `\n${indent}`))
+      } else if (tag === 'pre') blocks.push(words(kids, depth + 1, true).replace(/\n$/, ''))
+      else if (tag === 'hr') blocks.push(`${indent}----`)
+      else if (tag === 'blockquote') walk(kids, depth + 1, `${indent}    `)
+      else if (tag === 'ul' || tag === 'ol') {
+        const items = kids.filter((kid) => kid.type === 'element' && kid.tagName === 'li')
+        const lines: string[] = []
+        const list = (entries: TextNode[], ordered: boolean, level: number) => {
+          if (level > MAX_DEPTH) throw new Refusal(TOO_DEEP)
+          entries.forEach((item, n) => {
+            const parts = item.children ?? []
+            const own = parts.filter((part) => !(part.type === 'element' && (part.tagName === 'ul' || part.tagName === 'ol')))
+            const mark = ordered ? `${n + 1}.` : '-'
+            lines.push(`${indent}${'  '.repeat(level)}${mark} ${words(own, depth + 1).replace(/\s+/g, ' ').trim()}`)
+            for (const inner of parts.filter((part) => part.type === 'element' && (part.tagName === 'ul' || part.tagName === 'ol'))) {
+              list((inner.children ?? []).filter((kid) => kid.type === 'element' && kid.tagName === 'li'), inner.tagName === 'ol', level + 1)
+            }
+          })
+        }
+        list(items, tag === 'ol', 0)
+        if (lines.length) blocks.push(lines.join('\n'))
+      } else if (tag === 'table') {
+        // A row to a line, its cells apart by tabs, as a spreadsheet takes text pasted into it.
+        const rows: string[] = []
+        const gather = (parts: TextNode[], level: number) => {
+          if (level > MAX_DEPTH) return
+          for (const part of parts) {
+            if (part.type !== 'element') continue
+            if (part.tagName === 'tr') {
+              rows.push(indent + (part.children ?? []).filter((cell) => cell.type === 'element' && ['td', 'th'].includes(cell.tagName ?? '')).map((cell) => words(cell.children ?? [], depth + 1).replace(/\s+/g, ' ').trim()).join('\t'))
+            } else gather(part.children ?? [], level + 1)
+          }
+        }
+        gather(kids, 0)
+        if (rows.length) blocks.push(rows.join('\n'))
+      } else if (tag === 'head' || tag === 'script' || tag === 'style' || tag === 'template') continue
+      else walk(kids, depth + 1, indent)
+    }
+  }
+  walk(tree.children ?? [], 0, '')
+  return blocks.join('\n\n') + '\n'
+}
+
+async function htmlToText(text: string, name: string): Promise<string> {
+  const page = await readPage(text, name)
+  const written = writeText(page.tree as unknown as TextNode)
+  if (written.trim() === '') throw new Refusal('This file has no text in it to convert')
+  return written
+}
+
+async function htmlToRtf(text: string, name: string): Promise<Uint8Array> {
+  const page = await readPage(text, name)
+  return writeRtf(page.tree as never, page.title, page.language)
+}
+
 async function htmlToOdt(text: string, name: string): Promise<Uint8Array> {
   const page = await readPage(text, name)
   return writeOdt(page.tree, page.title, page.language)
@@ -394,6 +503,9 @@ export function createMarkupEngine(): Engine {
         else if (pair === 'odp>html') written = await officeToHtml(await readOdp(bytes, { notes: input.options.speakerNotes === true }), input.name)
         else if (pair === 'html>docx') written = await htmlToDocx(decode(), input.name)
         else if (pair === 'html>odt') written = await htmlToOdt(decode(), input.name)
+        else if (pair === 'txt>html') written = textToHtml(decode(), input.name, languageTag(input.options.language))
+        else if (pair === 'html>txt') written = await htmlToText(decode(), input.name)
+        else if (pair === 'html>rtf') written = await htmlToRtf(decode(), input.name)
         else throw new Error(`The markup engine does not convert ${pair}`)
       } catch (error) {
         // A reader may run out of room before the depth limit is even checked. Browsers name
