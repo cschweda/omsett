@@ -95,7 +95,7 @@ When a format ships, update its row here, in the same change.
 | DOCX ↔ HTML, Markdown | Browser | `markup` (Omsett's own reader and writer, through rehype-sanitize) | **Shipped** (0.19.0). Structure and words; not fonts or page layout |
 | Footnotes, headers and footers; pictures saved as separate files; a score for the accessibility of the result | Browser | the same | Planned |
 | ODT, RTF, TXT, EPUB to and from these | Browser | ODT the same way (a ZIP of XML); Pandoc (WASM) for the rest | Planned |
-| DOCM, DOTX (read) | Browser | Pandoc | Planned |
+| DOCM, DOTX, DOTM (read, macros ignored) | Browser | `markup`, as DOCX | **Done** (0.54.1) |
 | EML, Outlook MSG to HTML, TXT; MSG to EML | Browser | JavaScript | Planned |
 | DOCX to PDF, tagged | Desktop; Browser if the Typst route holds | LibreOffice; Typst | Planned |
 | DOC, WPS, WPD, Pages, FODT, OTT, ClarisWorks, MacWrite, T602 | Desktop | LibreOffice | Planned |
@@ -109,7 +109,8 @@ When a format ships, update its row here, in the same change.
 | XLSX ↔ CSV, TSV, JSON, JSON Lines, YAML, TOML, XML; and on to vCard and iCalendar | Browser | `data` (Omsett's own reader and writer) | **Shipped** (0.18.0) |
 | Whether the first row names the columns; the shape of the result (records, rows, columns) | Browser | the same | **Shipped** (0.20.0) |
 | Choosing which sheet; every sheet at once | Browser | the same | Done |
-| XLSM (read, macros ignored), ODS | Browser | the same approach: a ZIP of XML | Planned |
+| XLSM, XLTX, XLTM (read, macros ignored) | Browser | `data`, as XLSX | **Done** (0.54.1) |
+| ODS | Browser | the same approach: a ZIP of XML | Planned |
 | XLS, XLT (the older binary form, from Excel 97 on) to XLSX and every data format; read only | Browser | `data` (Omsett's own reader, of the container and of the workbook) | **Done** (0.45.0) |
 | DOC (the older binary form, from Word 97 on) to DOCX, HTML and Markdown; read only | Browser | `markup` (Omsett's own reader, on the same container reader) | **Done** (0.46.0) |
 | PPT (the older binary form) to HTML, and through it to DOCX, Markdown, PDF and EPUB; read only | Browser | `markup` (Omsett's own reader, on the same container reader) | **Done** (0.54.0) |
@@ -131,7 +132,8 @@ When a format ships, update its row here, in the same change.
 | --- | --- | --- | --- |
 | Markdown to PPTX | Browser | Pandoc | Planned |
 | PPTX to HTML and Markdown: a section to a slide, with titles, bullets, tables, links and pictures | Browser | `markup` (Omsett's own reader) | **Shipped** (0.21.0) |
-| Speaker notes, as a choice; charts and SmartArt as their text; PPSX, PPTM, ODP | Browser | the same | Planned |
+| PPTM, PPSX, PPSM, POTX, POTM (read, macros ignored) | Browser | `markup`, as PPTX | **Done** (0.54.1) |
+| Speaker notes, as a choice; charts and SmartArt as their text; ODP | Browser | the same | Planned |
 | PPTX, PPTM, PPSX, PPT, ODP, Keynote to PDF, PNG, JPEG, DOCX | Desktop | LibreOffice | Planned |
 
 ## HWP

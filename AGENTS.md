@@ -164,7 +164,10 @@ build by `apps/web/scripts/write-headers.ts`.
 - **An office file is a ZIP of XML, and is read as both** (`packages/engines/src/data/sheet.ts`):
   through `readZip`, so the archive limits hold, and with any part that declares a DOCTYPE
   refused. Formulas are never worked out and never written; macros and linked files are never
-  opened. DOCX and PPTX should be read the same way.
+  opened. DOCX and PPTX should be read the same way. A file saved with macros or as a template
+  (DOCM, DOTX, PPTM, PPSX, XLSM and the rest) is its family's package under another label, and
+  is that family's format in the registry, not one of its own: it is read by the same reader
+  under the same limits, and its macro project is never opened.
 - **An old Office file is two things to check, one inside the other.** Outside, the container
   (`packages/detect/src/cfb.ts`): every sector number, chain and length is held against the size
   of the file, and a chain is followed no further than the file has sectors. Inside, for a
