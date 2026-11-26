@@ -14,6 +14,8 @@ export default createConfigForNuxt({
       'playwright-report/**',
       'test-results/**',
       'brand/**',
+      // The audio engine as built by libav.js (vendor/libav/build), served as it is.
+      'packages/engines/vendor/**',
       'docs/**',
     ],
   },

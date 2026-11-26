@@ -349,7 +349,7 @@ None of this is built. It is the design work Phase 1 starts with.
 
 | Direction | Formats | Engine | Tier |
 | --- | --- | --- | --- |
-| Both | MP3, WAV, FLAC, OGG (Vorbis), Opus, AAC/M4A, AIFF, WavPack, TTA, W64, AC3, E-AC3, ALAC | `ffmpeg.wasm` (audio-only build, \~12 MB) | B |
+| Both | MP3, WAV, FLAC, OGG (Vorbis), Opus, AAC/M4A, AIFF, WavPack, TTA, W64, AC3, E-AC3, ALAC | Omsett's own libav.js build of FFmpeg (audio only, LGPL, 3.3 MB; AAC, AC-3 and WMA read only). MP3, WAV, FLAC, AIFF and AU are Omsett's own code, mpg123 and LAME | B |
 | Input only | M4B, WMA, AMR, AU, CAF, WebA, MKA, MP2, DSS, APE, Musepack, TAK, DSF, DFF, DTS, Speex | `ffmpeg.wasm` | B |
 | Extract | Audio track from any video container | `ffmpeg.wasm` (demux only, fast) | B |
 | Presets | Podcast MP3 (mono 64k), voice memo → transcript-ready WAV 16k | `ffmpeg.wasm` | B |

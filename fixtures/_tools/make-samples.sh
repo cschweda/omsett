@@ -145,3 +145,18 @@ printf '%s' '<html><head><meta charset="utf-8"><title>Test pattern</title></head
 textutil -convert rtf "$work/page.html" -output "$out/rtf/from-macos.rtf"
 mkdir -p "$out/txt"
 printf 'About Omsett\n\nOmsett converts files in the browser.\nNothing leaves the device:\nevery file is converted in the tab.\n\nCaf\xc3\xa9 \xe5\xad\x97\xe5\xb9\x95, & <not a tag>.\n' > "$out/txt/sample.txt"
+
+# --- the long tail of sound ----------------------------------------------------------------------
+# Each written by ffmpeg from the same WAV, so that every one holds the same sound and none was
+# made by Omsett. m4a/alac.m4a holds Apple Lossless, which unpacks to exactly the WAV.
+for d in m4a aac ac3 wma ogg opus wv tta; do dir "$d"; done
+ff -i "$out/wav/sample.wav" -fflags +bitexact -c:a aac -b:a 96k -metadata title="Test pattern" "$out/m4a/sample.m4a"
+ff -i "$out/wav/sample.wav" -fflags +bitexact -c:a alac -metadata title="Test pattern" "$out/m4a/alac.m4a"
+ff -i "$out/wav/sample.wav" -fflags +bitexact -c:a aac -b:a 96k -f adts "$out/aac/sample.aac"
+ff -i "$out/wav/sample.wav" -fflags +bitexact -c:a ac3 "$out/ac3/sample.ac3"
+ff -i "$out/wav/sample.wav" -fflags +bitexact -c:a eac3 -f eac3 "$out/ac3/sample.eac3"
+ff -i "$out/wav/sample.wav" -fflags +bitexact -c:a wmav2 -metadata title="Test pattern" "$out/wma/sample.wma"
+ff -i "$out/wav/sample.wav" -fflags +bitexact -c:a vorbis -strict -2 -ac 2 -metadata title="Test pattern" "$out/ogg/sample.ogg"
+ff -i "$out/wav/sample.wav" -fflags +bitexact -c:a libopus -metadata title="Test pattern" "$out/opus/sample.opus"
+ff -i "$out/wav/sample.wav" -fflags +bitexact -c:a wavpack -metadata title="Test pattern" "$out/wv/sample.wv"
+ff -i "$out/wav/sample.wav" -fflags +bitexact -c:a tta "$out/tta/sample.tta"

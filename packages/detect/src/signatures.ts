@@ -157,9 +157,21 @@ function au(bytes: Uint8Array): Sniffed | null {
   return { ext: 'au', mime: 'audio/basic', dimensions: null }
 }
 
+/**
+ * TTA, the True Audio format: "TTA1", then a header of 22 bytes whose format is 1 or 2 (whole
+ * numbers or floating point) and whose channel count is at least one.
+ */
+function tta(bytes: Uint8Array): Sniffed | null {
+  if (bytes.length < 22 || !starts(bytes, 0x54, 0x54, 0x41, 0x31)) return null
+  const format = bytes[4]! | (bytes[5]! << 8)
+  const channels = bytes[6]! | (bytes[7]! << 8)
+  if ((format !== 1 && format !== 2) || channels === 0) return null
+  return { ext: 'tta', mime: 'audio/x-tta', dimensions: null }
+}
+
 /** Strongest signatures first; TGA, which has none, last. */
 export function sniff(bytes: Uint8Array): Sniffed | null {
-  for (const test of [qoi, exr, ras, dds, fits, au, hdr, sgi, pnm, pcx, tga]) {
+  for (const test of [qoi, exr, ras, dds, fits, au, tta, hdr, sgi, pnm, pcx, tga]) {
     const found = test(bytes)
     if (found) return found
   }

@@ -39,7 +39,7 @@ describe('router, real registry', () => {
     for (const edge of deriveEdges(registry).edges) {
       const engines = edge.candidates.map((c) => c.engine)
       if (edge.from !== 'png') expect(engines, `${edge.from} → ${edge.to}`).not.toContain('canvas')
-      for (const engine of engines) expect(engine === 'canvas' || ['heif', 'resvg', 'magick', 'data', 'subtitle', 'markup', 'font', 'font-woff2', 'icon', 'archive', 'script', 'pdf', 'audio', 'audio-mp3', 'typst', 'ebook', 'pandoc'].includes(engine) || engine.startsWith('vips')).toBe(true)
+      for (const engine of engines) expect(engine === 'canvas' || ['heif', 'resvg', 'magick', 'data', 'subtitle', 'markup', 'font', 'font-woff2', 'icon', 'archive', 'script', 'pdf', 'audio', 'audio-mp3', 'typst', 'ebook', 'pandoc', 'audio-libav'].includes(engine) || engine.startsWith('vips')).toBe(true)
       // The data engine reads data and nothing else, and writes data or a page that sets a
       // table out to be read; nothing but the data engine reads data, and no picture engine touches it.
       const data = [edge.from, edge.to].map((id) => ['data', 'spreadsheet'].includes(formatById(registry, id)!.category))
@@ -65,11 +65,11 @@ describe('router, real registry', () => {
       'fountain', 'fdx', 'drafter',
       'woff2', 'woff', 'ttf', 'otf',
       'zip', 'tgz', 'tar',
-      'mp3', 'wav', 'flac', 'aiff', 'au',
+      'mp3', 'wav', 'flac', 'aiff', 'au', 'm4a', 'ogg', 'opus', 'wv', 'aac', 'ac3', 'wma', 'tta',
       'epub', 'azw3', 'mobi',
     ])
     const readOnly = new Set(everything.formats.filter((f) => f.readOnly).map((f) => f.id))
-    expect([...readOnly].sort()).toEqual(['apng', 'azw3', 'dcm', 'dng', 'doc', 'exr', 'fits', 'hdr', 'heic', 'mobi', 'odp', 'ods', 'pcx', 'ppt', 'pptx', 'psb', 'psd', 'ras', 'sgi', 'svg', 'svgz', 'xls'])
+    expect([...readOnly].sort()).toEqual(['aac', 'ac3', 'apng', 'azw3', 'dcm', 'dng', 'doc', 'exr', 'fits', 'hdr', 'heic', 'mobi', 'odp', 'ods', 'pcx', 'ppt', 'pptx', 'psb', 'psd', 'ras', 'sgi', 'svg', 'svgz', 'tta', 'wma', 'xls'])
     // Every pair of the same kind converts, directly or through a step in between; nothing is
     // written as HEIC. A picture never becomes data, nor data a picture.
     const kind = (id: string) => formatById(everything, id)!.category
@@ -175,7 +175,13 @@ describe('router, real registry', () => {
     expect(all.route('lrc', 'microdvd')!.warnings.map((w) => w.id).sort()).toEqual(['ends-guessed', 'frames-assumed'])
     // Sound: one step, its own kind only, nothing lost, and what the file says about itself left behind.
     expect(all.route('wav', 'aiff')!.edges.map((e) => e.candidates[0]!.engine)).toEqual(['audio'])
-    expect(all.targetsFor(['au']).map((t) => t.format.id)).toEqual(['mp3', 'wav', 'flac', 'aiff', 'au'])
+    expect(all.targetsFor(['au']).map((t) => t.format.id)).toEqual(['mp3', 'wav', 'flac', 'aiff', 'au', 'm4a', 'ogg', 'opus', 'wv', 'aac', 'ac3', 'wma', 'tta'])
+    // The long tail is read by FFmpeg into WAV and made into the rest from there; what it never writes says why.
+    expect(all.route('m4a', 'mp3')!.edges.map((e) => `${e.from}>${e.to}:${e.candidates[0]!.engine}`)).toEqual(['m4a>wav:audio-libav', 'wav>mp3:audio-mp3'])
+    expect(all.route('wma', 'flac')!.edges.map((e) => `${e.from}>${e.to}:${e.candidates[0]!.engine}`)).toEqual(['wma>wav:audio-libav', 'wav>flac:audio'])
+    expect(all.route('flac', 'opus')!.edges.map((e) => e.candidates[0]!.engine)).toEqual(['audio-libav'])
+    expect(all.route('aac', 'm4a')!.warnings.map((w) => w.id)).toEqual(expect.arrayContaining(['sound-already-left-out', 'm4a-lossless']))
+    for (const never of ['aac', 'ac3', 'wma', 'tta']) expect(all.targetsFor(['wav']).find((t) => t.format.id === never)!.reason, never).toMatch(/can be read but not written/)
     // MP3 is the one that loses sound, in one step, by the engine that is fetched for it alone.
     expect(all.route('wav', 'mp3')!.edges.map((e) => e.candidates[0]!.engine)).toEqual(['audio-mp3'])
     expect(all.route('wav', 'mp3')!.lossy).toBe(true)

@@ -7,6 +7,38 @@ The paragraph that opens a version is its teaser: the home page shows its first 
 in the "What's new" banner, so keep it to two or three sentences on what a visitor will notice.
 A line beginning "Released" gives the date.
 
+## 0.61.0
+
+Released 26 November 2026.
+
+M4A, AAC, AC-3, WMA, Ogg Vorbis, Opus, WavPack and TTA can now be converted. Sound can be
+packed small as Opus or Ogg Vorbis, at a quality you choose, or kept whole as WavPack or Apple
+Lossless. The engine, a 3 MB build of FFmpeg made for Omsett, is fetched only when one of these
+is converted.
+
+### Added
+
+- **The long tail of sound.** Read: M4A (AAC and Apple Lossless), AAC on its own, AC-3 and
+  E-AC-3, WMA (all four kinds), Ogg Vorbis, Opus, WavPack and TTA. Written: Opus and Ogg Vorbis
+  (smaller, standard or best), WavPack, and M4A as Apple Lossless. Each converts to WAV, FLAC,
+  AIFF, AU and MP3 as well, and those to it. AAC, AC-3 and WMA are read only: their encoders are
+  covered by patents and are not in the build.
+- **The engine is Omsett's own build of libav.js** (FFmpeg 9.0.2, LGPL-2.1-or-later, with Opus
+  and libvorbis, BSD-3-Clause), audio only, with nothing GPL in it. The script that builds it is
+  in `packages/engines/vendor/libav/build`, and building again gives the same bytes.
+- **A damaged or cut-short sound file is refused**, where a player would play what it could
+  find. FFmpeg is told to stop at damage; a file that holds less sound than its container says,
+  or a stream whose last stretch is cut off, is refused. A Windows Media file that holds a film
+  is refused as one. Titles, artists, comments and cover pictures are never carried across.
+- 20 trap files, five code traps, and a sample of each format, all made by ffmpeg from the
+  test notes.
+
+### Known
+
+- AAC on its own, WMA and Opus carry no checksum over their sound, so damage inside a stretch
+  of their sound cannot be told from sound, and is played as any player plays it. A file cut
+  short is still refused.
+
 ## 0.60.0
 
 Released 26 November 2026.

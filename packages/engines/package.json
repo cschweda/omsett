@@ -1,12 +1,13 @@
 {
   "name": "@omsett/engines",
-  "version": "0.60.0",
+  "version": "0.61.0",
   "private": true,
   "type": "module",
   "license": "MIT",
   "exports": {
     ".": "./src/index.ts",
-    "./node": "./src/node.ts"
+    "./node": "./src/node.ts",
+    "./vendor/libav/*": "./vendor/libav/*"
   },
   "scripts": {
     "typecheck": "tsc --noEmit -p tsconfig.json"

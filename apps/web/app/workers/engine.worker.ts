@@ -17,6 +17,7 @@ import {
   createAudioMp3Engine,
   createTypstEngine,
   createPandocEngine,
+  createAudioLibavEngine,
   type Mp3Decoder,
   type Mp3Encoder,
   createIconEngine,
@@ -161,6 +162,19 @@ const engines: Record<string, Engine> = Object.fromEntries(
     createPandocEngine({
       wasm: async () => new Uint8Array(await verified(assets.pandoc.wasm)),
       core: () => import('pandoc-wasm/core'),
+    }),
+    // The long tail of sound: libav.js's loader and glue arrive with this script; its binary is
+    // fetched and verified, and handed to it by an address in memory, only when a sound needs it.
+    createAudioLibavEngine({
+      async libav() {
+        const [{ default: LibAV }, { default: factory }, wasm] = await Promise.all([
+          import('@omsett/engines/vendor/libav/libav-omsett-audio.mjs'),
+          import('@omsett/engines/vendor/libav/libav-6.11.9.0.2-omsett-audio.wasm.mjs'),
+          verified(assets.libav.wasm),
+        ])
+        const wasmurl = URL.createObjectURL(new Blob([wasm], { type: 'application/wasm' }))
+        return LibAV.LibAV({ noworker: true, nothreads: true, factory, wasmurl, variant: 'omsett-audio' })
+      },
     }),
     createEbookEngine(),
     createAudioEngine(),

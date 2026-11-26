@@ -94,6 +94,8 @@ const SCRIPTS = ['fountain', 'fdx', 'drafter']
 const ARCHIVES = ['zip', 'tgz', 'tar']
 const SFNT = ['ttf', 'otf', 'woff']
 const SOUNDS = ['wav', 'flac', 'aiff', 'au']
+// The long tail of sound, read by FFmpeg (libav.js): unpacked to WAV, and from WAV made into the rest.
+const LONG_TAIL = ['m4a', 'aac', 'ac3', 'wma', 'ogg', 'opus', 'wv', 'tta']
 
 export const capabilities: Capability[] = [
   {
@@ -164,6 +166,22 @@ export const capabilities: Capability[] = [
   // to make the file small is the person's choice.
   { engine: 'audio-mp3', tier: 'browser', reads: SOUNDS, writes: [{ format: 'mp3', lossy: true, drops: ['metadata'], defaultOptions: { soundQuality: 'standard' } }], priority: 30 },
   { engine: 'audio-mp3', tier: 'browser', reads: ['mp3'], writes: SOUNDS.map((format) => ({ format, lossy: false, drops: ['metadata'] as Trait[] })), priority: 30 },
+  // FFmpeg reads the long tail into WAV, and writes the four it can write freely. Opus and
+  // Vorbis leave out sound, by the person's choice of how much; WavPack and Apple Lossless keep
+  // every bit. AAC and AC-3 are never written: their encoders are covered by patents.
+  { engine: 'audio-libav', tier: 'browser', reads: LONG_TAIL, writes: [{ format: 'wav', lossy: false, drops: ['metadata'] }], priority: 30 },
+  {
+    engine: 'audio-libav',
+    tier: 'browser',
+    reads: ['wav', 'flac', 'aiff', ...LONG_TAIL],
+    writes: [
+      { format: 'opus', lossy: true, drops: ['metadata'], defaultOptions: { soundQuality: 'standard' } },
+      { format: 'ogg', lossy: true, drops: ['metadata'], defaultOptions: { soundQuality: 'standard' } },
+      { format: 'wv', lossy: false, drops: ['metadata'] },
+      { format: 'm4a', lossy: false, drops: ['metadata'] },
+    ],
+    priority: 30,
+  },
 
   // A Kindle book is taken apart and written as an EPUB, in Omsett's own code.
   { engine: 'ebook', tier: 'browser', reads: ['azw3', 'mobi'], writes: [{ format: 'epub', lossy: false }], priority: 20 },

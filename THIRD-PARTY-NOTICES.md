@@ -239,6 +239,22 @@ the list of contents written at the front of each MP3 are Omsett's own code.
 
 The sample MP3s in `fixtures/` are Omsett's two test notes, packed by ffmpeg.
 
+### audio-libav
+
+M4A, AAC, AC-3, WMA, Ogg Vorbis, Opus, WavPack and TTA are read, and Opus, Ogg Vorbis, WavPack
+and Apple Lossless written, by **FFmpeg** 9.0.2 (LGPL-2.1-or-later), <https://ffmpeg.org>,
+built to WebAssembly with **libav.js** 6.11.9.0.2 (LGPL-2.1-or-later),
+<https://github.com/Yahweasel/libav.js>, together with **Opus** 1.6.1 (BSD-3-Clause),
+<https://opus-codec.org>, and **libvorbis** and **libogg** (BSD-3-Clause), <https://xiph.org>.
+The build is Omsett's own variant, audio only, with nothing licensed under the GPL and no AAC or
+AC-3 encoder. Nothing in their code is changed. The script, the Dockerfile and the list of parts
+that make it are in `packages/engines/vendor/libav/build`; each source is fetched from its
+project at the release named, and a build gives the same bytes. libav.js's licence is served
+next to the binary as `libav.LICENSE.txt`. It is fetched only when one of these formats is
+converted. The checks before and after FFmpeg reads a file are Omsett's own code.
+
+The sample files for these formats in `fixtures/` are Omsett's two test notes, packed by ffmpeg.
+
 ### typst
 
 PDFs are laid out and written by **Typst** (Apache-2.0), <https://github.com/typst/typst>,
