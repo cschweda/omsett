@@ -15,7 +15,7 @@ async function toPdf(page: import('@playwright/test').Page, path: string) {
   return describeDownload(page, () => link.click())
 }
 
-for (const [path, name] of [['docx/sample.docx', 'a Word document'], ['md/sample.md', 'Markdown'], ['doc/sample.doc', 'a Word document from before 2007'], ['pptx/sample.pptx', 'a presentation'], ['ppt/sample.ppt', 'a presentation from before 2007'], ['odt/sample.odt', 'an OpenDocument text']] as const) {
+for (const [path, name] of [['docx/sample.docx', 'a Word document'], ['md/sample.md', 'Markdown'], ['doc/sample.doc', 'a Word document from before 2007'], ['pptx/sample.pptx', 'a presentation'], ['ppt/sample.ppt', 'a presentation from before 2007'], ['odt/sample.odt', 'an OpenDocument text'], ['odp/sample.odp', 'an OpenDocument presentation']] as const) {
   test(`${name} becomes a PDF that is tagged and says its title`, async ({ page }) => {
     const output = await toPdf(page, path)
     expect(output.name).toBe('sample.pdf')

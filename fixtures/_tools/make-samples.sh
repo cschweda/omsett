@@ -131,3 +131,8 @@ textutil -convert odt "$work/page.html" -output "$out/odt/from-macos.odt"
 # ods/from-odfpy.ods is written by odfpy (ods-odfpy.py says how), a library that knows nothing
 # of Omsett; it is committed and made again only by hand.
 python3 "$tools/ods.py" >/dev/null
+
+# --- OpenDocument presentations ------------------------------------------------------------------
+# odp/sample.odp is written by odp.py and holds what pptx/sample.pptx holds. odp/from-odfpy.odp is
+# written by odfpy (odp-odfpy.py says how); it is committed and made again only by hand.
+python3 "$tools/odp.py" >/dev/null

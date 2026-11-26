@@ -201,6 +201,8 @@ export const capabilities: Capability[] = [
   { engine: 'markup', tier: 'browser', reads: ['pptx'], writes: [{ format: 'html', lossy: false }], priority: 20 },
   // A presentation from before 2007 is read to a page as the newer kind is. It is never written.
   { engine: 'markup', tier: 'browser', reads: ['ppt'], writes: [{ format: 'html', lossy: false }], priority: 20 },
+  // An OpenDocument presentation is read to a page as a PowerPoint one is. It is not written yet.
+  { engine: 'markup', tier: 'browser', reads: ['odp'], writes: [{ format: 'html', lossy: false }], priority: 20 },
   // An OpenDocument text is read to a page as a Word document is. It is not written yet.
   { engine: 'markup', tier: 'browser', reads: ['odt'], writes: [{ format: 'html', lossy: false }], priority: 20 },
   { engine: 'subtitle', tier: 'browser', reads: SUBTITLES, writes: SUBTITLE_WRITES, priority: 20 },

@@ -7,6 +7,46 @@ The paragraph that opens a version is its teaser: the home page shows its first 
 in the "What's new" banner, so keep it to two or three sentences on what a visitor will notice.
 A line beginning "Released" gives the date.
 
+## 0.57.0
+
+Released 26 November 2026.
+
+OpenDocument presentations, the .odp files LibreOffice Impress saves, can now be converted: to a
+web page, a Word document, Markdown, a PDF or an EPUB, a section to each slide. Speaker notes,
+hidden slides and shapes the audience never saw stay behind. With this, all three OpenDocument
+kinds are read.
+
+### Added
+
+- **ODP is read** (and OTP, its template). It becomes the same page a PPTX does: each slide a
+  section with its title as a heading, its outline as lists at their levels, bold, italic,
+  links, tables with their heading rows, and pictures with their descriptions. Each slide's
+  boxes are read by the same code that reads an ODT. Read only.
+- **What the audience was not shown is left behind**: speaker notes, hidden slides, shapes
+  hidden outright or shown only when printed, groups hidden whole, placeholders never filled in
+  (and their "Click to add" prompts), the slide's number, date and footer, and the author. The
+  details before converting count the slides and say which of these a presentation holds.
+- **20 trap files**, and a code trap. An adversarial review of the reader found six ways
+  something hidden could get through, a kind of shape that was dropped, and counts in the
+  details that were wrong, before release; each is fixed and has its trap or test.
+
+### Fixed
+
+- **In every OpenDocument reader, a word is read in the vocabulary it belongs to.** Two
+  attributes of one name in two vocabularies, a drawing's `display` and a text's `display`,
+  were taken for one, and the second could undo the first. Each is now read as itself, in ODT
+  and ODS as in ODP.
+- **Hidden is hidden wherever it is said.** A slide's style that hides it is found among the
+  named styles as well as the slide's own, and through the style it is based on; a layer that is
+  not shown hides what is on it; and a box inside a box of text is held to the same rules as one
+  on the slide.
+
+### Known
+
+- **Every slide that is not hidden is converted, whichever slide show the presentation is set
+  to play.** A presentation can name a custom show of some of its slides; Omsett does not yet
+  choose by it.
+
 ## 0.56.0
 
 Released 26 November 2026.

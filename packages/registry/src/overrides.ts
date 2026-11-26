@@ -101,6 +101,7 @@ export const overrides: EdgeOverride[] = [
   { from: 'pptx', to: 'html', warnings: [...FROM_SLIDES, ...CHECK_ACCESS] },
   { from: 'ppt', to: 'html', warnings: [...FROM_OLD_SLIDES, ...CHECK_ACCESS] },
   { from: 'odt', to: 'html', warnings: [...FROM_WORD, ...CHECK_ACCESS] },
+  { from: 'odp', to: 'html', warnings: [...FROM_SLIDES, ...CHECK_ACCESS] },
   { from: 'pdf', to: 'html', warnings: [...FROM_PDF, ...CHECK_ACCESS] },
   { from: 'html', to: 'pdf', warnings: [...TO_PDF, ...CHECK_ACCESS] },
   { from: 'png', to: 'pdf', warnings: PICTURE_PAGE },

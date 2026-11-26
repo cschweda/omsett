@@ -9,6 +9,7 @@ import { readFountain } from '../script/fountain'
 import { readCues } from '../subtitle/read'
 import { readCfb } from '@omsett/detect'
 import { listSheets } from '../data/sheet'
+import { describeSlides } from '../markup/odp-read'
 import { readExif } from './exif'
 import { hasMacros, writtenBy } from './ole'
 
@@ -125,6 +126,28 @@ async function openDocument(blob: Blob): Promise<Detail[]> {
   if (/<[\w.-]+:annotation\b/.test(content)) add('Comments', 'Yes', 'removed')
   if (/:display="(?:none|condition)"|:visibility="(?:collapse|filter)"|<[\w.-]+:hidden-(?:text|paragraph)\b/.test(content)) add('Hidden text', 'Yes', 'removed')
   if (entries.some((entry) => /^basic\//i.test(entry.name)) || /<[\w.-]+:script\b/.test(content)) add('Macros', 'Yes. They are never run and never carried over', 'removed')
+  return details
+}
+
+/** An OpenDocument presentation: who wrote it, its slides, and what the audience was not shown. */
+async function openPresentation(blob: Blob): Promise<Detail[]> {
+  const entries = await readZip(new Uint8Array(await blob.arrayBuffer()))
+  const part = (name: string) => {
+    const data = entries.find((entry) => entry.name.toLowerCase() === name)?.data
+    return data && data.length < 8 * 1024 * 1024 ? decode(data) : ''
+  }
+  const meta = part('meta.xml')
+  const details: Detail[] = []
+  const add = (label: string, value: string | undefined, fate?: Detail['fate']) => value && details.push({ label, value, fate })
+  add('Title', inTag(meta, 'title'), 'kept')
+  add('Author', inTag(meta, 'initial-creator') ?? inTag(meta, 'creator'), 'removed')
+  add('Made with', inTag(meta, 'generator'), 'removed')
+  // Counted as a conversion counts them, from the same reading of the file.
+  const counted = await describeSlides(new Uint8Array(await blob.arrayBuffer())).catch(() => null)
+  if (counted?.slides) add('Slides', String(counted.slides))
+  if (counted?.notes) add('Speaker notes', `On ${count(counted.notes, 'slide')}`, 'removed')
+  if (counted?.hidden) add('Hidden slides', `${counted.hidden}. They are never converted`, 'removed')
+  if (entries.some((entry) => /^(?:basic|scripts)\//i.test(entry.name))) add('Macros', 'Yes. They are never run and never carried over', 'removed')
   return details
 }
 
@@ -319,6 +342,7 @@ export async function describeFile(blob: Blob, format: Format): Promise<Detail[]
     if (['xls', 'doc', 'ppt'].includes(format.id)) return await oldOffice(blob, format.id)
     if (format.id === 'odt') return await openDocument(blob)
     if (format.id === 'ods') return await openSpreadsheet(blob)
+    if (format.id === 'odp') return await openPresentation(blob)
     if (format.id === 'pdf') return await pdf(blob)
     if (format.id === 'azw3' || format.id === 'mobi') return await book(blob)
     if (format.id === 'epub') return await book(blob, true)

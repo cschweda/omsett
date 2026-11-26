@@ -50,7 +50,7 @@ describe('old PowerPoint presentations (PPT)', () => {
     expect(body).toContain('<p>Nothing leaves your device.</p></section>')
     expect(body).toMatch(/<img src="data:image\/png;base64,[A-Za-z0-9+/=]+" alt="The Omsett mark: a word in white with a blue square">/)
     // A PPT does not say which rows of a table are headings, and none is made one.
-    expect(body).toContain('<table><tbody><tr><td>Format</td><td>Kind</td></tr><tr><td>PNG</td><td>Picture</td></tr><tr><td>CSV</td><td>Data</td></tr></tbody></table>')
+    expect(body).toContain('<table><tbody><tr><td>Format</td><td>Kind</td></tr><tr><td>PNG</td><td>Picture</td></tr><tr><td>XLSX</td><td>Workbook</td></tr></tbody></table>')
   })
 
   it('reads what the newer reader reads from the same slides', async () => {

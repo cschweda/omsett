@@ -20,13 +20,26 @@ const MAX_SPACES = 100
 /** The most columns a table is counted to. */
 const MAX_COLUMNS = 16384
 
-/** OpenDocument's own vocabularies. A name in any other is foreign, and never taken for one of these. */
-export const ODF = new Set(['office', 'style', 'text', 'table', 'drawing', 'xsl-fo-compatible', 'svg-compatible', 'meta', 'datastyle', 'presentation', 'chart', 'dr3d', 'form', 'script', 'smil', 'anim'].map((name) => `urn:oasis:names:tc:opendocument:xmlns:${name}:1.0`))
-for (const uri of ['http://www.w3.org/1999/xlink', 'http://purl.org/dc/elements/1.1/', 'urn:oasis:names:tc:opendocument:xmlns:manifest:1.0']) ODF.add(uri)
+/**
+ * OpenDocument's own vocabularies, each with the prefix the readers call its attributes by. A
+ * name in any other vocabulary is foreign, and never taken for one of these.
+ */
+export const ODF: ReadonlyMap<string, string> = new Map([
+  ...(['office', 'style', 'text', 'table', 'meta', 'presentation', 'chart', 'dr3d', 'form', 'script', 'smil', 'anim'] as const).map((name) => [`urn:oasis:names:tc:opendocument:xmlns:${name}:1.0`, name] as const),
+  ['urn:oasis:names:tc:opendocument:xmlns:drawing:1.0', 'draw'],
+  ['urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0', 'fo'],
+  ['urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0', 'svg'],
+  ['urn:oasis:names:tc:opendocument:xmlns:datastyle:1.0', 'number'],
+  ['urn:oasis:names:tc:opendocument:xmlns:manifest:1.0', 'manifest'],
+  ['http://www.w3.org/1999/xlink', 'xlink'],
+  ['http://purl.org/dc/elements/1.1/', 'dc'],
+])
 
 const TYPES = new Set(['application/vnd.oasis.opendocument.text', 'application/vnd.oasis.opendocument.text-template'])
 /** Inside a paragraph: what is never part of the text as it is read. */
-const SET_ASIDE = new Set(['note', 'annotation', 'annotation-end', 'hidden-text', 'hidden-paragraph', 'script', 'tracked-changes', 'event-listeners', 'change', 'change-start', 'change-end', 'bookmark', 'bookmark-start', 'bookmark-end', 'reference-mark', 'reference-mark-start', 'reference-mark-end', 'soft-page-break', 'changed-region', 'deletion', 'title', 'desc'])
+const SET_ASIDE = new Set(['note', 'annotation', 'annotation-end', 'hidden-text', 'hidden-paragraph', 'script', 'tracked-changes', 'event-listeners', 'change', 'change-start', 'change-end', 'bookmark', 'bookmark-start', 'bookmark-end', 'reference-mark', 'reference-mark-start', 'reference-mark-end', 'soft-page-break', 'changed-region', 'deletion', 'title', 'desc', 'notes'])
+/** What a placeholder can be that is not content: the furniture of a page, and its notes. */
+export const FURNITURE = new Set(['page-number', 'footer', 'date-time', 'header', 'notes', 'handout'])
 /** Lists of contents and indexes, whose words are on the page, kept inside a body of their own. */
 const INDEXES = new Set(['table-of-content', 'alphabetical-index', 'user-index', 'illustration-index', 'table-index', 'object-index', 'bibliography'])
 
@@ -45,17 +58,62 @@ interface Piece {
   marks: string[]
 }
 
-export async function readOdt(bytes: Uint8Array): Promise<ReadDocument> {
-  const { parts, root } = await openOffice(bytes, notOdt, 'document', ODF)
+/** An OpenDocument file opened, and the readers of its text that every kind shares. */
+export interface Odf {
+  content: Node
+  root: (path: string, tag: string) => Node | undefined
+  /** Paragraphs, headings, lists, tables and boxes → HTML. `tight`: inside a cell or an item, one paragraph needs no <p>. */
+  blocks(nodes: Node[], depth: number, tight?: boolean): string
+  /** One paragraph's words, with their emphasis and links. */
+  inline(paragraph: Node): string
+  /** A picture inside the file, or its description in its place. */
+  picture(frame: Node): string
+  /** Whether a style of a family hides, or makes bold or slanted, what it is given. */
+  said(family: string, name: string | undefined, what: 'bold' | 'italic' | 'hidden'): boolean | undefined
+  /** The title and language the file gives itself. */
+  meta(): { title: string | null; language: string | null }
+  /** Whether a shape is shown: not hidden, not only printed, not on a hidden layer, not a page's furniture or an empty placeholder. */
+  shown(node: Node): boolean
+  /** Whether a paragraph is hidden, by a mark in it or by its style. */
+  paragraphHidden(paragraph: Node): boolean
+}
+
+/**
+ * Open an OpenDocument file of one of `types`: its parts, its styles, and the readers of its
+ * text. A text document and a presentation's boxes are read by the same code.
+ * @param bytes the file
+ * @param types the types it may say it is
+ * @param invalid the refusal for a file that is not one
+ * @param what what to call it in a refusal: "document", "presentation"
+ */
+export async function openOdf(bytes: Uint8Array, types: ReadonlySet<string>, invalid: () => Refusal, what: string): Promise<Odf> {
+  const { parts, root } = await openOffice(bytes, invalid, what, ODF)
   const type = new TextDecoder().decode(parts.get('mimetype') ?? new Uint8Array()).trim()
-  if (!TYPES.has(type)) throw notOdt()
-  // A document saved with a password keeps its parts scrambled, and says so in its list of parts.
+  if (!types.has(type)) throw invalid()
+  // A file saved with a password keeps its parts scrambled, and says so in its list of parts.
   const manifest = new TextDecoder().decode(parts.get('meta-inf/manifest.xml') ?? new Uint8Array())
-  if (/encryption-data/.test(manifest)) throw new Refusal('This document is locked with a password, and cannot be read without it')
+  if (/encryption-data/.test(manifest)) throw new Refusal(`This ${what} is locked with a password, and cannot be read without it`)
   const content = root('content.xml', 'document-content')
-  const text = child(child(content ?? {}, 'body') ?? {}, 'text')
-  if (!content || !text) throw notOdt()
+  if (!content) throw invalid()
   const styled = root('styles.xml', 'document-styles')
+
+  // Layers a drawing's shapes may be put on, and which of them are not shown. Wherever they are declared.
+  const hiddenLayers = new Set<string>()
+  const looking: Array<{ node: Node; depth: number }> = [content, styled].filter((node): node is Node => node !== undefined).map((node) => ({ node, depth: 0 }))
+  while (looking.length) {
+    const { node, depth } = looking.pop()!
+    if (tagOf(node) === 'layer' && ['none', 'printer'].includes(attrs(node)['@draw:display'] ?? '')) hiddenLayers.add(attrs(node)['@draw:name'] ?? '')
+    // Layers are declared near the top; the text below is not looked through for them.
+    if (depth < 4) for (const kid of kids(node)) if (tagOf(kid) !== 'body') looking.push({ node: kid, depth: depth + 1 })
+  }
+  function shown(node: Node): boolean {
+    const a = attrs(node)
+    if (['none', 'printer'].includes(a['@draw:display'] ?? '')) return false
+    if (a['@draw:layer'] !== undefined && hiddenLayers.has(a['@draw:layer'])) return false
+    if (a['@presentation:class'] !== undefined && FURNITURE.has(a['@presentation:class'])) return false
+    // An empty placeholder shows a prompt ("Click to add Title") that is not the file's.
+    return a['@presentation:placeholder'] !== 'true'
+  }
 
   // --- Styles: what each says of its text, and which it takes the rest from -----------------
   const styles = new Map<string, Style>()
@@ -63,17 +121,17 @@ export async function readOdt(bytes: Uint8Array): Promise<ReadDocument> {
   const learn = (from: Node | undefined) => {
     for (const node of kids(from ?? {})) {
       const a = attrs(node)
-      if (tagOf(node) === 'list-style' && a['@name']) listStyles.set(a['@name'], node)
-      if (tagOf(node) !== 'style' || !a['@name']) continue
+      if (tagOf(node) === 'list-style' && a['@style:name']) listStyles.set(a['@style:name'], node)
+      if (tagOf(node) !== 'style' || !a['@style:name']) continue
       const props = attrs(child(node, 'text-properties') ?? {})
-      styles.set(`${a['@family']}:${a['@name']}`, {
-        family: a['@family'] ?? '',
-        parent: a['@parent-style-name'],
-        bold: props['@font-weight'] === undefined ? undefined : /^(?:bold|[6-9]00)$/.test(props['@font-weight']),
-        italic: props['@font-style'] === undefined ? undefined : /^(?:italic|oblique)$/.test(props['@font-style']),
+      styles.set(`${a['@style:family']}:${a['@style:name']}`, {
+        family: a['@style:family'] ?? '',
+        parent: a['@style:parent-style-name'],
+        bold: props['@fo:font-weight'] === undefined ? undefined : /^(?:bold|[6-9]00)$/.test(props['@fo:font-weight']),
+        italic: props['@fo:font-style'] === undefined ? undefined : /^(?:italic|oblique)$/.test(props['@fo:font-style']),
         // Shown only on a condition the document sets is hidden here, as a section on a condition is.
-        hidden: props['@display'] === undefined ? undefined : ['none', 'condition'].includes(props['@display']),
-        list: a['@list-style-name'],
+        hidden: props['@text:display'] === undefined ? undefined : ['none', 'condition'].includes(props['@text:display']),
+        list: a['@style:list-style-name'],
       })
     }
   }
@@ -103,7 +161,7 @@ export async function readOdt(bytes: Uint8Array): Promise<ReadDocument> {
         .join('')
         .trim()
     const alt = words('desc') || words('title')
-    const href = attrs(child(frame, 'image') ?? {})['@href'] ?? ''
+    const href = attrs(child(frame, 'image') ?? {})['@xlink:href'] ?? ''
     // A picture is a part of the document, named from its top. One that names another site or
     // leaves the document is described and not carried.
     const path = href.replace(/^\.\//, '')
@@ -115,7 +173,7 @@ export async function readOdt(bytes: Uint8Array): Promise<ReadDocument> {
 
   /** The runs of a paragraph, with their emphasis and links. `hidden`: the paragraph's style hides its text where a run does not say. */
   function pieces(nodes: Node[], marks: string[], depth: number, out: Array<Piece | string>, bold: boolean, italic: boolean, hidden: boolean): void {
-    if (depth > MAX_DEPTH) throw notOdt()
+    if (depth > MAX_DEPTH) throw invalid()
     for (const node of nodes) {
       const tag = tagOf(node)
       if (tag === '#text') {
@@ -126,22 +184,22 @@ export async function readOdt(bytes: Uint8Array): Promise<ReadDocument> {
         out.push({ text: words, marks: [...marks.filter((mark) => mark.startsWith('a:')), ...set] })
         continue
       }
-      if (SET_ASIDE.has(tag) || tag.startsWith('foreign:')) continue
+      if (SET_ASIDE.has(tag) || tag.startsWith('foreign:') || !shown(node)) continue
       const a = attrs(node)
       // A field may be hidden on the spot, or on a condition the document sets.
-      if (['none', 'condition'].includes(a['@display'] ?? '')) continue
+      if (['none', 'condition'].includes(a['@text:display'] ?? '')) continue
       if (tag === 's') {
         // Spaces that count are written so that a page keeps them: one ordinary, the rest fixed.
-        if (!hidden) out.push({ text: ` ${'\u00A0'.repeat(Math.min(MAX_SPACES, Math.max(1, Number(a['@c']) || 1)) - 1)}`, marks })
+        if (!hidden) out.push({ text: ` ${'\u00A0'.repeat(Math.min(MAX_SPACES, Math.max(1, Number(a['@text:c']) || 1)) - 1)}`, marks })
       } else if (tag === 'tab') {
         if (!hidden) out.push({ text: ' ', marks })
       } else if (tag === 'line-break') {
         if (!hidden) out.push('<br>')
       } else if (tag === 'span') {
-        const name = a['@style-name']
+        const name = a['@text:style-name']
         pieces(kids(node), marks, depth + 1, out, said('text', name, 'bold') ?? bold, said('text', name, 'italic') ?? italic, said('text', name, 'hidden') ?? hidden)
       } else if (tag === 'a') {
-        const href = (a['@href'] ?? '').trim()
+        const href = (a['@xlink:href'] ?? '').trim()
         // Only an address a browser would open or write to is made a link; any other is its words.
         const link = /^(?:https?:|mailto:)/i.test(href) ? [`a:${href}`] : []
         pieces(kids(node), [...marks.filter((mark) => !mark.startsWith('a:')), ...link], depth + 1, out, bold, italic, hidden)
@@ -151,7 +209,7 @@ export async function readOdt(bytes: Uint8Array): Promise<ReadDocument> {
         if (box) {
           for (const paragraph of kids(box).filter((kid) => ['p', 'h'].includes(tagOf(kid)))) {
             // Each paragraph in a box is hidden as any other is: by its style, or by a hidden-paragraph mark.
-            const name = attrs(paragraph)['@style-name']
+            const name = attrs(paragraph)['@text:style-name']
             if (hiddenParagraph(paragraph) || said('paragraph', name, 'hidden')) continue
             out.push('<br>')
             pieces(kids(paragraph), marks, depth + 1, out, said('paragraph', name, 'bold') ?? bold, said('paragraph', name, 'italic') ?? italic, hidden)
@@ -169,7 +227,7 @@ export async function readOdt(bytes: Uint8Array): Promise<ReadDocument> {
   }
 
   function inline(paragraph: Node): string {
-    const name = attrs(paragraph)['@style-name']
+    const name = attrs(paragraph)['@text:style-name']
     // A heading's style makes it bold, and that is how a heading looks, not a word stressed. A
     // heading's words are bold or slanted only where its own runs say so.
     const look = tagOf(paragraph) !== 'h'
@@ -208,20 +266,20 @@ export async function readOdt(bytes: Uint8Array): Promise<ReadDocument> {
     return undefined
   }
 
-  const hiddenParagraph = (paragraph: Node) => kids(paragraph).some((kid) => tagOf(kid) === 'hidden-paragraph' && attrs(kid)['@is-hidden'] !== 'false')
+  const hiddenParagraph = (paragraph: Node) => kids(paragraph).some((kid) => tagOf(kid) === 'hidden-paragraph' && attrs(kid)['@text:is-hidden'] !== 'false')
 
   /** Whether a level of a list is numbered, by its list style. */
   const numbered = (style: string | undefined, level: number): boolean => {
     const found = style ? listStyles.get(style) : undefined
-    const at = kids(found ?? {}).find((kid) => Number(attrs(kid)['@level']) === level)
+    const at = kids(found ?? {}).find((kid) => Number(attrs(kid)['@text:level']) === level)
     return at !== undefined && tagOf(at) === 'list-level-style-number'
   }
 
   function list(node: Node, depth: number, level: number, inherited: string | undefined): string {
-    if (depth > MAX_DEPTH) throw notOdt()
+    if (depth > MAX_DEPTH) throw invalid()
     // A list without a style of its own takes its outer list's, or the one its first paragraph's style gives.
     const firstParagraph = kids(kids(node).find((item) => tagOf(item) === 'list-item') ?? {}).find((part) => ['p', 'h'].includes(tagOf(part)))
-    const style = attrs(node)['@style-name'] ?? inherited ?? listOfStyle(attrs(firstParagraph ?? {})['@style-name'])
+    const style = attrs(node)['@text:style-name'] ?? inherited ?? listOfStyle(attrs(firstParagraph ?? {})['@text:style-name'])
     const tag = numbered(style, level) ? 'ol' : 'ul'
     const items = kids(node)
       .filter((item) => ['list-item', 'list-header'].includes(tagOf(item)))
@@ -247,18 +305,18 @@ export async function readOdt(bytes: Uint8Array): Promise<ReadDocument> {
   }
 
   function table(node: Node, depth: number): string {
-    if (depth > MAX_DEPTH) throw notOdt()
+    if (depth > MAX_DEPTH) throw invalid()
     // Which columns are folded away or filtered out. A cell is placed by counting the cells
     // before it, each as wide as it spans and as many as it repeats.
     const hiddenColumns: boolean[] = []
     const columns = (group: Node, level: number) => {
-      if (level > MAX_DEPTH) throw notOdt()
+      if (level > MAX_DEPTH) throw invalid()
       for (const part of kids(group)) {
         const tag = tagOf(part)
         if (['table-columns', 'table-header-columns', 'table-column-group'].includes(tag)) columns(part, level + 1)
         else if (tag === 'table-column') {
-          const gone = ['collapse', 'filter'].includes(attrs(part)['@visibility'] ?? '')
-          const many = Math.min(MAX_COLUMNS - hiddenColumns.length, Math.max(1, Number(attrs(part)['@number-columns-repeated']) || 1))
+          const gone = ['collapse', 'filter'].includes(attrs(part)['@table:visibility'] ?? '')
+          const many = Math.min(MAX_COLUMNS - hiddenColumns.length, Math.max(1, Number(attrs(part)['@table:number-columns-repeated']) || 1))
           for (let i = 0; i < many; i++) hiddenColumns.push(gone)
         }
       }
@@ -266,14 +324,14 @@ export async function readOdt(bytes: Uint8Array): Promise<ReadDocument> {
     columns(node, 0)
     const rows: Array<{ header: boolean; html: string }> = []
     const gather = (group: Node, header: boolean, level: number) => {
-      if (level > MAX_DEPTH) throw notOdt()
+      if (level > MAX_DEPTH) throw invalid()
       for (const part of kids(group)) {
         const tag = tagOf(part)
         if (tag === 'table-header-rows') gather(part, true, level + 1)
         else if (tag === 'table-rows' || tag === 'table-row-group') gather(part, header, level + 1)
         else if (tag === 'table-row') {
           // A row folded away or filtered out is not in the table as it is read.
-          if (['collapse', 'filter'].includes(attrs(part)['@visibility'] ?? '')) continue
+          if (['collapse', 'filter'].includes(attrs(part)['@table:visibility'] ?? '')) continue
           const cell = header ? 'th' : 'td'
           const cells: string[] = []
           let column = 0
@@ -281,9 +339,9 @@ export async function readOdt(bytes: Uint8Array): Promise<ReadDocument> {
             const tag = tagOf(found)
             if (tag !== 'table-cell' && tag !== 'covered-table-cell') continue
             const at = column
-            column += Math.min(MAX_COLUMNS, Math.max(1, Number(attrs(found)['@number-columns-repeated']) || 1))
+            column += Math.min(MAX_COLUMNS, Math.max(1, Number(attrs(found)['@table:number-columns-repeated']) || 1))
             if (tag !== 'table-cell' || hiddenColumns[at]) continue
-            const span = attrs(found)['@number-columns-spanned']
+            const span = attrs(found)['@table:number-columns-spanned']
             const wide = span && /^[2-9]$|^[1-9]\d$/.test(span) ? ` colspan="${span}"` : ''
             cells.push(`<${cell}${wide}>${blocks(kids(found), depth + 1, true)}</${cell}>`)
           }
@@ -299,26 +357,27 @@ export async function readOdt(bytes: Uint8Array): Promise<ReadDocument> {
 
   /** Paragraphs, headings, lists and tables → HTML. `tight`: inside a cell or an item, one paragraph needs no <p>. */
   function blocks(nodes: Node[], depth: number, tight = false): string {
-    if (depth > MAX_DEPTH) throw notOdt()
+    if (depth > MAX_DEPTH) throw invalid()
     let html = ''
     const paragraphs = nodes.filter((node) => ['p', 'h'].includes(tagOf(node))).length
     for (const node of nodes) {
       const tag = tagOf(node)
       const a = attrs(node)
+      if (!shown(node)) continue
       if (tag === 'p' || tag === 'h') {
         if (hiddenParagraph(node)) continue
         const words = inline(node)
         // An empty paragraph is spacing, not content.
         if (words.replace(/<br>/g, '').trim() === '') continue
         if (tag === 'h') {
-          const level = Math.min(6, Math.max(1, Number(a['@outline-level']) || 1))
+          const level = Math.min(6, Math.max(1, Number(a['@text:outline-level']) || 1))
           html += `<h${level}>${words}</h${level}>`
         } else html += tight && paragraphs === 1 ? words : `<p>${words}</p>`
       } else if (tag === 'list') html += list(node, depth + 1, 1, undefined)
       else if (tag === 'table') html += table(node, depth + 1)
       // A section can be hidden, or shown only on a condition the document sets: either way it is not read.
       else if (tag === 'section') {
-        if (!['none', 'condition'].includes(a['@display'] ?? '')) html += blocks(kids(node), depth + 1)
+        if (!['none', 'condition'].includes(a['@text:display'] ?? '')) html += blocks(kids(node), depth + 1)
       } else if (INDEXES.has(tag)) html += blocks(kids(child(node, 'index-body') ?? {}), depth + 1)
       else if (tag === 'index-title') html += blocks(kids(node), depth + 1)
       else if (tag === 'frame') {
@@ -334,26 +393,33 @@ export async function readOdt(bytes: Uint8Array): Promise<ReadDocument> {
     return html
   }
 
-  const written = blocks(kids(text), 0)
+  // What the file calls itself, and the language it says it is written in.
+  function meta(): { title: string | null; language: string | null } {
+    const found = child(root('meta.xml', 'document-meta') ?? {}, 'meta')
+    const metaText = (tag: string) =>
+      kids(child(found ?? {}, tag) ?? {})
+        .map((piece) => String(piece['#text'] ?? ''))
+        .join('')
+        .trim()
+    const defaults = kids(child(styled ?? {}, 'styles') ?? {}).find((node) => tagOf(node) === 'default-style' && ['paragraph', 'graphic'].includes(attrs(node)['@style:family'] ?? ''))
+    const props = attrs(child(defaults ?? {}, 'text-properties') ?? {})
+    const fromStyles = props['@fo:language'] && props['@fo:language'] !== 'none' ? `${props['@fo:language']}${props['@fo:country'] && props['@fo:country'] !== 'none' ? `-${props['@fo:country']}` : ''}` : ''
+    const language = metaText('language') || fromStyles
+    return { title: metaText('title') || null, language: /^[a-z]{2,3}(?:-[a-z0-9]{2,8}){0,3}$/i.test(language) ? language : null }
+  }
+
+  const paragraphHidden = (paragraph: Node) => hiddenParagraph(paragraph) || (said('paragraph', attrs(paragraph)['@text:style-name'], 'hidden') ?? false)
+
+  return { content, root, blocks, inline, picture, said, meta, shown, paragraphHidden }
+}
+
+export async function readOdt(bytes: Uint8Array): Promise<ReadDocument> {
+  const odf = await openOdf(bytes, TYPES, notOdt, 'document')
+  const text = child(child(odf.content, 'body') ?? {}, 'text')
+  if (!text) throw notOdt()
+  const written = odf.blocks(kids(text), 0)
   if (written.replace(/<[^>]*>/g, '').trim() === '' && !written.includes('<img')) {
     throw new Refusal('This document has no text in it to convert')
   }
-
-  // What the document calls itself, and the language it says it is written in.
-  const meta = child(root('meta.xml', 'document-meta') ?? {}, 'meta')
-  const metaText = (tag: string) =>
-    kids(child(meta ?? {}, tag) ?? {})
-      .map((piece) => String(piece['#text'] ?? ''))
-      .join('')
-      .trim()
-  const defaults = kids(child(styled ?? {}, 'styles') ?? {}).find((node) => tagOf(node) === 'default-style' && attrs(node)['@family'] === 'paragraph')
-  const props = attrs(child(defaults ?? {}, 'text-properties') ?? {})
-  const fromStyles = props['@language'] && props['@language'] !== 'none' ? `${props['@language']}${props['@country'] && props['@country'] !== 'none' ? `-${props['@country']}` : ''}` : ''
-  const language = metaText('language') || fromStyles
-  const title = metaText('title')
-  return {
-    body: written,
-    title: title || null,
-    language: /^[a-z]{2,3}(?:-[a-z0-9]{2,8}){0,3}$/i.test(language) ? language : null,
-  }
+  return { body: written, ...odf.meta() }
 }

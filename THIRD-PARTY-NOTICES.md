@@ -161,6 +161,13 @@ Kindle books (AZW3 and MOBI) are read, and EPUB is written, by Omsett's own code
 is used. The sample books in `fixtures/azw3` and `fixtures/mobi` are a few pages written for the
 tests by `fixtures/_tools/kindle.py`; nobody's book is in the repository.
 
+### markup (OpenDocument presentations)
+
+ODP is read by Omsett's own code, written from OASIS's published standard (OpenDocument 1.3),
+sharing the ODT reader. No other library is used. Of the two samples in `fixtures/odp`, one is
+written by `fixtures/_tools/odp.py` and one by odfpy, run by hand through
+`fixtures/_tools/odp-odfpy.py`. odfpy is not part of Omsett and is not shipped with it.
+
 ### data (OpenDocument spreadsheets)
 
 ODS is read by Omsett's own code, written from OASIS's published standard (OpenDocument 1.3),
