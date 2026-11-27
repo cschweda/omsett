@@ -7,6 +7,24 @@ The paragraph that opens a version is its teaser: the home page shows its first 
 in the "What's new" banner, so keep it to two or three sentences on what a visitor will notice.
 A line beginning "Released" gives the date.
 
+## 0.62.0
+
+Released 26 November 2026.
+
+Wave64 files convert now, and so do the WAV files that some recorders write as RF64 or BW64.
+Each is read to exactly the sound it holds, and Wave64 is written byte for byte as ffmpeg writes it.
+
+### Added
+
+- **Wave64 is read and written**, by Omsett's own code: Sony's form of WAV for recordings past
+  four gigabytes, with the same sound kept exactly. It converts to and from WAV, FLAC, AIFF, AU
+  and MP3, and through WAV to the rest.
+- **RF64 and BW64 are read as WAV.** They are WAV with a table of eight-byte lengths at the
+  front, and keep a WAV's name; field recorders and broadcasters often write every file that way.
+  A file without its table, or whose table says more than the file holds, is refused.
+- Five traps and a code trap: Wave64 cut short or with a part shorter than its own head, RF64
+  cut short, without its table, or claiming a terabyte.
+
 ## 0.61.0
 
 Released 26 November 2026.

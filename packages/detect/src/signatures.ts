@@ -169,9 +169,29 @@ function tta(bytes: Uint8Array): Sniffed | null {
   return { ext: 'tta', mime: 'audio/x-tta', dimensions: null }
 }
 
+/**
+ * RF64 and BW64: WAV with room for lengths past four gigabytes, and the name of a WAV. "RF64" or
+ * "BW64", then "WAVE". The table of long lengths that must follow is the reader's to check, so
+ * that a file without one is told why it is refused.
+ */
+function rf64(bytes: Uint8Array): Sniffed | null {
+  if (bytes.length < 16 || !(starts(bytes, 0x52, 0x46, 0x36, 0x34) || starts(bytes, 0x42, 0x57, 0x36, 0x34))) return null
+  const at = (offset: number, ...values: number[]) => values.every((value, i) => bytes[offset + i] === value)
+  if (!at(8, 0x57, 0x41, 0x56, 0x45)) return null
+  return { ext: 'wav', mime: 'audio/wav', dimensions: null }
+}
+
+/** Sony's Wave64: sixteen bytes that name its outermost part, then sixteen that name it a sound. */
+function w64(bytes: Uint8Array): Sniffed | null {
+  const RIFF = [0x72, 0x69, 0x66, 0x66, 0x2E, 0x91, 0xCF, 0x11, 0xA5, 0xD6, 0x28, 0xDB, 0x04, 0xC1, 0x00, 0x00]
+  const WAVE = [0x77, 0x61, 0x76, 0x65, 0xF3, 0xAC, 0xD3, 0x11, 0x8C, 0xD1, 0x00, 0xC0, 0x4F, 0x8E, 0xDB, 0x8A]
+  if (bytes.length < 40 || !RIFF.every((value, i) => bytes[i] === value) || !WAVE.every((value, i) => bytes[24 + i] === value)) return null
+  return { ext: 'w64', mime: 'audio/x-w64', dimensions: null }
+}
+
 /** Strongest signatures first; TGA, which has none, last. */
 export function sniff(bytes: Uint8Array): Sniffed | null {
-  for (const test of [qoi, exr, ras, dds, fits, au, tta, hdr, sgi, pnm, pcx, tga]) {
+  for (const test of [qoi, exr, ras, dds, fits, au, tta, rf64, w64, hdr, sgi, pnm, pcx, tga]) {
     const found = test(bytes)
     if (found) return found
   }

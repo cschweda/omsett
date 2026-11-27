@@ -80,7 +80,7 @@ const WEB_LICENCE = [{ id: 'font-licence', text: "Check that the font's licence 
 const OUTLINES = [{ id: 'font-outlines', text: 'A web font unwraps to TTF or to OTF, depending on how its letters are drawn. If one is refused, choose the other.' }]
 
 // Sound.
-const KEPT_WHOLE = ['wav', 'flac', 'aiff', 'au']
+const KEPT_WHOLE = ['wav', 'flac', 'aiff', 'au', 'w64']
 // Sound that leaves some out, and sound that keeps every bit.
 const SMALLER_SOUND = ['opus', 'ogg']
 const ALREADY_LEFT_OUT = ['aac', 'ac3', 'wma', 'opus', 'ogg']

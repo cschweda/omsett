@@ -139,6 +139,51 @@ describe('sound, there and back', () => {
   })
 })
 
+describe('Wave64, RF64 and BW64: WAV with room for longer lengths', () => {
+  it('reads RF64 and BW64 as the WAV they are, to the very numbers of the WAV they were made from', async () => {
+    const original = numbers('wav', await sample('wav/sample.wav')).values
+    for (const path of ['wav/rf64.wav', 'wav/bw64.wav']) expect(numbers('wav', await sample(path)).values, path).toEqual(original)
+  })
+
+  it('writes Wave64 byte for byte as ffmpeg does, and reads it back to the same numbers', async () => {
+    // fixtures/w64/sample.w64 is ffmpeg's, from wav/sample.wav (make-samples.sh).
+    const wav = await sample('wav/sample.wav')
+    const written = await convert(wav, 'wav', 'w64')
+    expect(Buffer.from(written.bytes).equals(Buffer.from(await sample('w64/sample.w64')))).toBe(true)
+    expect(numbers('w64', written.bytes).values).toEqual(numbers('wav', wav).values)
+    expect(numbers('wav', (await convert(written.bytes, 'w64', 'wav')).bytes).values).toEqual(numbers('wav', wav).values)
+  })
+
+  it('goes to AIFF and back with not a number changed, fractions, single bytes and many channels included', async () => {
+    for (const path of ['wav/fractions.wav', 'wav/six-channels.wav', 'wav/three-bytes.wav', 'wav/one-byte.wav']) {
+      const wav = await sample(path)
+      const back = await convert((await convert(wav, 'wav', 'w64')).bytes, 'w64', 'aiff')
+      expect(numbers('wav', (await convert(back.bytes, 'aiff', 'w64').then((w64) => convert(w64.bytes, 'w64', 'wav'))).bytes).values, path).toEqual(numbers('wav', wav).values)
+    }
+  })
+
+  it('refuses an RF64 without its table of lengths, and one whose table says more than the file holds', async () => {
+    const rf64 = await sample('wav/rf64.wav')
+    const untabled = rf64.slice()
+    untabled.set([0x4A, 0x55, 0x4E, 0x4B], 12) // "JUNK" where "ds64" was
+    expect(() => readSound('wav', untabled)).toThrow('This file is not a valid WAV file')
+    const longer = rf64.slice()
+    new DataView(longer.buffer).setBigUint64(28, 1n << 40n, true) // the sound's length, in the table
+    expect(() => readSound('wav', longer)).toThrow(/cut short/)
+  })
+
+  it('refuses a Wave64 cut short, and one whose part lengths cannot be followed', async () => {
+    const w64 = await sample('w64/sample.w64')
+    expect(() => readSound('w64', w64.subarray(0, w64.length - 100))).toThrow(/cut short/)
+    const zero = w64.slice()
+    new DataView(zero.buffer).setBigUint64(40 + 16, 3n, true) // a part shorter than its own head
+    expect(() => readSound('w64', zero)).toThrow('This file is not a valid Wave64 file')
+    const huge = w64.slice()
+    new DataView(huge.buffer).setBigUint64(40 + 16, 1n << 62n, true)
+    expect(() => readSound('w64', huge)).toThrow('This file is not a valid Wave64 file')
+  })
+})
+
 describe('telephone codes', () => {
   it('unpacks each of the 256 codes to the 16-bit number the standard gives for it', () => {
     const codes = Uint8Array.from({ length: 256 }, (_, code) => code)

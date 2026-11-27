@@ -74,6 +74,7 @@ import { webp } from './webp'
 import { wav } from './wav'
 import { aiff } from './aiff'
 import { au } from './au'
+import { w64 } from './w64'
 import { m4a } from './m4a'
 import { ogg } from './ogg'
 import { opus } from './opus'
@@ -108,7 +109,7 @@ export const formats: Format[] = [
   // Archives: files and folders, packed three ways.
   zip, tgz, tar,
   // Sound: MP3, which leaves some out to be small, and four formats that keep all of it.
-  mp3, wav, flac, aiff, au, m4a, ogg, opus, wv, aac, ac3, wma, tta,
+  mp3, wav, flac, aiff, au, w64, m4a, ogg, opus, wv, aac, ac3, wma, tta,
   // E-books: the one everything opens, and the Kindle's two.
   epub, azw3, mobi,
 ]

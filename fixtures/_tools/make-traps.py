@@ -5228,6 +5228,60 @@ sound("truncated.aiff", AIFF[: len(AIFF) // 2],
 sound("truncated.au", AU[: len(AU) // 2],
       "An AU cut off half-way.",
       "au", node="fails", note=CUT % "AU")
+# Wave64 and RF64: WAV's label in containers with eight-byte lengths, which can claim far more.
+W64_TAIL = bytes([0xF3, 0xAC, 0xD3, 0x11, 0x8C, 0xD1, 0x00, 0xC0, 0x4F, 0x8E, 0xDB, 0x8A])
+W64_RIFF = bytes([0x72, 0x69, 0x66, 0x66, 0x2E, 0x91, 0xCF, 0x11, 0xA5, 0xD6, 0x28, 0xDB, 0x04, 0xC1, 0x00, 0x00])
+
+
+def riff_parts(wav):
+    """The parts of a WAV, in order, as (name, body)."""
+    out, at = [], 12
+    while at + 8 <= len(wav):
+        size = struct.unpack_from("<I", wav, at + 4)[0]
+        out.append((wav[at : at + 4], wav[at + 8 : at + 8 + size]))
+        at += 8 + size + size % 2
+    return out
+
+
+def w64_of(wav, cut=None):
+    """The same parts in Sony's Wave64: sixteen-byte names, eight-byte lengths, every eighth byte."""
+    body = b""
+    for name, part in riff_parts(wav):
+        whole = 24 + len(part)
+        body += name + W64_TAIL + struct.pack("<Q", whole) + part + b"\0" * ((8 - whole % 8) % 8)
+    return W64_RIFF + struct.pack("<Q", 40 + len(body)) + b"wave" + W64_TAIL + body
+
+
+def rf64_of(wav, sound_length=None):
+    """The same parts as RF64: lengths in a table at the front, and the sound's own marked unknown."""
+    parts = riff_parts(wav)
+    data = next(part for name, part in parts if name == b"data")
+    table = b"ds64" + struct.pack("<IQQQI", 28, 0, sound_length if sound_length is not None else len(data), len(data) // 4, 0)
+    rest = b"".join(name + struct.pack("<I", 0xFFFFFFFF if name == b"data" else len(part)) + part + b"\0" * (len(part) % 2) for name, part in parts)
+    return b"RF64" + struct.pack("<I", 0xFFFFFFFF) + b"WAVE" + table + rest
+
+
+W64 = w64_of(WAV)
+sound("truncated.w64", W64[: len(W64) // 2],
+      "A Wave64 cut off half-way. Its label promises twice the sound the file holds.",
+      "w64", node="fails", note=CUT % "Wave64")
+broken = bytearray(W64)
+struct.pack_into("<Q", broken, 40 + 16, 3)
+sound("part-shorter-than-its-head.w64", bytes(broken),
+      "A Wave64 whose first part says it is three bytes long, shorter than the twenty-four of its own name and length. A reader that subtracted would go backwards.",
+      "w64", node="fails", note=NOT_SOUND % "Wave64")
+RF64 = rf64_of(WAV)
+sound("truncated-rf64.wav", RF64[: len(RF64) // 2],
+      "An RF64 cut off half-way. The table at its front promises twice the sound the file holds.",
+      "wav", node="fails", note=CUT % "WAV")
+sound("rf64-says-a-terabyte.wav", rf64_of(WAV, sound_length=1 << 40),
+      "An RF64 whose table of lengths says its sound is a terabyte long. The length is compared with the file before anything is set aside for it.",
+      "wav", node="fails", note=CUT % "WAV")
+untabled = bytearray(RF64)
+untabled[12:16] = b"JUNK"
+sound("rf64-without-its-table.wav", bytes(untabled),
+      "An RF64 with no table of lengths, so that nothing says how long its sound is. It is refused, not read to the end of the file.",
+      "wav", node="fails", note=NOT_SOUND % "WAV")
 sound("says-four-gigabytes.wav", S.wav(PCM, said=0xFFFFFFF0),
       "A quarter of a second of sound that says it is four gigabytes long. Nothing is set aside for sound that is not there: the length is compared with the file first.",
       "wav", node="fails", note=CUT % "WAV")
@@ -5327,8 +5381,8 @@ sound("film-named-as-sound.wav", b"RIFF" + struct.pack("<I", 4 + len(WAV) - 12) 
       "A file that opens as a WAV does and then says it is a film.",
       "unregistered", group="identity")
 sound("larger-than-wav-allows.wav", b"RF64" + b"\xFF\xFF\xFF\xFF" + WAV[8:],
-      "The form of WAV made for recordings past four gigabytes, which says so in its first four letters. Omsett does not read it yet.",
-      "unknown", group="identity")
+      "A WAV that calls itself RF64, the form made for recordings past four gigabytes, but has none of the table of lengths that form must begin with. It is known as a WAV and refused.",
+      "wav", node="fails", note=NOT_SOUND % "WAV", group="identity")
 
 # FLAC packs the same numbers without loss, and says a great deal more about itself: a checksum
 # on the start of every stretch of sound, another on the whole of each stretch, and one on all
@@ -5546,6 +5600,8 @@ code("code.mobi", K.older(title=CB[:120], author=CB[:120], change=lambda parts: 
      WHY % "as the title and the author, and in a page as a script, a handler, a link that is code, a frame and a form", "mobi", node="succeeds")
 code("code.wav", S.wav(PCM, before=BROADCAST, after=LIST_OF_NOTES + S.part(b"id3 ", b"ID3\x03\0\0\0\0\0\x7fTIT2" + CB)),
      WHY % "as the title, the artist and the comment, in a broadcaster's description, and in a block of tags", "wav", node="succeeds", absent="omsett_canary")
+code("code.w64", w64_of(S.wav(PCM, before=BROADCAST, after=LIST_OF_NOTES + S.part(b"id3 ", b"ID3\x03\0\0\0\0\0\x7fTIT2" + CB))),
+     WHY % "as the title, the artist and the comment, in a broadcaster's description, and in a block of tags", "w64", node="succeeds", absent="omsett_canary")
 code("code.aiff", S.aiff(PCM_BIG, before=b"".join(S.part(name, CB, little=False) for name in (b"NAME", b"AUTH", b"(c) ", b"ANNO")), after=S.part(b"ID3 ", b"ID3\x03\0\0\0\0\0\x7fTIT2" + CB, little=False)),
      WHY % "as the title, the artist, the copyright line and a comment, and in a block of tags", "aiff", node="succeeds", absent="omsett_canary")
 code("code.flac", F.flac(S.PAIRS, extra=F.part(4, F.comments(vendor=MARK.encode(), TITLE=CB, ARTIST=CB, COMMENT=CB, ENCODER=CB)) + F.part(6, F.picture(CB, CB), last=True)),
