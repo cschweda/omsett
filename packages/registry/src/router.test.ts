@@ -65,7 +65,7 @@ describe('router, real registry', () => {
       'fountain', 'fdx', 'drafter',
       'woff2', 'woff', 'ttf', 'otf',
       'zip', 'tgz', 'tar',
-      'mp3', 'wav', 'flac', 'aiff', 'au', 'm4a', 'ogg', 'opus', 'wv', 'aac', 'ac3', 'wma', 'tta',
+      'mp3', 'wav', 'flac', 'aiff', 'au', 'w64', 'm4a', 'ogg', 'opus', 'wv', 'aac', 'ac3', 'wma', 'tta',
       'epub', 'azw3', 'mobi',
     ])
     const readOnly = new Set(everything.formats.filter((f) => f.readOnly).map((f) => f.id))
@@ -175,7 +175,7 @@ describe('router, real registry', () => {
     expect(all.route('lrc', 'microdvd')!.warnings.map((w) => w.id).sort()).toEqual(['ends-guessed', 'frames-assumed'])
     // Sound: one step, its own kind only, nothing lost, and what the file says about itself left behind.
     expect(all.route('wav', 'aiff')!.edges.map((e) => e.candidates[0]!.engine)).toEqual(['audio'])
-    expect(all.targetsFor(['au']).map((t) => t.format.id)).toEqual(['mp3', 'wav', 'flac', 'aiff', 'au', 'm4a', 'ogg', 'opus', 'wv', 'aac', 'ac3', 'wma', 'tta'])
+    expect(all.targetsFor(['au']).map((t) => t.format.id)).toEqual(['mp3', 'wav', 'flac', 'aiff', 'au', 'w64', 'm4a', 'ogg', 'opus', 'wv', 'aac', 'ac3', 'wma', 'tta'])
     // The long tail is read by FFmpeg into WAV and made into the rest from there; what it never writes says why.
     expect(all.route('m4a', 'mp3')!.edges.map((e) => `${e.from}>${e.to}:${e.candidates[0]!.engine}`)).toEqual(['m4a>wav:audio-libav', 'wav>mp3:audio-mp3'])
     expect(all.route('wma', 'flac')!.edges.map((e) => `${e.from}>${e.to}:${e.candidates[0]!.engine}`)).toEqual(['wma>wav:audio-libav', 'wav>flac:audio'])

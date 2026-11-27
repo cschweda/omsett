@@ -29,7 +29,7 @@ Omsett is a free, open-source file converter. Every conversion runs in your brow
 <!-- facts:start -->
 <!-- Generated from the registry by `pnpm readme:facts`. Do not edit by hand. -->
 
-**88 formats, 382 conversions**, every one of them run in your browser, on your device, and tested against 831 files made on purpose to be broken, hostile or dishonest. How many tests there are today is on the site's [Trust](https://omsett.com/trust) page, counted at every build.
+**89 formats, 392 conversions**, every one of them run in your browser, on your device, and tested against 837 files made on purpose to be broken, hostile or dishonest. How many tests there are today is on the site's [Trust](https://omsett.com/trust) page, counted at every build.
 
 | Kind | Converts to and from | Reads only |
 | --- | --- | --- |
@@ -44,7 +44,7 @@ Omsett is a free, open-source file converter. Every conversion runs in your brow
 | Subtitles | SRT, WebVTT, ASS, SSA, TTML, LRC, SBV, SAMI, MicroDVD | — |
 | Screenplays | Fountain, Final Draft, Drafter | — |
 | Fonts | WOFF2, WOFF, TTF, OTF | — |
-| Sound | MP3, WAV, FLAC, AIFF, AU, M4A, Ogg Vorbis, Opus, WavPack | AAC, AC-3, WMA, TTA |
+| Sound | MP3, WAV, FLAC, AIFF, AU, Wave64, M4A, Ogg Vorbis, Opus, WavPack | AAC, AC-3, WMA, TTA |
 | E-books | EPUB | AZW3, MOBI |
 | Archives | ZIP, TAR.GZ, TAR | — |
 
@@ -71,7 +71,7 @@ A file is offered the formats of its own kind: a picture becomes another picture
 - **Makes icons**: any picture to a Windows icon, a Mac icon or a mouse pointer, at the sizes each expects.
 - **Develops a raw photograph (DNG)** with standard settings, the right way up.
 - **Converts a medical scan (DICOM) to a picture without the patient**: only the picture is read; the name, date of birth and notes never reach the converter.
-- **Converts sound with nothing lost**: WAV, FLAC, AIFF and AU to one another, with not one number of the sound changed. A FLAC is checked against its own checksums as it is read, and one that does not match is refused.
+- **Converts sound with nothing lost**: WAV (RF64 and BW64 included), Wave64, FLAC, AIFF and AU to one another, with not one number of the sound changed. A FLAC is checked against its own checksums as it is read, and one that does not match is refused.
 - **Packs and unpacks MP3**, at a quality you choose, and refuses an MP3 with part of its sound missing, where a player would skip the gap and say nothing.
 - **Reads the rest of the sound you are likely to have**: M4A, AAC, AC-3, WMA, Ogg Vorbis, Opus, WavPack and TTA, and writes Opus, Ogg Vorbis, WavPack and Apple Lossless. It uses Omsett's own audio-only build of FFmpeg, fetched only when needed, and refuses a file that is damaged or cut short.
 - **Says how long a recording runs** and how it is stored, before you start, and what title and artist a conversion leaves behind.

@@ -75,6 +75,7 @@ const samples: Record<string, string> = {
   opus: 'opus/sample.opus',
   wv: 'wv/sample.wv',
   tta: 'tta/sample.tta',
+  w64: 'w64/sample.w64',
   txt: 'txt/sample.txt',
   pptx: 'pptx/sample.pptx',
   pdf: 'pdf/sample.pdf',

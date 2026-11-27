@@ -7,23 +7,23 @@ import { readFlac, unpackFlac } from './flac'
 import { writeFlac } from './flac-write'
 import { packMp3, readMp3, unpackMp3, type Mp3Host } from './mp3'
 import { notValid, type Read, type Sound } from './sound'
-import { readWav, writeWav } from './wav'
+import { readW64, readWav, writeW64, writeWav } from './wav'
 
 export { readAiff } from './aiff'
 export { readAu } from './au'
-export { readWav } from './wav'
+export { readW64, readWav } from './wav'
 export { readFlac, unpackFlac } from './flac'
 export { readMp3, type Mp3Decoder, type Mp3Encoder, type Mp3Host } from './mp3'
 export type { Read, Sound } from './sound'
 
-// Sound, kept exactly. WAV, AIFF and AU store it unpacked: each is a label and then the same
+// Sound, kept exactly. WAV (and Wave64), AIFF and AU store it unpacked: each is a label and then the same
 // numbers, and converting writes a new label and copies the numbers, turning their bytes round
 // where two formats disagree about which comes first. FLAC packs the numbers without loss, and
 // unpacking gives every one of them back. So every conversion here hands back exactly the
 // sound it was given, and nothing is worked out from the sound on the way.
 
-const READERS: Record<string, (bytes: Uint8Array, length?: number) => Read> = { wav: readWav, aiff: readAiff, au: readAu, flac: readFlac, mp3: readMp3 }
-const WRITERS: Record<string, (sound: Sound, data: Uint8Array, notes: string[], onProgress?: (fraction: number) => void) => Uint8Array[]> = { wav: writeWav, aiff: writeAiff, au: writeAu, flac: writeFlac }
+const READERS: Record<string, (bytes: Uint8Array, length?: number) => Read> = { wav: readWav, w64: readW64, aiff: readAiff, au: readAu, flac: readFlac, mp3: readMp3 }
+const WRITERS: Record<string, (sound: Sound, data: Uint8Array, notes: string[], onProgress?: (fraction: number) => void) => Uint8Array[]> = { wav: writeWav, w64: writeW64, aiff: writeAiff, au: writeAu, flac: writeFlac }
 
 /** Read a sound file's label: what it holds and where, without unpacking anything. Refuses what it cannot follow. */
 export function readSound(format: string, bytes: Uint8Array, length = bytes.length): Read {

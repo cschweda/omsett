@@ -149,7 +149,11 @@ printf 'About Omsett\n\nOmsett converts files in the browser.\nNothing leaves th
 # --- the long tail of sound ----------------------------------------------------------------------
 # Each written by ffmpeg from the same WAV, so that every one holds the same sound and none was
 # made by Omsett. m4a/alac.m4a holds Apple Lossless, which unpacks to exactly the WAV.
-for d in m4a aac ac3 wma ogg opus wv tta; do dir "$d"; done
+for d in m4a aac ac3 wma ogg opus wv tta w64; do dir "$d"; done
+# WAV with room for longer lengths: RF64 (and BW64, the same with another first word), and Wave64.
+ff -i "$out/wav/sample.wav" -fflags +bitexact -c copy -rf64 always "$out/wav/rf64.wav"
+python3 -c "import sys; b = bytearray(open(sys.argv[1], 'rb').read()); b[0:4] = b'BW64'; open(sys.argv[2], 'wb').write(b)" "$out/wav/rf64.wav" "$out/wav/bw64.wav"
+ff -i "$out/wav/sample.wav" -fflags +bitexact -c copy "$out/w64/sample.w64"
 ff -i "$out/wav/sample.wav" -fflags +bitexact -c:a aac -b:a 96k -metadata title="Test pattern" "$out/m4a/sample.m4a"
 ff -i "$out/wav/sample.wav" -fflags +bitexact -c:a alac -metadata title="Test pattern" "$out/m4a/alac.m4a"
 ff -i "$out/wav/sample.wav" -fflags +bitexact -c:a aac -b:a 96k -f adts "$out/aac/sample.aac"

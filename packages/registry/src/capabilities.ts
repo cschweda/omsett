@@ -93,7 +93,7 @@ const SHEET_WRITES: WriteSpec[] = TABLE_WRITES.map((write) => ({ ...write, defau
 const SCRIPTS = ['fountain', 'fdx', 'drafter']
 const ARCHIVES = ['zip', 'tgz', 'tar']
 const SFNT = ['ttf', 'otf', 'woff']
-const SOUNDS = ['wav', 'flac', 'aiff', 'au']
+const SOUNDS = ['wav', 'flac', 'aiff', 'au', 'w64']
 // The long tail of sound, read by FFmpeg (libav.js): unpacked to WAV, and from WAV made into the rest.
 const LONG_TAIL = ['m4a', 'aac', 'ac3', 'wma', 'ogg', 'opus', 'wv', 'tta']
 
