@@ -108,6 +108,18 @@ export const markupInfo: EngineInfo = {
 
 // PDF, read with pdf.js: the reader Firefox uses, built for files nobody has reason to trust.
 // It is a script of the app's own, fetched with the first PDF.
+// A PDF's pages drawn as pictures, by the same pdf.js: in a browser only, since it draws on a
+// canvas. Its own files (typefaces, character tables, picture decoders) are fetched only when a
+// page asks for one, so it costs nothing to fetch beyond the reader.
+export const pdfPagesInfo: EngineInfo = {
+  id: 'pdf-pages',
+  // pdf.js, as built into the app: the same reader the `pdf` engine states.
+  sizeBytes: 1_756_575,
+  runtimes: ['browser'],
+  license: 'Apache-2.0',
+  sourceUrl: 'https://github.com/mozilla/pdf.js',
+}
+
 export const pdfInfo: EngineInfo = {
   id: 'pdf',
   // The reader and its parsing half, as built into the app.
@@ -274,6 +286,7 @@ export const engineInfo: Record<string, EngineInfo> = {
   [audioMp3Info.id]: audioMp3Info,
   [typstInfo.id]: typstInfo,
   [pandocInfo.id]: pandocInfo,
+  [pdfPagesInfo.id]: pdfPagesInfo,
   [audioLibavInfo.id]: audioLibavInfo,
   [ebookInfo.id]: ebookInfo,
 }

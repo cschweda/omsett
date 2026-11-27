@@ -20,8 +20,12 @@ const from = formatById(registry, formatId)!
 const engines = createNodeEngines()
 const router = createRouter(registry)
 const derived = deriveEdges(registry)
-// The first format this one can become: what the app shows first.
-const to = router.targetsFor([from.id]).find((target) => target.route)!.format
+// The first format this one can become that Node can reach: what the app shows first, unless
+// some step of it runs only in a browser (a PDF's pages are drawn on a canvas), which
+// e2e/traps.spec.ts covers there.
+const to = router
+  .targetsFor([from.id])
+  .find((target) => target.route?.edges.every((edge) => derived.edge(edge.from, edge.to)!.candidates.some((c) => c.engine in engines)))!.format
 
 async function convert(blob: Blob, source: Format): Promise<Blob> {
   let current = blob

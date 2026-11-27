@@ -8,6 +8,7 @@ import {
   createArchiveEngine,
   createScriptEngine,
   createPdfEngine,
+  createPdfPagesEngine,
   describeFile,
   listSheets,
   zipFiles,
@@ -141,6 +142,14 @@ const engines: Record<string, Engine> = Object.fromEntries(
     createArchiveEngine(),
     createScriptEngine(),
     createPdfEngine(),
+    // A PDF's pages, drawn: pdf.js's own files are handed to it from verified bytes, by name.
+    createPdfPagesEngine({
+      data: async (kind, name) => {
+        const asset = (assets.pdfjs as Record<string, Record<string, { url: string; sha256: string }>>)[kind]?.[name]
+        if (!asset) throw new Error(`pdf.js asked for ${kind}/${name}, which is not one of its files`)
+        return new Uint8Array(await verified(asset))
+      },
+    }),
     createIconEngine(),
     createFontEngine(),
     createFontWoff2Engine(),

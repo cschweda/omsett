@@ -8,6 +8,10 @@ Standard library only, and the same bytes every time. Two files with the same wo
 - sample.pdf is tagged: its catalog has a structure tree that says which words are a heading, a
   paragraph, a list, a table with header cells, a picture with a description, and a link.
 - untagged.pdf has no structure at all: only words at places on a page, in sizes.
+
+And three-pages.pdf, for drawing pages as pictures: a US Letter page, an A4 page on its side, and
+a small square page, each with a blue block in a corner. On the second, a red square sits in a
+layer the file marks as hidden; it must not be drawn.
 """
 import os
 
@@ -141,3 +145,22 @@ plain.add(2, "<< /Type /Pages /Kids [3 0 R] /Count 1 >>")
 plain.add(3, f"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font {FONTS} >> /Contents 4 0 R >>")
 plain.stream(4, body)
 plain.save("pdf/untagged.pdf")
+
+# --- three pages, of three sizes, one with a hidden layer ------------------------------------------
+three = Pdf()
+SIZES = [(612, 792), (842, 595), (288, 288)]
+three.add(1, "<< /Type /Catalog /Pages 2 0 R /OCProperties << /OCGs [20 0 R] /D << /OFF [20 0 R] /Order [20 0 R] >> >> >>")
+three.add(2, f"<< /Type /Pages /Kids [{' '.join(f'{3 + i * 2} 0 R' for i in range(3))}] /Count 3 >>")
+three.add(20, "<< /Type /OCG /Name (Hidden notes) >>")
+for i, (width, height) in enumerate(SIZES):
+    page, content = 3 + i * 2, 4 + i * 2
+    # A blue block in the top left corner, and the page's number in words.
+    body = f"0 0.4 1 rg 0 {height - 72} 72 72 re f\n" + text(90, height - 50, 18, f"Page {i + 1} of 3")
+    resources = f"/Font {FONTS}"
+    if i == 1:
+        # Red, in the hidden layer, in the bottom right corner.
+        body += f"/OC /Hidden BDC 1 0 0 rg {width - 144} 0 144 144 re f EMC\n"
+        resources += " /Properties << /Hidden 20 0 R >>"
+    three.add(page, f"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 {width} {height}] /Resources << {resources} >> /Contents {content} 0 R >>")
+    three.stream(content, body)
+three.save("pdf/three-pages.pdf")

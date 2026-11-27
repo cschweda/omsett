@@ -216,7 +216,7 @@ async function pdf(blob: Blob): Promise<Detail[]> {
     import('pdfjs-dist/legacy/build/pdf.worker.mjs') as Promise<unknown>,
   ])
   ;(globalThis as { pdfjsWorker?: unknown }).pdfjsWorker = parser
-  const task = pdfjs.getDocument({ data: new Uint8Array(await blob.arrayBuffer()), useSystemFonts: false, disableFontFace: true, enableXfa: false, verbosity: 0 })
+  const task = pdfjs.getDocument({ data: new Uint8Array(await blob.arrayBuffer()), useSystemFonts: false, disableFontFace: true, enableXfa: false, isImageDecoderSupported: false, verbosity: 0 })
   try {
     const document = await task.promise
     const info = ((await document.getMetadata().catch(() => null))?.info ?? {}) as Record<string, unknown>

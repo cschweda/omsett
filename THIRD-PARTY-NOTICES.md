@@ -124,11 +124,22 @@ part of the app's scripts; nothing separate is downloaded.
 
 ### pdf
 
-PDFs are read with pdf.js, the reader built into Firefox.
+PDFs are read with pdf.js, the reader built into Firefox, and their pages drawn by it too
+(`pdf-pages`). For drawing, pdf.js asks for files of its own, which come from its package
+unchanged, are served from the site, and are fetched only when a page needs one: the typefaces
+every PDF reader has (Foxit's, and Liberation Sans), the tables of characters for Chinese,
+Japanese and Korean (Adobe's CMaps), and decoders for JPEG 2000, JBIG2 and colour profiles. Each
+licence is served beside them as `pdfjs.LICENSE_*.txt`.
 
 | Library | Version | License | Source |
 | --- | --- | --- | --- |
 | pdfjs-dist (pdf.js) | 6.5.438 | Apache-2.0 | <https://github.com/mozilla/pdf.js> |
+| Foxit standard typefaces (in pdf.js) | 6.5.438 | BSD-3-Clause (PDFium) | <https://pdfium.googlesource.com/pdfium> |
+| Liberation Sans (in pdf.js) | 6.5.438 | GPL-2.0 with the font exception | <https://github.com/liberationfonts/liberation-fonts> |
+| Adobe CMaps (in pdf.js) | 6.5.438 | BSD-3-Clause | <https://github.com/adobe-type-tools/cmap-resources> |
+| OpenJPEG (in pdf.js, WebAssembly) | 6.5.438 | BSD-2-Clause | <https://github.com/uclouvain/openjpeg> |
+| JBIG2 decoder from PDFium (in pdf.js, WebAssembly) | 6.5.438 | BSD-3-Clause | <https://pdfium.googlesource.com/pdfium> |
+| qcms (in pdf.js, WebAssembly) | 6.5.438 | MIT | <https://github.com/FirefoxGraphics/qcms> |
 
 ### script
 

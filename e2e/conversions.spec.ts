@@ -128,6 +128,8 @@ test('there is a sample for every format that can be read', () => {
 for (const edge of deriveEdges(registry).edges) {
   const from = formatById(registry, edge.from)!
   const to = formatById(registry, edge.to)!
+  // A PDF's pages become one picture each, at a size of their own: tested in pdf-pages.spec.ts.
+  if (from.category === 'pdf' && to.category === 'image') continue
 
   test(`${from.name} → ${to.name}`, async ({ page }) => {
     const source = await detect(new Blob([readFileSync(path(from.id, to.id))]), registry.formats)

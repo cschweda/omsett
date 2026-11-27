@@ -18,12 +18,14 @@ export function sameKind(a: Category, b: Category): boolean {
 
 /**
  * What can become something of another kind, one way only. A picture can be put on a page of
- * a PDF; a PDF does not become a picture, and a picture does not become a Word document by
- * way of one. A table can be set out as a page; a page does not become a table.
+ * a PDF, and a PDF's pages can be drawn as pictures; a picture does not become a Word document
+ * by way of a PDF, nor a PDF a drawing. A table can be set out as a page; a page does not become a table.
  */
 const ALSO: Array<[from: Category, to: Category]> = [
   ['image', 'pdf'],
   ['vector', 'pdf'],
+  // A page of a PDF can be drawn as a picture. The words become part of it.
+  ['pdf', 'image'],
   // A table can be set out as a page to read, and so as a document or a PDF. Writing does not become a table.
   ['data', 'text'],
   ['data', 'document'],
