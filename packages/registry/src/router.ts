@@ -46,7 +46,12 @@ export function createRouter(registry: Registry): Router {
   // reach a node may use too many hops), so the search state is (format, hops): each round
   // extends every best-so-far path by one edge, and the best over all rounds wins.
   function route(from: string, to: string): Route | null {
-    if (from === to || !formats.has(from) || !formats.has(to)) return null
+    if (!formats.has(from) || !formats.has(to)) return null
+    // A format to itself is one step or nothing: never a road round through another format.
+    if (from === to) {
+      const edge = derived.edge(from, to)
+      return edge ? toRoute({ edges: [edge], cost: edge.candidates[0]!.cost, native: edge.candidates[0]!.tier === 'native' ? 1 : 0 }, formats.get(from)) : null
+    }
     // A road may pass through another kind of file; it may not end at a kind the file cannot become.
     if (!canBecome(formats.get(from)!.category, formats.get(to)!.category)) return null
     // A pair that is ruled out is ruled out by any road: no going round through a third format.
@@ -57,7 +62,7 @@ export function createRouter(registry: Registry): Router {
       const next = new Map<string, Path>()
       for (const [node, path] of frontier) {
         for (const edge of outgoing.get(node) ?? []) {
-          if (edge.to === from || path.edges.some((e) => e.from === edge.to)) continue
+          if (edge.from === edge.to || edge.to === from || path.edges.some((e) => e.from === edge.to)) continue
           const first = edge.candidates[0]!
           const extended: Path = {
             edges: [...path.edges, edge],

@@ -88,6 +88,11 @@ export interface WriteSpec {
    * usual one: author, location and camera details are removed, not copied into the output.
    */
   drops?: Trait[]
+  /**
+   * Set only where a format is written from itself: a PDF split into pages. What the tile says in
+   * place of the format's name. Without it, a format is never offered to itself ("Already PDF").
+   */
+  itself?: string
 }
 
 /** A pair that needs saying something the reads/writes lists can't. */
@@ -112,6 +117,8 @@ export interface Candidate {
   cost: number
   defaultOptions: Record<string, unknown>
   drops: Trait[]
+  /** What the tile says, for a format written from itself (`WriteSpec.itself`). */
+  itself?: string
 }
 
 export interface Edge {

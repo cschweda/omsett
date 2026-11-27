@@ -145,6 +145,24 @@ build by `apps/web/scripts/write-headers.ts`.
 - **A step of a route may make several files, and every one goes on** (`runFile` in
   `useConversionQueue`): a PDF's pages are drawn as PNGs, and each is converted by the next
   step. Never pass on only the first output of a step.
+- **A format is offered to itself only where its capability says what that does** (`itself`
+  on a `WriteSpec`, shown on the tile in place of the name). PDF to PDF is a split. The router
+  takes such a pair in one step and never as a step of a longer road. Every other format says
+  "Already …".
+- **A PDF is taken apart by qpdf, and what goes with the pages is decided by Omsett**
+  (`qpdf/clean.ts`, over `--json=2`). Allowed, not forbidden: an action stays only if it goes to
+  a page or a web or mail address, and after drawing, an annotation stays only if it is a link.
+  The order matters: notes and pop-ups out first, then the rest drawn into the page
+  (`--flatten-annotations`), then forms and every other annotation out. Each PDF written is
+  read with object streams off, and refused if `FORBIDDEN` matches anywhere in it. The person's
+  page range is read by `pagesFrom` and only numbers reach qpdf. Refused: encrypted, repaired
+  (exit 3), any layers at all, redactions not applied. Streams are copied, never unpacked
+  (`--decode-level=none`), and pages taken with `--remove-unreferenced-resources=yes`. qpdf wears
+  out past about 240 calls in one instance: each conversion starts its own, and a long split a
+  fresh one every `CALLS_PER_INSTANCE`. qpdf's loader takes no bytes; it is given a
+  `blob:` address of the verified binary, and `pdf-split.spec.ts` asserts no other is fetched.
+- **A trap may say what it is converted to** (`to` in `make-traps.py`), where the usual target
+  for its kind would not reach the engine it tests.
 - **A PDF's pages are drawn by pdf.js trusting nothing in the file** (`pdf/pages.ts`): its
   typefaces are drawn as outlines and never installed, no typeface of the device is consulted,
   a picture inside it is decoded by pdf.js's own code and never by the browser's

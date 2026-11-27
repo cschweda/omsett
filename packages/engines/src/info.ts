@@ -120,6 +120,16 @@ export const pdfPagesInfo: EngineInfo = {
   sourceUrl: 'https://github.com/mozilla/pdf.js',
 }
 
+// qpdf, which splits a PDF into pages or takes a range of them, copying them as they are.
+// Built to WebAssembly by @neslinesli93/qpdf-wasm (ISC); qpdf itself is Apache-2.0.
+export const qpdfInfo: EngineInfo = {
+  id: 'qpdf',
+  sizeBytes: 1_334_286,
+  runtimes: ['browser', 'node'],
+  license: 'Apache-2.0 AND ISC',
+  sourceUrl: 'https://github.com/qpdf/qpdf',
+}
+
 export const pdfInfo: EngineInfo = {
   id: 'pdf',
   // The reader and its parsing half, as built into the app.
@@ -286,6 +296,7 @@ export const engineInfo: Record<string, EngineInfo> = {
   [audioMp3Info.id]: audioMp3Info,
   [typstInfo.id]: typstInfo,
   [pandocInfo.id]: pandocInfo,
+  [qpdfInfo.id]: qpdfInfo,
   [pdfPagesInfo.id]: pdfPagesInfo,
   [audioLibavInfo.id]: audioLibavInfo,
   [ebookInfo.id]: ebookInfo,

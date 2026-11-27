@@ -7,6 +7,48 @@ The paragraph that opens a version is its teaser: the home page shows its first 
 in the "What's new" banner, so keep it to two or three sentences on what a visitor will notice.
 A line beginning "Released" gives the date.
 
+## 0.64.0
+
+Released 26 November 2026.
+
+A PDF can now be split: every page as a PDF of its own, or the pages you name, in the order you
+name them, as one PDF. The pages are copied as they are, words and all. Scripts, attached files,
+comments, the author's details and anything that runs are left behind.
+
+### Added
+
+- **Split or take pages.** Choosing PDF for a PDF offers "Split or take pages": every page as its
+  own PDF (up to 500), or a range such as 2-5, 9 as one PDF. "9, 1" puts the last page first.
+  It is done by qpdf, the PDF toolkit built to cope with damaged and hostile files, as
+  WebAssembly (1.3 MB), fetched only when a PDF is split and verified before it runs.
+- **What goes with the pages is decided by Omsett.** The whole file is listed and cleaned before
+  any page is taken: scripts and every action but a link to a page or a web or mail address,
+  attached files, comments and who wrote them, sound and film, bookmarks, the author and the
+  document's details, and the structure tree, which would still describe pages left out. What
+  was typed into a form is kept, drawn on its page. Every PDF written is read again before it is
+  handed over, and refused if anything taken out is still in it.
+- **Refused:** a protected (encrypted) PDF, one that qpdf would have to repair, one with layers
+  (which can hide part of a page in more ways than a check can follow; drawing its pages as
+  pictures leaves hidden layers out, and the refusal says so), and one with redactions marked but
+  not yet applied, whose hidden words are still in the file.
+- **Reviewed before release.** An adversarial review found nine ways something could go with the
+  pages: attachments by another route, layers hidden by rules the first check missed, a page's
+  share of resources used only by another, the author's details reached another way, signers'
+  certificates, actions carrying more than where they go, pictures kept in other files, a packed
+  stream unpacked, and qpdf wearing out after a few hundred calls. Each is closed and tested.
+- Four traps, and a sample full of what must not be carried (`full-of-things.pdf`).
+
+### Changed
+
+- **One format can now be offered to itself, where the registry says what that does**
+  (`itself` on a capability's write). PDF is the only one. Every other format still says
+  "Already …".
+
+### Known
+
+- A split PDF has no accessibility tags. The tile says so before converting. Keeping the tags of
+  the pages taken is planned.
+
 ## 0.63.0
 
 Released 26 November 2026.

@@ -82,7 +82,9 @@ When a format ships, update its row here, in the same change.
 | The same, untagged PDFs, or tagged in name only | Browser | `pdf`, with structure estimated from layout | **Shipped** (0.23.0). Estimated, and the result says so. Tables and bold headings are not found yet |
 | Scanned PDFs (OCR); pictures carried out of a PDF; characters for Chinese, Japanese and Korean | Browser | Tesseract (WASM); pdf.js | Planned |
 | PDF to Markdown, hard layouts and scans | Desktop | Docling or Marker, to be compared on real files | Planned |
-| Merge, split, page ranges | Browser | pdf-lib | Planned |
+| Split into pages; take a range of pages, in any order | Browser | qpdf (WebAssembly), Omsett's own cleaning | **Done** (0.64.0) |
+| Combine several PDFs and pictures into one PDF, in an order you set | Browser | qpdf; Typst for pictures | Planned (next) |
+| Keep the accessibility tags of the pages taken | Browser | Omsett's own code over qpdf's JSON | Planned |
 | Images, Markdown, HTML, text to PDF | Browser | pdf-lib; Typst (to be proven) | Planned |
 | Compress; PDF/A | Desktop | Ghostscript, qpdf | Planned |
 | PDF to DOCX, XLSX, PPTX, SVG | Desktop | LibreOffice | Planned |

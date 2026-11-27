@@ -17,6 +17,8 @@ defineEmits<{ select: [id: string]; convert: [id: string]; why: [id: string] }>(
 const id = computed(() => `tile-${props.target.format.id}`)
 const disabled = computed(() => props.target.route === null)
 const extension = computed(() => `.${props.target.format.extensions[0]}`)
+// A format offered to itself is named by what that does (a PDF split into pages), as the registry says.
+const name = computed(() => props.target.route?.edges[0]?.candidates[0]?.itself ?? props.target.format.name)
 // What shows on hover: for a format that cannot be chosen, why not, ahead of what it is.
 const tip = computed(() => (props.target.reason ? `${props.target.reason}. ${props.target.format.explain}` : props.target.format.explain))
 </script>
@@ -38,7 +40,7 @@ const tip = computed(() => (props.target.reason ? `${props.target.reason}. ${pro
       :style="{ '--cat': `var(--cat-${target.format.category})` }"
       @click="disabled ? $emit('why', target.format.id) : $emit('select', target.format.id)"
     >
-      <span class="name">{{ target.format.name }}</span>
+      <span class="name">{{ name }}</span>
       <span class="ext">{{ extension }}</span>
       <span :id="`${id}-desc`" class="desc">
         <TierBadge v-if="target.route" :tier="target.route.tier" :via-server="viaServer" />

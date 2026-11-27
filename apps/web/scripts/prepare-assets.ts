@@ -121,6 +121,10 @@ const manifest = {
       }),
     ),
   ),
+  // qpdf, which splits a PDF.
+  qpdf: {
+    wasm: await hashed(fromEngines.resolve('@neslinesli93/qpdf-wasm/dist/qpdf.wasm'), 'qpdf', 'wasm'),
+  },
   // The long tail of sound: the binary of Omsett's own build of libav.js.
   libav: {
     wasm: await hashed(join(repo, 'packages', 'engines', 'vendor', 'libav', 'libav-6.11.9.0.2-omsett-audio.wasm.wasm'), 'libav', 'wasm'),
@@ -158,6 +162,15 @@ await copyFile(
 // pdf.js's typefaces and decoders carry licences of their own (Foxit, Liberation, OpenJPEG, JBIG2, qcms).
 for (const [folder, names] of [['standard_fonts', ['LICENSE_FOXIT', 'LICENSE_LIBERATION']], ['wasm', ['LICENSE_OPENJPEG', 'LICENSE_JBIG2', 'LICENSE_QCMS', 'LICENSE_PDFJS_OPENJPEG', 'LICENSE_PDFJS_JBIG2', 'LICENSE_PDFJS_QCMS']]] as const) {
   for (const name of names) await copyFile(join(pdfjsRoot, folder, name), join(enginesDir, `pdfjs.${name}.txt`))
+}
+
+// qpdf is Apache-2.0; its WebAssembly package (ISC) carries only its own licence, so the Apache
+// text is taken from pdf.js's package, which is under the same licence word for word.
+{
+  const qpdfPackage = dirname(dirname(fromEngines.resolve('@neslinesli93/qpdf-wasm/dist/qpdf.wasm')))
+  await copyFile(join(qpdfPackage, 'LICENSE'), join(enginesDir, 'qpdf-wasm.LICENSE.txt'))
+  const apache = await readFile(join(pdfjsRoot, 'LICENSE'), 'utf8')
+  await writeFile(join(enginesDir, 'qpdf.LICENSE.txt'), `qpdf, https://github.com/qpdf/qpdf, Copyright (c) 2005-2025 Jay Berkenbilt and Manfred Holger, is licensed under the Apache License, Version 2.0. It includes libjpeg-turbo 2.1.1 (IJG and BSD-3-Clause) and zlib (Zlib).\n\n${apache}`)
 }
 
 // libav.js and FFmpeg are LGPL: their licence goes beside the binary.

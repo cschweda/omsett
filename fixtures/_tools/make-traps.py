@@ -62,7 +62,7 @@ GOOD = SIGNATURE + ihdr(W, H) + idat(rgba_rows(W, H)) + IEND
 
 
 # --- manifest ---------------------------------------------------------------------------------
-def trap(name, data, why, detect, guard="ok", node="none", browser=None, mismatch=False, group="", note=None, absent=None):
+def trap(name, data, why, detect, guard="ok", node="none", browser=None, mismatch=False, group="", note=None, absent=None, to=None):
     """
     detect   what identification must say: a format id, 'unregistered', or 'unknown'
     guard    'refused' if the size and pixel guard must stop it before any decode
@@ -73,6 +73,8 @@ def trap(name, data, why, detect, guard="ok", node="none", browser=None, mismatc
     note     the exact reason the app must show, where a generic one will not do
     absent   text that must not appear anywhere in the converted file (a payload hidden in the
              input's metadata, which a conversion must not carry across)
+    to       the format it is converted to, where the usual one for its kind would not reach
+             what it tests (a PDF split, which is PDF to PDF)
     """
     with open(os.path.join(OUT, name), "wb") as out:
         out.write(data)
@@ -88,6 +90,7 @@ def trap(name, data, why, detect, guard="ok", node="none", browser=None, mismatc
             "browser": node if browser is None else browser,
             "note": note,
             "absent": absent,
+            "to": to,
         }
     )
 
@@ -5027,6 +5030,34 @@ trap("six-channels.ac3", ffmpeg_made("ac3", "-f", "lavfi", "-i", "sine=frequency
 trap("sound-named-as-video.m4a", LONG["opus"],
      "An Opus file with an M4A's name. It is read as what it is.",
      "opus", node="succeeds", mismatch=True, group="identity")
+
+# --- a PDF taken apart (split, or a range of its pages) --------------------------------------------
+# qpdf copies pages as they are, so what it would copy with them is decided first. Converted to
+# PDF, which is a split.
+THREE = read("pdf", "three-pages.pdf")
+trap("layers-kept-hidden.pdf", THREE,
+     "A PDF with a layer it keeps hidden. Splitting would copy the layer with its page, where any reader can turn it on, so it is not split.",
+     "pdf", node="fails", to="pdf", group="documents",
+     note="This PDF has layers, which can keep parts of a page hidden. Splitting copies pages as they are, hidden parts and all, so it is not split. Make pictures of its pages instead, which leaves hidden layers out")
+FULL = read("pdf", "full-of-things.pdf")
+redact = FULL.replace(b"/Subtype /Popup /Rect [420 600 560 700]", b"/Subtype /Redact /Rect [420 600 560 70]")
+assert len(redact) == len(FULL)
+trap("redaction-not-applied.pdf", redact,
+     "A PDF with a part of a page marked to be blacked out, and not yet blacked out: what is under the mark is still in the file. It is not split.",
+     "pdf", node="fails", to="pdf", group="documents",
+     note="This PDF marks parts of its pages to be blacked out that have not been taken out yet: what is under them is still in the file. Apply the redactions first, in the program that marked them")
+# Only its second page, the one with scripts on it: the list of pages shortened, padded with
+# spaces to the same length, so that every position in the file still holds.
+kids = b"/Kids [10 0 R 12 0 R 14 0 R 16 0 R] /Count 4"
+one = b"/Kids [12 0 R] /Count 1".ljust(len(kids))
+assert FULL.count(kids) == 1
+trap("scripts-everywhere.pdf", FULL.replace(kids, one),
+     "A PDF with a script run on opening, one in its list of names, one on a page, one on a bookmark and one on a form field, and a link that starts a program. Split, none of them goes with its page.",
+     "pdf", node="succeeds", to="pdf", group="documents", absent="SECRET")
+trap("one-byte-out.pdf", FULL.replace(b"(SECRET-TITLE)", b"(SECRET-TITLE!)"),
+     "A PDF with one byte added in the middle, so that every position after it is wrong. qpdf can repair that, and says so; a file that had to be repaired is not split.",
+     "pdf", node="fails", to="pdf", group="documents",
+     note="This PDF is damaged: qpdf had to repair it to read it, so it is not split")
 
 # --- e-books: AZW3 and MOBI ----------------------------------------------------------------------
 # A Kindle book is a list of numbered records, and tables that say which stretch of text is

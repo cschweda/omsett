@@ -82,6 +82,9 @@ const OUTLINES = [{ id: 'font-outlines', text: 'A web font unwraps to TTF or to 
 // A PDF's pages drawn as pictures.
 const PAGE_AS_PICTURE = [{ id: 'page-as-picture', text: 'Each page becomes a picture of the page. Its words can no longer be selected, searched or read aloud, and links stop working. Keep the PDF.' }]
 
+// A PDF taken apart.
+const SPLIT = [{ id: 'pdf-split', text: 'Pages are copied as they are, words and all. Left out: comments, attached files, forms (what was typed into them stays, drawn on the page), scripts, bookmarks, the author\'s details, and the accessibility tags, which this does not keep yet.' }]
+
 // Sound.
 const KEPT_WHOLE = ['wav', 'flac', 'aiff', 'au', 'w64']
 // Sound that leaves some out, and sound that keeps every bit.
@@ -106,6 +109,7 @@ const READ_ONLY_BOOKS = ['xls', 'ods']
 
 export const overrides: EdgeOverride[] = [
   ...['png', 'jpeg'].map((to) => ({ from: 'pdf', to, warnings: PAGE_AS_PICTURE })),
+  { from: 'pdf', to: 'pdf', warnings: SPLIT },
   { from: 'fountain', to: 'fdx', warnings: SCRIPT_KEPT },
   { from: 'fdx', to: 'fountain', warnings: SCRIPT_KEPT },
   { from: 'drafter', to: 'fountain', warnings: PACKAGE_MAIN },

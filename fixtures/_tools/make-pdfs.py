@@ -12,6 +12,13 @@ Standard library only, and the same bytes every time. Two files with the same wo
 And three-pages.pdf, for drawing pages as pictures: a US Letter page, an A4 page on its side, and
 a small square page, each with a blue block in a corner. On the second, a red square sits in a
 layer the file marks as hidden; it must not be drawn.
+
+And full-of-things.pdf, for taking a PDF apart: four pages, each saying which it is, and
+everything that must not be carried with them, each marked SECRET-: the author, the XMP
+metadata, a script run on opening, a script in the list of names, an attached file, a script on
+a page, a sticky note with its author, a link that starts a program, a bookmark that runs a
+script, tags with a description of a picture on page 1, and a form with a script on its field.
+What must stay: a link to a web address, and the words typed into the form, drawn on page 2.
 """
 import os
 
@@ -164,3 +171,41 @@ for i, (width, height) in enumerate(SIZES):
     three.add(page, f"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 {width} {height}] /Resources << {resources} >> /Contents {content} 0 R >>")
     three.stream(content, body)
 three.save("pdf/three-pages.pdf")
+
+# --- a PDF full of things that must not be carried with its pages ---------------------------------
+full = Pdf()
+PAGES_AT = [10, 12, 14, 16]
+full.add(1, "<< /Type /Catalog /Pages 2 0 R /Metadata 30 0 R /OpenAction 31 0 R /Names << /JavaScript 32 0 R /EmbeddedFiles 34 0 R >> /Outlines 40 0 R /AcroForm << /Fields [50 0 R] /NeedAppearances false >> /StructTreeRoot 60 0 R /MarkInfo << /Marked true >> /Lang (en) >>")
+full.add(2, f"<< /Type /Pages /Kids [{' '.join(f'{n} 0 R' for n in PAGES_AT)}] /Count 4 >>")
+full.add(3, "<< /Title (SECRET-TITLE) /Author (SECRET-AUTHOR) /Producer (make-pdfs.py) >>")
+full.stream(30, '<x:xmpmeta xmlns:x="adobe:ns:meta/"><dc:creator>SECRET-XMP-AUTHOR</dc:creator></x:xmpmeta>', "/Type /Metadata /Subtype /XML ")
+full.add(31, "<< /S /JavaScript /JS (app.alert\\('SECRET-OPEN-SCRIPT'\\)) >>")
+full.add(32, "<< /Names [(a) 33 0 R] >>")
+full.add(33, "<< /S /JavaScript /JS (app.alert\\('SECRET-NAMED-SCRIPT'\\)) >>")
+full.add(34, "<< /Names [(secret.txt) 35 0 R] >>")
+full.add(35, "<< /Type /Filespec /F (secret.txt) /EF << /F 36 0 R >> >>")
+full.stream(36, "SECRET-ATTACHMENT", "/Type /EmbeddedFile ")
+full.add(40, "<< /Type /Outlines /First 41 0 R /Last 41 0 R /Count 1 >>")
+full.add(41, "<< /Title (SECRET-BOOKMARK) /Parent 40 0 R /A << /S /JavaScript /JS (app.alert\\('SECRET-BOOKMARK-SCRIPT'\\)) >> >>")
+# A form field with its words already drawn (an appearance), and a script on it.
+full.add(50, "<< /FT /Tx /T (SECRET-FIELD-NAME) /V (TYPED-WORDS) /Type /Annot /Subtype /Widget /Rect [72 600 300 630] /P 12 0 R /AP << /N 51 0 R >> /AA << /K << /S /JavaScript /JS (app.alert\\('SECRET-FIELD-SCRIPT'\\)) >> >> /F 4 >>")
+full.stream(51, "/Tx BMC BT /F1 14 Tf 2 8 Td (TYPED-WORDS) Tj ET EMC", f"/Type /XObject /Subtype /Form /BBox [0 0 228 30] /Resources << /Font {FONTS} >> ")
+# Tags: page 1 has a picture described in words that are not on any other page.
+full.add(60, "<< /Type /StructTreeRoot /K [61 0 R] >>")
+full.add(61, "<< /Type /StructElem /S /Figure /P 60 0 R /Pg 10 0 R /Alt (SECRET-ALT-OF-PAGE-ONE) >>")
+annotations = {
+    0: "",
+    # A script when the page opens, a sticky note and its pop-up, a link that starts a program, and one to a website.
+    1: "/AA << /O << /S /JavaScript /JS (app.alert\\('SECRET-PAGE-SCRIPT'\\)) >> >> /Annots [20 0 R 21 0 R 22 0 R 23 0 R 50 0 R]",
+    2: "",
+    3: "",
+}
+full.add(20, "<< /Type /Annot /Subtype /Text /Rect [400 700 420 720] /Contents (SECRET-COMMENT) /T (SECRET-COMMENT-AUTHOR) /Popup 21 0 R >>")
+full.add(21, "<< /Type /Annot /Subtype /Popup /Rect [420 600 560 700] /Parent 20 0 R >>")
+full.add(22, "<< /Type /Annot /Subtype /Link /Rect [72 500 200 520] /A << /S /Launch /F (SECRET-PROGRAM.exe) >> >>")
+full.add(23, "<< /Type /Annot /Subtype /Link /Rect [72 460 200 480] /Contents (omsett.com) /A << /S /URI /URI (https://omsett.com) >> >>")
+for i, page in enumerate(PAGES_AT):
+    content = page + 1
+    full.add(page, f"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font {FONTS} >> /Contents {content} 0 R {annotations[i]} >>")
+    full.stream(content, text(72, 720, 24, f"Page {i + 1} of 4"))
+full.save("pdf/full-of-things.pdf", info=3)

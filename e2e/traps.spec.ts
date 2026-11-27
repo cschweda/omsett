@@ -19,6 +19,8 @@ interface Trap {
   browser: 'none' | 'succeeds' | 'fails'
   note: string | null
   absent: string | null
+  /** What it is converted to, where not the usual for its kind. */
+  to: string | null
 }
 
 const dir = new URL('../fixtures/_traps/', import.meta.url)
@@ -111,7 +113,7 @@ for (const trap of traps) {
                     : category === 'ebook'
                       ? ['epub', 'html']
                     : ['webp', 'png']
-      const target = trap.detect === usual ? otherwise : usual
+      const target = trap.to ?? (trap.detect === usual ? otherwise : usual)
       if (trap.mismatch) await expect(note).toContainText('the contents are')
       await page.locator(`[role="radio"][data-format="${target}"]`).click()
       await convert.click()

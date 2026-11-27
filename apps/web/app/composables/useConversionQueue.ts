@@ -117,7 +117,7 @@ export function useConversionQueue() {
    * from the capability's default options, so no format is named here; a conversion that
    * offers none leaves this empty.
    */
-  const OFFERED = ['language', 'headerRow', 'shape', 'sheet', 'soundQuality', 'speakerNotes', 'pages']
+  const OFFERED = ['language', 'headerRow', 'shape', 'sheet', 'soundQuality', 'speakerNotes', 'pages', 'take']
   const choices = ref<Record<string, unknown>>({})
   const defaults = computed(() => {
     // A choice belongs to the step that makes use of it, wherever that step is in the route: a
