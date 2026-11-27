@@ -57,6 +57,9 @@ const KEEP: Record<string, Set<string>> = {
   '/Pages': new Set(['/Type', '/Parent', '/Kids', '/Count', '/Resources', '/MediaBox', '/CropBox', '/Rotate']),
   '/Catalog': new Set(['/Type', '/Pages', '/Lang', '/ViewerPreferences', '/PageLabels', '/PageLayout', '/PageMode', '/Version', '/Extensions', '/OutputIntents', '/AcroForm', '/OCProperties']),
   '/Link': new Set(['/Type', '/Subtype', '/Rect', '/A', '/Dest', '/Border', '/BS', '/C', '/H', '/QuadPoints', '/F', '/Contents']),
+  // What a page or a drawing uses to draw: the kinds of resource there are, and no other key.
+  '/Resources': new Set(['/Font', '/XObject', '/ExtGState', '/ColorSpace', '/Pattern', '/Shading', '/Properties', '/ProcSet']),
+  '/Group': new Set(['/Type', '/S', '/CS', '/I', '/K']),
 }
 /** The ways a destination names where on a page it goes, and how many numbers each takes. */
 const FITS: Record<string, number> = { '/XYZ': 3, '/Fit': 0, '/FitH': 1, '/FitV': 1, '/FitR': 4, '/FitB': 0, '/FitBH': 1, '/FitBV': 1 }
@@ -87,6 +90,33 @@ export function clean(json: QpdfJson, stage: 'before' | 'after'): Cleaned {
   }
   const resolve = (value: Value): Value => (isRef(value) ? (objects[`obj:${value}`]?.value ?? dictOf(`obj:${value}`)) : value)
 
+  // Which list an object keeps is decided by where it sits, never by what it says it is: the
+  // nodes reached from the catalog through /Pages and /Kids are pages or lists of pages; what a
+  // page's /Annots names is an annotation; what sits under /Resources or /Group is that.
+  const placed = new Map<string, string>()
+  const rootRef = (objects.trailer?.value as Dict | undefined)?.['/Root']
+  const walk = (node: Value, depth: number) => {
+    if (!isRef(node) || depth > 64 || placed.has(`obj:${node}`)) return
+    const found = dictOf(`obj:${node}`)
+    if (!found) return
+    const kids = resolve(found['/Kids'])
+    placed.set(`obj:${node}`, Array.isArray(kids) ? '/Pages' : '/Page')
+    if (Array.isArray(kids)) for (const kid of kids) walk(kid, depth + 1)
+  }
+  walk(isRef(rootRef) ? (dictOf(`obj:${rootRef}`)?.['/Pages'] as Value) : undefined, 0)
+  const pages = new Set([...placed].filter(([, kind]) => kind === '/Page').map(([key]) => key))
+  for (const [key, entry] of Object.entries(objects)) {
+    const dict = isDict(entry.value) ? entry.value : entry.stream?.dict
+    if (!dict) continue
+    for (const [name, list] of [['/Resources', '/Resources'], ['/Group', '/Group']] as const) {
+      if (isRef(dict[name]) && !placed.has(`obj:${dict[name]}`)) placed.set(`obj:${dict[name]}`, list)
+    }
+    if (stage === 'after' && pages.has(key)) {
+      const annotations = resolve(dict['/Annots'])
+      if (Array.isArray(annotations)) for (const annotation of annotations) if (isRef(annotation) && !placed.has(`obj:${annotation}`)) placed.set(`obj:${annotation}`, '/Link')
+    }
+  }
+
   /**
    * An action as it may stay, rebuilt from nothing: a jump to a place in this file, with only
    * where it goes, or a web or mail address, with only the address. Anything else is null.
@@ -111,8 +141,8 @@ export function clean(json: QpdfJson, stage: 'before' | 'after'): Cleaned {
     const [page, fit, ...numbers] = found as Value[]
     const kind = typeof fit === 'string' ? FITS[fit] : undefined
     if (kind === undefined || numbers.length !== kind || !numbers.every((n) => typeof n === 'number' || n === null)) return null
-    const isPage = (isRef(page) && dictOf(`obj:${page}`)?.['/Type'] === '/Page') || (typeof page === 'number' && Number.isInteger(page))
-    return isPage ? [page, fit, ...numbers] : null
+    // A page of this file's own list of pages, and nothing that only calls itself one.
+    return isRef(page) && pages.has(`obj:${page}`) ? [page, fit, ...numbers] : null
   }
   /** An annotation's kind, and whether it goes at this stage. */
   const annotationGoes = (annotation: Value): boolean => {
@@ -124,13 +154,14 @@ export function clean(json: QpdfJson, stage: 'before' | 'after'): Cleaned {
   }
 
   /** A value with what may not stay taken out of every dictionary in it, however deep. */
-  function scrub(value: Value, depth = 0): Value {
+  function scrub(value: Value, depth = 0, place?: string): Value {
     if (depth > 64) return null
-    if (Array.isArray(value)) return value.map((item) => scrub(item, depth + 1))
+    if (Array.isArray(value)) return value.map((item) => scrub(item, depth + 1, place === '/Annots' ? '/Link' : undefined))
     if (!isDict(value)) return value
     const out: Dict = {}
-    // A page, a node of the list of pages, and after drawing a link, keep only what is on their list.
-    const kind = value['/Type'] === '/Page' || value['/Type'] === '/Pages' ? (value['/Type'] as string) : stage === 'after' && value['/Subtype'] === '/Link' && isAnnotation(value) ? '/Link' : undefined
+    // Where it sits, if known; else what it says it is, which can only make its list stricter.
+    const said = value['/Type'] === '/Page' || value['/Type'] === '/Pages' ? (value['/Type'] as string) : stage === 'after' && value['/Subtype'] === '/Link' ? '/Link' : undefined
+    const kind = place === '/Link' ? (stage === 'after' ? '/Link' : undefined) : (place ?? said)
     const allowed = kind ? KEEP[kind] : undefined
     for (const [key, inner] of Object.entries(value)) {
       if (allowed && !allowed.has(key)) continue
@@ -174,7 +205,11 @@ export function clean(json: QpdfJson, stage: 'before' | 'after'): Cleaned {
             else if (stage === 'before') removed.add('sound, film and other media')
           }
         }
-        out[key] = scrub(kept, depth + 1)
+        out[key] = scrub(kept, depth + 1, '/Annots')
+        continue
+      }
+      if ((key === '/Resources' || key === '/Group') && isDict(inner)) {
+        out[key] = scrub(inner, depth + 1, key)
         continue
       }
       out[key] = scrub(inner, depth + 1)
@@ -188,10 +223,10 @@ export function clean(json: QpdfJson, stage: 'before' | 'after'): Cleaned {
     if (key === 'trailer') continue
     if (isDict(entry.value) && entry.value['/Subtype'] === '/Redact') redactions = true
     if (entry.stream) {
-      const dict = scrub(entry.stream.dict) as Dict
+      const dict = scrub(entry.stream.dict, 0, placed.get(key)) as Dict
       if (JSON.stringify(dict) !== JSON.stringify(entry.stream.dict)) changed[key] = { stream: { dict } }
     } else if (entry.value !== undefined) {
-      const value = scrub(entry.value)
+      const value = scrub(entry.value, 0, placed.get(key))
       if (JSON.stringify(value) !== JSON.stringify(entry.value)) changed[key] = { value }
     }
   }
