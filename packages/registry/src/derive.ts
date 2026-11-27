@@ -32,7 +32,8 @@ export function deriveEdges(registry: Registry): Derived {
     for (const from of capability.reads) {
       for (const write of capability.writes) {
         const to = write.format
-        if (from === to) continue
+        // A format is written from itself only where the capability says what that does.
+        if (from === to && !write.itself) continue
         if (!formats.has(from) || !formats.has(to)) {
           throw new Error(`Capability "${capability.engine}" names an unregistered format: ${from} → ${to}`)
         }
@@ -51,6 +52,7 @@ export function deriveEdges(registry: Registry): Derived {
           cost: candidateCost(write.lossy, capability.tier === 'native'),
           defaultOptions: { ...write.defaultOptions },
           drops: write.drops ?? [],
+          ...(write.itself ? { itself: write.itself } : {}),
           priority: capability.priority,
         })
         ranked.set(key(from, to), list)
@@ -71,6 +73,7 @@ export function deriveEdges(registry: Registry): Derived {
       cost: c.cost,
       defaultOptions: c.defaultOptions,
       drops: c.drops,
+      ...(c.itself ? { itself: c.itself } : {}),
     }))
     const first = candidates[0]!
 

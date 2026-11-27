@@ -39,7 +39,7 @@ describe('router, real registry', () => {
     for (const edge of deriveEdges(registry).edges) {
       const engines = edge.candidates.map((c) => c.engine)
       if (edge.from !== 'png') expect(engines, `${edge.from} → ${edge.to}`).not.toContain('canvas')
-      for (const engine of engines) expect(engine === 'canvas' || ['heif', 'resvg', 'magick', 'data', 'subtitle', 'markup', 'font', 'font-woff2', 'icon', 'archive', 'script', 'pdf', 'audio', 'audio-mp3', 'typst', 'ebook', 'pandoc', 'audio-libav', 'pdf-pages'].includes(engine) || engine.startsWith('vips')).toBe(true)
+      for (const engine of engines) expect(engine === 'canvas' || ['heif', 'resvg', 'magick', 'data', 'subtitle', 'markup', 'font', 'font-woff2', 'icon', 'archive', 'script', 'pdf', 'audio', 'audio-mp3', 'typst', 'ebook', 'pandoc', 'audio-libav', 'pdf-pages', 'qpdf'].includes(engine) || engine.startsWith('vips')).toBe(true)
       // The data engine reads data and nothing else, and writes data or a page that sets a
       // table out to be read; nothing but the data engine reads data, and no picture engine touches it.
       const data = [edge.from, edge.to].map((id) => ['data', 'spreadsheet'].includes(formatById(registry, id)!.category))
@@ -78,7 +78,9 @@ describe('router, real registry', () => {
         // TTF and OTF hold different kinds of outline, and neither becomes the other.
         // Nor does an address book become a calendar.
         const redrawn = ['otf>ttf', 'ics>vcf'].includes([from, to].sort().join('>'))
-        const impossible = from === to || readOnly.has(to) || !canBecome(kind(from), kind(to)) || redrawn
+        // A format is never offered to itself but where the registry says what that does: a PDF split.
+        const itself = from === to && from === 'pdf'
+        const impossible = (from === to && !itself) || readOnly.has(to) || !canBecome(kind(from), kind(to)) || redrawn
         expect(all.route(from, to) === null, `${from} → ${to}`).toBe(impossible)
       }
     }
@@ -136,6 +138,15 @@ describe('router, real registry', () => {
     expect(all.route('pdf', 'jpeg')!.edges.map((e) => e.candidates[0]!.engine)).toEqual(['pdf-pages'])
     expect(all.route('pdf', 'avif')!.edges.map((e) => `${e.from}>${e.to}`)).toEqual(['pdf>png', 'png>avif'])
     expect(all.route('pdf', 'svg')).toBeNull()
+    // A PDF to itself is a split, in one step, by qpdf, and says what it leaves out; the tile is
+    // named for what it does. Every other format to itself is "Already …".
+    const split = all.route('pdf', 'pdf')!
+    expect(split.edges.map((e) => `${e.from}>${e.to}:${e.candidates[0]!.engine}`)).toEqual(['pdf>pdf:qpdf'])
+    expect(split.edges[0]!.candidates[0]!.itself).toBe('Split or take pages')
+    expect(split.warnings.map((w) => w.id)).toContain('pdf-split')
+    expect(all.targetsFor(['png']).find((t) => t.format.id === 'png')!.reason).toBe('Already PNG')
+    // No road goes round through a split.
+    expect(all.route('html', 'pdf')!.edges.every((e) => e.from !== e.to)).toBe(true)
     for (const to of ['png', 'jpeg', 'webp', 'tiff']) expect(all.route('pdf', to)!.warnings.map((w) => w.id), to).toContain('page-as-picture')
     expect(all.route('png', 'html')).toBeNull()
     expect(all.route('png', 'docx')).toBeNull()

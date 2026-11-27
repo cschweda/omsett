@@ -141,6 +141,23 @@ licence is served beside them as `pdfjs.LICENSE_*.txt`.
 | JBIG2 decoder from PDFium (in pdf.js, WebAssembly) | 6.5.438 | BSD-3-Clause | <https://pdfium.googlesource.com/pdfium> |
 | qcms (in pdf.js, WebAssembly) | 6.5.438 | MIT | <https://github.com/FirefoxGraphics/qcms> |
 
+### qpdf
+
+A PDF is split into pages, or a range of its pages taken as one PDF, by **qpdf** 12.2.0
+(Apache-2.0), <https://github.com/qpdf/qpdf>, built to WebAssembly by
+[`@neslinesli93/qpdf-wasm`](https://github.com/neslinesli93/qpdf-wasm) 0.3.1 (ISC). Not changed.
+It carries libjpeg-turbo 2.1.1 (IJG and BSD-3-Clause) and zlib (Zlib). It is fetched only when a
+PDF is split, and verified before it runs. Both licences are served beside the binary
+(`qpdf.LICENSE.txt`, `qpdf-wasm.LICENSE.txt`). What goes with the pages is decided by Omsett's own
+code (`packages/engines/src/qpdf/clean.ts`), over qpdf's own listing of the file.
+
+| Library | Version | License | Source |
+| --- | --- | --- | --- |
+| qpdf | 12.2.0 | Apache-2.0 | <https://github.com/qpdf/qpdf> |
+| @neslinesli93/qpdf-wasm | 0.3.1 | ISC | <https://github.com/neslinesli93/qpdf-wasm> |
+| libjpeg-turbo (in qpdf) | 2.1.1 | IJG, BSD-3-Clause | <https://libjpeg-turbo.org> |
+| zlib (in qpdf) | — | Zlib | <https://zlib.net> |
+
 ### script
 
 Omsett's own readers and writers for Fountain, Final Draft (FDX) and the Drafter package. FDX

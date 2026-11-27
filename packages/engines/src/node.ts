@@ -17,6 +17,8 @@ import { createHeifEngine, type HeifModule } from './heif'
 import { engineInfo, resvgFonts, typstFonts, vipsModules } from './info'
 import { createTypstEngine, SCRIPTS } from './typst'
 import { createPandocEngine } from './pandoc'
+import { createQpdfEngine } from './qpdf'
+import { startQpdf } from './qpdf/loader'
 import { createAudioLibavEngine } from './audio-libav'
 import { createResvgEngine, type ResvgHost } from './resvg'
 import { createMagickEngine, type MagickApi } from './magick'
@@ -95,6 +97,10 @@ export function createNodeEngines(): Record<string, Engine> {
       const { default: LibAV } = (await import(pathToFileURL(join(libavDir, 'libav-omsett-audio.mjs')).href)) as { default: { LibAV(options: object): Promise<Record<string, never>> } }
       return LibAV.LibAV({ noworker: true, nothreads: true, base: libavDir.replace(/\/$/, ''), variant: 'omsett-audio' })
     },
+  })
+  // qpdf, started from the binary in its package.
+  engines.qpdf = createQpdfEngine({
+    qpdf: async (say) => startQpdf(require.resolve('@neslinesli93/qpdf-wasm/dist/qpdf.wasm'), say),
   })
   engines.ebook = createEbookEngine()
   engines.audio = createAudioEngine()

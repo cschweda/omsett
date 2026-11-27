@@ -24,6 +24,8 @@ const UNWRAPS_TO_THE_OTHER = [
   "This sound's numbers are more exact than M4A can hold, so some would be lost",
   "This sound's numbers are more exact than WavPack can hold, so some would be lost",
   'This sound uses 32 bits to a number, more than M4A can hold, so some would be lost',
+  // A PDF with layers is not split: what a layer hides would go with the pages.
+  'This PDF has layers, which can keep parts of a page hidden. Splitting copies pages as they are, hidden parts and all, so it is not split. Make pictures of its pages instead, which leaves hidden layers out',
 ]
 const derived = deriveEdges(registry)
 
@@ -102,6 +104,16 @@ describe('fixtures through every Node-capable engine', () => {
             })
           if (outputs === null) continue
           converted++
+          // A PDF split gives a PDF for each page, each a real PDF named for its page.
+          if (candidate.itself) {
+            expect(outputs.length).toBeGreaterThan(0)
+            for (const output of outputs) {
+              const found = await detect(output.blob, registry.formats)
+              expect(found.kind === 'known' && found.format.id, output.name).toBe(to.id)
+              expect(output.name.startsWith(fixture.name.replace(/\.[^.]+$/, '')), output.name).toBe(true)
+            }
+            continue
+          }
           expect(outputs).toHaveLength(1)
           const output = outputs[0]!
           // The ending is replaced whole: "sample.tar.gz" becomes "sample.zip", not "sample.tar.zip".

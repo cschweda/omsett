@@ -9,7 +9,8 @@
     "node": "none",
     "browser": "none",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "text.png",
@@ -21,7 +22,8 @@
     "node": "none",
     "browser": "none",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "random-bytes.png",
@@ -33,7 +35,8 @@
     "node": "none",
     "browser": "none",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "svg-with-script.png",
@@ -45,7 +48,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "jpeg-named.png",
@@ -57,7 +61,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "webp-named.png",
@@ -69,7 +74,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "gif-named.png",
@@ -81,7 +87,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "png-named.jpg",
@@ -93,7 +100,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "huge-declared.bmp",
@@ -105,7 +113,8 @@
     "node": "none",
     "browser": "none",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "huge-declared.qoi",
@@ -117,7 +126,8 @@
     "node": "none",
     "browser": "none",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "huge-declared.psd",
@@ -129,7 +139,8 @@
     "node": "none",
     "browser": "none",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "huge-declared.pnm",
@@ -141,7 +152,8 @@
     "node": "none",
     "browser": "none",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "huge-declared.tga",
@@ -153,7 +165,8 @@
     "node": "none",
     "browser": "none",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "huge-declared.svg",
@@ -165,7 +178,8 @@
     "node": "none",
     "browser": "none",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "declares-30000x30000.png",
@@ -177,7 +191,8 @@
     "node": "none",
     "browser": "none",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "declares-max-size.png",
@@ -189,7 +204,8 @@
     "node": "none",
     "browser": "none",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "declares-zero-size.png",
@@ -201,7 +217,8 @@
     "node": "fails",
     "browser": "fails",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "bomb-20000x20000.png",
@@ -213,7 +230,8 @@
     "node": "none",
     "browser": "none",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "too-wide-for-webp.png",
@@ -225,7 +243,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "Too large for WebP, which holds 16383 pixels a side at most",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "signature-only.png",
@@ -237,7 +256,8 @@
     "node": "none",
     "browser": "none",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "truncated.png",
@@ -249,7 +269,8 @@
     "node": "fails",
     "browser": "fails",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "no-image-data.png",
@@ -261,7 +282,8 @@
     "node": "fails",
     "browser": "fails",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "short-image-data.png",
@@ -273,7 +295,8 @@
     "node": "fails",
     "browser": "fails",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "corrupt-image-data.png",
@@ -285,7 +308,8 @@
     "node": "fails",
     "browser": "fails",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "bad-checksum.png",
@@ -297,7 +321,8 @@
     "node": "fails",
     "browser": "fails",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "bad-bit-depth.png",
@@ -309,7 +334,8 @@
     "node": "fails",
     "browser": "fails",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "bad-colour-type.png",
@@ -321,7 +347,8 @@
     "node": "fails",
     "browser": "fails",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "bad-filter-type.png",
@@ -333,7 +360,8 @@
     "node": "fails",
     "browser": "fails",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "chunk-length-overflow.png",
@@ -345,7 +373,8 @@
     "node": "none",
     "browser": "none",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "header-not-first.png",
@@ -357,7 +386,8 @@
     "node": "fails",
     "browser": "fails",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "metadata-bomb.png",
@@ -369,7 +399,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "no-end-marker.png",
@@ -381,7 +412,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "trailing-garbage.png",
@@ -393,7 +425,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "truncated.avif",
@@ -405,7 +438,8 @@
     "node": "fails",
     "browser": "fails",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "corrupt-data.avif",
@@ -417,7 +451,8 @@
     "node": "fails",
     "browser": "fails",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "truncated.jxl",
@@ -429,7 +464,8 @@
     "node": "fails",
     "browser": "fails",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "corrupt-data.jxl",
@@ -441,7 +477,8 @@
     "node": "fails",
     "browser": "fails",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "truncated.heic",
@@ -453,7 +490,8 @@
     "node": "fails",
     "browser": "fails",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "truncated.bmp",
@@ -465,7 +503,8 @@
     "node": "fails",
     "browser": "fails",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "truncated.qoi",
@@ -477,7 +516,8 @@
     "node": "fails",
     "browser": "fails",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "truncated.psd",
@@ -489,7 +529,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is damaged: a part of the file is longer than the file",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "truncated.ico",
@@ -501,7 +542,8 @@
     "node": "fails",
     "browser": "fails",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "truncated.jp2",
@@ -513,7 +555,8 @@
     "node": "fails",
     "browser": "fails",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "truncated.tga",
@@ -525,7 +568,8 @@
     "node": "fails",
     "browser": "fails",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "truncated.ppm",
@@ -537,7 +581,8 @@
     "node": "fails",
     "browser": "fails",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "truncated.pcx",
@@ -549,7 +594,8 @@
     "node": "fails",
     "browser": "fails",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "truncated.sgi",
@@ -561,7 +607,8 @@
     "node": "fails",
     "browser": "fails",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "truncated.ras",
@@ -573,7 +620,8 @@
     "node": "fails",
     "browser": "fails",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "truncated.hdr",
@@ -585,7 +633,8 @@
     "node": "fails",
     "browser": "fails",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "truncated.exr",
@@ -597,7 +646,8 @@
     "node": "fails",
     "browser": "fails",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "truncated.svgz",
@@ -609,7 +659,8 @@
     "node": "fails",
     "browser": "fails",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "gzip-bomb.svgz",
@@ -621,7 +672,8 @@
     "node": "fails",
     "browser": "fails",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "gzip-of-text.svgz",
@@ -633,7 +685,8 @@
     "node": "none",
     "browser": "none",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "bad-offset.ico",
@@ -645,7 +698,8 @@
     "node": "fails",
     "browser": "fails",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "unclosed.svg",
@@ -657,7 +711,8 @@
     "node": "fails",
     "browser": "fails",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "use-bomb.svg",
@@ -669,7 +724,8 @@
     "node": "fails",
     "browser": "fails",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "self-reference.svg",
@@ -681,7 +737,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "html-named.svg",
@@ -693,7 +750,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file has no text in it to convert",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "sixteen-bit.png",
@@ -705,7 +763,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "palette-with-transparency.png",
@@ -717,7 +776,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "one-bit-grey.png",
@@ -729,7 +789,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "gif-header-then-script.png",
@@ -741,7 +802,8 @@
     "node": "fails",
     "browser": "fails",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "entity-expansion.svg",
@@ -753,7 +815,8 @@
     "node": "fails",
     "browser": "fails",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "svg-fetches-elsewhere.svg",
@@ -765,7 +828,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "utf16-text.png",
@@ -777,7 +841,8 @@
     "node": "none",
     "browser": "none",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "png-then-zip.png",
@@ -789,7 +854,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "script-in-metadata.png",
@@ -801,7 +867,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "OMSETT-TRAP-PAYLOAD"
+    "absent": "OMSETT-TRAP-PAYLOAD",
+    "to": null
   },
   {
     "file": "rowbytes-overflow.png",
@@ -813,7 +880,8 @@
     "node": "none",
     "browser": "none",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "sign-bit-size.png",
@@ -825,7 +893,8 @@
     "node": "none",
     "browser": "none",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "tall-1x100000.png",
@@ -837,7 +906,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "Too large for WebP, which holds 16383 pixels a side at most",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "large-8000x8000.png",
@@ -849,7 +919,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "inner-checksum-wrong.png",
@@ -861,7 +932,8 @@
     "node": "fails",
     "browser": "fails",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "too-much-image-data.png",
@@ -873,7 +945,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "palette-index-out-of-range.png",
@@ -885,7 +958,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "palette-wrong-length.png",
@@ -897,7 +971,8 @@
     "node": "fails",
     "browser": "fails",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "transparency-longer-than-palette.png",
@@ -909,7 +984,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "unknown-critical-chunk.png",
@@ -921,7 +997,8 @@
     "node": "fails",
     "browser": "fails",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "interlace-flag-lies.png",
@@ -933,7 +1010,8 @@
     "node": "fails",
     "browser": "fails",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "colour-profile-bomb.png",
@@ -945,7 +1023,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "image-data-in-single-bytes.png",
@@ -957,7 +1036,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "five-thousand-comments.png",
@@ -969,7 +1049,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "zero-gamma.png",
@@ -981,7 +1062,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "claims-a-million-frames.png",
@@ -993,7 +1075,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "interlaced.png",
@@ -1005,7 +1088,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "truncated.json",
@@ -1017,7 +1101,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not valid JSON",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "nested-300-deep.json",
@@ -1029,7 +1114,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "The values in this file are nested too deeply",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "proto-names.json",
@@ -1041,7 +1127,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "byte-order-mark.json",
@@ -1053,7 +1140,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "utf-16.json",
@@ -1065,7 +1153,8 @@
     "node": "none",
     "browser": "none",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "alias-bomb.yaml",
@@ -1077,7 +1166,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not valid YAML",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "asks-to-run-code.yaml",
@@ -1089,7 +1179,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "unclosed-list.yaml",
@@ -1101,7 +1192,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not valid YAML",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "same-name-twice.toml",
@@ -1113,7 +1205,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not valid TOML",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "unfinished-text.toml",
@@ -1125,7 +1218,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not valid TOML",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "entity-bomb.xml",
@@ -1137,7 +1231,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    "absent": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "to": null
   },
   {
     "file": "reads-a-local-file.xml",
@@ -1149,7 +1244,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not valid XML",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "wrong-closing-tag.xml",
@@ -1161,7 +1257,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not valid XML",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "two-documents.xml",
@@ -1173,7 +1270,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not valid XML",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "web-page.xml",
@@ -1185,7 +1283,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "quote-never-closed.csv",
@@ -1197,7 +1296,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "A quoted value in this table is never closed",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "spreadsheet-formulas.csv",
@@ -1209,7 +1309,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "picture-named.csv",
@@ -1221,7 +1322,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "table-named.png",
@@ -1233,7 +1335,8 @@
     "node": "none",
     "browser": "none",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "latin-1.csv",
@@ -1245,7 +1348,8 @@
     "node": "none",
     "browser": "none",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "notes.txt",
@@ -1257,7 +1361,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "truncated.srt",
@@ -1269,7 +1374,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not valid SRT",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "ends-before-it-starts.srt",
@@ -1281,7 +1387,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "A subtitle in this file ends before it starts",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "impossible-time.srt",
@@ -1293,7 +1400,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not valid SRT",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "no-words.srt",
@@ -1305,7 +1413,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file has no subtitles in it",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "script-in-subtitles.srt",
@@ -1317,7 +1426,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "onerror"
+    "absent": "onerror",
+    "to": null
   },
   {
     "file": "tag-inside-a-tag.srt",
@@ -1329,7 +1439,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "<script"
+    "absent": "<script",
+    "to": null
   },
   {
     "file": "words-before-any-time.srt",
@@ -1341,7 +1452,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "arrow-in-the-wrong-place.srt",
@@ -1353,7 +1465,8 @@
     "node": "none",
     "browser": "none",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "picture-named.srt",
@@ -1365,7 +1478,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "subtitles-named.txt",
@@ -1377,7 +1491,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "latin-1.srt",
@@ -1389,7 +1504,8 @@
     "node": "none",
     "browser": "none",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "utf-16.srt",
@@ -1401,7 +1517,8 @@
     "node": "none",
     "browser": "none",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "nothing-inside.srt",
@@ -1413,7 +1530,8 @@
     "node": "none",
     "browser": "none",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "zero-bytes-inside.srt",
@@ -1425,7 +1543,8 @@
     "node": "none",
     "browser": "none",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "truncated.vtt",
@@ -1437,7 +1556,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not valid WebVTT",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "no-heading.vtt",
@@ -1449,7 +1569,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "almost-the-heading.vtt",
@@ -1461,7 +1582,8 @@
     "node": "none",
     "browser": "none",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "ninety-minutes-past.vtt",
@@ -1473,7 +1595,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not valid WebVTT",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "words-with-no-time.vtt",
@@ -1485,7 +1608,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not valid WebVTT",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "escaped-twice.vtt",
@@ -1497,7 +1621,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "<script"
+    "absent": "<script",
+    "to": null
   },
   {
     "file": "only-notes.vtt",
@@ -1509,7 +1634,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file has no subtitles in it",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "truncated.ass",
@@ -1521,7 +1647,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not valid ASS",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "braces-never-closed.ass",
@@ -1533,7 +1660,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "no-events.ass",
@@ -1545,7 +1673,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not valid ASS",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "columns-lie.ass",
@@ -1557,7 +1686,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not valid ASS",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "a-thousand-columns.ass",
@@ -1569,7 +1699,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not valid ASS",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "only-drawings.ass",
@@ -1581,7 +1712,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file has no subtitles in it",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "times-are-words.ass",
@@ -1593,7 +1725,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not valid ASS",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "heading-only.toml",
@@ -1605,7 +1738,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not valid ASS",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "truncated.ssa",
@@ -1617,7 +1751,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not valid SSA",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "ends-before-it-starts.ssa",
@@ -1629,7 +1764,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "A subtitle in this file ends before it starts",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "newer-than-it-says.ssa",
@@ -1641,7 +1777,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "no-columns-named.ssa",
@@ -1653,7 +1790,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "truncated.sbv",
@@ -1665,7 +1803,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not valid SBV",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "ends-before-it-starts.sbv",
@@ -1677,7 +1816,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "A subtitle in this file ends before it starts",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "captions-named.csv",
@@ -1689,7 +1829,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "table-named.sbv",
@@ -1701,7 +1842,8 @@
     "node": "none",
     "browser": "none",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "truncated.lrc",
@@ -1713,7 +1855,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not valid LRC",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "lyrics-bomb.lrc",
@@ -1725,7 +1868,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file holds more subtitles than Omsett will convert",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "times-and-no-words.lrc",
@@ -1737,7 +1881,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file has no subtitles in it",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "no-times.lrc",
@@ -1749,7 +1894,8 @@
     "node": "none",
     "browser": "none",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "ninety-nine-seconds.lrc",
@@ -1761,7 +1907,8 @@
     "node": "none",
     "browser": "none",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "list-named.lrc",
@@ -1773,7 +1920,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "words-between-the-lines.lrc",
@@ -1785,7 +1933,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not valid LRC",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "truncated.sub",
@@ -1797,7 +1946,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not valid MicroDVD",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "no-frames-a-second.sub",
@@ -1809,7 +1959,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not valid MicroDVD",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "ends-before-it-starts.sub",
@@ -1821,7 +1972,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "A subtitle in this file ends before it starts",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "frame-beyond-counting.sub",
@@ -1833,7 +1985,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not valid MicroDVD",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "object-named.sub",
@@ -1845,7 +1998,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "dvd-subtitles.sub",
@@ -1857,7 +2011,8 @@
     "node": "none",
     "browser": "none",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "truncated.ttml",
@@ -1869,7 +2024,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not valid TTML",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "entity-bomb.ttml",
@@ -1881,7 +2037,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    "absent": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "to": null
   },
   {
     "file": "reads-a-local-file.ttml",
@@ -1893,7 +2050,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not valid TTML",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "nested-ten-thousand-deep.ttml",
@@ -1905,7 +2063,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not valid TTML",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "time-is-a-word.ttml",
@@ -1917,7 +2076,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not valid TTML",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "no-frames-a-second.ttml",
@@ -1929,7 +2089,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not valid TTML",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "no-times.ttml",
@@ -1941,7 +2102,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file has no subtitles in it",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "ends-before-it-starts.ttml",
@@ -1953,7 +2115,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "A subtitle in this file ends before it starts",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "subtitles-in-a-comment.ttml",
@@ -1965,7 +2128,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "subtitles-named.xml",
@@ -1977,7 +2141,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "truncated.smi",
@@ -1989,7 +2154,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "SYNC"
+    "absent": "SYNC",
+    "to": null
   },
   {
     "file": "no-subtitles.smi",
@@ -2001,7 +2167,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file has no subtitles in it",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "script-in-captions.smi",
@@ -2013,7 +2180,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "iframe"
+    "absent": "iframe",
+    "to": null
   },
   {
     "file": "comments-never-closed.smi",
@@ -2025,7 +2193,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "<!--"
+    "absent": "<!--",
+    "to": null
   },
   {
     "file": "time-beyond-counting.smi",
@@ -2037,7 +2206,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file has no subtitles in it",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "web-page-named.smi",
@@ -2049,7 +2219,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "script-in-markdown.md",
@@ -2061,7 +2232,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "alert("
+    "absent": "alert(",
+    "to": null
   },
   {
     "file": "links-that-are-code.md",
@@ -2073,7 +2245,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "alert("
+    "absent": "alert(",
+    "to": null
   },
   {
     "file": "title-breaks-out.md",
@@ -2085,7 +2258,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "<script"
+    "absent": "<script",
+    "to": null
   },
   {
     "file": "page-takes-over.md",
@@ -2097,7 +2271,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "elsewhere.example"
+    "absent": "elsewhere.example",
+    "to": null
   },
   {
     "file": "quotes-ten-thousand-deep.md",
@@ -2109,7 +2284,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is nested too deeply to convert",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "lists-a-thousand-deep.md",
@@ -2121,7 +2297,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is nested too deeply to convert",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "brackets-never-closed.md",
@@ -2133,7 +2310,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "emphasis-never-closed.md",
@@ -2145,7 +2323,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "truncated.md",
@@ -2157,7 +2336,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "only-a-comment.md",
@@ -2169,7 +2349,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file has no text in it to convert",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "picture-named.md",
@@ -2181,7 +2362,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "latin-1.md",
@@ -2193,7 +2375,8 @@
     "node": "none",
     "browser": "none",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "zero-bytes-inside.md",
@@ -2205,7 +2388,8 @@
     "node": "none",
     "browser": "none",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "nothing-inside.md",
@@ -2217,7 +2401,8 @@
     "node": "none",
     "browser": "none",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "truncated.html",
@@ -2229,7 +2414,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "cla"
+    "absent": "cla",
+    "to": null
   },
   {
     "file": "nested-ten-thousand-deep.html",
@@ -2241,7 +2427,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is nested too deeply to convert",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "nothing-but-scripts.html",
@@ -2253,7 +2440,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file has no text in it to convert",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "everything-that-runs.html",
@@ -2265,7 +2453,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "alert("
+    "absent": "alert(",
+    "to": null
   },
   {
     "file": "hidden-words.html",
@@ -2277,7 +2466,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "NOT-CONTENT"
+    "absent": "NOT-CONTENT",
+    "to": null
   },
   {
     "file": "doctype-and-nothing-else.html",
@@ -2289,7 +2479,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file has no text in it to convert",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "a-hundred-thousand-attributes.html",
@@ -2301,7 +2492,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "a99999"
+    "absent": "a99999",
+    "to": null
   },
   {
     "file": "comments-never-closed.html",
@@ -2313,7 +2505,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "<!--"
+    "absent": "<!--",
+    "to": null
   },
   {
     "file": "page-named.json",
@@ -2325,7 +2518,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "piece-of-a-page.html",
@@ -2337,7 +2531,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "utf-16.html",
@@ -2349,7 +2544,8 @@
     "node": "none",
     "browser": "none",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "truncated.ttf",
@@ -2361,7 +2557,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid TTF font",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "one-byte-changed.ttf",
@@ -2373,7 +2570,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This font is damaged: part of it does not match its own checksum",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "table-outside-the-file.ttf",
@@ -2385,7 +2583,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid TTF font",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "table-is-the-list-itself.ttf",
@@ -2397,7 +2596,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid TTF font",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "sixty-five-thousand-tables.ttf",
@@ -2409,7 +2609,8 @@
     "node": "none",
     "browser": "none",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "no-letters.ttf",
@@ -2421,7 +2622,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid TTF font",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "same-table-twice.ttf",
@@ -2433,7 +2635,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid TTF font",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "wrong-magic-number.ttf",
@@ -2445,7 +2648,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid TTF font",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "first-bytes-only.ttf",
@@ -2457,7 +2661,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid TTF font",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "picture-named.ttf",
@@ -2469,7 +2674,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "words-named.ttf",
@@ -2481,7 +2687,8 @@
     "node": "none",
     "browser": "none",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "collection.ttc",
@@ -2493,7 +2700,8 @@
     "node": "none",
     "browser": "none",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "truncated.otf",
@@ -2505,7 +2713,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid OTF font",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "one-byte-changed.otf",
@@ -2517,7 +2726,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This font is damaged: part of it does not match its own checksum",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "wrong-outlines-inside.otf",
@@ -2529,7 +2739,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid OTF font",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "ttf-named.otf",
@@ -2541,7 +2752,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "truncated.woff",
@@ -2553,7 +2765,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid WOFF font",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "something-added-after.woff",
@@ -2565,7 +2778,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid WOFF font",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "unpacks-to-far-more.woff",
@@ -2577,7 +2791,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid WOFF font",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "claims-four-gigabytes.woff",
@@ -2589,7 +2804,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This font is too large to convert",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "unpacks-to-less.woff",
@@ -2601,7 +2817,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid WOFF font",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "packing-is-noise.woff",
@@ -2613,7 +2830,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid WOFF font",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "table-changed-after-packing.woff",
@@ -2625,7 +2843,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This font is damaged: part of it does not match its own checksum",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "no-such-kind-of-font.woff",
@@ -2637,7 +2856,8 @@
     "node": "none",
     "browser": "none",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "postscript-inside.woff",
@@ -2649,7 +2869,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This font has PostScript outlines, so it unwraps to OTF, not TTF. Choose OTF.",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "woff-named.woff2",
@@ -2661,7 +2882,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "truncated.woff2",
@@ -2673,7 +2895,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid WOFF2 font",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "packing-damaged.woff2",
@@ -2685,7 +2908,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid WOFF2 font",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "claims-four-gigabytes.woff2",
@@ -2697,7 +2921,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "first-bytes-only.woff2",
@@ -2709,7 +2934,8 @@
     "node": "none",
     "browser": "none",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "length-lies.woff2",
@@ -2721,7 +2947,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid WOFF2 font",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "truncated.vcf",
@@ -2733,7 +2960,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not valid vCard",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "contact-inside-a-contact.vcf",
@@ -2745,7 +2973,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not valid vCard",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "begins-a-thousand-deep.vcf",
@@ -2757,7 +2986,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not valid vCard",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "ended-by-the-wrong-thing.vcf",
@@ -2769,7 +2999,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not valid vCard",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "a-line-with-no-colon.vcf",
@@ -2781,7 +3012,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not valid vCard",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "nobody-in-it.vcf",
@@ -2793,7 +3025,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "ten-megabyte-photo.vcf",
@@ -2805,7 +3038,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "QUFBQUFB"
+    "absent": "QUFBQUFB",
+    "to": null
   },
   {
     "file": "five-thousand-emails.vcf",
@@ -2817,7 +3051,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "a4999@example.org"
+    "absent": "a4999@example.org",
+    "to": null
   },
   {
     "file": "folded-forever.vcf",
@@ -2829,7 +3064,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "formula-in-a-name.vcf",
@@ -2841,7 +3077,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "picture-named.vcf",
@@ -2853,7 +3090,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "almost-the-first-line.vcf",
@@ -2865,7 +3103,8 @@
     "node": "none",
     "browser": "none",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "latin-1.vcf",
@@ -2877,7 +3116,8 @@
     "node": "none",
     "browser": "none",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "contacts-named.csv",
@@ -2889,7 +3129,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "truncated.ics",
@@ -2901,7 +3142,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not valid iCalendar",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "event-outside-a-calendar.ics",
@@ -2913,7 +3155,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file has no events in it",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "event-inside-an-event.ics",
@@ -2925,7 +3168,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not valid iCalendar",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "no-start.ics",
@@ -2937,7 +3181,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not valid iCalendar",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "start-is-a-word.ics",
@@ -2949,7 +3194,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not valid iCalendar",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "only-tasks.ics",
@@ -2961,7 +3207,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file has no events in it",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "alarms-a-thousand-deep.ics",
@@ -2973,7 +3220,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not valid iCalendar",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "repeats-every-second-forever.ics",
@@ -2985,7 +3233,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "fetches-from-elsewhere.ics",
@@ -2997,7 +3246,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "elsewhere.example"
+    "absent": "elsewhere.example",
+    "to": null
   },
   {
     "file": "calendar-named.vcf",
@@ -3009,7 +3259,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "picture-named.ics",
@@ -3021,7 +3272,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "row-that-ends-its-contact.csv",
@@ -3033,7 +3285,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "row-that-ends-its-event.csv",
@@ -3045,7 +3298,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "truncated.zip",
@@ -3057,7 +3311,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid ZIP archive",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "climbs-out.zip",
@@ -3069,7 +3324,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This archive holds a file named so that it would land outside the folder it is unpacked into",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "absolute-path.zip",
@@ -3081,7 +3337,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This archive holds a file named so that it would land outside the folder it is unpacked into",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "windows-path.zip",
@@ -3093,7 +3350,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This archive holds a file named so that it would land outside the folder it is unpacked into",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "drive-letter.zip",
@@ -3105,7 +3363,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This archive holds a file named so that it would land outside the folder it is unpacked into",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "climbs-out-invisibly.zip",
@@ -3117,7 +3376,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This archive holds a file named so that it would land outside the folder it is unpacked into",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "climbs-out-with-a-space.zip",
@@ -3129,7 +3389,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This archive holds a file named so that it would land outside the folder it is unpacked into",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "bomb.zip",
@@ -3141,7 +3402,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This archive unpacks to more than Omsett will handle (256 MB)",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "bomb-that-lies.zip",
@@ -3153,7 +3415,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid ZIP archive",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "files-that-overlap.zip",
@@ -3165,7 +3428,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid ZIP archive",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "password.zip",
@@ -3177,7 +3441,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This archive is protected by a password, which Omsett cannot open",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "packed-another-way.zip",
@@ -3189,7 +3454,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This archive is packed in a way Omsett does not read",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "wrong-checksum.zip",
@@ -3201,7 +3467,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This archive is damaged: a file in it does not match its own checksum",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "ten-thousand-and-one-files.zip",
@@ -3213,7 +3480,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This archive holds more files than Omsett will handle (10,000)",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "zip-inside-zip.zip",
@@ -3225,7 +3493,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "same-name-twice.zip",
@@ -3237,7 +3506,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This archive holds two files with the same name",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "two-names-for-one-file.zip",
@@ -3249,7 +3519,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid ZIP archive",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "name-written-backwards.zip",
@@ -3261,7 +3532,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "\u00e2\u0080\u00ae"
+    "absent": "\u00e2\u0080\u00ae",
+    "to": null
   },
   {
     "file": "link-to-elsewhere.zip",
@@ -3273,7 +3545,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "/etc/passwd"
+    "absent": "/etc/passwd",
+    "to": null
   },
   {
     "file": "script-in-the-comment.zip",
@@ -3285,7 +3558,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "<script"
+    "absent": "<script",
+    "to": null
   },
   {
     "file": "very-large-form.zip",
@@ -3297,7 +3571,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This archive is in the ZIP64 form, for very large archives, which Omsett does not read yet",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "only-folders.zip",
@@ -3309,7 +3584,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This archive has no files in it",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "list-is-somewhere-else.zip",
@@ -3321,7 +3597,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid ZIP archive",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "picture-named.zip",
@@ -3333,7 +3610,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "truncated.tar",
@@ -3345,7 +3623,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid TAR archive",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "climbs-out.tar",
@@ -3357,7 +3636,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This archive holds a file named so that it would land outside the folder it is unpacked into",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "absolute-path.tar",
@@ -3369,7 +3649,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This archive holds a file named so that it would land outside the folder it is unpacked into",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "link-then-file-through-it.tar",
@@ -3381,7 +3662,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "/etc"
+    "absent": "/etc",
+    "to": null
   },
   {
     "file": "devices-and-pipes.tar",
@@ -3393,7 +3675,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "disk0"
+    "absent": "disk0",
+    "to": null
   },
   {
     "file": "claims-eight-gigabytes.tar",
@@ -3405,7 +3688,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid TAR archive",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "size-beyond-counting.tar",
@@ -3417,7 +3701,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This archive unpacks to more than Omsett will handle (256 MB)",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "size-is-a-word.tar",
@@ -3429,7 +3714,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid TAR archive",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "header-sum-wrong.tar",
@@ -3441,7 +3727,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid TAR archive",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "long-name-climbs-out.tar",
@@ -3453,7 +3740,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This archive holds a file named so that it would land outside the folder it is unpacked into",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "older-long-name-climbs-out.tar",
@@ -3465,7 +3753,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This archive holds a file named so that it would land outside the folder it is unpacked into",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "file-with-holes.tar",
@@ -3477,7 +3766,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This archive holds a file stored in a way Omsett does not read",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "same-name-twice.tar",
@@ -3489,7 +3779,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This archive holds two files with the same name",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "no-end-marker.tar",
@@ -3501,7 +3792,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "picture-named.tar",
@@ -3513,7 +3805,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "truncated.tar.gz",
@@ -3525,7 +3818,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid TAR.GZ archive",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "bomb.tar.gz",
@@ -3537,7 +3831,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This archive unpacks to more than Omsett will handle (256 MB)",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "ten-thousand-and-one-files.tar.gz",
@@ -3549,7 +3844,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This archive holds more files than Omsett will handle (10,000)",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "climbs-out.tar.gz",
@@ -3561,7 +3857,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This archive holds a file named so that it would land outside the folder it is unpacked into",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "damaged.tar.gz",
@@ -3573,7 +3870,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid TAR.GZ archive",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "words-squeezed.tar.gz",
@@ -3585,7 +3883,8 @@
     "node": "none",
     "browser": "none",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "zip-named.tar.gz",
@@ -3597,7 +3896,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "truncated.xlsx",
@@ -3609,7 +3909,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid XLSX workbook",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "entity-bomb.xlsx",
@@ -3621,7 +3922,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid XLSX workbook",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "reads-a-local-file.xlsx",
@@ -3633,7 +3935,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid XLSX workbook",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "bomb-inside.xlsx",
@@ -3645,7 +3948,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This workbook is too large to convert in a browser",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "formulas-that-run-programs.xlsx",
@@ -3657,7 +3961,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "calc.exe"
+    "absent": "calc.exe",
+    "to": null
   },
   {
     "file": "linked-to-elsewhere.xlsx",
@@ -3669,7 +3974,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "elsewhere.example"
+    "absent": "elsewhere.example",
+    "to": null
   },
   {
     "file": "every-sheet-hidden.xlsx",
@@ -3681,7 +3987,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This workbook has no rows in it",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "sheet-is-outside-the-workbook.xlsx",
@@ -3693,7 +4000,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid XLSX workbook",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "last-cell-of-the-sheet.xlsx",
@@ -3705,7 +4013,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "small-in-the-file-vast-when-laid-out.xlsx",
@@ -3717,7 +4026,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This workbook is too large to convert in a browser",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "cell-beyond-the-sheet.xlsx",
@@ -3729,7 +4039,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid XLSX workbook",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "a-row-of-two-million-cells.xlsx",
@@ -3741,7 +4052,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This workbook is too large to convert in a browser",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "dates-that-are-not-days.xlsx",
@@ -3753,7 +4065,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "no-list-of-sheets.xlsx",
@@ -3765,7 +4078,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid XLSX workbook",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "locked-with-a-password.xlsx",
@@ -3777,7 +4091,8 @@
     "node": "none",
     "browser": "none",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "picture-named.xlsx",
@@ -3789,7 +4104,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "archive-named.xlsx",
@@ -3801,7 +4117,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "workbook-named.zip",
@@ -3813,7 +4130,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "table-named.xlsx",
@@ -3825,7 +4143,8 @@
     "node": "none",
     "browser": "none",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "truncated.docx",
@@ -3837,7 +4156,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid DOCX document",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "entity-bomb.docx",
@@ -3849,7 +4169,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid DOCX document",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "reads-a-local-file.docx",
@@ -3861,7 +4182,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid DOCX document",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "shorthand-after-a-long-comment.docx",
@@ -3873,7 +4195,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid DOCX document",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "bomb-inside.docx",
@@ -3885,7 +4208,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This document is too large to convert in a browser",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "link-that-is-code.docx",
@@ -3897,7 +4221,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "javascript"
+    "absent": "javascript",
+    "to": null
   },
   {
     "file": "fetches-a-picture.docx",
@@ -3909,7 +4234,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "elsewhere.example"
+    "absent": "elsewhere.example",
+    "to": null
   },
   {
     "file": "fetches-a-template.docx",
@@ -3921,7 +4247,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "AutoOpen"
+    "absent": "AutoOpen",
+    "to": null
   },
   {
     "file": "web-page-inside.docx",
@@ -3933,7 +4260,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "Smuggled"
+    "absent": "Smuggled",
+    "to": null
   },
   {
     "file": "what-was-deleted.docx",
@@ -3945,7 +4273,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "SECRET-"
+    "absent": "SECRET-",
+    "to": null
   },
   {
     "file": "tables-two-hundred-deep.docx",
@@ -3957,7 +4286,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid DOCX document",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "no-text-part.docx",
@@ -3969,7 +4299,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid DOCX document",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "empty-paragraphs.docx",
@@ -3981,7 +4312,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This document has no text in it to convert",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "picture-named.docx",
@@ -3993,7 +4325,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "archive-named.docx",
@@ -4005,7 +4338,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "workbook-named.docx",
@@ -4017,7 +4351,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "document-named.zip",
@@ -4029,7 +4364,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "older-word.doc",
@@ -4041,7 +4377,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid DOC document",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "truncated.pptx",
@@ -4053,7 +4390,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid PPTX presentation",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "entity-bomb.pptx",
@@ -4065,7 +4403,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid PPTX presentation",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "bomb-inside.pptx",
@@ -4077,7 +4416,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This presentation is too large to convert in a browser",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "what-the-audience-was-not-shown.pptx",
@@ -4089,7 +4429,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "SECRET-"
+    "absent": "SECRET-",
+    "to": null
   },
   {
     "file": "link-that-is-code.pptx",
@@ -4101,7 +4442,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "javascript"
+    "absent": "javascript",
+    "to": null
   },
   {
     "file": "runs-a-program-when-clicked.pptx",
@@ -4113,7 +4455,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "calc.exe"
+    "absent": "calc.exe",
+    "to": null
   },
   {
     "file": "fetches-a-picture.pptx",
@@ -4125,7 +4468,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "elsewhere.example"
+    "absent": "elsewhere.example",
+    "to": null
   },
   {
     "file": "picture-is-outside-the-presentation.pptx",
@@ -4137,7 +4481,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "passwd"
+    "absent": "passwd",
+    "to": null
   },
   {
     "file": "every-slide-hidden.pptx",
@@ -4149,7 +4494,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This presentation has no text in it to convert",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "one-slide-two-thousand-times.pptx",
@@ -4161,7 +4507,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid PPTX presentation",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "no-list-of-slides.pptx",
@@ -4173,7 +4520,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid PPTX presentation",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "groups-two-hundred-deep.pptx",
@@ -4185,7 +4533,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid PPTX presentation",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "picture-named.pptx",
@@ -4197,7 +4546,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "document-named.pptx",
@@ -4209,7 +4559,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "slides-named.zip",
@@ -4221,7 +4572,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "older-powerpoint.ppt",
@@ -4233,7 +4585,8 @@
     "node": "none",
     "browser": "none",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "what-the-writer-set-aside.fountain",
@@ -4245,7 +4598,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "SECRET-"
+    "absent": "SECRET-",
+    "to": null
   },
   {
     "file": "marks-that-open-nothing.fountain",
@@ -4257,7 +4611,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "types-its-own-tags.fountain",
@@ -4269,7 +4624,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "<Paragraph Type=\"Scene Heading\"><Text>INJECTED"
+    "absent": "<Paragraph Type=\"Scene Heading\"><Text>INJECTED",
+    "to": null
   },
   {
     "file": "nothing-but-notes.fountain",
@@ -4281,7 +4637,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This script has nothing in it to convert",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "picture-named.fountain",
@@ -4293,7 +4650,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "latin-1.fountain",
@@ -4305,7 +4663,8 @@
     "node": "none",
     "browser": "none",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "truncated.fdx",
@@ -4317,7 +4676,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid Final Draft script",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "entity-bomb.fdx",
@@ -4329,7 +4689,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid Final Draft script",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "reads-a-local-file.fdx",
@@ -4341,7 +4702,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid Final Draft script",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "notes-and-revisions.fdx",
@@ -4353,7 +4715,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "SECRET-"
+    "absent": "SECRET-",
+    "to": null
   },
   {
     "file": "no-script-inside.fdx",
@@ -4365,7 +4728,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid Final Draft script",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "empty-paragraphs.fdx",
@@ -4377,7 +4741,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This script has nothing in it to convert",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "speeches-nested-a-thousand-deep.fdx",
@@ -4389,7 +4754,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid Final Draft script",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "data-named.fdx",
@@ -4401,7 +4767,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "script-named.xml",
@@ -4413,7 +4780,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "the-papers-beside-the-script.drafter",
@@ -4425,7 +4793,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "SECRET-"
+    "absent": "SECRET-",
+    "to": null
   },
   {
     "file": "truncated.drafter",
@@ -4437,7 +4806,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid Drafter package",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "script-is-outside-the-package.drafter",
@@ -4449,7 +4819,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid Drafter package",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "script-is-not-there.drafter",
@@ -4461,7 +4832,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid Drafter package",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "manifest-is-not-json.drafter",
@@ -4473,7 +4845,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid Drafter package",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "manifest-is-two-megabytes.drafter",
@@ -4485,7 +4858,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid Drafter package",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "manifest-of-another-format.drafter",
@@ -4497,7 +4871,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid Drafter package",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "holds-prose.drafter",
@@ -4509,7 +4884,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This Drafter package holds prose, not a script. Its text is the Markdown file inside it",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "bomb-inside.drafter",
@@ -4521,7 +4897,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This archive unpacks to more than Omsett will handle (256 MB)",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "says-it-is-something-else.drafter",
@@ -4533,7 +4910,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid EPUB book",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "package-named.zip",
@@ -4545,7 +4923,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "truncated.pdf",
@@ -4557,7 +4936,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid PDF",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "runs-a-script-when-opened.pdf",
@@ -4569,7 +4949,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "app.alert"
+    "absent": "app.alert",
+    "to": null
   },
   {
     "file": "links-that-start-programs.pdf",
@@ -4581,7 +4962,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "cmd.exe"
+    "absent": "cmd.exe",
+    "to": null
   },
   {
     "file": "file-attached-inside.pdf",
@@ -4593,7 +4975,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "SECRET-ATTACHMENT"
+    "absent": "SECRET-ATTACHMENT",
+    "to": null
   },
   {
     "file": "locked-with-a-password.pdf",
@@ -4605,7 +4988,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This PDF is protected by a password, which Omsett cannot open",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "pictures-of-pages.pdf",
@@ -4617,7 +5001,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This PDF has no text in it. It may be a scan: pictures of pages, which Omsett cannot read the words in yet",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "claims-a-billion-pages.pdf",
@@ -4629,7 +5014,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "pages-inside-themselves.pdf",
@@ -4641,7 +5027,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid PDF",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "tagged-for-its-pictures-only.pdf",
@@ -4653,7 +5040,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "[Picture: A chart]"
+    "absent": "[Picture: A chart]",
+    "to": null
   },
   {
     "file": "tags-five-thousand-deep.pdf",
@@ -4665,7 +5053,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "first-line-only.pdf",
@@ -4677,7 +5066,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid PDF",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "picture-named.pdf",
@@ -4689,7 +5079,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "report-named.txt",
@@ -4701,7 +5092,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "code.json",
@@ -4713,7 +5105,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "code.jsonl",
@@ -4725,7 +5118,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "code.yaml",
@@ -4737,7 +5131,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "code.toml",
@@ -4749,7 +5144,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "code.xml",
@@ -4761,7 +5157,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "names-that-pollute.xml",
@@ -4773,7 +5170,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not valid XML",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "code.csv",
@@ -4785,7 +5183,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "code.tsv",
@@ -4797,7 +5196,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "code.vcf",
@@ -4809,7 +5209,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "code.ics",
@@ -4821,7 +5222,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "code.xlsx",
@@ -4833,7 +5235,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "code.srt",
@@ -4845,7 +5248,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "<script"
+    "absent": "<script",
+    "to": null
   },
   {
     "file": "code.vtt",
@@ -4857,7 +5261,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "<script"
+    "absent": "<script",
+    "to": null
   },
   {
     "file": "code.ass",
@@ -4869,7 +5274,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "<script"
+    "absent": "<script",
+    "to": null
   },
   {
     "file": "code.ssa",
@@ -4881,7 +5287,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "<script"
+    "absent": "<script",
+    "to": null
   },
   {
     "file": "code.sbv",
@@ -4893,7 +5300,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "<script"
+    "absent": "<script",
+    "to": null
   },
   {
     "file": "code.lrc",
@@ -4905,7 +5313,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "<script"
+    "absent": "<script",
+    "to": null
   },
   {
     "file": "code.ttml",
@@ -4917,7 +5326,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "<script"
+    "absent": "<script",
+    "to": null
   },
   {
     "file": "code.smi",
@@ -4929,7 +5339,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "<script"
+    "absent": "<script",
+    "to": null
   },
   {
     "file": "code.sub",
@@ -4941,7 +5352,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "<script"
+    "absent": "<script",
+    "to": null
   },
   {
     "file": "code.md",
@@ -4953,7 +5365,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "<script"
+    "absent": "<script",
+    "to": null
   },
   {
     "file": "code.html",
@@ -4965,7 +5378,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "<script>globalThis.__omsett_canary=1"
+    "absent": "<script>globalThis.__omsett_canary=1",
+    "to": null
   },
   {
     "file": "code.docx",
@@ -4977,7 +5391,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "<script>globalThis.__omsett_canary=1"
+    "absent": "<script>globalThis.__omsett_canary=1",
+    "to": null
   },
   {
     "file": "code.pptx",
@@ -4989,7 +5404,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "<script>globalThis.__omsett_canary=1"
+    "absent": "<script>globalThis.__omsett_canary=1",
+    "to": null
   },
   {
     "file": "code.pdf",
@@ -5001,7 +5417,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "<script>globalThis.__omsett_canary=1"
+    "absent": "<script>globalThis.__omsett_canary=1",
+    "to": null
   },
   {
     "file": "code.fountain",
@@ -5013,7 +5430,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "code.fdx",
@@ -5025,7 +5443,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "code.drafter",
@@ -5037,7 +5456,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "code.svg",
@@ -5049,7 +5469,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "omsett_canary"
+    "absent": "omsett_canary",
+    "to": null
   },
   {
     "file": "code.jpg",
@@ -5061,7 +5482,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "omsett_canary"
+    "absent": "omsett_canary",
+    "to": null
   },
   {
     "file": "code.gif",
@@ -5073,7 +5495,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "omsett_canary"
+    "absent": "omsett_canary",
+    "to": null
   },
   {
     "file": "code.ttf",
@@ -5085,7 +5508,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "code.zip",
@@ -5097,7 +5521,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "code.tar",
@@ -5109,7 +5534,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "code.tar.gz",
@@ -5121,7 +5547,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "hidden-every-other-way.docx",
@@ -5133,7 +5560,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "SECRET-"
+    "absent": "SECRET-",
+    "to": null
   },
   {
     "file": "two-million-empty-paragraphs.docx",
@@ -5145,7 +5573,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This document is too large to convert in a browser",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "hidden-spelled-another-way.pptx",
@@ -5157,7 +5586,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "SECRET-"
+    "absent": "SECRET-",
+    "to": null
   },
   {
     "file": "ten-million-empty-rows.xlsx",
@@ -5169,7 +5599,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This workbook is too large to convert in a browser",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "tag-left-behind.srt",
@@ -5181,7 +5612,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "<img"
+    "absent": "<img",
+    "to": null
   },
   {
     "file": "tag-spelled-in-entities.vtt",
@@ -5193,7 +5625,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "<script"
+    "absent": "<script",
+    "to": null
   },
   {
     "file": "words-after-eighty-thousand-blank-lines.srt",
@@ -5205,7 +5638,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "tables-that-share-their-bytes.ttf",
@@ -5217,7 +5651,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid TTF font",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "names-differ-only-in-capitals.zip",
@@ -5229,7 +5664,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This archive holds two files whose names differ only in capitals or accents. On many computers one would overwrite the other",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "names-differ-only-in-accents.zip",
@@ -5241,7 +5677,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This archive holds two files whose names differ only in capitals or accents. On many computers one would overwrite the other",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "named-for-a-device.zip",
@@ -5253,7 +5690,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This archive holds a file with a name Windows cannot keep safely: a device name such as NUL, a name ending in a dot or a space, or one with a colon in it",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "a-second-stream.tar",
@@ -5265,7 +5703,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This archive holds a file with a name Windows cannot keep safely: a device name such as NUL, a name ending in a dot or a space, or one with a colon in it",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "a-file-that-is-also-a-folder.zip",
@@ -5277,7 +5716,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid ZIP archive",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "length-of-eighty-thousand-zeros.tar",
@@ -5289,7 +5729,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "brackets-never-closed.fountain",
@@ -5301,7 +5742,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "type-is-constructor.fdx",
@@ -5313,7 +5755,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "soft-breaks-eighty-thousand-times.vcf",
@@ -5325,7 +5768,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "html-a-thousand-deep.md",
@@ -5337,7 +5781,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is nested too deeply to convert",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "long-and-flat.html",
@@ -5349,7 +5794,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "picture-inside-is-huge.svg",
@@ -5361,7 +5807,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This drawing holds a picture too large to convert in a browser",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "noise-a-hundred-million-deep.svg",
@@ -5373,7 +5820,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This drawing asks for more work than Omsett will do to draw it",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "three-million-letters.svg",
@@ -5385,7 +5833,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This drawing asks for more work than Omsett will do to draw it",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "drawing-in-a-drawing-25-deep.svg",
@@ -5397,7 +5846,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This drawing asks for more work than Omsett will do to draw it",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "picture-inside-is-huge.ico",
@@ -5409,7 +5859,8 @@
     "node": "fails",
     "browser": "fails",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "twenty-thousand-pictures.pbm",
@@ -5421,7 +5872,8 @@
     "node": "fails",
     "browser": "fails",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "comment-ends-the-old-way.pbm",
@@ -5433,7 +5885,8 @@
     "node": "none",
     "browser": "none",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "two-widths.pam",
@@ -5445,7 +5898,8 @@
     "node": "none",
     "browser": "none",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "bmi.csv",
@@ -5457,7 +5911,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "p1-incidents.md",
@@ -5469,7 +5924,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "gif89a.csv",
@@ -5481,7 +5937,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "old-header.bmp",
@@ -5493,7 +5950,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "animation-cut-short.png",
@@ -5505,7 +5963,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "four-billion-frames.png",
@@ -5517,7 +5976,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "frame-larger-than-the-picture.png",
@@ -5529,7 +5989,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "animation-named-gif.gif",
@@ -5541,7 +6002,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "frames-out-of-order.png",
@@ -5553,7 +6015,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "code.apng",
@@ -5565,7 +6028,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "omsett_canary"
+    "absent": "omsett_canary",
+    "to": null
   },
   {
     "file": "truncated.cur",
@@ -5577,7 +6041,8 @@
     "node": "fails",
     "browser": "fails",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "truncated.dds",
@@ -5589,7 +6054,8 @@
     "node": "fails",
     "browser": "fails",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "truncated.fits",
@@ -5601,7 +6067,8 @@
     "node": "fails",
     "browser": "fails",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "truncated.psb",
@@ -5613,7 +6080,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is damaged: the picture stops partway",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "bad-offset.cur",
@@ -5625,7 +6093,8 @@
     "node": "fails",
     "browser": "fails",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "picture-inside-is-huge.cur",
@@ -5637,7 +6106,8 @@
     "node": "fails",
     "browser": "fails",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "clicks-far-outside.cur",
@@ -5649,7 +6119,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "cursor-named-icon.ico",
@@ -5661,7 +6132,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "code.cur",
@@ -5673,7 +6145,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "omsett_canary"
+    "absent": "omsett_canary",
+    "to": null
   },
   {
     "file": "huge-declared.dds",
@@ -5685,7 +6158,8 @@
     "node": "none",
     "browser": "none",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "four-billion-smaller-copies.dds",
@@ -5697,7 +6171,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "header-of-four-bytes.dds",
@@ -5709,7 +6184,8 @@
     "node": "none",
     "browser": "none",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "code.dds",
@@ -5721,7 +6197,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "omsett_canary"
+    "absent": "omsett_canary",
+    "to": null
   },
   {
     "file": "huge-declared.fits",
@@ -5733,7 +6210,8 @@
     "node": "none",
     "browser": "none",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "size-given-twice.fits",
@@ -5745,7 +6223,8 @@
     "node": "none",
     "browser": "none",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "header-never-ends.fits",
@@ -5757,7 +6236,8 @@
     "node": "fails",
     "browser": "fails",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "no-picture.fits",
@@ -5769,7 +6249,8 @@
     "node": "none",
     "browser": "none",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "a-thousand-pictures.fits",
@@ -5781,7 +6262,8 @@
     "node": "fails",
     "browser": "fails",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "bits-that-are-not.fits",
@@ -5793,7 +6275,8 @@
     "node": "fails",
     "browser": "fails",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "words-that-begin-like-fits.fits",
@@ -5805,7 +6288,8 @@
     "node": "none",
     "browser": "none",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "code.fits",
@@ -5817,7 +6301,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "omsett_canary"
+    "absent": "omsett_canary",
+    "to": null
   },
   {
     "file": "huge-declared.psb",
@@ -5829,7 +6314,8 @@
     "node": "none",
     "browser": "none",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "large-file-named-psd.psd",
@@ -5841,7 +6327,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "version-three.psd",
@@ -5853,7 +6340,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is damaged: the file gives a version that does not exist",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "notes-longer-than-the-file.psb",
@@ -5865,7 +6353,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is damaged: a part of the file is longer than the file",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "code.psb",
@@ -5877,7 +6366,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "omsett_canary"
+    "absent": "omsett_canary",
+    "to": null
   },
   {
     "file": "truncated.icns",
@@ -5889,7 +6379,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "No picture could be found in this icon",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "picture-inside-is-damaged.icns",
@@ -5901,7 +6392,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "The picture inside this icon is damaged",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "picture-inside-is-huge.icns",
@@ -5913,7 +6405,8 @@
     "node": "none",
     "browser": "none",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "named-for-one-size-holds-another.icns",
@@ -5925,7 +6418,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "entry-longer-than-the-file.icns",
@@ -5937,7 +6431,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "No picture could be found in this icon",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "entry-of-no-length.icns",
@@ -5949,7 +6444,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "No picture could be found in this icon",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "ten-thousand-entries.icns",
@@ -5961,7 +6457,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "No picture could be found in this icon",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "the-old-kind.icns",
@@ -5973,7 +6470,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "old-kind-without-transparency.icns",
@@ -5985,7 +6483,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "old-kind-overruns.icns",
@@ -5997,7 +6496,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "The picture inside this icon is damaged",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "old-kind-stops-early.icns",
@@ -6009,7 +6509,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "The picture inside this icon is damaged",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "transparency-of-the-wrong-size.icns",
@@ -6021,7 +6522,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "The picture inside this icon is damaged",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "jpeg-2000-inside.icns",
@@ -6033,7 +6535,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This icon keeps its pictures as JPEG 2000, which Omsett cannot yet read out of an icon",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "icon-named-png.png",
@@ -6045,7 +6548,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "code.icns",
@@ -6057,7 +6561,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "omsett_canary"
+    "absent": "omsett_canary",
+    "to": null
   },
   {
     "file": "truncated.dcm",
@@ -6069,7 +6574,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is damaged: the picture stops partway",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "huge-declared.dcm",
@@ -6081,7 +6587,8 @@
     "node": "none",
     "browser": "none",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "picture-shorter-than-it-says.dcm",
@@ -6093,7 +6600,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is damaged: the picture is shorter than the size it gives",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "picture-two-gigabytes-long.dcm",
@@ -6105,7 +6613,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is damaged: the picture stops partway",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "no-picture.dcm",
@@ -6117,7 +6626,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is damaged: the file holds no picture",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "note-longer-than-the-file.dcm",
@@ -6129,7 +6639,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is damaged: a part of the file is longer than the file",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "lists-forty-deep.dcm",
@@ -6141,7 +6652,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is damaged: its lists sit deeper inside one another than any real file needs",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "a-huge-picture-inside-a-list.dcm",
@@ -6153,7 +6665,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "two-hundred-thousand-pictures.dcm",
@@ -6165,7 +6678,8 @@
     "node": "fails",
     "browser": "fails",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "grey.dcm",
@@ -6177,7 +6691,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "kinds-left-out.dcm",
@@ -6189,7 +6704,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "scan-named-png.png",
@@ -6201,7 +6717,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "letters-without-a-scan.dcm",
@@ -6213,7 +6730,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is damaged: the file does not say how large its picture is",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "code.dcm",
@@ -6225,7 +6743,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "omsett_canary"
+    "absent": "omsett_canary",
+    "to": null
   },
   {
     "file": "truncated.dng",
@@ -6237,7 +6756,8 @@
     "node": "fails",
     "browser": "fails",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "huge-declared.dng",
@@ -6249,7 +6769,8 @@
     "node": "none",
     "browser": "none",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "picture-shorter-than-it-says.dng",
@@ -6261,7 +6782,8 @@
     "node": "fails",
     "browser": "fails",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "as-a-sensor-records.dng",
@@ -6273,7 +6795,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "preview-first.dng",
@@ -6285,7 +6808,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "camera-held-sideways.dng",
@@ -6297,7 +6821,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "list-names-itself.dng",
@@ -6309,7 +6834,8 @@
     "node": "fails",
     "browser": "fails",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "picture-says-two-gigabytes.dng",
@@ -6321,7 +6847,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "raw-named-tiff.tif",
@@ -6333,7 +6860,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "code.dng",
@@ -6345,7 +6873,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "omsett_canary"
+    "absent": "omsett_canary",
+    "to": null
   },
   {
     "file": "truncated.xls",
@@ -6357,7 +6886,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid XLS workbook",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "half-an-old-file.xls",
@@ -6369,7 +6899,8 @@
     "node": "none",
     "browser": "none",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "sectors-in-a-circle.xls",
@@ -6381,7 +6912,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid XLS workbook",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "sector-past-the-end.xls",
@@ -6393,7 +6925,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid XLS workbook",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "directory-in-a-circle.xls",
@@ -6405,7 +6938,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid XLS workbook",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "stream-of-two-gigabytes.xls",
@@ -6417,7 +6951,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid XLS workbook",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "locked-with-a-password.xls",
@@ -6429,7 +6964,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This workbook is locked with a password, and cannot be read without it",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "from-excel-95.xls",
@@ -6441,7 +6977,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This workbook was saved by Excel 95 or earlier, in a form Omsett cannot read yet. Opening it in a spreadsheet program and saving it again will bring it up to date",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "record-longer-than-the-workbook.xls",
@@ -6453,7 +6990,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid XLS workbook",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "sheet-somewhere-else.xls",
@@ -6465,7 +7003,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid XLS workbook",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "cell-in-column-sixty-thousand.xls",
@@ -6477,7 +7016,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid XLS workbook",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "one-cell-at-the-end-of-every-row.xls",
@@ -6489,7 +7029,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This workbook is too large to convert in a browser",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "text-broken-across-records.xls",
@@ -6501,7 +7042,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "more-text-than-there-is.xls",
@@ -6513,7 +7055,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "chart-on-the-sheet.xls",
@@ -6525,7 +7068,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "999"
+    "absent": "999",
+    "to": null
   },
   {
     "file": "neighbours-in-one-record.xls",
@@ -6537,7 +7081,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "days-counted-from-1904.xls",
@@ -6549,7 +7094,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "larger-sectors.xls",
@@ -6561,7 +7107,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "hidden-sheet-and-macros.xls",
@@ -6573,7 +7120,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "not shown"
+    "absent": "not shown",
+    "to": null
   },
   {
     "file": "old-workbook-named-as-new.xlsx",
@@ -6585,7 +7133,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "words-named-as-a-workbook.xls",
@@ -6597,7 +7146,8 @@
     "node": "none",
     "browser": "none",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "some-other-old-file.xls",
@@ -6609,7 +7159,8 @@
     "node": "none",
     "browser": "none",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "truncated.doc",
@@ -6621,7 +7172,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid DOC document",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "locked-with-a-password.doc",
@@ -6633,7 +7185,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This document is locked with a password, and cannot be read without it",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "from-word-95.doc",
@@ -6645,7 +7198,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This document was saved by Word 95 or earlier, in a form Omsett cannot read yet. Opening it in a word processor and saving it again will bring it up to date",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "text-two-gigabytes-in.doc",
@@ -6657,7 +7211,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid DOC document",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "two-billion-characters.doc",
@@ -6669,7 +7224,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This document is too long to convert in a browser",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "settings-on-page-four-million.doc",
@@ -6681,7 +7237,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid DOC document",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "list-longer-than-its-stream.doc",
@@ -6693,7 +7250,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid DOC document",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "instruction-that-never-ends.doc",
@@ -6705,7 +7263,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This document has no text in it",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "a-hundred-instructions-deep.doc",
@@ -6717,7 +7276,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid DOC document",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "text-in-two-places.doc",
@@ -6729,7 +7289,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "two-bytes-to-every-letter.doc",
@@ -6741,7 +7302,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "what-the-author-struck-out.doc",
@@ -6753,7 +7315,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "one million"
+    "absent": "one million",
+    "to": null
   },
   {
     "file": "what-the-author-hid.doc",
@@ -6765,7 +7328,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "circulate"
+    "absent": "circulate",
+    "to": null
   },
   {
     "file": "link-that-is-code.doc",
@@ -6777,7 +7341,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "javascript:"
+    "absent": "javascript:",
+    "to": null
   },
   {
     "file": "link-with-tags-in-its-address.doc",
@@ -6789,7 +7354,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "<script"
+    "absent": "<script",
+    "to": null
   },
   {
     "file": "macro-in-an-old-document.doc",
@@ -6801,7 +7367,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "AutoOpen"
+    "absent": "AutoOpen",
+    "to": null
   },
   {
     "file": "old-document-named-as-new.docx",
@@ -6813,7 +7380,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "truncated.ppt",
@@ -6825,7 +7393,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid PPT presentation",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "locked-with-a-password.ppt",
@@ -6837,7 +7406,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This presentation is locked with a password, and cannot be read without it",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "from-powerpoint-95.ppt",
@@ -6849,7 +7419,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This presentation was saved by PowerPoint 95 or earlier, in a form Omsett cannot read yet. Opening it in a presentation program and saving it again will bring it up to date",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "saves-in-a-circle.ppt",
@@ -6861,7 +7432,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid PPT presentation",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "directory-two-gigabytes-in.ppt",
@@ -6873,7 +7445,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid PPT presentation",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "slide-two-gigabytes-in.ppt",
@@ -6885,7 +7458,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid PPT presentation",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "record-longer-than-the-file.ppt",
@@ -6897,7 +7471,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid PPT presentation",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "one-slide-named-twice.ppt",
@@ -6909,7 +7484,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid PPT presentation",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "groups-two-hundred-deep.ppt",
@@ -6921,7 +7497,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid PPT presentation",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "table-drawn-on-a-slant.ppt",
@@ -6933,7 +7510,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This presentation is too large to convert in a browser",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "every-slide-hidden.ppt",
@@ -6945,7 +7523,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This presentation has no text in it to convert",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "every-letter-set-its-own-way.ppt",
@@ -6957,7 +7536,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "placeholder-hidden-in-the-editor.ppt",
@@ -6969,7 +7549,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "Redundancies"
+    "absent": "Redundancies",
+    "to": null
   },
   {
     "file": "group-hidden-in-the-editor.ppt",
@@ -6981,7 +7562,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "Redundancies"
+    "absent": "Redundancies",
+    "to": null
   },
   {
     "file": "letters-under-a-long-link.ppt",
@@ -6993,7 +7575,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "one-slide-under-two-thousand-names.ppt",
@@ -7005,7 +7588,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid PPT presentation",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "title-that-looks-like-markup.ppt",
@@ -7017,7 +7601,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "hidden-slide.ppt",
@@ -7029,7 +7614,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "before the audit"
+    "absent": "before the audit",
+    "to": null
   },
   {
     "file": "speaker-notes.ppt",
@@ -7041,7 +7627,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "layoffs"
+    "absent": "layoffs",
+    "to": null
   },
   {
     "file": "shape-hidden-in-the-editor.ppt",
@@ -7053,7 +7640,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "unchecked"
+    "absent": "unchecked",
+    "to": null
   },
   {
     "file": "earlier-save-still-in-the-file.ppt",
@@ -7065,7 +7653,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "four million"
+    "absent": "four million",
+    "to": null
   },
   {
     "file": "slides-stored-out-of-order.ppt",
@@ -7077,7 +7666,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "link-that-is-code.ppt",
@@ -7089,7 +7679,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "javascript:"
+    "absent": "javascript:",
+    "to": null
   },
   {
     "file": "picture-that-is-a-script.ppt",
@@ -7101,7 +7692,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "omsett_canary"
+    "absent": "omsett_canary",
+    "to": null
   },
   {
     "file": "macro-in-an-old-presentation.ppt",
@@ -7113,7 +7705,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "Auto_Open"
+    "absent": "Auto_Open",
+    "to": null
   },
   {
     "file": "old-presentation-named-as-new.pptx",
@@ -7125,7 +7718,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "with-a-macro.docm",
@@ -7137,7 +7731,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "AutoOpen"
+    "absent": "AutoOpen",
+    "to": null
   },
   {
     "file": "a-template.dotx",
@@ -7149,7 +7744,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "a-template-with-a-macro.dotm",
@@ -7161,7 +7757,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "AutoOpen"
+    "absent": "AutoOpen",
+    "to": null
   },
   {
     "file": "with-a-macro.pptm",
@@ -7173,7 +7770,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "AutoOpen"
+    "absent": "AutoOpen",
+    "to": null
   },
   {
     "file": "a-slide-show.ppsx",
@@ -7185,7 +7783,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "a-slide-show-with-a-macro.ppsm",
@@ -7197,7 +7796,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "AutoOpen"
+    "absent": "AutoOpen",
+    "to": null
   },
   {
     "file": "a-template.potx",
@@ -7209,7 +7809,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "a-template-with-a-macro.potm",
@@ -7221,7 +7822,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "AutoOpen"
+    "absent": "AutoOpen",
+    "to": null
   },
   {
     "file": "with-a-macro.xlsm",
@@ -7233,7 +7835,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "AutoOpen"
+    "absent": "AutoOpen",
+    "to": null
   },
   {
     "file": "a-template.xltx",
@@ -7245,7 +7848,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "a-template-with-a-macro.xltm",
@@ -7257,7 +7861,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "AutoOpen"
+    "absent": "AutoOpen",
+    "to": null
   },
   {
     "file": "presentation-with-a-macro-named-as-a-document.docm",
@@ -7269,7 +7874,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "AutoOpen"
+    "absent": "AutoOpen",
+    "to": null
   },
   {
     "file": "truncated.odt",
@@ -7281,7 +7887,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid ODT document",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "locked-with-a-password.odt",
@@ -7293,7 +7900,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This document is locked with a password, and cannot be read without it",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "shorthand-after-a-long-comment.odt",
@@ -7305,7 +7913,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid ODT document",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "entity-bomb.odt",
@@ -7317,7 +7926,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid ODT document",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "bomb-inside.odt",
@@ -7329,7 +7939,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This document is too large to convert in a browser",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "spans-two-hundred-deep.odt",
@@ -7341,7 +7952,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid ODT document",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "styles-in-a-circle.odt",
@@ -7353,7 +7965,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "a-billion-spaces.odt",
@@ -7365,7 +7978,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "what-was-deleted.odt",
@@ -7377,7 +7991,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "one million"
+    "absent": "one million",
+    "to": null
   },
   {
     "file": "comment-and-hidden-words.odt",
@@ -7389,7 +8004,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "circulate"
+    "absent": "circulate",
+    "to": null
   },
   {
     "file": "hidden-section.odt",
@@ -7401,7 +8017,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "settlement"
+    "absent": "settlement",
+    "to": null
   },
   {
     "file": "hidden-paragraph.odt",
@@ -7413,7 +8030,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "redundancy"
+    "absent": "redundancy",
+    "to": null
   },
   {
     "file": "hidden-paragraph-in-a-box.odt",
@@ -7425,7 +8043,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "pay figures"
+    "absent": "pay figures",
+    "to": null
   },
   {
     "file": "hidden-field.odt",
@@ -7437,7 +8056,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "before the audit"
+    "absent": "before the audit",
+    "to": null
   },
   {
     "file": "hidden-column.odt",
@@ -7449,7 +8069,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "withheld"
+    "absent": "withheld",
+    "to": null
   },
   {
     "file": "hidden-under-another-name.odt",
@@ -7461,7 +8082,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "draft terms"
+    "absent": "draft terms",
+    "to": null
   },
   {
     "file": "link-that-is-code.odt",
@@ -7473,7 +8095,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "javascript:"
+    "absent": "javascript:",
+    "to": null
   },
   {
     "file": "fetches-a-picture.odt",
@@ -7485,7 +8108,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "canary.invalid"
+    "absent": "canary.invalid",
+    "to": null
   },
   {
     "file": "picture-that-is-a-script.odt",
@@ -7497,7 +8121,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "picture-outside-the-document.odt",
@@ -7509,7 +8134,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "passwd"
+    "absent": "passwd",
+    "to": null
   },
   {
     "file": "macro-in-an-open-document.odt",
@@ -7521,7 +8147,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "Shell"
+    "absent": "Shell",
+    "to": null
   },
   {
     "file": "spreadsheet-named-as-text.odt",
@@ -7533,7 +8160,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid ODS spreadsheet",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "open-document-named-as-word.docx",
@@ -7545,7 +8173,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "truncated.ods",
@@ -7557,7 +8186,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid ODS spreadsheet",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "locked-with-a-password.ods",
@@ -7569,7 +8199,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This workbook is locked with a password, and cannot be read without it",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "entity-bomb.ods",
@@ -7581,7 +8212,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid ODS spreadsheet",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "bomb-inside.ods",
@@ -7593,7 +8225,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This workbook is too large to convert in a browser",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "a-row-a-million-times.ods",
@@ -7605,7 +8238,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This workbook is too large to convert in a browser",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "a-cell-across-two-million-columns.ods",
@@ -7617,7 +8251,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This workbook is too large to convert in a browser",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "row-groups-two-hundred-deep.ods",
@@ -7629,7 +8264,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid ODS spreadsheet",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "comment-on-a-cell.ods",
@@ -7641,7 +8277,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "overpaid"
+    "absent": "overpaid",
+    "to": null
   },
   {
     "file": "formula-that-runs-a-program.ods",
@@ -7653,7 +8290,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "canary.invalid"
+    "absent": "canary.invalid",
+    "to": null
   },
   {
     "file": "hidden-sheet-under-another-name.ods",
@@ -7665,7 +8303,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "salaries"
+    "absent": "salaries",
+    "to": null
   },
   {
     "file": "macro-in-an-open-spreadsheet.ods",
@@ -7677,7 +8316,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "Shell"
+    "absent": "Shell",
+    "to": null
   },
   {
     "file": "a-long-name-for-every-column.ods",
@@ -7689,7 +8329,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "shorthand-after-a-long-comment.ods",
@@ -7701,7 +8342,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid ODS spreadsheet",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "repeated-one-and-a-half-times.ods",
@@ -7713,7 +8355,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid ODS spreadsheet",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "sheet-hidden-by-the-style-it-is-based-on.ods",
@@ -7725,7 +8368,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "salaries"
+    "absent": "salaries",
+    "to": null
   },
   {
     "file": "a-long-name-for-every-column.xlsx",
@@ -7737,7 +8381,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "shorthand-after-a-long-comment.xlsx",
@@ -7749,7 +8394,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid XLSX workbook",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "times-spaces-and-text-results.ods",
@@ -7761,7 +8407,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "open-spreadsheet-named-as-excel.xlsx",
@@ -7773,7 +8420,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "truncated.odp",
@@ -7785,7 +8433,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid ODP presentation",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "locked-with-a-password.odp",
@@ -7797,7 +8446,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This presentation is locked with a password, and cannot be read without it",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "entity-bomb.odp",
@@ -7809,7 +8459,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid ODP presentation",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "shorthand-after-a-long-comment.odp",
@@ -7821,7 +8472,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid ODP presentation",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "groups-two-hundred-deep.odp",
@@ -7833,7 +8485,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid ODP presentation",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "every-slide-hidden.odp",
@@ -7845,7 +8498,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This presentation has no text in it to convert",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "hidden-slide.odp",
@@ -7857,7 +8511,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "before the audit"
+    "absent": "before the audit",
+    "to": null
   },
   {
     "file": "speaker-notes.odp",
@@ -7869,7 +8524,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "layoffs"
+    "absent": "layoffs",
+    "to": null
   },
   {
     "file": "shapes-not-shown.odp",
@@ -7881,7 +8537,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "unchecked"
+    "absent": "unchecked",
+    "to": null
   },
   {
     "file": "placeholder-never-filled-in.odp",
@@ -7893,7 +8550,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "Click to add"
+    "absent": "Click to add",
+    "to": null
   },
   {
     "file": "slide-hidden-by-a-style-kept-elsewhere.odp",
@@ -7905,7 +8563,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "before the audit"
+    "absent": "before the audit",
+    "to": null
   },
   {
     "file": "shape-on-a-hidden-layer.odp",
@@ -7917,7 +8576,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "unchecked"
+    "absent": "unchecked",
+    "to": null
   },
   {
     "file": "hidden-in-one-vocabulary-shown-in-another.odp",
@@ -7929,7 +8589,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "unchecked"
+    "absent": "unchecked",
+    "to": null
   },
   {
     "file": "notes-and-hidden-frames-inside-text.odp",
@@ -7941,7 +8602,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "unchecked"
+    "absent": "unchecked",
+    "to": null
   },
   {
     "file": "shape-made-a-link.odp",
@@ -7953,7 +8615,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "link-that-is-code.odp",
@@ -7965,7 +8628,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "javascript:"
+    "absent": "javascript:",
+    "to": null
   },
   {
     "file": "picture-that-is-a-script.odp",
@@ -7977,7 +8641,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "fetches-a-picture.odp",
@@ -7989,7 +8654,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "canary.invalid"
+    "absent": "canary.invalid",
+    "to": null
   },
   {
     "file": "macro-in-an-open-presentation.odp",
@@ -8001,7 +8667,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "Shell"
+    "absent": "Shell",
+    "to": null
   },
   {
     "file": "open-presentation-named-as-powerpoint.pptx",
@@ -8013,7 +8680,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "truncated.rtf",
@@ -8025,7 +8693,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid RTF document",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "groups-three-hundred-deep.rtf",
@@ -8037,7 +8706,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid RTF document",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "raw-bytes-past-the-end.rtf",
@@ -8049,7 +8719,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid RTF document",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "words-after-the-end.rtf",
@@ -8061,7 +8732,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid RTF document",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "what-was-deleted.rtf",
@@ -8073,7 +8745,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "one million"
+    "absent": "one million",
+    "to": null
   },
   {
     "file": "hidden-and-commented.rtf",
@@ -8085,7 +8758,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "circulate"
+    "absent": "circulate",
+    "to": null
   },
   {
     "file": "field-that-includes-a-file.rtf",
@@ -8097,7 +8771,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "canary.invalid"
+    "absent": "canary.invalid",
+    "to": null
   },
   {
     "file": "link-that-is-code.rtf",
@@ -8109,7 +8784,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "javascript:"
+    "absent": "javascript:",
+    "to": null
   },
   {
     "file": "embedded-object.rtf",
@@ -8121,7 +8797,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "picture-that-is-a-script.rtf",
@@ -8133,7 +8810,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "the-author.rtf",
@@ -8145,7 +8823,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "Lovelace"
+    "absent": "Lovelace",
+    "to": null
   },
   {
     "file": "document-named-as-rtf.rtf",
@@ -8157,7 +8836,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "text-named-as-rtf.rtf",
@@ -8169,7 +8849,8 @@
     "node": "none",
     "browser": "none",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "picture-named-as-text.txt",
@@ -8181,7 +8862,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "not-utf8.txt",
@@ -8193,7 +8875,8 @@
     "node": "none",
     "browser": "none",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "truncated.m4a",
@@ -8205,7 +8888,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid M4A file",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "truncated.wma",
@@ -8217,7 +8901,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This sound file is damaged: part of it could not be read",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "truncated.ogg",
@@ -8229,7 +8914,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This sound file holds less sound than it says. It may have been cut short",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "truncated.opus",
@@ -8241,7 +8927,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This sound file holds less sound than it says. It may have been cut short",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "truncated.wv",
@@ -8253,7 +8940,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This WavPack file has no sound in it",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "truncated.tta",
@@ -8265,7 +8953,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This sound file is damaged: part of it could not be read",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "truncated.aac",
@@ -8277,7 +8966,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This sound file is damaged: part of it could not be read",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "truncated.ac3",
@@ -8289,7 +8979,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This sound file holds less sound than it says. It may have been cut short",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "damaged-in-the-middle.m4a",
@@ -8301,7 +8992,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This sound file is damaged: part of it could not be read",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "damaged-in-the-middle.wv",
@@ -8313,7 +9005,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This sound file is damaged: part of it could not be read",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "damaged-in-the-middle.tta",
@@ -8325,7 +9018,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This sound file is damaged: part of it could not be read",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "damaged-in-the-middle.ac3",
@@ -8337,7 +9031,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This sound file is damaged: part of it could not be read",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "damaged-in-the-middle.ogg",
@@ -8349,7 +9044,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This sound file is damaged: part of it could not be read",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "cut-between-pages.ogg",
@@ -8361,7 +9057,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This sound file holds less sound than it says. It may have been cut short",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "damaged-in-the-middle.opus",
@@ -8373,7 +9070,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This sound file is damaged: part of it could not be read",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "cut-between-pages.opus",
@@ -8385,7 +9083,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This sound file holds less sound than it says. It may have been cut short",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "two-tracks.m4a",
@@ -8397,7 +9096,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file holds more than one track. Omsett converts a file with one track of sound",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "film-named-as-sound.m4a",
@@ -8409,7 +9109,8 @@
     "node": "none",
     "browser": "none",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "film-named-as-sound.wma",
@@ -8421,7 +9122,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file holds a film, not only sound. Omsett converts sound files",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "six-channels.ac3",
@@ -8433,7 +9135,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "sound-named-as-video.m4a",
@@ -8445,7 +9148,60 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
+  },
+  {
+    "file": "layers-kept-hidden.pdf",
+    "group": "documents",
+    "why": "A PDF with a layer it keeps hidden. Splitting would copy the layer with its page, where any reader can turn it on, so it is not split.",
+    "detect": "pdf",
+    "mismatch": false,
+    "guard": "ok",
+    "node": "fails",
+    "browser": "fails",
+    "note": "This PDF has layers, which can keep parts of a page hidden. Splitting copies pages as they are, hidden parts and all, so it is not split. Make pictures of its pages instead, which leaves hidden layers out",
+    "absent": null,
+    "to": "pdf"
+  },
+  {
+    "file": "redaction-not-applied.pdf",
+    "group": "documents",
+    "why": "A PDF with a part of a page marked to be blacked out, and not yet blacked out: what is under the mark is still in the file. It is not split.",
+    "detect": "pdf",
+    "mismatch": false,
+    "guard": "ok",
+    "node": "fails",
+    "browser": "fails",
+    "note": "This PDF marks parts of its pages to be blacked out that have not been taken out yet: what is under them is still in the file. Apply the redactions first, in the program that marked them",
+    "absent": null,
+    "to": "pdf"
+  },
+  {
+    "file": "scripts-everywhere.pdf",
+    "group": "documents",
+    "why": "A PDF with a script run on opening, one in its list of names, one on a page, one on a bookmark and one on a form field, and a link that starts a program. Split, none of them goes with its page.",
+    "detect": "pdf",
+    "mismatch": false,
+    "guard": "ok",
+    "node": "succeeds",
+    "browser": "succeeds",
+    "note": null,
+    "absent": "SECRET",
+    "to": "pdf"
+  },
+  {
+    "file": "one-byte-out.pdf",
+    "group": "documents",
+    "why": "A PDF with one byte added in the middle, so that every position after it is wrong. qpdf can repair that, and says so; a file that had to be repaired is not split.",
+    "detect": "pdf",
+    "mismatch": false,
+    "guard": "ok",
+    "node": "fails",
+    "browser": "fails",
+    "note": "This PDF is damaged: qpdf had to repair it to read it, so it is not split",
+    "absent": null,
+    "to": "pdf"
   },
   {
     "file": "truncated.azw3",
@@ -8457,7 +9213,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid Kindle book",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "truncated.mobi",
@@ -8469,7 +9226,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid Kindle book",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "copy-protected.azw3",
@@ -8481,7 +9239,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This book is copy-protected (DRM), and Omsett does not unlock books. Only books without copy protection can be converted",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "copy-protected.mobi",
@@ -8493,7 +9252,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This book is copy-protected (DRM), and Omsett does not unlock books. Only books without copy protection can be converted",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "text-of-two-gigabytes.azw3",
@@ -8505,7 +9265,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This book unpacks to more text than Omsett will handle",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "phrase-that-is-itself.azw3",
@@ -8517,7 +9278,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid Kindle book",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "phrases-that-double.azw3",
@@ -8529,7 +9291,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid Kindle book",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "piece-put-past-the-end.azw3",
@@ -8541,7 +9304,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid Kindle book",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "page-longer-than-the-book.azw3",
@@ -8553,7 +9317,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid Kindle book",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "page-of-forty-thousand-pieces.azw3",
@@ -8565,7 +9330,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid Kindle book",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "records-out-of-order.azw3",
@@ -8577,7 +9343,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid Kindle book",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "no-pages.mobi",
@@ -8589,7 +9356,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid Kindle book",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "picture-that-is-not-there.azw3",
@@ -8601,7 +9369,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "packed-the-kindle-way.azw3",
@@ -8613,7 +9382,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "not-packed-at-all.mobi",
@@ -8625,7 +9395,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "kindle-book-named-as-epub.epub",
@@ -8637,7 +9408,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "words-named-as-a-book.azw3",
@@ -8649,7 +9421,8 @@
     "node": "none",
     "browser": "none",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "truncated.epub",
@@ -8661,7 +9434,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid EPUB book",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "copy-protected.epub",
@@ -8673,7 +9447,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This book is copy-protected (DRM), and Omsett does not unlock books. Only books without copy protection can be converted",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "shorthand-that-multiplies.epub",
@@ -8685,7 +9460,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid EPUB book",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "reads-a-local-file.epub",
@@ -8697,7 +9473,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid EPUB book",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "bomb-inside.epub",
@@ -8709,7 +9486,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This book is too large to convert in a browser",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "pages-that-add-up.epub",
@@ -8721,7 +9499,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This book is too large to convert in a browser",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "page-of-a-million-line-breaks.epub",
@@ -8733,7 +9512,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This book has a page with more in it than Omsett will handle",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "page-three-thousand-deep.epub",
@@ -8745,7 +9525,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is nested too deeply to convert",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "locked-under-another-name.epub",
@@ -8757,7 +9538,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This book is copy-protected (DRM), and Omsett does not unlock books. Only books without copy protection can be converted",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "pages-that-are-not-there.epub",
@@ -8769,7 +9551,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This book has no pages in it",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "page-outside-the-book.epub",
@@ -8781,7 +9564,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "root:"
+    "absent": "root:",
+    "to": null
   },
   {
     "file": "fetches-a-picture.epub",
@@ -8793,7 +9577,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "elsewhere.example"
+    "absent": "elsewhere.example",
+    "to": null
   },
   {
     "file": "contents-five-thousand-deep.epub",
@@ -8805,7 +9590,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid EPUB book",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "fonts-scrambled.epub",
@@ -8817,7 +9603,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "tags-written-closed.epub",
@@ -8829,7 +9616,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "everything-after-is-text.epub",
@@ -8841,7 +9629,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "&lt;h1"
+    "absent": "&lt;h1",
+    "to": null
   },
   {
     "file": "the-older-kind.epub",
@@ -8853,7 +9642,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "document-named-as-a-book.epub",
@@ -8865,7 +9655,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "truncated.wav",
@@ -8877,7 +9668,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This WAV says it holds more sound than the file has. It may have been cut short",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "truncated.aiff",
@@ -8889,7 +9681,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This AIFF says it holds more sound than the file has. It may have been cut short",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "truncated.au",
@@ -8901,7 +9694,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This AU says it holds more sound than the file has. It may have been cut short",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "truncated.w64",
@@ -8913,7 +9707,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This Wave64 says it holds more sound than the file has. It may have been cut short",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "part-shorter-than-its-head.w64",
@@ -8925,7 +9720,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid Wave64 file",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "truncated-rf64.wav",
@@ -8937,7 +9733,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This WAV says it holds more sound than the file has. It may have been cut short",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "rf64-says-a-terabyte.wav",
@@ -8949,7 +9746,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This WAV says it holds more sound than the file has. It may have been cut short",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "rf64-without-its-table.wav",
@@ -8961,7 +9759,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid WAV file",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "says-four-gigabytes.wav",
@@ -8973,7 +9772,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This WAV says it holds more sound than the file has. It may have been cut short",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "two-billion-moments.aiff",
@@ -8985,7 +9785,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This AIFF says it holds more sound than the file has. It may have been cut short",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "four-billion-channels.au",
@@ -8997,7 +9798,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This AU says it has 4,000,000,000 channels of sound. Omsett reads up to 64",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "no-channels.wav",
@@ -9009,7 +9811,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid WAV file",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "fewer-than-no-channels.aiff",
@@ -9021,7 +9824,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid AIFF file",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "no-rate.wav",
@@ -9033,7 +9837,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid WAV file",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "endless-rate.aiff",
@@ -9045,7 +9850,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid AIFF file",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "moment-of-the-wrong-size.wav",
@@ -9057,7 +9863,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid WAV file",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "no-sound.wav",
@@ -9069,7 +9876,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This WAV has no sound in it",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "no-sound-part.aiff",
@@ -9081,7 +9889,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This AIFF has no sound in it",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "label-missing.wav",
@@ -9093,7 +9902,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid WAV file",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "mp3-inside.wav",
@@ -9105,7 +9915,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This WAV holds its sound as MP3, which Omsett cannot read yet. It reads sound that is stored unpacked",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "packing-unnamed.wav",
@@ -9117,7 +9928,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This WAV holds its sound packed, which Omsett cannot read yet. It reads sound that is stored unpacked",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "adpcm.aifc",
@@ -9129,7 +9941,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This AIFF holds its sound as ADPCM, which Omsett cannot read yet. It reads sound that is stored unpacked",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "adpcm.au",
@@ -9141,7 +9954,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This AU holds its sound as ADPCM, which Omsett cannot read yet. It reads sound that is stored unpacked",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "sound-starts-in-the-label.au",
@@ -9153,7 +9967,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid AU file",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "sound-starts-past-the-end.au",
@@ -9165,7 +9980,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This AU says it holds more sound than the file has. It may have been cut short",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "sound-set-in-past-its-end.aiff",
@@ -9177,7 +9993,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid AIFF file",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "five-thousand-empty-parts.wav",
@@ -9189,7 +10006,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid WAV file",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "part-runs-past-the-end.wav",
@@ -9201,7 +10019,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid WAV file",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "length-not-given.wav",
@@ -9213,7 +10032,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "length-not-given.au",
@@ -9225,7 +10045,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "label-after-the-sound.aiff",
@@ -9237,7 +10058,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "sound-set-in.aiff",
@@ -9249,7 +10071,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "two-labels.wav",
@@ -9261,7 +10084,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "ends-mid-moment.wav",
@@ -9273,7 +10097,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "notes-run-past-their-end.wav",
@@ -9285,7 +10110,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "old-mac.aiff",
@@ -9297,7 +10123,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "telephone.au",
@@ -9309,7 +10136,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "sound-named-as-music.mp3",
@@ -9321,7 +10149,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "words-named-as-sound.wav",
@@ -9333,7 +10162,8 @@
     "node": "none",
     "browser": "none",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "film-named-as-sound.wav",
@@ -9345,7 +10175,8 @@
     "node": "none",
     "browser": "none",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "larger-than-wav-allows.wav",
@@ -9357,7 +10188,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid WAV file",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "truncated.flac",
@@ -9369,7 +10201,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This FLAC says it holds more sound than the file has. It may have been cut short",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "one-byte-changed.flac",
@@ -9381,7 +10214,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This FLAC is damaged: part of it does not match its own checksum",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "first-checksum-wrong.flac",
@@ -9393,7 +10227,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This FLAC is damaged: part of it does not match its own checksum",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "checksum-of-other-sound.flac",
@@ -9405,7 +10240,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This FLAC is damaged: the sound it unpacks to is not the sound its checksum was made from",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "eight-days-of-sound.flac",
@@ -9417,7 +10253,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This FLAC unpacks to more sound than Omsett can hold in a browser (1 GB)",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "silence-without-end.flac",
@@ -9429,7 +10266,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This FLAC does not say how much sound it holds, and unpacks to more than Omsett will take on trust (256 MB)",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "says-less-than-it-holds.flac",
@@ -9441,7 +10279,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid FLAC file",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "says-more-than-it-holds.flac",
@@ -9453,7 +10292,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This FLAC says it holds more sound than the file has. It may have been cut short",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "stretch-of-one-channel.flac",
@@ -9465,7 +10305,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid FLAC file",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "guess-from-numbers-not-there.flac",
@@ -9477,7 +10318,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid FLAC file",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "nothing-but-zeros.flac",
@@ -9489,7 +10331,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This FLAC says it holds more sound than the file has. It may have been cut short",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "difference-wider-than-a-number.flac",
@@ -9501,7 +10344,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid FLAC file",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "louder-than-its-bits.flac",
@@ -9513,7 +10357,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid FLAC file",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "packed-in-a-way-not-yet-invented.flac",
@@ -9525,7 +10370,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid FLAC file",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "label-of-the-wrong-size.flac",
@@ -9537,7 +10383,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid FLAC file",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "two-thousand-empty-parts.flac",
@@ -9549,7 +10396,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid FLAC file",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "differences-written-plainly.flac",
@@ -9561,7 +10409,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "low-bits-left-out.flac",
@@ -9573,7 +10422,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "ten-minutes-of-silence.flac",
@@ -9585,7 +10435,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "length-not-given.flac",
@@ -9597,7 +10448,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "tags-in-front.flac",
@@ -9609,7 +10461,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "comments-run-past-their-end.flac",
@@ -9621,7 +10474,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "packed-sound-named-as-wav.wav",
@@ -9633,7 +10487,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "truncated.mp3",
@@ -9645,7 +10500,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This MP3 says it holds more sound than the file has. It may have been cut short",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "stops-inside-a-stretch.mp3",
@@ -9657,7 +10513,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This MP3 says it holds more sound than the file has. It may have been cut short",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "rubbish-in-the-middle.mp3",
@@ -9669,7 +10526,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This MP3 is damaged: part-way through, it stops being MP3",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "says-a-million-stretches.mp3",
@@ -9681,7 +10539,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This MP3 says it holds more sound than the file has. It may have been cut short",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "rate-changes-part-way.mp3",
@@ -9693,7 +10552,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This MP3 is damaged: part-way through, it stops being MP3",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "speed-not-stated.mp3",
@@ -9705,7 +10565,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This MP3 does not say how fast its sound is packed, which Omsett cannot read yet",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "tags-and-no-sound.mp3",
@@ -9717,7 +10578,8 @@
     "node": "none",
     "browser": "none",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "tags-longer-than-the-file.mp3",
@@ -9729,7 +10591,8 @@
     "node": "fails",
     "browser": "fails",
     "note": "This file is not a valid MP3 file",
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "tags-at-the-end.mp3",
@@ -9741,7 +10604,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "even-speed-no-count.mp3",
@@ -9753,7 +10617,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "music-named-as-sound.wav",
@@ -9765,7 +10630,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "an-older-layer.mp3",
@@ -9777,7 +10643,8 @@
     "node": "none",
     "browser": "none",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "code.doc",
@@ -9789,7 +10656,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "code.odt",
@@ -9801,7 +10669,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "code.ods",
@@ -9813,7 +10682,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "code.odp",
@@ -9825,7 +10695,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "code.rtf",
@@ -9837,7 +10708,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "code.txt",
@@ -9849,7 +10721,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "code.m4a",
@@ -9861,7 +10734,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "omsett_canary"
+    "absent": "omsett_canary",
+    "to": null
   },
   {
     "file": "code.ogg",
@@ -9873,7 +10747,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "omsett_canary"
+    "absent": "omsett_canary",
+    "to": null
   },
   {
     "file": "code.opus",
@@ -9885,7 +10760,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "omsett_canary"
+    "absent": "omsett_canary",
+    "to": null
   },
   {
     "file": "code.wv",
@@ -9897,7 +10773,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "omsett_canary"
+    "absent": "omsett_canary",
+    "to": null
   },
   {
     "file": "code.wma",
@@ -9909,7 +10786,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "omsett_canary"
+    "absent": "omsett_canary",
+    "to": null
   },
   {
     "file": "code.ppt",
@@ -9921,7 +10799,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "code.xls",
@@ -9933,7 +10812,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "code.azw3",
@@ -9945,7 +10825,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "code.epub",
@@ -9957,7 +10838,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "code.mobi",
@@ -9969,7 +10851,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": null
+    "absent": null,
+    "to": null
   },
   {
     "file": "code.wav",
@@ -9981,7 +10864,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "omsett_canary"
+    "absent": "omsett_canary",
+    "to": null
   },
   {
     "file": "code.w64",
@@ -9993,7 +10877,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "omsett_canary"
+    "absent": "omsett_canary",
+    "to": null
   },
   {
     "file": "code.aiff",
@@ -10005,7 +10890,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "omsett_canary"
+    "absent": "omsett_canary",
+    "to": null
   },
   {
     "file": "code.flac",
@@ -10017,7 +10903,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "omsett_canary"
+    "absent": "omsett_canary",
+    "to": null
   },
   {
     "file": "code.mp3",
@@ -10029,7 +10916,8 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "omsett_canary"
+    "absent": "omsett_canary",
+    "to": null
   },
   {
     "file": "code.au",
@@ -10041,6 +10929,7 @@
     "node": "succeeds",
     "browser": "succeeds",
     "note": null,
-    "absent": "omsett_canary"
+    "absent": "omsett_canary",
+    "to": null
   }
 ]

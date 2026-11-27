@@ -137,7 +137,7 @@ describe('trap files', () => {
                     : from.category === 'ebook'
                       ? [epub, html]
                     : [webp, png]
-      const to = from.id === usual.id ? otherwise : usual
+      const to = trap.to ? formatById(registry, trap.to)! : from.id === usual.id ? otherwise : usual
       if (!router.route(from.id, to.id)) {
         expect(trap.node, 'no route, so no engine').toBe('none')
         return

@@ -29,7 +29,7 @@ Omsett is a free, open-source file converter. Every conversion runs in your brow
 <!-- facts:start -->
 <!-- Generated from the registry by `pnpm readme:facts`. Do not edit by hand. -->
 
-**89 formats, 394 conversions**, every one of them run in your browser, on your device, and tested against 837 files made on purpose to be broken, hostile or dishonest. How many tests there are today is on the site's [Trust](https://omsett.com/trust) page, counted at every build.
+**89 formats, 395 conversions**, every one of them run in your browser, on your device, and tested against 841 files made on purpose to be broken, hostile or dishonest. How many tests there are today is on the site's [Trust](https://omsett.com/trust) page, counted at every build.
 
 | Kind | Converts to and from | Reads only |
 | --- | --- | --- |
@@ -72,6 +72,7 @@ A file is offered the formats of its own kind: a picture becomes another picture
 - **Develops a raw photograph (DNG)** with standard settings, the right way up.
 - **Converts a medical scan (DICOM) to a picture without the patient**: only the picture is read; the name, date of birth and notes never reach the converter.
 - **Converts sound with nothing lost**: WAV (RF64 and BW64 included), Wave64, FLAC, AIFF and AU to one another, with not one number of the sound changed. A FLAC is checked against its own checksums as it is read, and one that does not match is refused.
+- **Splits a PDF**, every page as its own PDF or a range of pages as one, with qpdf. Scripts, attached files, comments and the author's details are left behind, and every file written is checked for them before you get it.
 - **Draws a PDF's pages as pictures**: PNG, JPEG or any other picture format, a picture to a page, in your browser with pdf.js, which fetches nothing and is given no typeface of your device.
 - **Packs and unpacks MP3**, at a quality you choose, and refuses an MP3 with part of its sound missing, where a player would skip the gap and say nothing.
 - **Reads the rest of the sound you are likely to have**: M4A, AAC, AC-3, WMA, Ogg Vorbis, Opus, WavPack and TTA, and writes Opus, Ogg Vorbis, WavPack and Apple Lossless. It uses Omsett's own audio-only build of FFmpeg, fetched only when needed, and refuses a file that is damaged or cut short.

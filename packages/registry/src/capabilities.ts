@@ -215,6 +215,9 @@ export const capabilities: Capability[] = [
   { engine: 'typst', tier: 'browser', reads: ['png'], writes: [{ format: 'pdf', lossy: false, defaultOptions: { onPage: true }, drops: ['metadata'] }], priority: 30 },
   // A PDF is read to a page, from its tags where it has them and from its layout where not.
   { engine: 'pdf', tier: 'browser', reads: ['pdf'], writes: [{ format: 'html', lossy: false }], priority: 20 },
+  // A PDF split into a PDF for each page, or a range of its pages taken as one: the one format
+  // written from itself. qpdf copies the pages as they are; what goes with them is cleaned.
+  { engine: 'qpdf', tier: 'browser', reads: ['pdf'], writes: [{ format: 'pdf', lossy: false, drops: ['metadata'], itself: 'Split or take pages', defaultOptions: { take: 'every' } }], priority: 20 },
   // A PDF's pages drawn as pictures, every page or the first, by the person's choice.
   { engine: 'pdf-pages', tier: 'browser', reads: ['pdf'], writes: [{ ...png, defaultOptions: { pages: 'all' } }, { ...jpeg, defaultOptions: { quality: 85, pages: 'all' } }], priority: 20 },
   // A presentation is read to a page, a section to a slide. Its speaker notes are left out

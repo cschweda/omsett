@@ -8,6 +8,7 @@ import {
   createArchiveEngine,
   createScriptEngine,
   createPdfEngine,
+  createQpdfEngine,
   createPdfPagesEngine,
   describeFile,
   listSheets,
@@ -36,6 +37,7 @@ import {
   type MagickApi,
   type ResvgHost,
   type VipsModule,
+  startQpdf,
 } from '@omsett/engines'
 import { formatById, registry, type Format } from '@omsett/registry'
 import * as Comlink from 'comlink'
@@ -121,6 +123,8 @@ async function loadMagick() {
 }
 
 // Threads need SharedArrayBuffer, which needs cross-origin isolation (and so HTTPS).
+/** The address of qpdf's verified binary, made once. */
+let qpdfAddress: Promise<string> | undefined
 const scriptFaces = assets.typst.scripts as Record<string, { ranges: { url: string; sha256: string }; pieces: { url: string; sha256: string } }>
 const pieceLists: Record<string, Promise<Record<string, { url: string; sha256: string }>>> = {}
 
@@ -142,6 +146,13 @@ const engines: Record<string, Engine> = Object.fromEntries(
     createArchiveEngine(),
     createScriptEngine(),
     createPdfEngine(),
+    // qpdf, which splits a PDF: its loader is part of this worker's code, its binary verified.
+    createQpdfEngine({
+      // Its loader fetches its binary from an address and takes no bytes, so the address is a
+      // `blob:` made here from the verified bytes, as for libav.js.
+      // Made once: every conversion starts a fresh qpdf, from the same verified bytes.
+      qpdf: async (say) => startQpdf(await (qpdfAddress ??= verified(assets.qpdf.wasm).then((bytes) => URL.createObjectURL(new Blob([bytes], { type: 'application/wasm' })))), say),
+    }),
     // A PDF's pages, drawn: pdf.js's own files are handed to it from verified bytes, by name.
     createPdfPagesEngine({
       data: async (kind, name) => {
