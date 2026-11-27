@@ -137,10 +137,22 @@ build by `apps/web/scripts/write-headers.ts`.
   Markdown's and HTML's, as are PDFs and e-books: a book is writing. Screenplays are a kind of their own. A new category that should convert into an
   existing one must be added there, or its formats will never be listed for it.
 - **A few things can become something of another kind, one way only** (`ALSO` and `canBecome` in
-  `kinds.ts`): a picture can become a PDF. The router ends no road at a kind the file cannot
-  become, so a picture does not go on through a PDF to a Word document, and a PDF is not
-  offered picture formats. A table can be set out as a page, and so become a document or a PDF;
-  a page does not become a table. Add a pair there; do not merge two kinds to get one conversion.
+  `kinds.ts`): a picture can become a PDF, and a PDF's pages can be drawn as pictures. The
+  router ends no road at a kind the file cannot become, so a picture does not go on through a
+  PDF to a Word document, and a PDF does not become a drawing. A table can be set out as a page,
+  and so become a document or a PDF; a page does not become a table. Add a pair there; do not
+  merge two kinds to get one conversion.
+- **A step of a route may make several files, and every one goes on** (`runFile` in
+  `useConversionQueue`): a PDF's pages are drawn as PNGs, and each is converted by the next
+  step. Never pass on only the first output of a step.
+- **A PDF's pages are drawn by pdf.js trusting nothing in the file** (`pdf/pages.ts`): its
+  typefaces are drawn as outlines and never installed, no typeface of the device is consulted,
+  a picture inside it is decoded by pdf.js's own code and never by the browser's
+  (`isImageDecoderSupported: false`), and pdf.js fetches nothing. The files it asks for by name
+  (standard typefaces, character tables, picture decoders) come through `BinaryDataFactory`
+  from bytes the worker has verified; its JavaScript fallbacks are never published. Only in a
+  browser, so it is tested in `e2e/pdf-pages.spec.ts`; the generic conversion test skips PDF to
+  picture, whose results are one to a page at a size of their own.
 - **Only PNG is set on a PDF page** (`picturePage` in the `typst` engine). Every other picture is
   made a PNG first, by the engines that drop its metadata; Typst would embed a JPEG as it is,
   location and all. The PNG's structure is checked before Typst decodes it.

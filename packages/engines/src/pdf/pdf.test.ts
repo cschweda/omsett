@@ -122,3 +122,20 @@ describe('what is not a PDF Omsett can read', () => {
     )
   })
 })
+
+describe('every opening of a PDF', () => {
+  it('tells pdf.js never to hand a picture to the browser’s decoder, which it remembers for the life of the worker', async () => {
+    const { readdir, readFile } = await import('node:fs/promises')
+    const root = new URL('../', import.meta.url)
+    const files = (await readdir(root, { recursive: true })).filter((name) => name.endsWith('.ts') && !name.endsWith('.test.ts'))
+    let calls = 0
+    for (const name of files) {
+      const source = await readFile(new URL(name, root), 'utf8')
+      for (const found of source.matchAll(/getDocument\(\{[\s\S]*?\}\)?/g)) {
+        calls++
+        expect(found[0], name).toContain('isImageDecoderSupported: false')
+      }
+    }
+    expect(calls).toBeGreaterThanOrEqual(3)
+  })
+})

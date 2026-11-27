@@ -7,6 +7,32 @@ The paragraph that opens a version is its teaser: the home page shows its first 
 in the "What's new" banner, so keep it to two or three sentences on what a visitor will notice.
 A line beginning "Released" gives the date.
 
+## 0.63.0
+
+Released 26 November 2026.
+
+A PDF's pages can now be made into pictures: PNG or JPEG, and any other picture format by way of
+PNG. Every page becomes a picture of its own, or only the first if you choose. They are drawn in
+your browser by pdf.js, the PDF reader built into Firefox.
+
+### Added
+
+- **PDF to pictures.** Each page is drawn at 150 dots to the inch, on white, and named for its
+  page. Every page or the first page is a choice; every page is the default, up to 100 pages. A
+  page larger than a poster is drawn smaller to fit. What the file marks hidden (a layer turned
+  off) is not drawn. Where the format is chosen, it says that the words become part of the
+  picture and can no longer be selected, searched or read aloud.
+- **pdf.js trusts nothing in the PDF.** Its typefaces are drawn as outlines, never installed; a
+  picture inside it is decoded by pdf.js's own code, never by the browser's; and pdf.js fetches
+  nothing. The typefaces, character tables and decoders it asks for come from this site,
+  checked against their hashes first.
+
+### Changed
+
+- **A conversion in two steps carries every file across.** Where a first step makes several
+  files (a PDF's pages), the second converts each of them; before, it would have taken only the
+  first.
+
 ## 0.62.0
 
 Released 26 November 2026.

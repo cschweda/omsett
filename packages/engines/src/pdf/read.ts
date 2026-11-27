@@ -75,6 +75,9 @@ export async function readPdf(bytes: Uint8Array): Promise<ReadPdf> {
     disableFontFace: true,
     // Forms that are programs (XFA) are not opened.
     enableXfa: false,
+    // A picture inside is decoded by pdf.js's own code, never by the browser's. pdf.js remembers
+    // its answer for as long as the worker runs, so every opening of a PDF must say no.
+    isImageDecoderSupported: false,
     stopAtErrors: false,
     verbosity: 0,
   })

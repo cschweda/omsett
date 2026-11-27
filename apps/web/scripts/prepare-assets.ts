@@ -22,6 +22,8 @@ const fromEngines = createRequire(join(repo, 'packages', 'engines', 'package.jso
 let pandocRoot = dirname(fromEngines.resolve('pandoc-wasm'))
 while (!existsSync(join(pandocRoot, 'package.json'))) pandocRoot = dirname(pandocRoot)
 const fromWeb = createRequire(join(web, 'package.json'))
+// pdf.js's own files sit beside its package description.
+const pdfjsRoot = dirname(fromEngines.resolve('pdfjs-dist/package.json'))
 
 async function hashed(source: string, stem: string, ext: string) {
   const bytes = await readFile(source)
@@ -97,6 +99,28 @@ const manifest = {
     fonts: await Promise.all(typstFonts.map((file) => hashed(fromEngines.resolve(file), file.split('/').pop()!.replace('.woff', ''), 'woff'))),
     scripts: Object.fromEntries(await Promise.all(SCRIPT_FACES.map(async (id) => [id, await scriptFace(id)]))) as Record<string, Awaited<ReturnType<typeof scriptFace>>>,
   },
+  // pdf.js's own files, for drawing a PDF's pages: the typefaces every PDF reader has, the
+  // tables of characters for Chinese, Japanese and Korean, and the decoders for some kinds of
+  // picture. Each is fetched only when a page asks for it, and verified before pdf.js sees it.
+  // Not the JavaScript fallbacks beside the decoders: pdf.js is never given a script to run.
+  pdfjs: Object.fromEntries(
+    await Promise.all(
+      (
+        [
+          ['standard_fonts', /\.(pfb|ttf)$/],
+          ['cmaps', /\.bcmap$/],
+          // The decoders for JPEG 2000 and JBIG2, and no other: not the scripting sandbox's
+          // interpreter, and not the colour-profile module, which this setup never asks for.
+          ['wasm', /^(openjpeg|jbig2)\.wasm$/],
+        ] as const
+      ).map(async ([kind, pattern]) => {
+        const folder = join(pdfjsRoot, kind)
+        const names = (await readdir(folder)).filter((name) => pattern.test(name)).sort()
+        const files = await Promise.all(names.map(async (name) => [name, await hashed(join(folder, name), `pdfjs-${kind}-${name.replace(/\.[^.]+$/, '')}`, name.split('.').pop()!)] as const))
+        return [kind, Object.fromEntries(files)] as const
+      }),
+    ),
+  ),
   // The long tail of sound: the binary of Omsett's own build of libav.js.
   libav: {
     wasm: await hashed(join(repo, 'packages', 'engines', 'vendor', 'libav', 'libav-6.11.9.0.2-omsett-audio.wasm.wasm'), 'libav', 'wasm'),
@@ -130,6 +154,11 @@ await copyFile(
   join(dirname(fromEngines.resolve('@imagemagick/magick-wasm/magick.wasm')), '..', '..', 'NOTICE'),
   join(enginesDir, 'magick.NOTICE.txt'),
 )
+
+// pdf.js's typefaces and decoders carry licences of their own (Foxit, Liberation, OpenJPEG, JBIG2, qcms).
+for (const [folder, names] of [['standard_fonts', ['LICENSE_FOXIT', 'LICENSE_LIBERATION']], ['wasm', ['LICENSE_OPENJPEG', 'LICENSE_JBIG2', 'LICENSE_QCMS', 'LICENSE_PDFJS_OPENJPEG', 'LICENSE_PDFJS_JBIG2', 'LICENSE_PDFJS_QCMS']]] as const) {
+  for (const name of names) await copyFile(join(pdfjsRoot, folder, name), join(enginesDir, `pdfjs.${name}.txt`))
+}
 
 // libav.js and FFmpeg are LGPL: their licence goes beside the binary.
 await copyFile(join(repo, 'packages', 'engines', 'vendor', 'libav', 'LICENSE.md'), join(enginesDir, 'libav.LICENSE.txt'))

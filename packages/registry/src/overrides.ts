@@ -79,6 +79,9 @@ const REDRAW = 'TTF and OTF draw letters in different ways. Changing one into th
 const WEB_LICENCE = [{ id: 'font-licence', text: "Check that the font's licence allows it to be used on a website." }]
 const OUTLINES = [{ id: 'font-outlines', text: 'A web font unwraps to TTF or to OTF, depending on how its letters are drawn. If one is refused, choose the other.' }]
 
+// A PDF's pages drawn as pictures.
+const PAGE_AS_PICTURE = [{ id: 'page-as-picture', text: 'Each page becomes a picture of the page. Its words can no longer be selected, searched or read aloud, and links stop working. Keep the PDF.' }]
+
 // Sound.
 const KEPT_WHOLE = ['wav', 'flac', 'aiff', 'au', 'w64']
 // Sound that leaves some out, and sound that keeps every bit.
@@ -102,6 +105,7 @@ const TYPED = ['json', 'jsonl', 'yaml', 'toml']
 const READ_ONLY_BOOKS = ['xls', 'ods']
 
 export const overrides: EdgeOverride[] = [
+  ...['png', 'jpeg'].map((to) => ({ from: 'pdf', to, warnings: PAGE_AS_PICTURE })),
   { from: 'fountain', to: 'fdx', warnings: SCRIPT_KEPT },
   { from: 'fdx', to: 'fountain', warnings: SCRIPT_KEPT },
   { from: 'drafter', to: 'fountain', warnings: PACKAGE_MAIN },

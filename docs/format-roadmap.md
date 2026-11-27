@@ -76,7 +76,8 @@ When a format ships, update its row here, in the same change.
 
 | Conversion | Home | Engine | Status |
 | --- | --- | --- | --- |
-| PDF to PNG, JPEG, TIFF, CBZ; to text | Browser | pdf.js | Planned |
+| PDF to PNG and JPEG, a picture to a page; to any other picture by way of PNG | Browser | pdf.js (`pdf-pages`) | **Done** (0.63.0) |
+| PDF to CBZ; to text | Browser | pdf.js | Planned |
 | PDF to HTML, Markdown and DOCX, tagged PDFs | Browser | `pdf` (pdf.js), reading the PDF's own structure tags | **Shipped** (0.23.0). Headings, lists and tables are read, not guessed |
 | The same, untagged PDFs, or tagged in name only | Browser | `pdf`, with structure estimated from layout | **Shipped** (0.23.0). Estimated, and the result says so. Tables and bold headings are not found yet |
 | Scanned PDFs (OCR); pictures carried out of a PDF; characters for Chinese, Japanese and Korean | Browser | Tesseract (WASM); pdf.js | Planned |

@@ -39,7 +39,7 @@ describe('router, real registry', () => {
     for (const edge of deriveEdges(registry).edges) {
       const engines = edge.candidates.map((c) => c.engine)
       if (edge.from !== 'png') expect(engines, `${edge.from} → ${edge.to}`).not.toContain('canvas')
-      for (const engine of engines) expect(engine === 'canvas' || ['heif', 'resvg', 'magick', 'data', 'subtitle', 'markup', 'font', 'font-woff2', 'icon', 'archive', 'script', 'pdf', 'audio', 'audio-mp3', 'typst', 'ebook', 'pandoc', 'audio-libav'].includes(engine) || engine.startsWith('vips')).toBe(true)
+      for (const engine of engines) expect(engine === 'canvas' || ['heif', 'resvg', 'magick', 'data', 'subtitle', 'markup', 'font', 'font-woff2', 'icon', 'archive', 'script', 'pdf', 'audio', 'audio-mp3', 'typst', 'ebook', 'pandoc', 'audio-libav', 'pdf-pages'].includes(engine) || engine.startsWith('vips')).toBe(true)
       // The data engine reads data and nothing else, and writes data or a page that sets a
       // table out to be read; nothing but the data engine reads data, and no picture engine touches it.
       const data = [edge.from, edge.to].map((id) => ['data', 'spreadsheet'].includes(formatById(registry, id)!.category))
@@ -130,11 +130,17 @@ describe('router, real registry', () => {
     expect(all.route('jpeg', 'pdf')!.edges.map((e) => `${e.from}>${e.to}`)).toEqual(['jpeg>png', 'png>pdf'])
     expect(all.route('heic', 'pdf')).not.toBeNull()
     expect(all.route('png', 'pdf')!.warnings.map((w) => w.id)).toEqual(expect.arrayContaining(['pdf-of-a-picture']))
-    expect(all.route('pdf', 'png')).toBeNull()
+    // A PDF's pages can be drawn as pictures: as PNG or JPEG by pdf.js, and any other picture by
+    // way of PNG. Never as a drawing, and the route says what is lost.
+    expect(all.route('pdf', 'png')!.edges.map((e) => e.candidates[0]!.engine)).toEqual(['pdf-pages'])
+    expect(all.route('pdf', 'jpeg')!.edges.map((e) => e.candidates[0]!.engine)).toEqual(['pdf-pages'])
+    expect(all.route('pdf', 'avif')!.edges.map((e) => `${e.from}>${e.to}`)).toEqual(['pdf>png', 'png>avif'])
+    expect(all.route('pdf', 'svg')).toBeNull()
+    for (const to of ['png', 'jpeg', 'webp', 'tiff']) expect(all.route('pdf', to)!.warnings.map((w) => w.id), to).toContain('page-as-picture')
     expect(all.route('png', 'html')).toBeNull()
     expect(all.route('png', 'docx')).toBeNull()
     expect(all.targetsFor(['png']).some((t) => t.format.id === 'pdf' && t.route)).toBe(true)
-    expect(all.targetsFor(['pdf']).some((t) => t.format.category === 'image')).toBe(false)
+    expect(all.targetsFor(['pdf']).some((t) => t.format.category === 'vector' && t.route)).toBe(false)
     expect(sameKind('image', 'pdf')).toBe(false)
     expect(all.route('docx', 'pdf')!.warnings.map((w) => w.id)).toEqual(expect.arrayContaining(['pdf-written', 'accessibility-check']))
     // A Word document from before 2007 becomes the newer kind by way of a page, and says what to check.

@@ -99,12 +99,13 @@ test('a photograph becomes a PDF of one page, by way of PNG, and says what such 
   expect(output.bytes.toString('latin1').match(/\/Type\s*\/Page[^s]/g) ?? ['one']).toHaveLength(1)
 })
 
-test('a PDF is not offered picture formats: the road goes one way', async ({ page }) => {
+test('a PDF is offered its pages as pictures, and never a drawing', async ({ page }) => {
+  // Pictures from a PDF are drawn by pdf.js: see pdf-pages.spec.ts.
   await open(page)
   await page.locator('#file-input').setInputFiles(fixture('pdf/sample.pdf'))
   await expect(page.locator('[role="radio"][data-format="html"]')).toBeVisible()
-  await expect(page.locator('[role="radio"][data-format="png"]')).toHaveCount(0)
-  await expect(page.locator('[role="radio"][data-format="webp"]')).toHaveCount(0)
+  await expect(page.locator('[role="radio"][data-format="png"]')).toHaveCount(1)
+  await expect(page.locator('[role="radio"][data-format="svg"]')).toHaveCount(0)
 })
 
 test('a workbook becomes a PDF with its table tagged, and a CSV becomes a Markdown table', async ({ page }) => {

@@ -117,7 +117,7 @@ export function useConversionQueue() {
    * from the capability's default options, so no format is named here; a conversion that
    * offers none leaves this empty.
    */
-  const OFFERED = ['language', 'headerRow', 'shape', 'sheet', 'soundQuality', 'speakerNotes']
+  const OFFERED = ['language', 'headerRow', 'shape', 'sheet', 'soundQuality', 'speakerNotes', 'pages']
   const choices = ref<Record<string, unknown>>({})
   const defaults = computed(() => {
     // A choice belongs to the step that makes use of it, wherever that step is in the route: a
@@ -248,81 +248,84 @@ export function useConversionQueue() {
 
   async function runFile(entry: QueueFile, route: Route) {
     if (entry.detection.kind !== 'known') return
-    let blob: Blob = entry.file
-    let name = entry.file.name
+    // What each step is given: the file as dropped, then everything the step before made. A
+    // step that makes several files (a PDF's pages) hands every one of them on, never only the first.
+    let inputs: Array<{ blob: Blob; name: string }> = [{ blob: entry.file, name: entry.file.name }]
     // Dimensions are only known for the file as dropped; later hops are not pixel-checked.
     let pixels = pixelCount(entry.detection.dimensions)
 
     const produced: QueueResult[] = []
     const notes: string[] = []
-    let timedOut = false
-    let refusal: string | null = null
     for (const [hop, edge] of route.edges.entries()) {
       const from = formatById(registry, edge.from)!
       const to = formatById(registry, edge.to)!
       const last = hop === route.edges.length - 1
-      // The first engine that remains runs. If it throws, the next is tried once.
-      const attempts = viable(edge, pixels).slice(0, 2)
-      let next: Blob | null = null
-      for (const candidate of attempts) {
-        // The user's quality applies to the final encode, and only if that encoder has one.
-        const chosen: Record<string, unknown> = {}
-        if (last && quality.value !== null && 'quality' in candidate.defaultOptions) chosen.quality = quality.value
-        // A choice is given to every step that makes use of it.
-        for (const [key, value] of Object.entries(choices.value)) if (key in candidate.defaultOptions) chosen[key] = value
-        const options = { ...candidate.defaultOptions, ...chosen }
-        // A converter that has not been fetched yet is fetched first, and that can be the
-        // longest part. The first word back from the engine means it has arrived.
-        const info = engines.info[candidate.engine]
-        const fetching = info !== undefined && info.sizeBytes > 0 && !engines.loaded.value.includes(candidate.engine)
-        entry.stage = fetching ? 'loading' : 'working'
-        entry.loadingBytes = fetching ? info.sizeBytes : 0
-        try {
-          const outputs = await engines.convert(
-            candidate.engine,
-            { blob, name, from, to, options, maxPixels: MAX_PIXELS },
-            (fraction) => {
-              // Word from the worker can arrive after the file is finished, so it only ever
-              // moves a file from fetching to converting, and never brings one back to life.
-              if (entry.stage === 'loading') entry.stage = 'working'
-              if (entry.status === 'converting') entry.progress = (hop + fraction) / route.edges.length
-            },
-            forcedBudgetMs ?? conversionBudgetMs(pixels, blob.size),
-          )
-          // What a step learned by reading the file is kept, whichever step it was.
-          for (const output of outputs) if (output.note && !notes.includes(output.note)) notes.push(output.note)
-          if (last) {
-            for (const [index, output] of outputs.entries()) {
-              produced.push({
-                // Stable across re-conversions, so a result card keeps its place and its state.
-                id: `${entry.id}:${to.id}:${index}`,
-                sourceId: entry.id,
-                // With whatever the person has asked to have put before and after it, in Settings.
-                name: namedAs(output.name, naming.value),
-                formatId: output.format,
-                blob: markRaw(output.blob),
-                engine: candidate.engine,
-                inputBytes: entry.file.size,
-                notes,
-              })
+      const made: Array<{ blob: Blob; name: string }> = []
+      for (const [part, { blob, name }] of inputs.entries()) {
+        let timedOut = false
+        let refusal: string | null = null
+        // The first engine that remains runs. If it throws, the next is tried once.
+        const attempts = viable(edge, pixels).slice(0, 2)
+        let outputs: Awaited<ReturnType<typeof engines.convert>> | null = null
+        for (const candidate of attempts) {
+          // The user's quality applies to the final encode, and only if that encoder has one.
+          const chosen: Record<string, unknown> = {}
+          if (last && quality.value !== null && 'quality' in candidate.defaultOptions) chosen.quality = quality.value
+          // A choice is given to every step that makes use of it.
+          for (const [key, value] of Object.entries(choices.value)) if (key in candidate.defaultOptions) chosen[key] = value
+          const options = { ...candidate.defaultOptions, ...chosen }
+          // A converter that has not been fetched yet is fetched first, and that can be the
+          // longest part. The first word back from the engine means it has arrived.
+          const info = engines.info[candidate.engine]
+          const fetching = info !== undefined && info.sizeBytes > 0 && !engines.loaded.value.includes(candidate.engine)
+          entry.stage = fetching ? 'loading' : 'working'
+          entry.loadingBytes = fetching ? info.sizeBytes : 0
+          try {
+            outputs = await engines.convert(
+              candidate.engine,
+              { blob, name, from, to, options, maxPixels: MAX_PIXELS },
+              (fraction) => {
+                // Word from the worker can arrive after the file is finished, so it only ever
+                // moves a file from fetching to converting, and never brings one back to life.
+                if (entry.stage === 'loading') entry.stage = 'working'
+                if (entry.status === 'converting') entry.progress = (hop + (part + fraction) / inputs.length) / route.edges.length
+              },
+              forcedBudgetMs ?? conversionBudgetMs(pixels, blob.size),
+            )
+            if (!outputs[0]) throw new Error('The engine returned nothing')
+            // What a step learned by reading the file is kept, whichever step it was.
+            for (const output of outputs) if (output.note && !notes.includes(output.note)) notes.push(output.note)
+            if (last) {
+              for (const output of outputs) {
+                produced.push({
+                  // Stable across re-conversions, so a result card keeps its place and its state.
+                  id: `${entry.id}:${to.id}:${produced.length}`,
+                  sourceId: entry.id,
+                  // With whatever the person has asked to have put before and after it, in Settings.
+                  name: namedAs(output.name, naming.value),
+                  formatId: output.format,
+                  blob: markRaw(output.blob),
+                  engine: candidate.engine,
+                  inputBytes: entry.file.size,
+                  notes,
+                })
+              }
             }
+            break
+          } catch (error) {
+            outputs = null
+            if (error instanceof TimedOut) timedOut = true
+            // An engine's own reason for turning the file away, written to be shown.
+            if (error instanceof Error && error.name === 'Refusal') refusal = error.message
+            console.warn(`[omsett] ${candidate.engine} failed on ${entry.file.name}`, error)
           }
-          const first = outputs[0]
-          if (!first) throw new Error('The engine returned nothing')
-          next = first.blob
-          name = first.name
-          break
-        } catch (error) {
-          if (error instanceof TimedOut) timedOut = true
-          // An engine's own reason for turning the file away, written to be shown.
-          if (error instanceof Error && error.name === 'Refusal') refusal = error.message
-          console.warn(`[omsett] ${candidate.engine} failed on ${entry.file.name}`, error)
         }
+        if (!outputs && refusal) throw new Refusal(refusal)
+        if (!outputs && timedOut) throw new Refusal('Stopped: this file took too long to convert')
+        if (!outputs) throw new Error("This file couldn't be converted")
+        made.push(...outputs.map((output) => ({ blob: output.blob, name: output.name })))
       }
-      if (!next && refusal) throw new Refusal(refusal)
-      if (!next && timedOut) throw new Refusal('Stopped: this file took too long to convert')
-      if (!next) throw new Error("This file couldn't be converted")
-      blob = next
+      inputs = made
       pixels = 0
     }
     return produced
