@@ -47,6 +47,20 @@ const CATALOG_OUT: Record<string, string> = {
 const EVERYWHERE_OUT = ['/AA', '/JS', '/Metadata', '/PieceInfo', '/StructParent', '/StructParents', '/Next', '/AF', '/EF', '/Ref']
 /** Annotations that go before anything is drawn: notes, pop-ups, attachments, sound and film. */
 const NOTES = new Set(['/Text', '/Popup', '/FileAttachment', '/Sound', '/Movie', '/Screen', '/RichMedia', '/3D', '/Projection'])
+/**
+ * What a page, a node of the list of pages, the catalog and (after drawing) a link may keep, and
+ * nothing else: a key not on its list goes, so that no key of the file's own invention can carry
+ * an object along with the page.
+ */
+const KEEP: Record<string, Set<string>> = {
+  '/Page': new Set(['/Type', '/Parent', '/MediaBox', '/CropBox', '/BleedBox', '/TrimBox', '/ArtBox', '/Resources', '/Contents', '/Rotate', '/Annots', '/Group', '/UserUnit', '/Tabs']),
+  '/Pages': new Set(['/Type', '/Parent', '/Kids', '/Count', '/Resources', '/MediaBox', '/CropBox', '/Rotate']),
+  '/Catalog': new Set(['/Type', '/Pages', '/Lang', '/ViewerPreferences', '/PageLabels', '/PageLayout', '/PageMode', '/Version', '/Extensions', '/OutputIntents', '/AcroForm', '/OCProperties']),
+  '/Link': new Set(['/Type', '/Subtype', '/Rect', '/A', '/Dest', '/Border', '/BS', '/C', '/H', '/QuadPoints', '/F', '/Contents']),
+}
+/** The ways a destination names where on a page it goes, and how many numbers each takes. */
+const FITS: Record<string, number> = { '/XYZ': 3, '/Fit': 0, '/FitH': 1, '/FitV': 1, '/FitR': 4, '/FitB': 0, '/FitBH': 1, '/FitBV': 1 }
+
 /** The only actions kept: a jump to a page of this file, and a web or mail address. */
 const ACTIONS = new Set(['/GoTo', '/URI'])
 const ADDRESS = /^(?:https?:\/\/|mailto:)/i
@@ -80,8 +94,25 @@ export function clean(json: QpdfJson, stage: 'before' | 'after'): Cleaned {
   const keptAction = (action: Value): Dict | null => {
     const found = resolve(action)
     if (!isDict(found) || !ACTIONS.has(found['/S'] as string)) return null
-    if (found['/S'] === '/GoTo') return found['/D'] === undefined ? null : { '/S': '/GoTo', '/D': found['/D'] }
+    if (found['/S'] === '/GoTo') {
+      const where = keptDestination(found['/D'])
+      return where === null ? null : { '/S': '/GoTo', '/D': where }
+    }
     return ADDRESS.test(text(found['/URI'])) ? { '/S': '/URI', '/URI': found['/URI'] } : null
+  }
+  /**
+   * A destination as it may stay: a page of this file, a way of fitting it and that way's numbers,
+   * or a destination's name. Anything else (a reference to some other object) is null.
+   */
+  const keptDestination = (where: Value): Value => {
+    if (typeof where === 'string' && /^(?:\/|u:|b:)/.test(where)) return where
+    const found = isRef(where) ? resolve(where) : where
+    if (!Array.isArray(found) || found.length < 2) return null
+    const [page, fit, ...numbers] = found as Value[]
+    const kind = typeof fit === 'string' ? FITS[fit] : undefined
+    if (kind === undefined || numbers.length !== kind || !numbers.every((n) => typeof n === 'number' || n === null)) return null
+    const isPage = (isRef(page) && dictOf(`obj:${page}`)?.['/Type'] === '/Page') || (typeof page === 'number' && Number.isInteger(page))
+    return isPage ? [page, fit, ...numbers] : null
   }
   /** An annotation's kind, and whether it goes at this stage. */
   const annotationGoes = (annotation: Value): boolean => {
@@ -98,7 +129,16 @@ export function clean(json: QpdfJson, stage: 'before' | 'after'): Cleaned {
     if (Array.isArray(value)) return value.map((item) => scrub(item, depth + 1))
     if (!isDict(value)) return value
     const out: Dict = {}
+    // A page, a node of the list of pages, and after drawing a link, keep only what is on their list.
+    const kind = value['/Type'] === '/Page' || value['/Type'] === '/Pages' ? (value['/Type'] as string) : stage === 'after' && value['/Subtype'] === '/Link' && isAnnotation(value) ? '/Link' : undefined
+    const allowed = kind ? KEEP[kind] : undefined
     for (const [key, inner] of Object.entries(value)) {
+      if (allowed && !allowed.has(key)) continue
+      if (key === '/Dest' && isAnnotation(value)) {
+        const where = keptDestination(inner)
+        if (where !== null) out[key] = where
+        continue
+      }
       if (EVERYWHERE_OUT.includes(key)) {
         if (key === '/AA' || key === '/JS') removed.add('scripts and actions')
         if (key === '/Metadata') removed.add("the author's name and the document's details")
@@ -167,6 +207,8 @@ export function clean(json: QpdfJson, stage: 'before' | 'after'): Cleaned {
       if (why) removed.add(why)
     }
   }
+  // And anything else not on the catalog's list.
+  for (const key of Object.keys(catalog)) if (!KEEP['/Catalog']!.has(key)) Reflect.deleteProperty(catalog, key)
   if (stage === 'after' && '/AcroForm' in catalog) {
     delete catalog['/AcroForm']
     removed.add('forms (their filled-in words are kept, drawn on the page)')

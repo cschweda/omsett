@@ -219,6 +219,16 @@ describe('what a review found going with the pages, each closed', () => {
     expect(latin1(first!.bytes)).toMatch(/\/S \/GoTo/)
   })
 
+  it('lets no key of the file’s own invention, and no destination that is not a page, carry an object along', async () => {
+    // An untyped stream, so that no forbidden name is near it: only an allowed list keeps it out.
+    const hidden = { 6: '<< >>\nstream\nSECRET-CARRIED-ALONG\nendstream', 7: '[6 0 R /Fit]' }
+    const links = '/Annots [<< /Type /Annot /Subtype /Link /Rect [0 0 50 50] /Foo 6 0 R /A << /S /GoTo /D [6 0 R /Fit] >> >> << /Type /Annot /Subtype /Link /Rect [60 0 90 50] /Dest 7 0 R >> << /Type /Annot /Subtype /Link /Rect [100 0 150 50] /A << /S /GoTo /D [12 0 R /XYZ 0 792 null] >> >>]'
+    const [first] = await split(made({ catalog: '/Bar 6 0 R', pages: [`/Foo 6 0 R ${links}`, '', ''], objects: hidden }), '1-2')
+    expect(latin1(first!.bytes)).not.toContain('SECRET')
+    // A jump to a page that is in the file stays, with its place on that page.
+    expect(latin1(first!.bytes)).toMatch(/\/D \[ ?\d+ 0 R \/XYZ 0 792 null ?\]/)
+  })
+
   it('never unpacks a stream packed to many thousand times its size, so it costs neither time nor memory', async () => {
     const { deflateSync } = await import('node:zlib')
     const bomb = deflateSync(deflateSync(Buffer.alloc(64 * 1024 * 1024)))
